@@ -15,9 +15,9 @@ namespace grove {
 
 template <typename KeypointType, typename DescriptorType>
 RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator(
-  bool depthAdaptive, RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+  bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
   uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius,
-  uint32_t depthMaxRadius, RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+  uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
   uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius
 )
 : m_depthDifferenceType(depthDifferenceType),

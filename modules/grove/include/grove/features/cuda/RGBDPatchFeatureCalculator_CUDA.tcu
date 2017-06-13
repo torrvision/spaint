@@ -13,7 +13,7 @@ namespace {
 
 //#################### CUDA KERNELS ####################
 
-template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
+template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 __global__ void ck_compute_colour_features(Vector2i inDepthSize, Vector2i inRgbSize, Vector2i outSize, const Vector4u *rgb,
                                            const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
                                            const KeypointType *keypoints, uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset,
@@ -32,7 +32,7 @@ __global__ void ck_compute_colour_features(Vector2i inDepthSize, Vector2i inRgbS
   }
 }
 
-template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
+template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 __global__ void ck_compute_depth_features(Vector2i inSize, Vector2i outSize, const float *depths, const Vector4i *depthOffsets,
                                           const KeypointType *keypoints, uint32_t depthFeatureCount, uint32_t depthFeatureOffset,
                                           uint32_t featureStep, bool normalise, DescriptorType *descriptors)
@@ -73,7 +73,7 @@ __global__ void ck_compute_keypoints(const Vector2i inDepthSize, const Vector2i 
 //#################### CONSTRUCTORS ####################
 
 template <typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive, RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius, RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
                                                                                               uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius)
 : RGBDPatchFeatureCalculator<KeypointType,DescriptorType>(depthAdaptive,
                                                           depthDifferenceType,
