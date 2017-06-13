@@ -111,10 +111,10 @@ protected:
    *
    * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets would cause out-of-bounds access.
    */
-  RGBDPatchFeatureCalculator(bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
-                             uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius,
-                             uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
-                             uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius);
+  RGBDPatchFeatureCalculator(bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType, uint32_t depthFeatureCount,
+                             uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius,
+                             RGBDPatchFeatureDifferenceType rgbDifferenceType, uint32_t rgbFeatureCount,
+                             uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius);
 
   //#################### DESTRUCTOR ####################
 public:

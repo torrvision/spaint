@@ -12,8 +12,6 @@
 
 #include <ITMLib/Utils/ITMProjectionUtils.h>
 
-#include <ORUtils/PlatformIndependence.h>
-
 namespace grove {
 
 /**
@@ -119,7 +117,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     const int channel = rgbChannels[featIdx];
     Vector4i offsets = rgbOffsets[featIdx];
 
-    // Now rescale the offsets depending on the depth-to-rgb ratio.
+    // Now rescale the offsets using the colour to depth ratio.
     offsets[0] *= rgbDepthRatio.x;
     offsets[1] *= rgbDepthRatio.y;
     offsets[2] *= rgbDepthRatio.x;
