@@ -6,11 +6,13 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 
-#include "../base/RGBDPatchFeatureDifferenceType.h"
-
 #include <helper_math.h>
 
 #include <ITMLib/Utils/ITMProjectionUtils.h>
+
+#include "../base/RGBDPatchFeatureDifferenceType.h"
+#include "../../keypoints/Keypoint2D.h"
+#include "../../keypoints/Keypoint3DColour.h"
 
 namespace grove {
 
