@@ -22,7 +22,17 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
-SET(features_base_headers include/grove/features/base/Descriptor.h)
+SET(features_base_headers
+include/grove/features/base/Descriptor.h
+include/grove/features/base/RGBDPatchFeatureDifferenceType.h
+)
+
+##
+SET(features_interface_headers include/grove/features/interface/RGBDPatchFeatureCalculator.h)
+SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatureCalculator.tpp)
+
+##
+SET(features_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
 ##
 SET(keypoints_headers
@@ -50,8 +60,14 @@ ${numbers_sources}
 
 SET(headers
 ${features_base_headers}
+${features_interface_headers}
+${features_shared_headers}
 ${keypoints_headers}
 ${numbers_headers}
+)
+
+SET(templates
+${features_interface_templates}
 )
 
 #############################
@@ -59,6 +75,8 @@ ${numbers_headers}
 #############################
 
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
+SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
+SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 
