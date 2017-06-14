@@ -195,7 +195,7 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv
   const float EPSILON = 1e-3f;
   if(fabs(depth + 1) > EPSILON) // i.e. if(depth != -1)
   {
-    return reproject(ux, uy, depth, view->calib.intrinsics_d.projectionParamsSimple.all);
+    return unproject(ux, uy, depth, view->calib.intrinsics_d.projectionParamsSimple.all);
   }
   else return boost::none;
 }
