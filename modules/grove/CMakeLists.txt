@@ -29,9 +29,11 @@ include/grove/features/base/RGBDPatchFeatureDifferenceType.h
 
 ##
 SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h)
+SET(features_cpu_templates include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.tpp)
 
 ##
 SET(features_cuda_headers include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.h)
+SET(features_cuda_templates include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu)
 
 ##
 SET(features_interface_headers include/grove/features/interface/RGBDPatchFeatureCalculator.h)
@@ -74,12 +76,17 @@ ${numbers_headers}
 )
 
 SET(templates
+${features_cpu_templates}
 ${features_interface_templates}
 )
 
 IF(WITH_CUDA)
   SET(headers ${headers}
     ${features_cuda_headers}
+  )
+
+  SET(templates ${templates}
+    ${features_cuda_templates}
   )
 ENDIF()
 
@@ -88,8 +95,8 @@ ENDIF()
 #############################
 
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
-SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers})
-SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers})
+SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_templates})
+SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
