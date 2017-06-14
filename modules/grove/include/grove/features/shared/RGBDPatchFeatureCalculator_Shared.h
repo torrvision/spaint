@@ -283,7 +283,7 @@ inline void compute_keypoint(const Vector2i& xyDepth, const Vector2i& xyRgb, con
   }
 
   // Back-project the keypoint to determine its position in camera coordinates.
-  const Vector3f position = reproject(xyDepth, depth, intrinsics);
+  const Vector3f position = unproject(xyDepth, depth, intrinsics);
 
   // Determine the keypoint's position in "descriptor" coordinates.
   outKeypoint.position = cameraPose * position;
