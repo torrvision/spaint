@@ -29,9 +29,15 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
                                                                                                  const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                                                                                  KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
-  // The size of the colour image is used if we have to compute both colour-based features and depth-based features.
-  const Vector2i depthSize = depthImage->noDims;
-  const Vector2i rgbSize = rgbImage->noDims;
+  const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CPU);
+  const float *depths = depthImage ? depthImage->GetData(MEMORYDEVICE_CPU) : NULL;
+  const Vector2i& depthSize = depthImage->noDims;
+  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CPU);
+  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const Vector4u *rgb = rgbImage ? rgbImage->GetData(MEMORYDEVICE_CPU): NULL;
+  const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CPU);
+  const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
+  const Vector2i& rgbSize = rgbImage->noDims;
 
   // Check that the input images are valid and compute the output dimensions.
   const Vector2i outSize = this->compute_output_dims(rgbImage, depthImage);
@@ -40,15 +46,6 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
   // happens once per program run if the images are properly cached).
   keypointsImage->ChangeDims(outSize);
   descriptorsImage->ChangeDims(outSize);
-
-  const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CPU);
-  const float *depths = depthImage ? depthImage->GetData(MEMORYDEVICE_CPU) : NULL;
-  const Vector4u *rgb = rgbImage ? rgbImage->GetData(MEMORYDEVICE_CPU): NULL;
-  const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CPU);
-  const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
-
-  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
-  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CPU);
 
   // For each pixel in the RGBD image:
 #ifdef WITH_OPENMP
