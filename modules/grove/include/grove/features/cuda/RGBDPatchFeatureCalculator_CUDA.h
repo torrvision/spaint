@@ -21,10 +21,14 @@ namespace grove {
 template <typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator<KeypointType,DescriptorType>
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef RGBDPatchFeatureCalculator<KeypointType,DescriptorType> Base;
+
   //#################### USINGS ####################
 public:
-  using typename RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::DescriptorsImage;
-  using typename RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::KeypointsImage;
+  using typename Base::DescriptorsImage;
+  using typename Base::KeypointsImage;
 
   //#################### CONSTRUCTORS ####################
 private:

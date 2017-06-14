@@ -24,12 +24,15 @@ __global__ void ck_compute_colour_features(Vector2i depthSize, Vector2i rgbSize,
 
   if(xyOut.x < outSize.width && xyOut.y < outSize.height)
   {
-    // Determine the positions in the depth and RGB images of the pixel for which to compute colour features.
+    // Determine the depth and RGB image positions of the pixel for which to compute colour features.
     const Vector2i xyDepth = map_pixel_coordinates(xyOut, outSize, depthSize);
     const Vector2i xyRgb = map_pixel_coordinates(xyOut, outSize, rgbSize);
 
-    // Compute the colour feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_colour_features<DifferenceType>(xyDepth, xyRgb, xyOut, depthSize, rgbSize, outSize, depths, rgb, rgbOffsets, rgbChannels, keypoints, rgbFeatureCount, rgbFeatureOffset, normalise, descriptors);
+    // Compute the colour feature for the pixel and write it into the correct place in the pixel's descriptor.
+    compute_colour_features<DifferenceType>(
+      xyDepth, xyRgb, xyOut, depthSize, rgbSize, outSize, depths, rgb, rgbOffsets, rgbChannels,
+      keypoints, rgbFeatureCount, rgbFeatureOffset, normalise, descriptors
+    );
   }
 }
 
@@ -43,11 +46,14 @@ __global__ void ck_compute_depth_features(Vector2i depthSize, Vector2i outSize, 
 
   if(xyOut.x < outSize.width && xyOut.y < outSize.height)
   {
-    // Determine the position in the depth image of the pixel for which we are computing the feature descriptor.
+    // Determine the depth image position of the pixel for which we are computing the feature descriptor.
     const Vector2i xyDepth = map_pixel_coordinates(xyOut, outSize, depthSize);
 
-    // Compute the depth feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_depth_features<DifferenceType>(xyDepth, xyOut, depthSize, outSize, depths, depthOffsets, keypoints, depthFeatureCount, depthFeatureOffset, normalise, descriptors);
+    // Compute the depth feature for the pixel and write it into the correct place in the pixel's descriptor.
+    compute_depth_features<DifferenceType>(
+      xyDepth, xyOut, depthSize, outSize, depths, depthOffsets, keypoints,
+      depthFeatureCount, depthFeatureOffset, normalise, descriptors
+    );
   }
 }
 
@@ -61,11 +67,11 @@ __global__ void ck_compute_keypoints(const Vector2i depthSize, const Vector2i rg
 
   if(xyOut.x < outSize.width && xyOut.y < outSize.height)
   {
-    // Determine the positions in the depth and RGB images of the pixel for which we are computing the keypoint.
+    // Determine the depth and RGB image positions of the pixel for which we are computing the keypoint.
     const Vector2i xyDepth = map_pixel_coordinates(xyOut, outSize, depthSize);
     const Vector2i xyRgb = map_pixel_coordinates(xyOut, outSize, rgbSize);
 
-    // Compute the keypoint for the specified RGBD pixel and write it into the keypoints image.
+    // Compute the keypoint for the pixel and write it into the keypoints image.
     compute_keypoint(xyDepth, xyRgb, xyOut, depthSize, rgbSize, outSize, depths, rgb, cameraPose, intrinsics, keypoints);
   }
 }
@@ -75,19 +81,14 @@ __global__ void ck_compute_keypoints(const Vector2i depthSize, const Vector2i rg
 //#################### CONSTRUCTORS ####################
 
 template <typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
-                                                                                              uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius)
-: RGBDPatchFeatureCalculator<KeypointType,DescriptorType>(depthAdaptive,
-                                                          depthDifferenceType,
-                                                          depthFeatureCount,
-                                                          depthFeatureOffset,
-                                                          depthMinRadius,
-                                                          depthMaxRadius,
-                                                          rgbDifferenceType,
-                                                          rgbFeatureCount,
-                                                          rgbFeatureOffset,
-                                                          rgbMinRadius,
-                                                          rgbMaxRadius)
+RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CUDA(
+  bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
+  uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius,
+  uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
+  uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius
+)
+: Base(depthAdaptive, depthDifferenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius,
+       depthMaxRadius, rgbDifferenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius)
 {
   // Copy the memory blocks used to specify the features across to the GPU.
   this->m_depthOffsets->UpdateDeviceFromHost();
@@ -102,9 +103,15 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
                                                                                                   const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                                                                                   KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
-  // The size of the colour image is used if we have to compute both colour-based features and depth-based features.
-  const Vector2i depthSize = depthImage->noDims;
-  const Vector2i rgbSize = rgbImage->noDims;
+  const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CUDA);
+  const float *depths = depthImage ? depthImage->GetData(MEMORYDEVICE_CUDA) : NULL;
+  const Vector2i& depthSize = depthImage->noDims;
+  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CUDA);
+  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CUDA);
+  const Vector4u *rgb = rgbImage ? rgbImage->GetData(MEMORYDEVICE_CUDA) : NULL;
+  const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CUDA);
+  const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CUDA);
+  const Vector2i& rgbSize = rgbImage->noDims;
 
   // Check that the input images are valid and compute the output dimensions.
   const Vector2i outSize = this->compute_output_dims(rgbImage, depthImage);
@@ -112,15 +119,6 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
   // Ensure the output images are the right size (always a no-op after the first time).
   keypointsImage->ChangeDims(outSize);
   descriptorsImage->ChangeDims(outSize);
-
-  const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CUDA);
-  const float *depths = depthImage ? depthImage->GetData(MEMORYDEVICE_CUDA) : NULL;
-  const Vector4u *rgb = rgbImage ? rgbImage->GetData(MEMORYDEVICE_CUDA) : NULL;
-  const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CUDA);
-  const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CUDA);
-
-  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);
   dim3 gridSize((outSize.x + blockSize.x - 1) / blockSize.x, (outSize.y + blockSize.y - 1) / blockSize.y);
