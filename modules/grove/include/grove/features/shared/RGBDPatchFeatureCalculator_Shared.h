@@ -142,7 +142,7 @@ inline void compute_colour_features(const Vector2i& xyDepth, const Vector2i& xyR
     if(DifferenceType == PAIRWISE_DIFFERENCE)
     {
       // This is the "correct" definition, but the SCoRe Forests code uses the other one.
-      descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[raster2][channel];
+      descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[raster2][channel]);
     }
     else
     {
@@ -304,8 +304,8 @@ _CPU_AND_GPU_CODE_
 inline Vector2i map_pixel_coordinates(const Vector2i& pos, const Vector2i& inSize, const Vector2i& outSize)
 {
   return Vector2i(
-    (int)clamp(roundf(pos.x * (outSize.width - 1) / (float)(inSize.width - 1)), 0.0f, inSize.width - 1.0f),
-    (int)clamp(roundf(pos.y * (outSize.height - 1) / (float)(inSize.height - 1)), 0.0f, inSize.height - 1.0f)
+    (int)clamp(roundf(pos.x * (outSize.width - 1) / (float)(inSize.width - 1)), 0.0f, outSize.width - 1.0f),
+    (int)clamp(roundf(pos.y * (outSize.height - 1) / (float)(inSize.height - 1)), 0.0f, outSize.height - 1.0f)
   );
 }
 

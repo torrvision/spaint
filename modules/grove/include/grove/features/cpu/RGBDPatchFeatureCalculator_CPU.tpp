@@ -32,8 +32,6 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
   const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CPU);
   const float *depths = depthImage ? depthImage->GetData(MEMORYDEVICE_CPU) : NULL;
   const Vector2i& depthSize = depthImage->noDims;
-  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CPU);
-  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
   const Vector4u *rgb = rgbImage ? rgbImage->GetData(MEMORYDEVICE_CPU): NULL;
   const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CPU);
   const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
@@ -46,6 +44,9 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
   // happens once per program run if the images are properly cached).
   keypointsImage->ChangeDims(outSize);
   descriptorsImage->ChangeDims(outSize);
+
+  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
+  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CPU);
 
   // For each pixel in the RGBD image:
 #ifdef WITH_OPENMP
