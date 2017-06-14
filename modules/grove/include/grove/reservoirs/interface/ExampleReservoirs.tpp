@@ -23,48 +23,23 @@ ExampleReservoirs<ExampleType>::ExampleReservoirs(
   m_rngSeed = rngSeed;
 
   // One row per reservoir, width equal to the capacity.
-  m_data = mbf.make_image<ExampleType>(Vector2i(reservoirCapacity, reservoirCount));
-  m_reservoirsSize = mbf.make_block<int>(reservoirCount);
-  m_reservoirsAddCalls = mbf.make_block<int>(reservoirCount);
+  m_reservoirs = mbf.make_image<ExampleType>(Vector2i(reservoirCapacity, reservoirCount));
+  m_reservoirSizes = mbf.make_block<int>(reservoirCount);
+  m_reservoirAddCalls = mbf.make_block<int>(reservoirCount);
 
   // No calls to virtual clear() in the constructor.
-  // No need to clear m_data if the size is 0.
-  m_reservoirsSize->Clear();
-  m_reservoirsAddCalls->Clear();
+  // No need to clear m_reservoirs if the size is 0.
+  m_reservoirSizes->Clear();
+  m_reservoirAddCalls->Clear();
 }
 
 //#################### DESTRUCTOR ####################
 
 template <typename ExampleType>
 ExampleReservoirs<ExampleType>::~ExampleReservoirs()
-{
-}
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-
-template <typename ExampleType>
-uint32_t ExampleReservoirs<ExampleType>::get_capacity() const
-{
-  return m_capacity;
-}
-
-template <typename ExampleType>
-typename ExampleReservoirs<ExampleType>::ExampleImage_CPtr ExampleReservoirs<ExampleType>::get_reservoirs() const
-{
-  return m_data;
-}
-
-template <typename ExampleType>
-uint32_t ExampleReservoirs<ExampleType>::get_reservoirs_count() const
-{
-  return m_reservoirCount;
-}
-
-template <typename ExampleType>
-ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoirs_size() const
-{
-  return m_reservoirsSize;
-}
 
 template <typename ExampleType>
 template <int IndexLength>
@@ -95,13 +70,35 @@ void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr &examp
   add_examples(examples, reservoirIndicesConst);
 }
 
-//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
-
 template <typename ExampleType>
 void ExampleReservoirs<ExampleType>::clear()
 {
-  m_reservoirsSize->Clear();
-  m_reservoirsAddCalls->Clear();
+  m_reservoirSizes->Clear();
+  m_reservoirAddCalls->Clear();
+}
+
+template <typename ExampleType>
+uint32_t ExampleReservoirs<ExampleType>::get_capacity() const
+{
+  return m_capacity;
+}
+
+template <typename ExampleType>
+typename ExampleReservoirs<ExampleType>::ExampleImage_CPtr ExampleReservoirs<ExampleType>::get_reservoirs() const
+{
+  return m_reservoirs;
+}
+
+template <typename ExampleType>
+uint32_t ExampleReservoirs<ExampleType>::get_reservoir_count() const
+{
+  return m_reservoirCount;
+}
+
+template <typename ExampleType>
+ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() const
+{
+  return m_reservoirSizes;
 }
 
 }

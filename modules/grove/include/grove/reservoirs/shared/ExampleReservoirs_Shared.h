@@ -66,7 +66,7 @@ inline void example_reservoirs_add_example(const ExampleType &example,
 
       // Also increment the size of the current reservoir.
       // Might not be strictly necessary, since reservoirAddCalls also has the same info and we could
-      // return that in get_reservoirs_size(), but then care would need to be taken when examining values
+      // return that in get_reservoir_sizes(), but then care would need to be taken when examining values
       // outside this class since they will be greater than the actual reservoir capacity.
 #ifdef __CUDACC__
       atomicAdd(&reservoirSize[reservoirIdx], 1);

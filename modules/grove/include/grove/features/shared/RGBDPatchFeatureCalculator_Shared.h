@@ -142,7 +142,7 @@ inline void compute_colour_features(const Vector2i& xyDepth, const Vector2i& xyR
     if(DifferenceType == PAIRWISE_DIFFERENCE)
     {
       // This is the "correct" definition, but the SCoRe Forests code uses the other one.
-      descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[raster2][channel];
+      descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[raster2][channel]);
     }
     else
     {

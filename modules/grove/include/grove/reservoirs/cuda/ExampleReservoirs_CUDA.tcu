@@ -84,16 +84,16 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr &
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CUDA);
 
   CUDARNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
-  int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CUDA);
-  ExampleType *reservoirData = this->m_data->GetData(MEMORYDEVICE_CUDA);
-  int *reservoirSize = this->m_reservoirsSize->GetData(MEMORYDEVICE_CUDA);
+  int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CUDA);
+  ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CUDA);
+  int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);
   dim3 gridSize((imgSize.width + blockSize.x - 1) / blockSize.x,
       (imgSize.height + blockSize.y - 1) / blockSize.y);
   ck_add_examples<<<gridSize, blockSize>>>(exampleData, imgSize, reservoirIndicesCUDA,
       reservoirIndicesCount, reservoirIndicesStep, randomStates,
-      reservoirData, reservoirSize, reservoirAddCalls, this->m_capacity);
+      reservoirData, reservoirSizes, reservoirAddCalls, this->m_capacity);
   ORcudaKernelCheck;
 }
 
@@ -102,7 +102,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr &
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::init_random()
 {
-  const size_t nbStates = m_randomStates->dataSize;
+  const int nbStates = static_cast<int>(m_randomStates->dataSize);
 
   if (nbStates == 0) return;
 

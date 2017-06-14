@@ -6,19 +6,17 @@
 #ifndef H_GROVE_EXAMPLERESERVOIRS
 #define H_GROVE_EXAMPLERESERVOIRS
 
-#include <ITMLib/Utils/ITMMath.h>
-
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
 namespace grove {
 
 /**
- * \brief An instance of a class deriving from this one can be used to store a number of "Examples" in a set of fixed-size reservoirs.
+ * \brief An instance of a class deriving from this one can be used to store a number of examples in a set of fixed-size reservoirs.
  *
- * \param ExampleType The type of the examples stored in the reservoirs. Must have a member named "valid", convertible to boolean.
+ * \tparam ExampleType  The type of example stored in the reservoirs. Must have a member named "valid", convertible to bool.
  */
-template<typename ExampleType>
+template <typename ExampleType>
 class ExampleReservoirs
 {
   //#################### TYPEDEFS ####################
@@ -36,17 +34,17 @@ protected:
   /** The capacity of each reservoir. */
   uint32_t m_capacity;
 
-  /** The actual reservoirs: an image wherein each row allows the storage of up to m_capacity examples. */
-  ReservoirsImage_Ptr m_data;
-
   /** The number of reservoirs. */
   uint32_t m_reservoirCount;
 
-  /** The number of times the insertion of an example has been attempted for each reservoir. Has an element for each reservoir (i.e. row in m_data). */
-  ITMIntMemoryBlock_Ptr m_reservoirsAddCalls;
+  /** The example reservoirs: an image in which each row allows the storage of up to m_capacity examples. */
+  ReservoirsImage_Ptr m_reservoirs;
 
-  /** The current size of each reservoir.  Has an element for each reservoir (i.e. row in m_data). */
-  ITMIntMemoryBlock_Ptr m_reservoirsSize;
+  /** The number of times the insertion of an example has been attempted for each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
+  ITMIntMemoryBlock_Ptr m_reservoirAddCalls;
+
+  /** The current size of each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
+  ITMIntMemoryBlock_Ptr m_reservoirSizes;
 
   /** The seed for the random number generation. */
   uint32_t m_rngSeed;
@@ -65,43 +63,31 @@ protected:
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys an instance of the ExampleReservoirs class.
+   * \brief Destroys the example reservoirs.
    */
   virtual ~ExampleReservoirs();
 
+  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Add examples to the reservoirs. Virtual, non-templated, method, implemented in the CPU and CUDA subclasses.
+   *
+   * \note  This method will be called by the templated add_examples method, the reservoirIndicesCPU and reservoirIndicesCUDA
+   *        parameters will point to the beginning of the memory associated to the "index image".
+   *        Access to the reservoirIndicesCount indices is strided according to reservoirIndicesStep.
+   *
+   * \param examples              The examples to add to the reservoirs. Only those that have the "valid" member set to true
+   *                              will be added.
+   * \param reservoirIndicesCPU   Raw pointer to the CPU memory associated to the indices.
+   * \param reservoirIndicesCUDA  Raw pointer to the CUDA memory associated to the indices.
+   * \param reservoirIndicesCount Number of integer indices for each element of the indices image.
+   * \param reservoirIndicesStep  Step between the beginning of neighboring elements in the indices image.
+   */
+  virtual void add_examples(const ExampleImage_CPtr &examples, const char *reservoirIndicesCPU,
+                            const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
+                            uint32_t reservoirIndicesStep) = 0;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Gets the reservoir capacity.
-   *
-   * \return The reservoir capacity.
-   */
-  uint32_t get_capacity() const;
-
-  /**
-   * \brief Returns a pointer to the reservoirs.
-   *
-   * \note One reservoir per row, each row has get_capacity() length but only get_reservoirs_size()[rowIdx] are valid.
-   *
-   * \return A constant pointer to the example reservoirs.
-   */
-  ReservoirsImage_CPtr get_reservoirs() const;
-
-  /**
-   * \brief Gets the number of reservoirs.
-   *
-   * \return The number of reservoirs.
-   */
-  uint32_t get_reservoirs_count() const;
-
-  /**
-   * \brief Returns the current size of each reservoir.
-   *
-   * \return A constant pointer to a vector storing the size of each reservoir.
-   */
-  ITMIntMemoryBlock_CPtr get_reservoirs_size() const;
-
-  //#################### PUBLIC TEMPLATED MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Add examples to the reservoirs. Templated on the number of reservoirs an example will be added to.
@@ -133,32 +119,43 @@ public:
   void add_examples(const ExampleImage_CPtr &examples,
                     const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > &reservoirIndices);
 
-  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
-public:
   /**
-   * \brief Clear the reservoirs. Discards all examples and reinitialises the random number generator.
+   * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
    */
   virtual void clear();
 
-  //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
-public:
   /**
-   * \brief Add examples to the reservoirs. Virtual, non-templated, method, implemented in the CPU and CUDA subclasses.
+   * \brief Gets the capacity of each reservoir.
    *
-   * \note  This method will be called by the templated add_examples method, the reservoirIndicesCPU and reservoirIndicesCUDA
-   *        parameters will point to the beginning of the memory associated to the "index image".
-   *        Access to the reservoirIndicesCount indices is strided according to reservoirIndicesStep.
+   * \note All the reservoirs have the same capacity.
    *
-   * \param examples              The examples to add to the reservoirs. Only those that have the "valid" member set to true
-   *                              will be added.
-   * \param reservoirIndicesCPU   Raw pointer to the CPU memory associated to the indices.
-   * \param reservoirIndicesCUDA  Raw pointer to the CUDA memory associated to the indices.
-   * \param reservoirIndicesCount Number of integer indices for each element of the indices image.
-   * \param reservoirIndicesStep  Step between the beginning of neighboring elements in the indices image.
+   * \return The capacity of each reservoir.
    */
-  virtual void add_examples(const ExampleImage_CPtr &examples, const char *reservoirIndicesCPU,
-                            const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
-                            uint32_t reservoirIndicesStep) = 0;
+  uint32_t get_capacity() const;
+
+  /**
+   * \brief Gets the example reservoirs.
+   *
+   * \note These are stored in an image in which each row corresponds to a reservoir. Each row can store up to
+   *       get_capacity() examples, but only the first get_reservoir_sizes()[rowIdx] are valid at any time.
+   *
+   * \return The example reservoirs.
+   */
+  ReservoirsImage_CPtr get_reservoirs() const;
+
+  /**
+   * \brief Gets the number of example reservoirs.
+   *
+   * \return The number of example reservoirs.
+   */
+  uint32_t get_reservoir_count() const;
+
+  /**
+   * \brief Gets the current size of each reservoir.
+   *
+   * \return A memory block containing the current size of each reservoir.
+   */
+  ITMIntMemoryBlock_CPtr get_reservoir_sizes() const;
 };
 
 }

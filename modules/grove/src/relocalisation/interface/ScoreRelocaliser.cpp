@@ -141,7 +141,7 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
   // Fourth: cluster some of the reservoirs.
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
   m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
-                                 m_exampleReservoirs->get_reservoirs_size(),
+                                 m_exampleReservoirs->get_reservoir_sizes(),
                                  m_predictionsBlock,
                                  m_reservoirUpdateStartIdx,
                                  updateCount);
@@ -165,7 +165,7 @@ void ScoreRelocaliser::update()
 
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
   m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
-                                 m_exampleReservoirs->get_reservoirs_size(),
+                                 m_exampleReservoirs->get_reservoir_sizes(),
                                  m_predictionsBlock,
                                  m_reservoirUpdateStartIdx,
                                  updateCount);

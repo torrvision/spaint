@@ -55,9 +55,9 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr &e
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
 
   CPURNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CPU);
-  int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CPU);
-  ExampleType *reservoirData = this->m_data->GetData(MEMORYDEVICE_CPU);
-  int *reservoirSize = this->m_reservoirsSize->GetData(MEMORYDEVICE_CPU);
+  int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CPU);
+  ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CPU);
+  int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
@@ -72,7 +72,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr &e
 
       example_reservoirs_add_example(exampleData[linearIdx], indices,
           reservoirIndicesStep, randomStates[linearIdx], reservoirData,
-          reservoirSize, reservoirAddCalls, this->m_capacity);
+          reservoirSizes, reservoirAddCalls, this->m_capacity);
     }
   }
 }
@@ -82,10 +82,10 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr &e
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::init_random()
 {
-  const size_t nbStates = m_randomStates->dataSize;
+  const int nbStates = static_cast<int>(m_randomStates->dataSize);
   CPURNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CPU);
 
-  for (size_t stateIdx = 0; stateIdx < nbStates; ++stateIdx)
+  for (int stateIdx = 0; stateIdx < nbStates; ++stateIdx)
   {
     randomStates[stateIdx].reset(this->m_rngSeed + stateIdx);
   }
