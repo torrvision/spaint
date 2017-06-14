@@ -19,17 +19,17 @@ namespace grove {
 /**
  * \brief Calculates the raster position(s) of the secondary point(s) to use when computing a feature.
  *
- * \param xyIn      The pixel in the RGBD image for which features are being computed.
+ * \param xyIn      The pixel in either the RGB or depth image for which features are being computed.
  * \param offsets   The unnormalised offsets of the secondary point(s) to use when computing the feature.
- * \param inSize    The size of the RGBD image.
- * \param normalise Whether or not to normalise the offsets by the RGBD pixel's depth value.
- * \param depth     The RGBD pixel's depth value.
+ * \param imgSize   The size of the RGB or depth image (whichever is being used).
+ * \param normalise Whether or not to normalise the offsets by the pixel's depth value.
+ * \param depth     The pixel's depth value.
  * \param raster1   An int into which to write the raster position of the first secondary point.
  * \param raster2   An int into which to write the raster position of the second secondary point (if needed).
  */
 template <RGBDPatchFeatureDifferenceType DifferenceType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& offsets, const Vector2i& inSize, const bool normalise, const float depth, int& raster1, int& raster2)
+inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& offsets, const Vector2i& imgSize, const bool normalise, const float depth, int& raster1, int& raster2)
 {
   int x1, y1;
   int x2 = 0, y2 = 0;
@@ -60,18 +60,18 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
   }
 
   // Constrain the secondary point(s) to be within the image.
-  x1 = min(max(x1, 0), inSize.width - 1);
-  y1 = min(max(y1, 0), inSize.height - 1);
+  x1 = min(max(x1, 0), imgSize.width - 1);
+  y1 = min(max(y1, 0), imgSize.height - 1);
 
   if(DifferenceType == PAIRWISE_DIFFERENCE)
   {
-    x2 = min(max(x2, 0), inSize.width - 1);
-    y2 = min(max(y2, 0), inSize.height - 1);
+    x2 = min(max(x2, 0), imgSize.width - 1);
+    y2 = min(max(y2, 0), imgSize.height - 1);
   }
 
   // Calculate the raster position(s) of the secondary point(s).
-  raster1 = y1 * inSize.width + x1;
-  raster2 = y2 * inSize.width + x2;
+  raster1 = y1 * imgSize.width + x1;
+  raster2 = y2 * imgSize.width + x2;
 }
 
 /**
@@ -155,9 +155,9 @@ inline void compute_colour_features(const Vector2i& xyRgb, const Vector2i& xyOut
 /**
  * \brief Computes depth features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param xyIn                The pixel in the RGBD image for which to compute depth features.
+ * \param xyDepth             The position in the depth image of the pixel for which to compute depth features.
  * \param xyOut               The position in the descriptors image into which to write the computed features.
- * \param inSize              The size of the RGBD image.
+ * \param depthSize           The size of the depth image.
  * \param outSize             The size of the keypoints/descriptors images.
  * \param depths              A pointer to the depth image.
  * \param depthOffsets        A pointer to the vector of offsets needed to specify the depth features to be computed.
@@ -169,7 +169,7 @@ inline void compute_colour_features(const Vector2i& xyRgb, const Vector2i& xyOut
  */
 template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+inline void compute_depth_features(const Vector2i& xyDepth, const Vector2i& xyOut, const Vector2i& depthSize, const Vector2i& outSize,
                                    const float *depths, const Vector4i *depthOffsets, const KeypointType *keypoints,
                                    uint32_t depthFeatureCount, uint32_t depthFeatureOffset, bool normalise, DescriptorType *descriptors)
 {
@@ -179,8 +179,7 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
   if(!keypoint.valid) return;
 
   // Look up the depth for the input pixel. This must be available, since otherwise the pixel's keypoint would have been invalid.
-  const int rasterIdxIn = xyIn.y * inSize.width + xyIn.x;
-  const float depth = depths[rasterIdxIn];
+  const float depth = depths[xyDepth.y * depthSize.width + xyDepth.x];
 
   // Compute the features and fill in the descriptor.
   DescriptorType& descriptor = descriptors[rasterIdxOut];
@@ -190,7 +189,7 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
-    calculate_secondary_points<DifferenceType>(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
+    calculate_secondary_points<DifferenceType>(xyDepth, offsets, depthSize, normalise, depth, raster1, raster2);
 
     // Convert the depth of the first secondary point to millimetres.
     const float depth1Mm = fmaxf(depths[raster1] * 1000.f, 0.0f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
