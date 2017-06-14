@@ -106,8 +106,6 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
   const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CUDA);
   const float *depths = depthImage ? depthImage->GetData(MEMORYDEVICE_CUDA) : NULL;
   const Vector2i& depthSize = depthImage->noDims;
-  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CUDA);
-  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const Vector4u *rgb = rgbImage ? rgbImage->GetData(MEMORYDEVICE_CUDA) : NULL;
   const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CUDA);
   const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CUDA);
@@ -119,6 +117,9 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
   // Ensure the output images are the right size (always a no-op after the first time).
   keypointsImage->ChangeDims(outSize);
   descriptorsImage->ChangeDims(outSize);
+
+  KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CUDA);
+  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);
   dim3 gridSize((outSize.x + blockSize.x - 1) / blockSize.x, (outSize.y + blockSize.y - 1) / blockSize.y);
