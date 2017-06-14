@@ -93,7 +93,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr &
       (imgSize.height + blockSize.y - 1) / blockSize.y);
   ck_add_examples<<<gridSize, blockSize>>>(exampleData, imgSize, reservoirIndicesCUDA,
       reservoirIndicesCount, reservoirIndicesStep, randomStates,
-      reservoirData, reservoirSizes, reservoirAddCalls, this->m_capacity);
+      reservoirData, reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
   ORcudaKernelCheck;
 }
 

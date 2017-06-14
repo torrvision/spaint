@@ -72,7 +72,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr &e
 
       example_reservoirs_add_example(exampleData[linearIdx], indices,
           reservoirIndicesStep, randomStates[linearIdx], reservoirData,
-          reservoirSizes, reservoirAddCalls, this->m_capacity);
+          reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
     }
   }
 }

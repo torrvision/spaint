@@ -6,26 +6,21 @@
 #include "ExampleReservoirs.h"
 
 #include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
 
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType>
-ExampleReservoirs<ExampleType>::ExampleReservoirs(
-    uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
+ExampleReservoirs<ExampleType>::ExampleReservoirs(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
+: m_reservoirCapacity(reservoirCapacity), m_reservoirCount(reservoirCount), m_rngSeed(rngSeed)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-
-  m_capacity = reservoirCapacity;
-  m_reservoirCount = reservoirCount;
-  m_rngSeed = rngSeed;
+  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
   // One row per reservoir, width equal to the capacity.
   m_reservoirs = mbf.make_image<ExampleType>(Vector2i(reservoirCapacity, reservoirCount));
-  m_reservoirSizes = mbf.make_block<int>(reservoirCount);
   m_reservoirAddCalls = mbf.make_block<int>(reservoirCount);
+  m_reservoirSizes = mbf.make_block<int>(reservoirCount);
 
   // No calls to virtual clear() in the constructor.
   // No need to clear m_reservoirs if the size is 0.
@@ -78,9 +73,9 @@ void ExampleReservoirs<ExampleType>::clear()
 }
 
 template <typename ExampleType>
-uint32_t ExampleReservoirs<ExampleType>::get_capacity() const
+uint32_t ExampleReservoirs<ExampleType>::get_reservoir_capacity() const
 {
-  return m_capacity;
+  return m_reservoirCapacity;
 }
 
 template <typename ExampleType>

@@ -32,12 +32,12 @@ public:
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
   /** The capacity of each reservoir. */
-  uint32_t m_capacity;
+  uint32_t m_reservoirCapacity;
 
   /** The number of reservoirs. */
   uint32_t m_reservoirCount;
 
-  /** The example reservoirs: an image in which each row allows the storage of up to m_capacity examples. */
+  /** The example reservoirs: an image in which each row allows the storage of up to m_reservoirCapacity examples. */
   ReservoirsImage_Ptr m_reservoirs;
 
   /** The number of times the insertion of an example has been attempted for each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
@@ -131,13 +131,13 @@ public:
    *
    * \return The capacity of each reservoir.
    */
-  uint32_t get_capacity() const;
+  uint32_t get_reservoir_capacity() const;
 
   /**
    * \brief Gets the example reservoirs.
    *
    * \note These are stored in an image in which each row corresponds to a reservoir. Each row can store up to
-   *       get_capacity() examples, but only the first get_reservoir_sizes()[rowIdx] are valid at any time.
+   *       get_reservoir_capacity() examples, but only the first get_reservoir_sizes()[rowIdx] are valid.
    *
    * \return The example reservoirs.
    */
