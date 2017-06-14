@@ -28,6 +28,12 @@ include/grove/features/base/RGBDPatchFeatureDifferenceType.h
 )
 
 ##
+SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h)
+
+##
+SET(features_cuda_headers include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.h)
+
+##
 SET(features_interface_headers include/grove/features/interface/RGBDPatchFeatureCalculator.h)
 SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatureCalculator.tpp)
 
@@ -60,6 +66,7 @@ ${numbers_sources}
 
 SET(headers
 ${features_base_headers}
+${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
 ${keypoints_headers}
@@ -70,11 +77,19 @@ SET(templates
 ${features_interface_templates}
 )
 
+IF(WITH_CUDA)
+  SET(headers ${headers}
+    ${features_cuda_headers}
+  )
+ENDIF()
+
 #############################
 # Specify the source groups #
 #############################
 
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
+SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers})
+SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
