@@ -4,14 +4,13 @@
  */
 
 #include "features/FeatureCalculatorFactory.h"
+using namespace ITMLib;
 
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
 
 #ifdef WITH_CUDA
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.h"
 #endif
-
-using namespace ITMLib;
 
 namespace grove {
 
@@ -31,9 +30,9 @@ DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_f
   const uint32_t rgbFeatureOffset = 128;
 
   return make_custom_patch_feature_calculator<Keypoint3DColour,RGBDPatchDescriptor>(
-        deviceType,
-        depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius,
-        differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius);
+    deviceType, depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius,
+    differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius
+  );
 }
 
 RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
@@ -50,9 +49,9 @@ RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_c
   const uint32_t rgbFeatureOffset = 0;
 
   return make_custom_patch_feature_calculator<Keypoint2D,RGBDPatchDescriptor>(
-        deviceType,
-        depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius,
-        differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius);
+    deviceType, depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius,
+    differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius
+  );
 }
 
 }
