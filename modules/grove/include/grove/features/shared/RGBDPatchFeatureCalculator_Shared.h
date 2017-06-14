@@ -19,7 +19,7 @@ namespace grove {
 /**
  * \brief Calculates the raster position(s) of the secondary point(s) to use when computing a feature.
  *
- * \param xyIn      The pixel in either the RGB or depth image for which features are being computed.
+ * \param xyIn      The coordinates of the pixel (in either the RGB or depth image) for which features are being computed.
  * \param offsets   The unnormalised offsets of the secondary point(s) to use when computing the feature.
  * \param imgSize   The size of the RGB or depth image (whichever is being used).
  * \param normalise Whether or not to normalise the offsets by the pixel's depth value.
@@ -77,9 +77,9 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
 /**
  * \brief Computes colour features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param xyDepth           The position of the pixel in the depth image.
- * \param xyRgb             The position of the pixel in the RGB image.
- * \param xyOut             The position in the descriptors image into which to write the computed features.
+ * \param xyDepth           The coordinates of the pixel in the depth image.
+ * \param xyRgb             The coordinates of the pixel in the colour image.
+ * \param xyOut             The coordinates in the descriptors image into which to write the computed features.
  * \param depthSize         The size of the depth image.
  * \param rgbSize           The size of the colour image.
  * \param outSize           The size of the keypoints/descriptors images.
@@ -90,7 +90,7 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
  * \param keypoints         A pointer to the keypoints image.
  * \param rgbFeatureCount   The number of colour features to be computed.
  * \param rgbFeatureOffset  The starting offset of the colour features in the feature descriptor.
- * \param normalise         Whether or not to normalise the RGB offsets by the RGBD pixel's depth value.
+ * \param normalise         Whether or not to normalise the RGB offsets by the pixel's depth value.
  * \param descriptors       A pointer to the descriptors image.
  */
 template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
@@ -128,7 +128,7 @@ inline void compute_colour_features(const Vector2i& xyDepth, const Vector2i& xyR
     const int channel = rgbChannels[featIdx];
     Vector4i offsets = rgbOffsets[featIdx];
 
-    // Now rescale the offsets using the offset ratio.
+    // Rescale the offsets using the offset ratio.
     offsets[0] = static_cast<int>(offsets[0] * offsetRatio.x);
     offsets[1] = static_cast<int>(offsets[1] * offsetRatio.y);
     offsets[2] = static_cast<int>(offsets[2] * offsetRatio.x);
@@ -155,8 +155,8 @@ inline void compute_colour_features(const Vector2i& xyDepth, const Vector2i& xyR
 /**
  * \brief Computes depth features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param xyDepth             The position in the depth image of the pixel for which to compute depth features.
- * \param xyOut               The position in the descriptors image into which to write the computed features.
+ * \param xyDepth             The coordinates of the pixel in the depth image.
+ * \param xyOut               The coordinates in the descriptors image into which to write the computed features.
  * \param depthSize           The size of the depth image.
  * \param outSize             The size of the keypoints/descriptors images.
  * \param depths              A pointer to the depth image.
@@ -164,7 +164,7 @@ inline void compute_colour_features(const Vector2i& xyDepth, const Vector2i& xyR
  * \param keypoints           A pointer to the keypoints image.
  * \param depthFeatureCount   The number of depth features to be computed.
  * \param depthFeatureOffset  The starting offset of the depth features in the feature descriptor.
- * \param normalise           Whether or not to normalise the depth offsets by the RGBD pixel's depth value.
+ * \param normalise           Whether or not to normalise the depth offsets by the pixel's depth value.
  * \param descriptors         A pointer to the descriptors image.
  */
 template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
@@ -217,7 +217,7 @@ inline void compute_depth_features(const Vector2i& xyDepth, const Vector2i& xyOu
  *
  * \param xyDepth     The coordinates of the pixel in the depth image.
  * \param xyRgb       The coordinates of the pixel in the colour image.
- * \param xyOut       The coordinates of the pixel in the keypoints image into which to store the computed keypoint.
+ * \param xyOut       The coordinates in the keypoints image into which to store the computed keypoint.
  * \param depthSize   The size of the depth image.
  * \param rgbSize     The size of the colour image.
  * \param outSize     The size of the keypoints image.
@@ -248,11 +248,9 @@ inline void compute_keypoint(const Vector2i& xyDepth, const Vector2i& xyRgb, con
                              const float *depths, const Vector4u *rgb, const Matrix4f& cameraPose,
                              const Vector4f& intrinsics, Keypoint2D *keypoints)
 {
-  // Look up the keypoint corresponding to the specified pixel.
-  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
-  Keypoint2D& outKeypoint = keypoints[linearIdxOut];
-
-  // Set its parameters appropriately. Note that 2D keypoints are always valid (and represent the input coordinates).
+  // Look up the keypoint corresponding to the specified pixel and set its parameters appropriately.
+  // Note that 2D keypoints are always valid (and represent the input coordinates).
+  Keypoint2D& outKeypoint = keypoints[xyOut.y * outSize.width + xyOut.x];
   outKeypoint.position = xyRgb.toFloat();
   outKeypoint.valid = true;
 }
@@ -271,8 +269,7 @@ inline void compute_keypoint(const Vector2i& xyDepth, const Vector2i& xyRgb, con
                              const Vector4f& intrinsics, Keypoint3DColour *keypoints)
 {
   // Look up the keypoint corresponding to the specified pixel.
-  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
-  Keypoint3DColour& outKeypoint = keypoints[linearIdxOut];
+  Keypoint3DColour& outKeypoint = keypoints[xyOut.y * outSize.x + xyOut.x];
 
   // Check whether depth is available for the specified pixel. If not, mark the keypoint as invalid and early out.
   const float depth = depths[xyDepth.y * depthSize.width + xyDepth.x];
