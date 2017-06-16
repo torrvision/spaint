@@ -10,14 +10,13 @@ namespace grove {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates, uint32_t seed)
+__global__ void ck_init_rngs(CUDARNG *rngs, uint32_t rngCount, uint32_t seed)
 {
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if (idx >= nbStates)
-    return;
-
-  randomStates[idx].reset(seed, idx);
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  if(tid < rngCount)
+  {
+    rngs[tid].reset(seed, tid);
+  }
 }
 
 }

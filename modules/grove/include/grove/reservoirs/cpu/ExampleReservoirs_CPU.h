@@ -67,7 +67,7 @@ protected:
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** A set of random number generators used during the add operation. */
-  CPURNGMemoryBlock_Ptr m_randomStates;
+  CPURNGMemoryBlock_Ptr m_rngs;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

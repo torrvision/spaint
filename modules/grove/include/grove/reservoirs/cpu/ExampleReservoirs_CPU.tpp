@@ -20,7 +20,7 @@ ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCapa
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
   // Initialise the random number generators.
-  m_randomStates = mbf.make_block<CPURNG>();
+  m_rngs = mbf.make_block<CPURNG>();
   init_random();
 }
 
@@ -42,16 +42,16 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& e
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;
 
-  // Check that we have enough random states and, if not, reallocate them.
-  if (nbExamples > m_randomStates->dataSize)
+  // Check that we have enough random number generators and, if not, reallocate them.
+  if (nbExamples > m_rngs->dataSize)
   {
-    m_randomStates->Resize(nbExamples);
+    m_rngs->Resize(nbExamples);
     init_random();
   }
 
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
 
-  CPURNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CPU);
+  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
   int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CPU);
   ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CPU);
   int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CPU);
@@ -68,7 +68,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& e
       const int* indices = reinterpret_cast<const int*>(reservoirIndicesCPU + linearIndicesIdx);
 
       example_reservoirs_add_example(exampleData[linearIdx], indices,
-          reservoirIndicesStep, randomStates[linearIdx], reservoirData,
+          reservoirIndicesStep, rngs[linearIdx], reservoirData,
           reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
     }
   }
@@ -79,12 +79,12 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& e
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::init_random()
 {
-  const int nbStates = static_cast<int>(m_randomStates->dataSize);
-  CPURNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CPU);
+  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
+  const int rngCount = static_cast<int>(m_rngs->dataSize);
 
-  for (int stateIdx = 0; stateIdx < nbStates; ++stateIdx)
+  for (int i = 0; i < rngCount; ++i)
   {
-    randomStates[stateIdx].reset(this->m_rngSeed + stateIdx);
+    rngs[i].reset(this->m_rngSeed + i);
   }
 }
 

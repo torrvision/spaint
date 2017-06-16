@@ -67,7 +67,7 @@ protected:
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** A set of random number generators used by the CUDA threads. */
-  CUDARNGMemoryBlock_Ptr m_randomStates;
+  CUDARNGMemoryBlock_Ptr m_rngs;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

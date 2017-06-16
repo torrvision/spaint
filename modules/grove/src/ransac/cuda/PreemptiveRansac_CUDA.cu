@@ -110,13 +110,13 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
   }
 }
 
-__global__ void ck_preemptive_ransac_init_random_generators(CUDARNG *randomGenerators, uint32_t nbStates, uint32_t seed)
+__global__ void ck_preemptive_ransac_init_random_generators(CUDARNG *rngs, uint32_t rngCount, uint32_t seed)
 {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(idx >= nbStates) return;
-
-  randomGenerators[idx].reset(seed, idx);
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
+  if(tid < rngCount)
+  {
+    rngs[tid].reset(seed, tid);
+  }
 }
 
 __global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints,
