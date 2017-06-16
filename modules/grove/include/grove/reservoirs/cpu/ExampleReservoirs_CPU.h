@@ -44,8 +44,13 @@ public:
    */
   virtual void clear();
 
-  //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
-protected:
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  virtual void accept(Visitor& visitor)
+  {
+    visitor.visit(*this);
+  }
+
   /**
    * \brief Add examples to the reservoirs.
    *
@@ -64,6 +69,13 @@ protected:
                             const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
                             uint32_t reservoirIndicesStep);
 
+  template <int IndexLength>
+  void add_examples(const ExampleImage_CPtr& examples, const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCPU,
+                    const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCUDA)
+  {
+    // TODO
+  }
+
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** A set of random number generators used during the add operation. */
@@ -75,6 +87,10 @@ private:
    * \brief Initialises the random number generation states with a known seed.
    */
   void init_random();
+
+  //#################### FRIENDS ####################
+
+  friend class ExampleReservoirs<ExampleType>;
 };
 
 }

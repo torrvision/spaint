@@ -44,8 +44,13 @@ public:
    */
   virtual void clear();
 
-  //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
-protected:
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  virtual void accept(Visitor& visitor)
+  {
+    visitor.visit(*this);
+  }
+
   /**
    * \brief Add examples to the reservoirs.
    *
@@ -75,7 +80,12 @@ private:
    * \brief Initialises the random number generation states with a known seed.
    */
   void init_random();
+
+  //#################### FRIENDS ####################
+
+  friend class ExampleReservoirs<ExampleType>;
 };
+
 }
 
 #endif

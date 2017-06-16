@@ -11,6 +11,11 @@
 
 namespace grove {
 
+//#################### FORWARD DECLARATIONS ####################
+
+template <typename ExampleType> class ExampleReservoirs_CPU;
+template <typename ExampleType> class ExampleReservoirs_CUDA;
+
 /**
  * \brief An instance of a class deriving from this one can be used to store a number of examples in a set of fixed-size reservoirs.
  *
@@ -28,6 +33,36 @@ public:
   typedef ORUtils::Image<ExampleType> ReservoirsImage;
   typedef boost::shared_ptr<ReservoirsImage> ReservoirsImage_Ptr;
   typedef boost::shared_ptr<const ReservoirsImage> ReservoirsImage_CPtr;
+
+  //#################### NESTED TYPES ####################
+protected:
+  struct Visitor
+  {
+    virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const = 0;
+    virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const = 0;
+  };
+
+  template <int IndexLength>
+  struct AddExamplesVisitor : Visitor
+  {
+    ExampleImage_CPtr examples;
+    const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCPU;
+    const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCUDA;
+
+    AddExamplesVisitor(const ExampleImage_CPtr& examples_, const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCPU_, const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCUDA_)
+    : examples(examples_), reservoirIndicesCPU(reservoirIndicesCPU_), reservoirIndicesCUDA(reservoirIndicesCUDA_)
+    {}
+
+    virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const
+    {
+      target.add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA);
+    }
+
+    virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const
+    {
+      //target.add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA);
+    }
+  };
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
@@ -69,6 +104,8 @@ public:
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
+  virtual void accept(Visitor& visitor) = 0;
+
   /**
    * \brief Add examples to the reservoirs. Virtual, non-templated, method, implemented in the CPU and CUDA subclasses.
    *

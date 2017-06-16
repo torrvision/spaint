@@ -53,6 +53,14 @@ void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examp
 
   // Call the non-templated virtual function.
   add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA, IndexLength, indexStep);
+
+  // BEGIN TEMPORARY
+  accept(AddExamplesVisitor<IndexLength>(
+    examples,
+    reservoirIndices->GetData(MEMORYDEVICE_CPU),
+    reservoirIndices->GetData(MEMORYDEVICE_CUDA)
+  ));
+  // END TEMPORARY
 }
 
 template <typename ExampleType>
