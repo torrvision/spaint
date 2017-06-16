@@ -46,11 +46,12 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  virtual void accept(Visitor& visitor)
+  virtual void accept(const Visitor& visitor)
   {
     visitor.visit(*this);
   }
 
+#if 0
   /**
    * \brief Add examples to the reservoirs.
    *
@@ -68,6 +69,10 @@ private:
   virtual void add_examples(const ExampleImage_CPtr& examples, const char *reservoirIndicesCPU,
                             const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
                             uint32_t reservoirIndicesStep);
+#endif
+
+  template <int IndexLength>
+  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices);
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:

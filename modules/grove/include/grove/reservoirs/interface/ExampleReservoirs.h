@@ -59,7 +59,7 @@ protected:
 
     virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const
     {
-      //target.add_examples(examples, reservoirIndices);
+      target.add_examples(examples, reservoirIndices);
     }
   };
 
@@ -103,8 +103,9 @@ public:
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
-  virtual void accept(Visitor& visitor) = 0;
+  virtual void accept(const Visitor& visitor) = 0;
 
+#if 0
   /**
    * \brief Add examples to the reservoirs. Virtual, non-templated, method, implemented in the CPU and CUDA subclasses.
    *
@@ -121,6 +122,7 @@ private:
   virtual void add_examples(const ExampleImage_CPtr& examples, const char *reservoirIndicesCPU,
                             const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
                             uint32_t reservoirIndicesStep) = 0;
+#endif
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

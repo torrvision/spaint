@@ -35,6 +35,7 @@ void ExampleReservoirs_CPU<ExampleType>::clear()
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
+#if 0
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const char *reservoirIndicesCPU, const char *reservoirIndicesCUDA,
                                                       uint32_t reservoirIndicesCount, uint32_t reservoirIndicesStep)
@@ -67,6 +68,46 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& e
 
       example_reservoirs_add_example(
         exampleData[linearIdx], indices, reservoirIndicesStep, rngs[linearIdx], reservoirData,
+        reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity
+      );
+    }
+  }
+}
+#endif
+
+template <typename ExampleType>
+template <int IndexLength>
+void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
+{
+  const Vector2i imgSize = examples->noDims;
+  const size_t exampleCount = imgSize.width * imgSize.height;
+
+  // Check that we have enough random number generators and reallocate them if not.
+  if(m_rngs->dataSize < exampleCount)
+  {
+    m_rngs->Resize(exampleCount);
+    init_random();
+  }
+
+  const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
+  int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CPU);
+  ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CPU);
+  const ORUtils::VectorX<int,IndexLength> *reservoirIndicesPtr = reservoirIndices->GetData(MEMORYDEVICE_CPU);
+  int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CPU);
+  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+#pragma omp parallel for
+#endif
+  for (int y = 0; y < imgSize.height; ++y)
+  {
+    for (int x = 0; x < imgSize.width; ++x)
+    {
+      const int linearIdx = y * imgSize.x + x;
+      const int *indices = reservoirIndicesPtr[linearIdx].v;
+
+      example_reservoirs_add_example(
+        exampleData[linearIdx], indices, IndexLength, rngs[linearIdx], reservoirData,
         reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity
       );
     }
