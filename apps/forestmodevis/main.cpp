@@ -64,6 +64,31 @@ void readModes(const std::string &modesFile, std::vector<std::vector<Mode>> &mod
   }
 }
 
+void readExamples(const std::string &examplesFile, std::vector<std::vector<cv::Point3d>> &examples)
+{
+  examples.clear();
+  examples.resize(NTREES);
+
+  std::ifstream inExamples(examplesFile);
+  for(int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
+  {
+    int nbExamples;
+    inExamples >> nbExamples;
+//    std::cout << examplesFile << " - Nb examples for tree " << treeIdx << ": " << nbExamples << '\n';
+
+    for(int exampleIdx = 0; exampleIdx < nbExamples; ++exampleIdx)
+    {
+      cv::Point3d example;
+
+      inExamples >> example.x >> example.y >> example.z;
+
+//      std::cout << example << '\n';
+
+      examples[treeIdx].push_back(example);
+    }
+  }
+}
+
 class WCovarianceEllipsoid : public Widget3D
 {
 public:
@@ -120,21 +145,44 @@ struct VisualizationCookie
   WMesh *mesh;
   std::string baseName;
   std::vector<std::string> widgetNames;
-  std::string animationBaseName;
+  std::string animationModesBaseName;
+  std::string animationExamplesBaseName;
 };
 
-std::vector<std::string> drawModes(const std::vector<Mode> &modes, const std::string &nameBase, const Color &color, Viz3d &visualizer)
+std::vector<std::string>
+    drawModes(const std::vector<Mode> &modes, const std::string &nameBase, const Color &color, Viz3d &visualizer)
 {
   std::vector<std::string> widgetNames;
 
   for(size_t modeIdx = 0; modeIdx < modes.size(); ++modeIdx)
   {
     const Mode &mode = modes[modeIdx];
-    const std::string modeName =nameBase + '_' + boost::lexical_cast<std::string>(modeIdx);
+    const std::string modeName = nameBase + '_' + boost::lexical_cast<std::string>(modeIdx);
     widgetNames.push_back(modeName);
 
     WCovarianceEllipsoid ellipsoid(mode.position, mode.covariance, color);
     visualizer.showWidget(modeName, ellipsoid);
+  }
+
+  return widgetNames;
+}
+
+std::vector<std::string> drawExamples(const std::vector<cv::Point3d> &examples,
+                                      const std::string &nameBase,
+                                      const Color &color,
+                                      Viz3d &visualizer)
+{
+  std::vector<std::string> widgetNames;
+
+  for(size_t exampleIdx = 0; exampleIdx < examples.size(); ++exampleIdx)
+  {
+    const cv::Point3d &example = examples[exampleIdx];
+
+    const std::string exampleName = nameBase + '_' + boost::lexical_cast<std::string>(exampleIdx);
+    widgetNames.push_back(exampleName);
+
+    WSphere sphere(example, 0.01, 10, color);
+    visualizer.showWidget(exampleName, sphere);
   }
 
   return widgetNames;
@@ -158,7 +206,8 @@ static void vizCallbackSingleModes(const KeyboardEvent &event, void *c)
 
     for(size_t treeIdx = 2; treeIdx < cookie->modesByTree.size(); ++treeIdx)
     {
-      std::vector<std::string> modeNames = drawModes(cookie->modesByTree[treeIdx], "wModes_", cookie->treeColours[treeIdx], visualizer);
+      std::vector<std::string> modeNames =
+          drawModes(cookie->modesByTree[treeIdx], "wModes_", cookie->treeColours[treeIdx], visualizer);
 
       visualizer.saveScreenshot(cookie->baseName + "_" + boost::lexical_cast<std::string>(treeIdx) + ".png");
 
@@ -186,30 +235,79 @@ static void vizCallbackAnimation(const KeyboardEvent &event, void *c)
       visualizer.removeWidget(x);
     }
 
-    fs::path currentModeFileName = cookie->pathGenerator->make_path(cookie->animationBaseName);
+    fs::path currentModeFileName = cookie->pathGenerator->make_path(cookie->animationModesBaseName);
+    fs::path currentExamplesFileName = cookie->pathGenerator->make_path(cookie->animationExamplesBaseName);
 
     while(fs::is_regular_file(currentModeFileName))
     {
       std::vector<std::vector<Mode>> currentModes;
       readModes(currentModeFileName.string(), currentModes);
 
-      for(size_t treeIdx = 2; treeIdx < currentModes.size(); ++treeIdx)
+      std::vector<std::vector<cv::Point3d>> currentExamples;
+      readExamples(currentExamplesFileName.string(), currentExamples);
+
+      for(size_t treeIdx = 0; treeIdx < currentModes.size(); ++treeIdx)
       {
-        std::vector<std::string> modeNames = drawModes(currentModes[treeIdx], "wModes_", cookie->treeColours[treeIdx], visualizer);
+//        // Draw modes
+//        {
+//          std::vector<std::string> modeNames =
+//              drawModes(currentModes[treeIdx], "wModes_", cookie->treeColours[treeIdx], visualizer);
 
-        fs::path screenshotPath = cookie->pathGenerator->make_path("modes_" + boost::lexical_cast<std::string>(treeIdx) + '_' + cookie->animationBaseName + ".png");
-        std::cout << "Saving screenshot: " << screenshotPath << '\n';
+//          fs::path screenshotPath = cookie->pathGenerator->make_path(
+//              "modes_" + boost::lexical_cast<std::string>(treeIdx) + '_' + cookie->animationModesBaseName + ".png");
+//          std::cout << "Saving screenshot: " << screenshotPath << '\n';
 
-        visualizer.saveScreenshot(screenshotPath.string());
+//          visualizer.saveScreenshot(screenshotPath.string());
 
-        for(const auto &x : modeNames)
+//          for(const auto &x : modeNames)
+//          {
+//            visualizer.removeWidget(x);
+//          }
+//        }
+
+//        // Draw examples
+//        {
+//          std::vector<std::string> exampleNames = drawExamples(currentExamples[treeIdx], "wExamples_", cookie->treeColours[treeIdx], visualizer);
+
+//          fs::path screenshotPath = cookie->pathGenerator->make_path(
+//              "examples_" + boost::lexical_cast<std::string>(treeIdx) + '_' + cookie->animationModesBaseName + ".png");
+//          std::cout << "Saving screenshot: " << screenshotPath << '\n';
+
+//          visualizer.saveScreenshot(screenshotPath.string());
+
+//          for(const auto &x : exampleNames)
+//          {
+//            visualizer.removeWidget(x);
+//          }
+//        }
+
+        // Draw combined
         {
-          visualizer.removeWidget(x);
+          std::vector<std::string> exampleNames = drawExamples(currentExamples[treeIdx], "wExamples_", cookie->treeColours[treeIdx], visualizer);
+          std::vector<std::string> modeNames = drawModes(currentModes[treeIdx], "wModes_", Color::gold(), visualizer);
+
+          fs::path screenshotPath = cookie->pathGenerator->make_path(
+              "combined_" + boost::lexical_cast<std::string>(treeIdx) + '_' + cookie->animationModesBaseName + ".png");
+          std::cout << "Saving screenshot: " << screenshotPath << '\n';
+
+          visualizer.saveScreenshot(screenshotPath.string());
+
+          for(const auto &x : exampleNames)
+          {
+            visualizer.removeWidget(x);
+          }
+
+          for(const auto &x : modeNames)
+          {
+            visualizer.removeWidget(x);
+          }
         }
+
       }
 
       cookie->pathGenerator->increment_index();
-      currentModeFileName = cookie->pathGenerator->make_path(cookie->animationBaseName);
+      currentModeFileName = cookie->pathGenerator->make_path(cookie->animationModesBaseName);
+      currentExamplesFileName = cookie->pathGenerator->make_path(cookie->animationExamplesBaseName);
     }
   }
 }
@@ -229,7 +327,8 @@ int main(int argc, char *argv[])
 
   if(argc > 3)
   {
-    cookie.animationBaseName = argv[3];
+    cookie.animationModesBaseName = argv[3];
+    cookie.animationExamplesBaseName = argv[4];
   }
 
   // Load mesh
@@ -277,7 +376,7 @@ int main(int argc, char *argv[])
   cookie.mesh = &wMesh;
   cookie.baseName = fs::path(modesFile).stem().string();
 
-//  visualizer.registerKeyboardCallback(vizCallbackSingleModes, &cookie);
+  //  visualizer.registerKeyboardCallback(vizCallbackSingleModes, &cookie);
   visualizer.registerKeyboardCallback(vizCallbackAnimation, &cookie);
 
   //  WCovarianceEllipsoid test(cv::Vec3f(), cv::Matx33f(), Color::bluberry());
