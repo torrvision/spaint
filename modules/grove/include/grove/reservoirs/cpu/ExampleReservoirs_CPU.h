@@ -70,8 +70,7 @@ private:
                             uint32_t reservoirIndicesStep);
 
   template <int IndexLength>
-  void add_examples(const ExampleImage_CPtr& examples, const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCPU,
-                    const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCUDA)
+  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
   {
     // TODO
   }

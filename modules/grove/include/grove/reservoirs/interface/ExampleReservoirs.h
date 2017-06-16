@@ -46,21 +46,20 @@ protected:
   struct AddExamplesVisitor : Visitor
   {
     ExampleImage_CPtr examples;
-    const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCPU;
-    const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCUDA;
+    boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > > reservoirIndices;
 
-    AddExamplesVisitor(const ExampleImage_CPtr& examples_, const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCPU_, const ORUtils::VectorX<int,IndexLength> *reservoirIndicesCUDA_)
-    : examples(examples_), reservoirIndicesCPU(reservoirIndicesCPU_), reservoirIndicesCUDA(reservoirIndicesCUDA_)
+    AddExamplesVisitor(const ExampleImage_CPtr& examples_, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices_)
+    : examples(examples_), reservoirIndices(reservoirIndices_)
     {}
 
     virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const
     {
-      target.add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA);
+      target.add_examples(examples, reservoirIndices);
     }
 
     virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const
     {
-      //target.add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA);
+      //target.add_examples(examples, reservoirIndices);
     }
   };
 
