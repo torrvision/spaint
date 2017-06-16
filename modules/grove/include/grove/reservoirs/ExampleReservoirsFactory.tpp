@@ -8,7 +8,7 @@
 #include "reservoirs/cpu/ExampleReservoirs_CPU.h"
 
 #ifdef WITH_CUDA
-#include "reservoirs/cuda/ExampleReservoirs_CUDA.h"
+#include "reservoirs/cuda/ExampleReservoirs_CUDA.tcu"
 #endif
 
 namespace grove {

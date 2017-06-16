@@ -7,6 +7,7 @@
 
 #include <itmx/base/MemoryBlockFactory.h>
 
+#include "../../numbers/CUDARNG.h"
 #include "../shared/ExampleReservoirs_Shared.h"
 
 namespace grove {
@@ -89,6 +90,7 @@ template <typename ExampleType>
 template <int IndexLength>
 void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
 {
+#ifdef __CUDACC__
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;
 
@@ -111,6 +113,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr& 
   ck_add_examples<<<gridSize, blockSize>>>(exampleData, imgSize, reservoirIndices->GetData(MEMORYDEVICE_CUDA),
       rngs, reservoirData, reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
   ORcudaKernelCheck;
+#endif
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -118,6 +121,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr& 
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::init_random()
 {
+#ifdef __CUDACC__
   const int rngCount = static_cast<int>(m_rngs->dataSize);
   if(rngCount == 0) return;
 
@@ -128,6 +132,7 @@ void ExampleReservoirs_CUDA<ExampleType>::init_random()
   dim3 gridSize((rngCount + blockSize.x - 1) / blockSize.x);
   ck_init_rngs<<<gridSize, blockSize>>>(rngs, rngCount, this->m_rngSeed);
   ORcudaKernelCheck;
+#endif
 }
 
 }
