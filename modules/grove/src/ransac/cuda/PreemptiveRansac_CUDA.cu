@@ -7,7 +7,7 @@
 
 #ifdef _MSC_VER
   // Suppress some VC++ warnings that are produced when including the Thrust headers.
-  #pragma warning(disable:4267)
+  #pragma warning(disable:4244 4267)
 #endif
 
 #include <thrust/device_ptr.h>
@@ -15,7 +15,7 @@
 
 #ifdef _MSC_VER
   // Reenable the suppressed warnings for the rest of the translation unit.
-  #pragma warning(default:4267)
+  #pragma warning(default:4244 4267)
 #endif
 
 #include <itmx/base/MemoryBlockFactory.h>
