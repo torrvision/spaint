@@ -51,40 +51,7 @@ void ExampleReservoirs_CUDA<ExampleType>::clear()
   init_random();
 }
 
-//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
-
-#if 0
-template <typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const char *reservoirIndicesCPU,
-                                                       const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
-                                                       uint32_t reservoirIndicesStep)
-{
-  const Vector2i imgSize = examples->noDims;
-  const size_t nbExamples = imgSize.width * imgSize.height;
-
-  // Check that we have enough random number generators and, if not, reallocate them.
-  if (nbExamples > m_rngs->dataSize)
-  {
-    m_rngs->Resize(nbExamples);
-    init_random();
-  }
-
-  const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CUDA);
-
-  CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
-  int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CUDA);
-  ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CUDA);
-  int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CUDA);
-
-  dim3 blockSize(32, 32);
-  dim3 gridSize((imgSize.width + blockSize.x - 1) / blockSize.x,
-      (imgSize.height + blockSize.y - 1) / blockSize.y);
-  ck_add_examples<<<gridSize, blockSize>>>(exampleData, imgSize, reservoirIndicesCUDA,
-      reservoirIndicesCount, reservoirIndicesStep, rngs,
-      reservoirData, reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
-  ORcudaKernelCheck;
-}
-#endif
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
 template <int IndexLength>

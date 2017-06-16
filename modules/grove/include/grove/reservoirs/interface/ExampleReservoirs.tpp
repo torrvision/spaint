@@ -44,19 +44,7 @@ void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examp
   if(examples->noDims != reservoirIndices->noDims)
     throw std::invalid_argument("The example and indices images should have the same size.");
 
-#if 0
-  // Compute the step between elements of the reservoirIndices image.
-  const uint32_t indexStep = sizeof(ORUtils::VectorX<int,IndexLength>);
-
-  // Extract raw memory pointers.
-  const char *reservoirIndicesCPU = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CPU));
-  const char *reservoirIndicesCUDA = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CUDA));
-
-  // Call the non-templated virtual function.
-  add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA, IndexLength, indexStep);
-#else
   accept(AddExamplesVisitor<IndexLength>(examples, reservoirIndices));
-#endif
 }
 
 template <typename ExampleType>
