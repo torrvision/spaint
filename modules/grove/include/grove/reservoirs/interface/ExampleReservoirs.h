@@ -74,17 +74,17 @@ protected:
   /** The current size of each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
   ITMIntMemoryBlock_Ptr m_reservoirSizes;
 
-  /** The seed for the random number generation. */
+  /** The seed for the random number generator. */
   uint32_t m_rngSeed;
 
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Constructs an instance of the ExampleReservoirs class.
+   * \brief Constructs a set of example reservoirs.
    *
    * \param reservoirCapacity The capacity of each reservoir.
    * \param reservoirCount    The number of reservoirs to create.
-   * \param rngSeed           The seed for the random number generation routines used to decide whether to add examples to reservoirs.
+   * \param rngSeed           The seed for the random number generator.
    */
   ExampleReservoirs(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed = 42);
 
@@ -107,30 +107,27 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Add examples to the reservoirs. Templated on the number of reservoirs an example will be added to.
+   * \brief Adds examples to the reservoirs.
    *
-   * \note  Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
+   * \note Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
+   *
+   * \tparam IndexLength  The number of reservoirs to which an example will be added.
    *
    * \param examples         The examples to add to the reservoirs. Only those that have the "valid" member set to true will be added.
-   * \param reservoirIndices Indices of the reservoirs wherein to add each element of the examples image. Must have the same size as examples.
+   * \param reservoirIndices The indices of the reservoirs to which to add each element of the examples image. Must have the same size as examples.
    *
    * \throws std::invalid_argument If examples and reservoirIndices have different dimensions.
    */
   template <int IndexLength>
-  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > >& reservoirIndices);
+  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices);
 
   /**
-   * \brief Add examples to the reservoirs. Templated on the number of reservoirs an example will be added to. Non-const variant.
+   * \brief Adds examples to the reservoirs.
    *
-   * \note  Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
-   *
-   * \param examples         The examples to add to the reservoirs. Only those that have the "valid" member set to true will be added.
-   * \param reservoirIndices Indices of the reservoirs wherein to add each element of the examples image. Must have the same size as examples.
-   *
-   * \throws std::invalid_argument If examples and reservoirIndices have different dimensions.
+   * \note This is a variant of the other add_examples function that allows us to pass in non-const images.
    */
   template <int IndexLength>
-  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, IndexLength> > >& reservoirIndices);
+  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices);
 
   /**
    * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
@@ -164,9 +161,9 @@ public:
   uint32_t get_reservoir_count() const;
 
   /**
-   * \brief Gets the current size of each reservoir.
+   * \brief Gets the current size of each example reservoir.
    *
-   * \return A memory block containing the current size of each reservoir.
+   * \return A memory block containing the current size of each example reservoir.
    */
   ITMIntMemoryBlock_CPtr get_reservoir_sizes() const;
 };
