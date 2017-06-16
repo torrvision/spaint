@@ -34,7 +34,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
   static uint32_t frameIdx = 0;
 
   if(frameIdx++ % 15 != 0) return; // Work every N frames
-  if(frameIdx > 1031) exit(0);     // done
+//  if(frameIdx > 1031) exit(0);     // done
 
   static SequentialPathGenerator pathGenerator("./clusters");
   fs::create_directories(pathGenerator.get_base_dir());
@@ -48,37 +48,70 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
 
   std::vector<uint32_t> predictionIndices{3234, 4335, 4545, 6565, 6666};
 
-  const std::string fileName =
-      pathGenerator
-          .make_path(model->get_settings()->get_first_value<std::string>("experimentTag", "predictionClusters") +
-                     "_%04d.txt")
-          .string();
-  pathGenerator.increment_index();
-
-  std::cout << "Saving clusters in " << fileName << '\n';
-
-  std::ofstream outFile(fileName);
-
-  // For each prediction print centroids, covariances, nbInliers
-  for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
+  // Save cluster contents.
   {
-    const ScorePrediction p = scoreRelocaliser->get_raw_prediction(treeIdx, predictionIndices[treeIdx]);
-    outFile << p.nbClusters << ' ' << predictionIndices[treeIdx] << '\n';
-    for(int modeIdx = 0; modeIdx < p.nbClusters; ++modeIdx)
+    const std::string fileName =
+        pathGenerator
+            .make_path(model->get_settings()->get_first_value<std::string>("experimentTag", "predictionClusters") +
+                       "_%04d.txt")
+            .string();
+
+    std::cout << "Saving clusters in " << fileName << '\n';
+
+    std::ofstream outFile(fileName);
+
+    // For each prediction print centroids, covariances, nbInliers
+    for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
-      const Mode3DColour &m = p.clusters[modeIdx];
-      outFile << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
+      const ScorePrediction p = scoreRelocaliser->get_raw_prediction(treeIdx, predictionIndices[treeIdx]);
+      outFile << p.nbClusters << ' ' << predictionIndices[treeIdx] << '\n';
+      for(int modeIdx = 0; modeIdx < p.nbClusters; ++modeIdx)
+      {
+        const Mode3DColour &m = p.clusters[modeIdx];
+        outFile << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
 
-      // Invert and transpose the covariance to print it in row-major format.
-      Matrix3f posCovariance;
-      m.positionInvCovariance.inv(posCovariance);
-      posCovariance = posCovariance.t();
+        // Invert and transpose the covariance to print it in row-major format.
+        Matrix3f posCovariance;
+        m.positionInvCovariance.inv(posCovariance);
+        posCovariance = posCovariance.t();
 
-      for(int i = 0; i < 9; ++i) outFile << posCovariance.m[i] << ' ';
+        for(int i = 0; i < 9; ++i) outFile << posCovariance.m[i] << ' ';
+        outFile << '\n';
+      }
       outFile << '\n';
     }
-    outFile << '\n';
   }
+
+  // Save reservoir contents
+  {
+    const std::string fileName =
+        pathGenerator
+            .make_path(model->get_settings()->get_first_value<std::string>("experimentTag", "predictionClusters") +
+                       "_reservoirs_%04d.txt")
+            .string();
+
+    std::cout << "Saving reservoir contents in " << fileName << '\n';
+
+    std::ofstream outFile(fileName);
+
+    // For each prediction print centroids, covariances, nbInliers
+    for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
+    {
+      const std::vector<Keypoint3DColour> examples = scoreRelocaliser->get_reservoir_contents(treeIdx, predictionIndices[treeIdx]);
+
+      outFile << examples.size() << ' ';
+
+      for(size_t exampleIdx = 0; exampleIdx < examples.size(); ++exampleIdx)
+      {
+        const Keypoint3DColour &e = examples[exampleIdx];
+
+        outFile << e.position.x << ' ' << e.position.y << ' ' << e.position.z << ' ';
+      }
+      outFile << '\n';
+    }
+  }
+
+  pathGenerator.increment_index();
 }
 
 void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
