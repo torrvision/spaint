@@ -42,25 +42,19 @@ protected:
     virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const = 0;
   };
 
+private:
   template <int IndexLength>
-  struct AddExamplesVisitor : Visitor
+  struct AddExamplesCaller : Visitor
   {
     ExampleImage_CPtr examples;
     boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > > reservoirIndices;
 
-    AddExamplesVisitor(const ExampleImage_CPtr& examples_, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices_)
+    AddExamplesCaller(const ExampleImage_CPtr& examples_, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices_)
     : examples(examples_), reservoirIndices(reservoirIndices_)
     {}
 
-    virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const
-    {
-      target.add_examples(examples, reservoirIndices);
-    }
-
-    virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const
-    {
-      target.add_examples(examples, reservoirIndices);
-    }
+    virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const  { target.add_examples(examples, reservoirIndices); }
+    virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const { target.add_examples(examples, reservoirIndices); }
   };
 
   //#################### PROTECTED MEMBER VARIABLES ####################
@@ -103,6 +97,11 @@ public:
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Accepts a visitor.
+   *
+   * \param visitor The visitor to accept.
+   */
   virtual void accept(const Visitor& visitor) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -44,7 +44,7 @@ void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examp
   if(examples->noDims != reservoirIndices->noDims)
     throw std::invalid_argument("The example and indices images should have the same size.");
 
-  accept(AddExamplesVisitor<IndexLength>(examples, reservoirIndices));
+  accept(AddExamplesCaller<IndexLength>(examples, reservoirIndices));
 }
 
 template <typename ExampleType>
