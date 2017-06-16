@@ -29,9 +29,6 @@ __global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgS
   example_reservoirs_add_example(examples[linearIdx], indices, reservoirIndicesCount, rngs[linearIdx], reservoirs, reservoirSize, reservoirAddCalls, reservoirCapacity);
 }
 
-// Declare a non-templated kernel used to initialise the random number generators. See the associated .cu file.
-__global__ void ck_init_rngs(CUDARNG *rngs, uint32_t rngCount, uint32_t seed);
-
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType>

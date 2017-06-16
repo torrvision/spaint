@@ -158,7 +158,6 @@ SET(reservoirs_cpu_templates include/grove/reservoirs/cpu/ExampleReservoirs_CPU.
 
 ##
 SET(reservoirs_cuda_headers include/grove/reservoirs/cuda/ExampleReservoirs_CUDA.h)
-SET(reservoirs_cuda_sources src/reservoirs/cuda/ExampleReservoirs_CUDA.cu)
 SET(reservoirs_cuda_templates include/grove/reservoirs/cuda/ExampleReservoirs_CUDA.tcu)
 
 ##
@@ -261,7 +260,6 @@ IF(WITH_CUDA)
       ${sources}
       ${ransac_cuda_sources}
       ${relocalisation_cuda_sources}
-      ${reservoirs_cuda_sources}
       )
       
   SET(templates
@@ -310,7 +308,7 @@ SOURCE_GROUP(relocalisation\\interface FILES ${relocalisation_interface_headers}
 SOURCE_GROUP(relocalisation\\shared FILES ${relocalisation_shared_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
-SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
+SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_templates})
 SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})
 SOURCE_GROUP(reservoirs\\shared FILES ${reservoirs_shared_headers})
 SOURCE_GROUP(scoreforests FILES ${scoreforests_headers})

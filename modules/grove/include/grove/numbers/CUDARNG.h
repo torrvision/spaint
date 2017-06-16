@@ -92,6 +92,23 @@ public:
 #endif
 };
 
+//#################### HELPER CUDA KERNELS ####################
+
+#ifdef __CUDACC__
+/**
+ * \brief TODO
+ */
+__global__
+static void ck_init_rngs(CUDARNG *rngs, uint32_t rngCount, uint32_t seed)
+{
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  if(tid < rngCount)
+  {
+    rngs[tid].reset(seed, tid);
+  }
+}
+#endif
+
 //#################### TYPEDEFS ####################
 
 typedef ORUtils::MemoryBlock<CUDARNG> CUDARNGMemoryBlock;

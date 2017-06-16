@@ -110,15 +110,6 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
   }
 }
 
-__global__ void ck_preemptive_ransac_init_random_generators(CUDARNG *rngs, uint32_t rngCount, uint32_t seed)
-{
-  int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  if(tid < rngCount)
-  {
-    rngs[tid].reset(seed, tid);
-  }
-}
-
 __global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints,
                                                                       const ScorePrediction *predictions,
                                                                       const int *inlierIndices,
@@ -401,8 +392,7 @@ void PreemptiveRansac_CUDA::init_random()
   dim3 blockSize(256);
   dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
-  ck_preemptive_ransac_init_random_generators<<<gridSize, blockSize>>>(
-      randomGenerators, m_maxPoseCandidates, m_rngSeed);
+  ck_init_rngs<<<gridSize, blockSize>>>(randomGenerators, m_maxPoseCandidates, m_rngSeed);
 }
 
 } // namespace grove
