@@ -38,14 +38,14 @@ ExampleReservoirs<ExampleType>::~ExampleReservoirs()
 
 template <typename ExampleType>
 template <int IndexLength>
-void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > >& reservoirIndices)
+void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
 {
   // Check preconditions.
   if(examples->noDims != reservoirIndices->noDims)
     throw std::invalid_argument("The example and indices images should have the same size.");
 
   // Compute the step between elements of the reservoirIndices image.
-  const uint32_t indexStep = sizeof(ORUtils::VectorX<int, IndexLength>);
+  const uint32_t indexStep = sizeof(ORUtils::VectorX<int,IndexLength>);
 
   // Extract raw memory pointers.
   const char *reservoirIndicesCPU = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CPU));

@@ -40,21 +40,20 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& e
                                                       uint32_t reservoirIndicesCount, uint32_t reservoirIndicesStep)
 {
   const Vector2i imgSize = examples->noDims;
-  const size_t nbExamples = imgSize.width * imgSize.height;
+  const size_t exampleCount = imgSize.width * imgSize.height;
 
-  // Check that we have enough random number generators and, if not, reallocate them.
-  if (nbExamples > m_rngs->dataSize)
+  // Check that we have enough random number generators and reallocate them if not.
+  if(m_rngs->dataSize < exampleCount)
   {
-    m_rngs->Resize(nbExamples);
+    m_rngs->Resize(exampleCount);
     init_random();
   }
 
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
-
-  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
   int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CPU);
   ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CPU);
   int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CPU);
+  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
@@ -64,12 +63,12 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& e
     for (int x = 0; x < imgSize.width; ++x)
     {
       const int linearIdx = y * imgSize.x + x;
-      const int linearIndicesIdx = (y * imgSize.x + x) * reservoirIndicesStep;
-      const int* indices = reinterpret_cast<const int*>(reservoirIndicesCPU + linearIndicesIdx);
+      const int *indices = reinterpret_cast<const int*>(reservoirIndicesCPU + linearIdx * reservoirIndicesStep);
 
-      example_reservoirs_add_example(exampleData[linearIdx], indices,
-          reservoirIndicesStep, rngs[linearIdx], reservoirData,
-          reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
+      example_reservoirs_add_example(
+        exampleData[linearIdx], indices, reservoirIndicesStep, rngs[linearIdx], reservoirData,
+        reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity
+      );
     }
   }
 }
