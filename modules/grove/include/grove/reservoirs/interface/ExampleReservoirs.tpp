@@ -38,8 +38,7 @@ ExampleReservoirs<ExampleType>::~ExampleReservoirs()
 
 template <typename ExampleType>
 template <int IndexLength>
-void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr &examples,
-    const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > &reservoirIndices)
+void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > >& reservoirIndices)
 {
   // Check preconditions.
   if(examples->noDims != reservoirIndices->noDims)
@@ -49,8 +48,8 @@ void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr &examp
   const uint32_t indexStep = sizeof(ORUtils::VectorX<int, IndexLength>);
 
   // Extract raw memory pointers.
-  const char* reservoirIndicesCPU = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CPU));
-  const char* reservoirIndicesCUDA = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CUDA));
+  const char *reservoirIndicesCPU = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CPU));
+  const char *reservoirIndicesCUDA = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CUDA));
 
   // Call the non-templated virtual function.
   add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA, IndexLength, indexStep);
@@ -58,8 +57,7 @@ void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr &examp
 
 template <typename ExampleType>
 template <int IndexLength>
-void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr &examples,
-    const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > &reservoirIndices)
+void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, IndexLength> > >& reservoirIndices)
 {
   const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > reservoirIndicesConst = reservoirIndices;
   add_examples(examples, reservoirIndicesConst);

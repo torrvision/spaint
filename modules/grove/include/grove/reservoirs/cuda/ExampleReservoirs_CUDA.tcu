@@ -6,7 +6,6 @@
 #include "ExampleReservoirs_CUDA.h"
 
 #include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
 
 #include "../shared/ExampleReservoirs_Shared.h"
 
@@ -15,40 +14,31 @@ namespace grove {
 //#################### CUDA KERNELS ####################
 
 template <typename ExampleType>
-__global__ void ck_add_examples(const ExampleType *examples,
-    const Vector2i imgSize, const char *reservoirIndices, uint32_t reservoirIndicesCount,
-    uint32_t reservoirIndicesStep, CUDARNG *randomStates,
-    ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls,
-    uint32_t reservoirCapacity)
+__global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgSize, const char *reservoirIndices, uint32_t reservoirIndicesCount, uint32_t reservoirIndicesStep,
+                                CUDARNG *randomStates, ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity)
 {
   const int x = threadIdx.x + blockIdx.x * blockDim.x;
   const int y = threadIdx.y + blockIdx.y * blockDim.y;
 
-  if (x >= imgSize.x || y >= imgSize.y)
-    return;
+  if (x >= imgSize.x || y >= imgSize.y) return;
 
   const int linearIdx = y * imgSize.x + x;
   const int linearIndicesIdx = (y * imgSize.x + x) * reservoirIndicesStep;
   const int* indices = reinterpret_cast<const int*>(reservoirIndices + linearIndicesIdx);
 
-  example_reservoirs_add_example(examples[linearIdx], indices,
-      reservoirIndicesCount, randomStates[linearIdx], reservoirs, reservoirSize, reservoirAddCalls,
-      reservoirCapacity);
+  example_reservoirs_add_example(examples[linearIdx], indices, reservoirIndicesCount, randomStates[linearIdx], reservoirs, reservoirSize, reservoirAddCalls, reservoirCapacity);
 }
 
 // Declare a non-templated kernel used to initialise the RNG states. See the associated .cu file.
-__global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates,
-    uint32_t seed);
+__global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates, uint32_t seed);
 
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType>
-ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(
-    uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed) :
-    ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount,
-        rngSeed)
+ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
+: ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
   // Initialise the random number generators.
   m_randomStates = mbf.make_block<CUDARNG>();
@@ -67,9 +57,9 @@ void ExampleReservoirs_CUDA<ExampleType>::clear()
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr &examples,
-    const char *reservoirIndicesCPU, const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
-    uint32_t reservoirIndicesStep)
+void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const char *reservoirIndicesCPU,
+                                                       const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
+                                                       uint32_t reservoirIndicesStep)
 {
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;

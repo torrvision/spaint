@@ -6,7 +6,6 @@
 #include "ExampleReservoirs_CPU.h"
 
 #include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
 
 #include "../shared/ExampleReservoirs_Shared.h"
 
@@ -15,11 +14,10 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType>
-ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(
-    uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed) :
-    ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
+ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
+: ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
   // Initialise the random number generators.
   m_randomStates = mbf.make_block<CPURNG>();
@@ -38,9 +36,8 @@ void ExampleReservoirs_CPU<ExampleType>::clear()
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr &examples,
-    const char *reservoirIndicesCPU, const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
-    uint32_t reservoirIndicesStep)
+void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const char *reservoirIndicesCPU, const char *reservoirIndicesCUDA,
+                                                      uint32_t reservoirIndicesCount, uint32_t reservoirIndicesStep)
 {
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;

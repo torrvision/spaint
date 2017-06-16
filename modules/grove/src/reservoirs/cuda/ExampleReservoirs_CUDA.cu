@@ -6,8 +6,7 @@
 #include "reservoirs/cuda/ExampleReservoirs_CUDA.h"
 #include "reservoirs/cuda/ExampleReservoirs_CUDA.tcu"
 
-namespace grove
-{
+namespace grove {
 
 //#################### CUDA KERNELS ####################
 

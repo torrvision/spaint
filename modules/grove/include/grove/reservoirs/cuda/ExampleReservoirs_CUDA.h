@@ -60,7 +60,7 @@ protected:
    * \param reservoirIndicesCount Number of integer indices for each element of the indices image.
    * \param reservoirIndicesStep  Step between the beginning of neighboring elements in the indices image.
    */
-  virtual void add_examples(const ExampleImage_CPtr &examples, const char *reservoirIndicesCPU,
+  virtual void add_examples(const ExampleImage_CPtr& examples, const char *reservoirIndicesCPU,
                             const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
                             uint32_t reservoirIndicesStep);
 
