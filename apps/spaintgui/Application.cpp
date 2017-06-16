@@ -737,8 +737,8 @@ void Application::save_mesh() const
   const std::string& sceneID = mainSubwindow.get_scene_id();
   SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-  // Construct the mesh.
-  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType()));
+  // Construct the mesh (specify a maximum number of triangles to avoid crash on the Titan Black).
+  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
   m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
   // Find the meshes directory and make sure that it exists.
@@ -746,12 +746,12 @@ void Application::save_mesh() const
   boost::filesystem::create_directories(meshesSubdir);
 
   // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".stl";
+  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".obj";
   const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
 
   // Save the mesh to disk.
   std::cout << "Saving mesh to: " << meshPath << '\n';
-  mesh->WriteSTL(meshPath.string().c_str());
+  mesh->WriteOBJ(meshPath.string().c_str());
 }
 
 void Application::save_screenshot() const

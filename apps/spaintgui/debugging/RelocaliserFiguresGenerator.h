@@ -17,6 +17,13 @@ namespace spaintgui {
 struct RelocaliserFiguresGenerator
 {
   /**
+   * \brief Saves the modes (centroid and covariances) contained in a predetermined set of leaves as they grow.
+   *
+   * \param model The model containing the relocaliser.
+   */
+  static void show_growing_leaf_modes(const Model_Ptr &model);
+
+  /**
    * \brief Prints on screen the modes (centroid and covariances) contained in a predetermined set of leaves.
    *
    * \param model The model containing the relocaliser.
