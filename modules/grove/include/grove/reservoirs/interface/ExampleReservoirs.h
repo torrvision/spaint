@@ -53,8 +53,8 @@ private:
     : examples(examples_), reservoirIndices(reservoirIndices_)
     {}
 
-    virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const  { target.add_examples(examples, reservoirIndices); }
-    virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const { target.add_examples(examples, reservoirIndices); }
+    virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const  { target.add_examples_sub(examples, reservoirIndices); }
+    virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const { target.add_examples_sub(examples, reservoirIndices); }
   };
 
   //#################### PROTECTED MEMBER VARIABLES ####################

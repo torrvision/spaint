@@ -55,7 +55,7 @@ void ExampleReservoirs_CUDA<ExampleType>::clear()
 
 template <typename ExampleType>
 template <int IndexLength>
-void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
+void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
 {
 #ifdef __CUDACC__
   const Vector2i imgSize = examples->noDims;

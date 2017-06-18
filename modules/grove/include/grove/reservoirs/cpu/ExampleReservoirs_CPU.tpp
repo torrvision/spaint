@@ -37,7 +37,7 @@ void ExampleReservoirs_CPU<ExampleType>::clear()
 
 template <typename ExampleType>
 template <int IndexLength>
-void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
+void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
 {
   const Vector2i imgSize = examples->noDims;
   const size_t exampleCount = imgSize.width * imgSize.height;

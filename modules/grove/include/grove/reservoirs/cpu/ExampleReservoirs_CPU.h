@@ -52,9 +52,9 @@ private:
     visitor.visit(*this);
   }
 
-  /** Simulated Override */
+  /** Derived Implementation */
   template <int IndexLength>
-  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices);
+  void add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices);
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
