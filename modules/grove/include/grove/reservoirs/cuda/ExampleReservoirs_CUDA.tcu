@@ -16,17 +16,19 @@ namespace grove {
 
 template <typename ExampleType, int ReservoirIndexCount>
 __global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgSize, const ORUtils::VectorX<int,ReservoirIndexCount> *reservoirIndicesPtr,
-                                CUDARNG *rngs, ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity)
+                                ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity, CUDARNG *rngs)
 {
   const int x = threadIdx.x + blockIdx.x * blockDim.x;
   const int y = threadIdx.y + blockIdx.y * blockDim.y;
 
-  if (x >= imgSize.x || y >= imgSize.y) return;
-
-  const int linearIdx = y * imgSize.x + x;
-  const int *indices = reservoirIndicesPtr[linearIdx].v;
-
-  add_example_to_reservoirs(examples[linearIdx], indices, ReservoirIndexCount, reservoirs, reservoirSize, reservoirAddCalls, reservoirCapacity, rngs[linearIdx]);
+  if(x < imgSize.width && y < imgSize.height)
+  {
+    const int linearIdx = y * imgSize.x + x;
+    add_example_to_reservoirs(
+      examples[linearIdx], reservoirIndicesPtr[linearIdx].v, ReservoirIndexCount, reservoirs,
+      reservoirSize, reservoirAddCalls, reservoirCapacity, rngs[linearIdx]
+    );
+  }
 }
 
 //#################### CONSTRUCTORS ####################
@@ -60,47 +62,56 @@ template <int ReservoirIndexCount>
 void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
   const Vector2i imgSize = examples->noDims;
-  const size_t nbExamples = imgSize.width * imgSize.height;
+  const size_t exampleCount = imgSize.width * imgSize.height;
 
-  // Check that we have enough random number generators and, if not, reallocate them.
-  if(nbExamples > m_rngs->dataSize)
+  // Check that we have enough random number generators and reallocate them if not.
+  if(m_rngs->dataSize < exampleCount)
   {
-    m_rngs->Resize(nbExamples);
+    m_rngs->Resize(exampleCount);
     reinit_rngs();
   }
 
-  const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CUDA);
-
-  CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
-  int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CUDA);
-  ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CUDA);
-  int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CUDA);
-
+  // Add each example to the relevant reservoirs.
   dim3 blockSize(32, 32);
   dim3 gridSize((imgSize.width + blockSize.x - 1) / blockSize.x, (imgSize.height + blockSize.y - 1) / blockSize.y);
-  ck_add_examples<<<gridSize, blockSize>>>(exampleData, imgSize, reservoirIndices->GetData(MEMORYDEVICE_CUDA),
-      rngs, reservoirData, reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
+
+  ck_add_examples<<<gridSize,blockSize>>>(
+    examples->GetData(MEMORYDEVICE_CUDA),
+    imgSize,
+    reservoirIndices->GetData(MEMORYDEVICE_CUDA),
+    this->m_reservoirs->GetData(MEMORYDEVICE_CUDA),
+    this->m_reservoirSizes->GetData(MEMORYDEVICE_CUDA),
+    this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CUDA),
+    this->m_reservoirCapacity,
+    m_rngs->GetData(MEMORYDEVICE_CUDA)
+  );
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 {
+  // If the memory block that will hold the random number generators hasn't yet been created, create it.
   if(!m_rngs)
   {
     itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
     m_rngs = mbf.make_block<CUDARNG>();
   }
 
+  // If there aren't currently any random number generators to reinitialise, early out.
+  // We need to check this because CUDA kernels can't be called with zero threads.
   const int rngCount = static_cast<int>(m_rngs->dataSize);
   if(rngCount == 0) return;
 
-  CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
-
-  // Initialize random states
+  // Reinitialise each random number generator based on the specified seed.
   dim3 blockSize(256);
   dim3 gridSize((rngCount + blockSize.x - 1) / blockSize.x);
-  ck_init_rngs<<<gridSize, blockSize>>>(rngs, rngCount, this->m_rngSeed);
+
+  ck_init_rngs<<<gridSize,blockSize>>>(
+    m_rngs->GetData(MEMORYDEVICE_CUDA),
+    rngCount,
+    this->m_rngSeed
+  );
   ORcudaKernelCheck;
 }
 

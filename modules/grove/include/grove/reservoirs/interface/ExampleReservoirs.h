@@ -110,7 +110,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Adds examples to the reservoirs.
+   * \brief Adds some examples to the reservoirs.
    *
    * \note Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
    *

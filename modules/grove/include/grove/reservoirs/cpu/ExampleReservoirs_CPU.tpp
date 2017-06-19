@@ -51,13 +51,14 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
     reinit_rngs();
   }
 
-  const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
+  const ExampleType *examplesPtr = examples->GetData(MEMORYDEVICE_CPU);
   int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CPU);
-  ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CPU);
   const ORUtils::VectorX<int,ReservoirIndexCount> *reservoirIndicesPtr = reservoirIndices->GetData(MEMORYDEVICE_CPU);
   int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CPU);
+  ExampleType *reservoirs = this->m_reservoirs->GetData(MEMORYDEVICE_CPU);
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
+  // Add each example to the relevant reservoirs.
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
@@ -66,10 +67,9 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
     for (int x = 0; x < imgSize.width; ++x)
     {
       const int linearIdx = y * imgSize.x + x;
-      const int *indices = reservoirIndicesPtr[linearIdx].v;
 
       add_example_to_reservoirs(
-        exampleData[linearIdx], indices, ReservoirIndexCount, reservoirData,
+        examplesPtr[linearIdx], reservoirIndicesPtr[linearIdx].v, ReservoirIndexCount, reservoirs,
         reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity, rngs[linearIdx]
       );
     }
@@ -79,7 +79,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
 {
-  // If the random number generators don't yet exist, create them.
+  // If the memory block that will hold the random number generators hasn't yet been created, create it.
   if(!m_rngs)
   {
     itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
