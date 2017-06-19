@@ -17,19 +17,15 @@ template <typename ExampleType>
 ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
 {
-  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-
-  // Initialise the random number generators.
-  m_rngs = mbf.make_block<CPURNG>();
-  init_random();
+  reset();
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-void ExampleReservoirs_CPU<ExampleType>::clear()
+void ExampleReservoirs_CPU<ExampleType>::reset()
 {
-  ExampleReservoirs<ExampleType>::clear();
+  ExampleReservoirs<ExampleType>::reset();
   init_random();
 }
 
@@ -79,6 +75,12 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::init_random()
 {
+  if(!m_rngs)
+  {
+    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+    m_rngs = mbf.make_block<CPURNG>();
+  }
+
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
   const int rngCount = static_cast<int>(m_rngs->dataSize);
 

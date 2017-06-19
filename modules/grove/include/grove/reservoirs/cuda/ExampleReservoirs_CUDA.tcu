@@ -35,19 +35,15 @@ template <typename ExampleType>
 ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
 {
-  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-
-  // Initialise the random number generators.
-  m_rngs = mbf.make_block<CUDARNG>();
-  init_random();
+  reset();
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::clear()
+void ExampleReservoirs_CUDA<ExampleType>::reset()
 {
-  ExampleReservoirs<ExampleType>::clear();
+  ExampleReservoirs<ExampleType>::reset();
   init_random();
 }
 
@@ -89,6 +85,12 @@ template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::init_random()
 {
 #ifdef __CUDACC__
+  if(!m_rngs)
+  {
+    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+    m_rngs = mbf.make_block<CUDARNG>();
+  }
+
   const int rngCount = static_cast<int>(m_rngs->dataSize);
   if(rngCount == 0) return;
 

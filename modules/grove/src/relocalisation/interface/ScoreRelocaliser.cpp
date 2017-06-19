@@ -113,7 +113,7 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
 
 void ScoreRelocaliser::reset()
 {
-  m_exampleReservoirs->clear();
+  m_exampleReservoirs->reset();
   m_predictionsBlock->Clear();
 
   m_lastFeaturesAddedStartIdx = 0;

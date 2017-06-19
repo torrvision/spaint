@@ -133,11 +133,6 @@ public:
   void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
   /**
-   * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
-   */
-  virtual void clear();
-
-  /**
    * \brief Gets the capacity of each reservoir.
    *
    * \note All the reservoirs have the same capacity.
@@ -169,6 +164,11 @@ public:
    * \return A memory block containing the current size of each example reservoir.
    */
   ITMIntMemoryBlock_CPtr get_reservoir_sizes() const;
+
+  /**
+   * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
+   */
+  virtual void reset();
 };
 
 }

@@ -21,11 +21,6 @@ ExampleReservoirs<ExampleType>::ExampleReservoirs(uint32_t reservoirCapacity, ui
   m_reservoirs = mbf.make_image<ExampleType>(Vector2i(reservoirCapacity, reservoirCount));
   m_reservoirAddCalls = mbf.make_block<int>(reservoirCount);
   m_reservoirSizes = mbf.make_block<int>(reservoirCount);
-
-  // No calls to virtual clear() in the constructor.
-  // No need to clear m_reservoirs if the size is 0.
-  m_reservoirSizes->Clear();
-  m_reservoirAddCalls->Clear();
 }
 
 //#################### DESTRUCTOR ####################
@@ -40,9 +35,11 @@ template <typename ExampleType>
 template <int ReservoirIndexCount>
 void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
-  // Check preconditions.
+  // Check the preconditions.
   if(examples->noDims != reservoirIndices->noDims)
-    throw std::invalid_argument("The example and indices images should have the same size.");
+  {
+    throw std::invalid_argument("The example and reservoir indices images should have the same size.");
+  }
 
   accept(AddExamplesCaller<ReservoirIndexCount>(examples, reservoirIndices));
 }
@@ -53,13 +50,6 @@ void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examp
 {
   const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > > reservoirIndicesConst = reservoirIndices;
   add_examples(examples, reservoirIndicesConst);
-}
-
-template <typename ExampleType>
-void ExampleReservoirs<ExampleType>::clear()
-{
-  m_reservoirSizes->Clear();
-  m_reservoirAddCalls->Clear();
 }
 
 template <typename ExampleType>
@@ -84,6 +74,14 @@ template <typename ExampleType>
 ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() const
 {
   return m_reservoirSizes;
+}
+
+template <typename ExampleType>
+void ExampleReservoirs<ExampleType>::reset()
+{
+  // Note: There is no need to clear m_reservoirs if the size is 0.
+  m_reservoirAddCalls->Clear();
+  m_reservoirSizes->Clear();
 }
 
 }

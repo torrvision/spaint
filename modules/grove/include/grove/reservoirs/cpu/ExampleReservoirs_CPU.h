@@ -41,10 +41,8 @@ public:
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Clear the reservoirs. Discards all examples and reinitialises the random number generator.
-   */
-  virtual void clear();
+  /** Override */
+  virtual void reset();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
