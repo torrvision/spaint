@@ -46,10 +46,13 @@ private:
   template <int ReservoirIndexCount>
   struct AddExamplesCaller : Visitor
   {
-    ExampleImage_CPtr examples;
-    boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > > reservoirIndices;
+    typedef ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > ReservoirIndexImage;
+    typedef boost::shared_ptr<const ReservoirIndexImage> ReservoirIndexImage_CPtr;
 
-    AddExamplesCaller(const ExampleImage_CPtr& examples_, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices_)
+    ExampleImage_CPtr examples;
+    ReservoirIndexImage_CPtr reservoirIndices;
+
+    AddExamplesCaller(const ExampleImage_CPtr& examples_, const ReservoirIndexImage_CPtr& reservoirIndices_)
     : examples(examples_), reservoirIndices(reservoirIndices_)
     {}
 
