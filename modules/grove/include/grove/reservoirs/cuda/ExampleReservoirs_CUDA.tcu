@@ -44,7 +44,7 @@ template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reset()
 {
   ExampleReservoirs<ExampleType>::reset();
-  init_random();
+  reinit_rngs();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -61,7 +61,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CP
   if(nbExamples > m_rngs->dataSize)
   {
     m_rngs->Resize(nbExamples);
-    init_random();
+    reinit_rngs();
   }
 
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CUDA);
@@ -82,7 +82,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CP
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::init_random()
+void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 {
 #ifdef __CUDACC__
   if(!m_rngs)

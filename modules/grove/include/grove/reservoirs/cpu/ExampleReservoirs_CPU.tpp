@@ -26,7 +26,7 @@ template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reset()
 {
   ExampleReservoirs<ExampleType>::reset();
-  init_random();
+  reinit_rngs();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -42,7 +42,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
   if(m_rngs->dataSize < exampleCount)
   {
     m_rngs->Resize(exampleCount);
-    init_random();
+    reinit_rngs();
   }
 
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
@@ -73,7 +73,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-void ExampleReservoirs_CPU<ExampleType>::init_random()
+void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
 {
   if(!m_rngs)
   {

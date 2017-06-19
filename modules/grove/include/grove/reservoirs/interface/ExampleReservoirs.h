@@ -89,7 +89,7 @@ protected:
    * \param reservoirCount    The number of reservoirs to create.
    * \param rngSeed           The seed for the random number generator.
    */
-  ExampleReservoirs(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed = 42);
+  ExampleReservoirs(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed);
 
   //#################### DESTRUCTOR ####################
 public:

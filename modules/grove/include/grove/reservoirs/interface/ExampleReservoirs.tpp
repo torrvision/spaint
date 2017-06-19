@@ -79,7 +79,7 @@ ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() con
 template <typename ExampleType>
 void ExampleReservoirs<ExampleType>::reset()
 {
-  // Note: There is no need to clear m_reservoirs if the size is 0.
+  // Note: There is no need to clear m_reservoirs - it is sufficient to simply reset the size of each reservoir to 0.
   m_reservoirAddCalls->Clear();
   m_reservoirSizes->Clear();
 }
