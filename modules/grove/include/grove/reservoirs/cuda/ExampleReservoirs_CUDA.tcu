@@ -7,7 +7,6 @@
 
 #include <itmx/base/MemoryBlockFactory.h>
 
-#include "../../numbers/CUDARNG.h"
 #include "../shared/ExampleReservoirs_Shared.h"
 
 namespace grove {

@@ -41,7 +41,7 @@ public:
    */
   ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed = 42);
 
-  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
   virtual void reset();
