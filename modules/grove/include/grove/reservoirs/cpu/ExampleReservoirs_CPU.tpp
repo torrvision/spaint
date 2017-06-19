@@ -68,9 +68,9 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
       const int linearIdx = y * imgSize.x + x;
       const int *indices = reservoirIndicesPtr[linearIdx].v;
 
-      example_reservoirs_add_example(
-        exampleData[linearIdx], indices, ReservoirIndexCount, rngs[linearIdx], reservoirData,
-        reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity
+      add_example_to_reservoirs(
+        exampleData[linearIdx], indices, ReservoirIndexCount, reservoirData,
+        reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity, rngs[linearIdx]
       );
     }
   }

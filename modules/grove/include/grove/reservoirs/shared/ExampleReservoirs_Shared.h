@@ -13,86 +13,88 @@
 namespace grove {
 
 /**
- * \brief Add an example to some reservoirs.
+ * \brief Attempts to add an example to some reservoirs.
  *
- * If the example is valid, an attempt to add it to each reservoir specified by indices is made.
- * If a reservoir is not full, then the example is added.
- * Otherwise, if ALWAYS_ADD_EXAMPLES is set, a randomly-selected existing example is discarded and replaced by the current example.
- * If ALWAYS_ADD_EXAMPLES is 0 then whether to replace an existing example is randomly decided as well.
+ * If the example is valid, we attempt to add it to each specified reservoir. If a
+ * reservoir is not full, then the example is added. Otherwise, if ALWAYS_ADD_EXAMPLES
+ * is 1, a randomly-selected existing example is discarded and replaced by the current
+ * example. If ALWAYS_ADD_EXAMPLES is 0, then an additional random decision is made as
+ * to *whether* to replace an existing example.
  *
- * \param example            The example to add to the reservoirs.
- * \param indices            Pointer to the indices to the reservoir wherein to add the example.
- * \param indicesCount       Number of elements in the indices array.
- * \param randomGenerator    A random number generator.
- * \param reservoirs         A pointer to the reservoir data.
- * \param reservoirSize      A pointer to the current sizes of each reservoir.
- * \param reservoirAddCalls  A pointer to the number of times an add operation has been attempted for each reservoir.
- * \param reservoirCapacity  The maximum size of each reservoir.
+ * \param example             The example to attempt to add to the reservoirs.
+ * \param reservoirIndices    The indices of the reservoirs to which to attempt to add the example.
+ * \param reservoirIndexCount The number of reservoirs to which to attempt to add the example.
+ * \param reservoirs          The example reservoirs: an image in which each row allows the storage of up to reservoirCapacity examples.
+ * \param reservoirSizes      The current size of each reservoir.
+ * \param reservoirAddCalls   The number of times the insertion of an example has been attempted for each reservoir.
+ * \param reservoirCapacity   The capacity (maximum size) of each reservoir.
+ * \param randomGenerator     A random number generator.
  */
 template <typename ExampleType, typename RNGType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void example_reservoirs_add_example(const ExampleType &example,
-    const int *indices, uint32_t indicesCount, RNGType &randomGenerator, ExampleType *reservoirs,
-    int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity)
+inline void add_example_to_reservoirs(const ExampleType& example, const int *reservoirIndices, uint32_t reservoirIndexCount,
+                                      ExampleType *reservoirs, int *reservoirSizes, int *reservoirAddCalls, uint32_t reservoirCapacity,
+                                      RNGType& randomGenerator)
 {
-  // Early out if the example is invalid.
-  if (!example.valid) return;
+  // If the example is invalid, early out.
+  if(!example.valid) return;
 
-  // Try to add the example to each reservoir in indices.
-  for (uint32_t i = 0; i < indicesCount; ++i)
+  // Try to add the example to each specified reservoir.
+  for(uint32_t i = 0; i < reservoirIndexCount; ++i)
   {
-    // The reservoir index, representing its row in the reservoirs array.
-    const int reservoirIdx = indices[i];
+    // The reservoir index (this corresponds to a row in the reservoirs image).
+    const int reservoirIdx = reservoirIndices[i];
 
-    // The linearised index of the first example of the reservoir.
+    // The raster index (in the reservoirs image) of the first example in the reservoir.
     const int reservoirStartIdx = reservoirIdx * reservoirCapacity;
 
-    // Get the number of total add calls for the current reservoir.
-    uint32_t addCallsCount = 0;
+    // Get the total number of add calls that have ever been made for the current reservoir, and increment it for next time.
+    uint32_t oldAddCallsCount = 0;
 
 #ifdef __CUDACC__
-    addCallsCount = atomicAdd(&reservoirAddCalls[reservoirIdx], 1);
+    oldAddCallsCount = atomicAdd(&reservoirAddCalls[reservoirIdx], 1);
 #else
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
-    addCallsCount = reservoirAddCalls[reservoirIdx]++;
+  #ifdef WITH_OPENMP
+    #pragma omp atomic capture
+  #endif
+    oldAddCallsCount = reservoirAddCalls[reservoirIdx]++;
 #endif
 
-    // If addCallsCount is less than capacity we can add the example straight-away.
-    if (addCallsCount < reservoirCapacity)
+    // If the old total number of add calls is less than the reservoir's capacity, then we can immediately add the example.
+    // Otherwise, we need to decide whether or not to replace an existing example with this one.
+    if(oldAddCallsCount < reservoirCapacity)
     {
-      reservoirs[reservoirStartIdx + addCallsCount] = example;
+      // Store the example in the reservoir.
+      reservoirs[reservoirStartIdx + oldAddCallsCount] = example;
 
-      // Also increment the size of the current reservoir.
-      // Might not be strictly necessary, since reservoirAddCalls also has the same info and we could
-      // return that in get_reservoir_sizes(), but then care would need to be taken when examining values
-      // outside this class since they will be greater than the actual reservoir capacity.
+      // Increment the reservoir's size. Note that it is not strictly necessary to
+      // maintain the reservoir sizes separately, since we can obtain the same
+      // information from reservoirAddCalls by clamping the values to the reservoir
+      // capacity, but writing it this way is much clearer and the cost in efficiency
+      // is limited in practice.
 #ifdef __CUDACC__
-      atomicAdd(&reservoirSize[reservoirIdx], 1);
+      atomicAdd(&reservoirSizes[reservoirIdx], 1);
 #else
-#ifdef WITH_OPENMP
-#pragma omp atomic
-#endif
-      reservoirSize[reservoirIdx]++;
+    #ifdef WITH_OPENMP
+      #pragma omp atomic
+    #endif
+      ++reservoirSizes[reservoirIdx];
 #endif
     }
     else
     {
 #if ALWAYS_ADD_EXAMPLES
-      // The code below always evicts a sample from the reservoir.
-      const uint32_t randomIdx = randomGenerator.generate_int_from_uniform(0,
-          reservoirCapacity - 1);
+      // Generate a random offset that will always result in an example being evicted from the reservoir.
+      const uint32_t randomOffset = randomGenerator.generate_int_from_uniform(0, reservoirCapacity - 1);
 #else
-      // Generate a random number between 0 and addCallsCount.
-      const uint32_t randomIdx = randomGenerator.generate_int_from_uniform(0,
-          addCallsCount - 1);
+      // Generate a random offset that may or may not result in an example being evicted from the reservoir.
+      const uint32_t randomOffset = randomGenerator.generate_int_from_uniform(0, oldAddCallsCount - 1);
 #endif
 
-      // Check if we have to evict an example.
-      if (randomIdx < reservoirCapacity)
+      // If the random offset corresponds to an example in the reservoir, replace that with the new example.
+      if(randomOffset < reservoirCapacity)
       {
-        reservoirs[reservoirStartIdx + randomIdx] = example;
+        reservoirs[reservoirStartIdx + randomOffset] = example;
       }
     }
   }

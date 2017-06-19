@@ -62,7 +62,7 @@ private:
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
-  /** The capacity of each reservoir. */
+  /** The capacity (maximum size) of each reservoir. */
   uint32_t m_reservoirCapacity;
 
   /** The number of reservoirs. */
@@ -85,7 +85,7 @@ protected:
   /**
    * \brief Constructs a set of example reservoirs.
    *
-   * \param reservoirCapacity The capacity of each reservoir.
+   * \param reservoirCapacity The capacity (maximum size) of each reservoir.
    * \param reservoirCount    The number of reservoirs to create.
    * \param rngSeed           The seed for the random number generator.
    */

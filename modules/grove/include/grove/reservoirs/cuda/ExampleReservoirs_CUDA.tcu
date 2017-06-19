@@ -26,7 +26,7 @@ __global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgS
   const int linearIdx = y * imgSize.x + x;
   const int *indices = reservoirIndicesPtr[linearIdx].v;
 
-  example_reservoirs_add_example(examples[linearIdx], indices, ReservoirIndexCount, rngs[linearIdx], reservoirs, reservoirSize, reservoirAddCalls, reservoirCapacity);
+  add_example_to_reservoirs(examples[linearIdx], indices, ReservoirIndexCount, reservoirs, reservoirSize, reservoirAddCalls, reservoirCapacity, rngs[linearIdx]);
 }
 
 //#################### CONSTRUCTORS ####################
