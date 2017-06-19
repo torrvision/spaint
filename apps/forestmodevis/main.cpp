@@ -101,7 +101,7 @@ public:
     cv::sqrt(eVals, eVals);
 
     auto scalingTransform =
-        Eigen::Scaling(std::sqrt(covariance.val[0]), std::sqrt(covariance.val[4]), std::sqrt(covariance.val[8]));
+        Eigen::Scaling(std::sqrt(covariance.val[0]) * 2.0f, std::sqrt(covariance.val[4]) * 2.0f, std::sqrt(covariance.val[8]) * 2.0f);
     //    auto scalingTransform = Eigen::Scaling(
     //        Eigen::Map<Eigen::Vector3f>(eVals.ptr<float>()));
     auto rotation = Eigen::AngleAxisf(Eigen::Map<Eigen::Matrix3f>(eVecs.ptr<float>()));
@@ -114,6 +114,8 @@ public:
 
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
     sphereSource->SetCenter(0.0, 0.0, 0.0);
+    sphereSource->SetPhiResolution(180);
+    sphereSource->SetThetaResolution(360);
     sphereSource->SetRadius(1.0);
 
     vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
@@ -246,7 +248,7 @@ static void vizCallbackAnimation(const KeyboardEvent &event, void *c)
       std::vector<std::vector<cv::Point3d>> currentExamples;
       readExamples(currentExamplesFileName.string(), currentExamples);
 
-      for(size_t treeIdx = 0; treeIdx < currentModes.size(); ++treeIdx)
+      for(size_t treeIdx = 2; treeIdx < currentModes.size(); ++treeIdx)
       {
 //        // Draw modes
 //        {
@@ -376,7 +378,7 @@ int main(int argc, char *argv[])
   cookie.mesh = &wMesh;
   cookie.baseName = fs::path(modesFile).stem().string();
 
-  //  visualizer.registerKeyboardCallback(vizCallbackSingleModes, &cookie);
+//  visualizer.registerKeyboardCallback(vizCallbackSingleModes, &cookie);
   visualizer.registerKeyboardCallback(vizCallbackAnimation, &cookie);
 
   //  WCovarianceEllipsoid test(cv::Vec3f(), cv::Matx33f(), Color::bluberry());
