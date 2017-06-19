@@ -85,11 +85,11 @@ protected:
   /**
    * \brief Constructs a set of example reservoirs.
    *
-   * \param reservoirCapacity The capacity (maximum size) of each reservoir.
    * \param reservoirCount    The number of reservoirs to create.
+   * \param reservoirCapacity The capacity (maximum size) of each reservoir.
    * \param rngSeed           The seed for the random number generator.
    */
-  ExampleReservoirs(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed);
+  ExampleReservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed);
 
   //#################### DESTRUCTOR ####################
 public:

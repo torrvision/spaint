@@ -12,7 +12,7 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType>
-ExampleReservoirs<ExampleType>::ExampleReservoirs(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
+ExampleReservoirs<ExampleType>::ExampleReservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : m_reservoirCapacity(reservoirCapacity), m_reservoirCount(reservoirCount), m_rngSeed(rngSeed)
 {
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();

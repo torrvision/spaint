@@ -14,8 +14,8 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType>
-ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
-: ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
+ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
+: ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
   reset();
 }

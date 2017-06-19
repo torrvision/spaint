@@ -78,7 +78,7 @@ template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleIma
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
     const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, FOREST_TREES> > >&);
 template class ExampleReservoirs_CPU<Keypoint3DColour>;
-template class ExampleReservoirsFactory<Keypoint3DColour>;
+template struct ExampleReservoirsFactory<Keypoint3DColour>;
 
 template class ExampleReservoirs<Keypoint2D>;
 template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&,
@@ -86,6 +86,6 @@ template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPt
 template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&,
     const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, FOREST_TREES> > >&);
 template class ExampleReservoirs_CPU<Keypoint2D>;
-template class ExampleReservoirsFactory<Keypoint2D>;
+template struct ExampleReservoirsFactory<Keypoint2D>;
 
 }

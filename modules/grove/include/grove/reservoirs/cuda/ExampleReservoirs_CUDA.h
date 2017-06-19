@@ -35,11 +35,11 @@ public:
   /**
    * \brief Constructs a set of example reservoirs.
    *
-   * \param reservoirCapacity The capacity of each reservoir.
    * \param reservoirCount    The number of reservoirs to create.
+   * \param reservoirCapacity The capacity of each reservoir.
    * \param rngSeed           The seed for the random number generator.
    */
-  ExampleReservoirs_CUDA(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed = 42);
+  ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed = 42);
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:

@@ -34,8 +34,8 @@ __global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgS
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType>
-ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
-: ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
+ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
+: ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
   reset();
 }
