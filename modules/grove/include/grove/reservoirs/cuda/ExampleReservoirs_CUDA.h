@@ -22,9 +22,11 @@ namespace grove {
 template <typename ExampleType>
 class ExampleReservoirs_CUDA : public ExampleReservoirs<ExampleType>
 {
-  //#################### TYPEDEFS ####################
+  //#################### TYPEDEFS & USINGS ####################
 public:
-  using typename ExampleReservoirs<ExampleType>::ExampleImage_CPtr;
+  typedef ExampleReservoirs<ExampleType> Base;
+  using typename Base::ExampleImage_CPtr;
+  using typename Base::Visitor;
 
   //#################### CONSTRUCTORS ####################
 public:
