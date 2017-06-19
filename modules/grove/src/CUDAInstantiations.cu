@@ -10,6 +10,8 @@
 #include "scoreforests/Keypoint3DColourClusteringUtils.h"
 #include "scoreforests/Mode3DColour.h"
 #include "scoreforests/ScorePrediction.h"
+using namespace boost;
+using namespace ORUtils;
 
 namespace grove {
 
@@ -25,5 +27,8 @@ template class ExampleReservoirs_CUDA<Keypoint2D>;
 template class ExampleReservoirs_CUDA<Keypoint3DColour>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour,RGBDPatchDescriptor>;
+
+template void ExampleReservoirs_CUDA<Keypoint2D>::add_examples_sub(const ExampleImage_CPtr&, const shared_ptr<const Image<VectorX<int,FOREST_TREES> > >&);
+template void ExampleReservoirs_CUDA<Keypoint3DColour>::add_examples_sub(const ExampleImage_CPtr&, const shared_ptr<const Image<VectorX<int,FOREST_TREES> > >&);
 
 }

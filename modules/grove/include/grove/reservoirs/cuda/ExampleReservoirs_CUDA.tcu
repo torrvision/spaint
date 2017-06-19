@@ -59,7 +59,6 @@ template <typename ExampleType>
 template <int ReservoirIndexCount>
 void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
-#ifdef __CUDACC__
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;
 
@@ -82,13 +81,11 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CP
   ck_add_examples<<<gridSize, blockSize>>>(exampleData, imgSize, reservoirIndices->GetData(MEMORYDEVICE_CUDA),
       rngs, reservoirData, reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity);
   ORcudaKernelCheck;
-#endif
 }
 
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 {
-#ifdef __CUDACC__
   if(!m_rngs)
   {
     itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
@@ -105,7 +102,6 @@ void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
   dim3 gridSize((rngCount + blockSize.x - 1) / blockSize.x);
   ck_init_rngs<<<gridSize, blockSize>>>(rngs, rngCount, this->m_rngSeed);
   ORcudaKernelCheck;
-#endif
 }
 
 }
