@@ -14,8 +14,8 @@ namespace grove {
 
 //#################### CUDA KERNELS ####################
 
-template <typename ExampleType, int IndexLength>
-__global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgSize, const ORUtils::VectorX<int,IndexLength> *reservoirIndicesPtr,
+template <typename ExampleType, int ReservoirIndexCount>
+__global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgSize, const ORUtils::VectorX<int,ReservoirIndexCount> *reservoirIndicesPtr,
                                 CUDARNG *rngs, ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity)
 {
   const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -26,7 +26,7 @@ __global__ void ck_add_examples(const ExampleType *examples, const Vector2i imgS
   const int linearIdx = y * imgSize.x + x;
   const int *indices = reservoirIndicesPtr[linearIdx].v;
 
-  example_reservoirs_add_example(examples[linearIdx], indices, IndexLength, rngs[linearIdx], reservoirs, reservoirSize, reservoirAddCalls, reservoirCapacity);
+  example_reservoirs_add_example(examples[linearIdx], indices, ReservoirIndexCount, rngs[linearIdx], reservoirs, reservoirSize, reservoirAddCalls, reservoirCapacity);
 }
 
 //#################### CONSTRUCTORS ####################
@@ -54,8 +54,8 @@ void ExampleReservoirs_CUDA<ExampleType>::clear()
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-template <int IndexLength>
-void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
+template <int ReservoirIndexCount>
+void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
 #ifdef __CUDACC__
   const Vector2i imgSize = examples->noDims;

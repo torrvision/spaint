@@ -36,8 +36,8 @@ void ExampleReservoirs_CPU<ExampleType>::clear()
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-template <int IndexLength>
-void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
+template <int ReservoirIndexCount>
+void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
   const Vector2i imgSize = examples->noDims;
   const size_t exampleCount = imgSize.width * imgSize.height;
@@ -52,7 +52,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
   int *reservoirAddCalls = this->m_reservoirAddCalls->GetData(MEMORYDEVICE_CPU);
   ExampleType *reservoirData = this->m_reservoirs->GetData(MEMORYDEVICE_CPU);
-  const ORUtils::VectorX<int,IndexLength> *reservoirIndicesPtr = reservoirIndices->GetData(MEMORYDEVICE_CPU);
+  const ORUtils::VectorX<int,ReservoirIndexCount> *reservoirIndicesPtr = reservoirIndices->GetData(MEMORYDEVICE_CPU);
   int *reservoirSizes = this->m_reservoirSizes->GetData(MEMORYDEVICE_CPU);
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
@@ -67,7 +67,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
       const int *indices = reservoirIndicesPtr[linearIdx].v;
 
       example_reservoirs_add_example(
-        exampleData[linearIdx], indices, IndexLength, rngs[linearIdx], reservoirData,
+        exampleData[linearIdx], indices, ReservoirIndexCount, rngs[linearIdx], reservoirData,
         reservoirSizes, reservoirAddCalls, this->m_reservoirCapacity
       );
     }

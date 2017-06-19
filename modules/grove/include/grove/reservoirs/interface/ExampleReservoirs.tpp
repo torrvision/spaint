@@ -37,21 +37,21 @@ ExampleReservoirs<ExampleType>::~ExampleReservoirs()
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
-template <int IndexLength>
-void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices)
+template <int ReservoirIndexCount>
+void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
   // Check preconditions.
   if(examples->noDims != reservoirIndices->noDims)
     throw std::invalid_argument("The example and indices images should have the same size.");
 
-  accept(AddExamplesCaller<IndexLength>(examples, reservoirIndices));
+  accept(AddExamplesCaller<ReservoirIndexCount>(examples, reservoirIndices));
 }
 
 template <typename ExampleType>
-template <int IndexLength>
-void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, IndexLength> > >& reservoirIndices)
+template <int ReservoirIndexCount>
+void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
-  const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > reservoirIndicesConst = reservoirIndices;
+  const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > > reservoirIndicesConst = reservoirIndices;
   add_examples(examples, reservoirIndicesConst);
 }
 

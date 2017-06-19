@@ -43,13 +43,13 @@ protected:
   };
 
 private:
-  template <int IndexLength>
+  template <int ReservoirIndexCount>
   struct AddExamplesCaller : Visitor
   {
     ExampleImage_CPtr examples;
-    boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > > reservoirIndices;
+    boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > > reservoirIndices;
 
-    AddExamplesCaller(const ExampleImage_CPtr& examples_, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices_)
+    AddExamplesCaller(const ExampleImage_CPtr& examples_, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices_)
     : examples(examples_), reservoirIndices(reservoirIndices_)
     {}
 
@@ -111,23 +111,23 @@ public:
    *
    * \note Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
    *
-   * \tparam IndexLength  The number of reservoirs to which an example will be added.
+   * \tparam ReservoirIndexCount  The number of reservoirs to which an example will be added.
    *
    * \param examples         The examples to add to the reservoirs. Only those that have the "valid" member set to true will be added.
    * \param reservoirIndices The indices of the reservoirs to which to add each element of the examples image. Must have the same size as examples.
    *
    * \throws std::invalid_argument If examples and reservoirIndices have different dimensions.
    */
-  template <int IndexLength>
-  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices);
+  template <int ReservoirIndexCount>
+  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
   /**
    * \brief Adds examples to the reservoirs.
    *
    * \note This is a variant of the other add_examples function that allows us to pass in non-const images.
    */
-  template <int IndexLength>
-  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int,IndexLength> > >& reservoirIndices);
+  template <int ReservoirIndexCount>
+  void add_examples(const ExampleImage_CPtr& examples, const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
   /**
    * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
