@@ -20,7 +20,7 @@ ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCapa
   reset();
 }
 
-//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reset()
@@ -30,6 +30,12 @@ void ExampleReservoirs_CPU<ExampleType>::reset()
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+template <typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::accept(const Visitor& visitor)
+{
+  visitor.visit(*this);
+}
 
 template <typename ExampleType>
 template <int ReservoirIndexCount>
@@ -70,21 +76,20 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
   }
 }
 
-//#################### PRIVATE MEMBER FUNCTIONS ####################
-
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
 {
+  // If the random number generators don't yet exist, create them.
   if(!m_rngs)
   {
     itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
     m_rngs = mbf.make_block<CPURNG>();
   }
 
+  // Reinitialise each random number generator based on the specified seed.
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
-  const int rngCount = static_cast<int>(m_rngs->dataSize);
-
-  for (int i = 0; i < rngCount; ++i)
+  const uint32_t rngCount = static_cast<uint32_t>(m_rngs->dataSize);
+  for(uint32_t i = 0; i < rngCount; ++i)
   {
     rngs[i].reset(this->m_rngSeed + i);
   }

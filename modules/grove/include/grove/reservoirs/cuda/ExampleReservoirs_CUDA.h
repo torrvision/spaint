@@ -49,17 +49,14 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual void accept(const Visitor& visitor)
-  {
-    visitor.visit(*this);
-  }
+  virtual void accept(const Visitor& visitor);
 
   /** Derived Implementation */
   template <int ReservoirIndexCount>
   void add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
   /**
-   * \brief Re-initialises the random number generators with a known seed.
+   * \brief Reinitialises the random number generators with a known seed.
    */
   void reinit_rngs();
 

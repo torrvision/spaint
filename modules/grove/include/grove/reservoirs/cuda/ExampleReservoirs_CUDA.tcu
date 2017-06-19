@@ -50,6 +50,12 @@ void ExampleReservoirs_CUDA<ExampleType>::reset()
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
+void ExampleReservoirs_CUDA<ExampleType>::accept(const Visitor& visitor)
+{
+  visitor.visit(*this);
+}
+
+template <typename ExampleType>
 template <int ReservoirIndexCount>
 void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices)
 {
@@ -78,8 +84,6 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CP
   ORcudaKernelCheck;
 #endif
 }
-
-//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
