@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_EXAMPLERESERVOIRSCUDA
-#define H_GROVE_EXAMPLERESERVOIRSCUDA
+#ifndef H_GROVE_EXAMPLERESERVOIRS_CUDA
+#define H_GROVE_EXAMPLERESERVOIRS_CUDA
 
 #include "../interface/ExampleReservoirs.h"
 #include "../../numbers/CUDARNG.h"

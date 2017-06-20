@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_EXAMPLERESERVOIRSCPU
-#define H_GROVE_EXAMPLERESERVOIRSCPU
+#ifndef H_GROVE_EXAMPLERESERVOIRS_CPU
+#define H_GROVE_EXAMPLERESERVOIRS_CPU
 
 #include "../interface/ExampleReservoirs.h"
 #include "../../numbers/CPURNG.h"
