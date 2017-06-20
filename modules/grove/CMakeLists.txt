@@ -48,6 +48,25 @@ SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatu
 SET(features_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
 ##
+SET(forests_headers include/grove/forests/DecisionForestFactory.h)
+SET(forests_templates include/grove/forests/DecisionForestFactory.tpp)
+
+##
+SET(forests_cpu_headers include/grove/forests/cpu/DecisionForest_CPU.h)
+SET(forests_cpu_templates include/grove/forests/cpu/DecisionForest_CPU.tpp)
+
+##
+SET(forests_cuda_headers include/grove/forests/cuda/DecisionForest_CUDA.h)
+SET(forests_cuda_templates include/grove/forests/cuda/DecisionForest_CUDA.tcu)
+
+##
+SET(forests_interface_headers include/grove/forests/interface/DecisionForest.h)
+SET(forests_interface_templates include/grove/forests/interface/DecisionForest.tpp)
+
+##
+SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
+
+##
 SET(keypoints_headers
 include/grove/keypoints/Keypoint2D.h
 include/grove/keypoints/Keypoint3DColour.h
@@ -97,6 +116,10 @@ ${features_base_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${forests_headers}
+${forests_cpu_headers}
+${forests_interface_headers}
+${forests_shared_headers}
 ${keypoints_headers}
 ${numbers_headers}
 ${reservoirs_headers}
@@ -109,6 +132,9 @@ SET(templates
 ${features_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
+${forests_templates}
+${forests_cpu_templates}
+${forests_interface_templates}
 ${reservoirs_templates}
 ${reservoirs_cpu_templates}
 ${reservoirs_interface_templates}
@@ -117,11 +143,13 @@ ${reservoirs_interface_templates}
 IF(WITH_CUDA)
   SET(headers ${headers}
     ${features_cuda_headers}
+    ${forests_cuda_headers}
     ${reservoirs_cuda_headers}
   )
 
   SET(templates ${templates}
     ${features_cuda_templates}
+    ${forests_cuda_templates}
     ${reservoirs_cuda_templates}
   )
 ENDIF()
@@ -136,6 +164,11 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_template
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(forests FILES ${forests_headers} ${forests_templates})
+SOURCE_GROUP(forests\\cpu FILES ${forests_cpu_headers} ${forests_cpu_templates})
+SOURCE_GROUP(forests\\cuda FILES ${forests_cuda_headers} ${forests_cuda_templates})
+SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_interface_templates})
+SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
