@@ -56,7 +56,7 @@ private:
   void add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
   /**
-   * \brief Reinitialises the random number generators with a known seed.
+   * \brief Reinitialises the random number generators using known seeds.
    */
   void reinit_rngs();
 

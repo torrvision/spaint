@@ -106,7 +106,7 @@ void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
   dim3 blockSize(256);
   dim3 gridSize((rngCount + blockSize.x - 1) / blockSize.x);
 
-  ck_init_rngs<<<gridSize,blockSize>>>(
+  ck_reinit_rngs<<<gridSize,blockSize>>>(
     m_rngs->GetData(MEMORYDEVICE_CUDA),
     rngCount,
     this->m_rngSeed
