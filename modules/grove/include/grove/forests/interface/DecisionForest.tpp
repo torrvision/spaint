@@ -238,27 +238,26 @@ void DecisionForest<DescriptorType,TreeCount>::load_structure_from_file(const st
 template <typename DescriptorType, int TreeCount>
 void DecisionForest<DescriptorType,TreeCount>::save_structure_to_file(const std::string& filename) const
 {
-  std::ofstream out(filename.c_str(), std::ios::trunc);
+  std::ofstream out(filename.c_str());
 
-  // Write the number of trees
+  // Write the number of trees.
   const uint32_t nbTrees = get_nb_trees();
   out << nbTrees << '\n';
 
-  // For each tree write first the number of nodes, then the number of leaves.
-  for (uint32_t i = 0; i < nbTrees; ++i)
+  // For each tree, first write the number of nodes, then the number of leaves.
+  for(uint32_t i = 0; i < nbTrees; ++i)
   {
     out << m_nbNodesPerTree[i] << ' ' << m_nbLeavesPerTree[i] << '\n';
   }
 
   // Then, for each tree, dump its nodes.
-  const NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
+  const NodeEntry *forestNodes = m_nodeImage->GetData(MEMORYDEVICE_CPU);
   for(uint32_t treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
   {
     for(uint32_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
     {
-      const NodeEntry &node = forestData[nodeIdx * nbTrees + treeIdx];
-      out << node.leftChildIdx << ' ' << node.leafIdx << ' ' << node.featureIdx << ' ' << std::setprecision(7)
-          << node.featureThreshold << '\n';
+      const NodeEntry& node = forestNodes[nodeIdx * nbTrees + treeIdx];
+      out << node.leftChildIdx << ' ' << node.leafIdx << ' ' << node.featureIdx << ' ' << std::setprecision(7) << node.featureThreshold << '\n';
     }
   }
 
