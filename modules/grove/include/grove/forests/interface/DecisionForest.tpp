@@ -274,8 +274,8 @@ void DecisionForest<DescriptorType,TreeCount>::save_structure_to_file(const std:
 
 #ifdef WITH_SCOREFORESTS
 template <typename DescriptorType, int TreeCount>
-int DecisionForest<DescriptorType, TreeCount>::convert_node(const Learner *tree, uint32_t nodeIdx, uint32_t treeIdx, uint32_t nbTrees, uint32_t outputIdx,
-                                                            uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves)
+int DecisionForest<DescriptorType,TreeCount>::convert_node(const Learner *tree, uint32_t nodeIdx, uint32_t treeIdx, uint32_t nbTrees, uint32_t outputIdx,
+                                                           uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves)
 {
   const Node *node = tree->GetNode(nodeIdx);
   NodeEntry& outputNode = outputNodes[outputIdx * nbTrees + treeIdx];
