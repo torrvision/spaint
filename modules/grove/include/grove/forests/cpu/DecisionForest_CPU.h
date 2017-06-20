@@ -41,9 +41,6 @@ public:
   using typename DecisionForest<DescriptorType, TreeCount>::LeafIndicesImage_CPtr;
 
   using typename DecisionForest<DescriptorType, TreeCount>::NodeEntry;
-  using typename DecisionForest<DescriptorType, TreeCount>::NodeImage;
-  using typename DecisionForest<DescriptorType, TreeCount>::NodeImage_Ptr;
-  using typename DecisionForest<DescriptorType, TreeCount>::NodeImage_CPtr;
 
   //#################### CONSTRUCTORS ####################
 public:

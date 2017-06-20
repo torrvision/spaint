@@ -27,22 +27,21 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename DescriptorType, int TreeCount>
-DecisionForest<DescriptorType, TreeCount>::DecisionForest() : m_nbTotalLeaves(0)
-{
-}
+DecisionForest<DescriptorType,TreeCount>::DecisionForest()
+: m_nbTotalLeaves(0)
+{}
 
 template <typename DescriptorType, int TreeCount>
-DecisionForest<DescriptorType, TreeCount>::DecisionForest(const std::string &fileName)
+DecisionForest<DescriptorType,TreeCount>::DecisionForest(const std::string& filename)
 {
-  load_structure_from_file(fileName);
+  load_structure_from_file(filename);
 }
 
 //#################### DESTRUCTOR ####################
 
 template <typename DescriptorType, int TreeCount>
-DecisionForest<DescriptorType, TreeCount>::~DecisionForest()
-{
-}
+DecisionForest<DescriptorType,TreeCount>::~DecisionForest()
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 

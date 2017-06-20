@@ -12,10 +12,9 @@
 
 #include <ORUtils/Image.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
+//#################### FORWARD DECLARATIONS ####################
 
 #ifdef WITH_SCOREFORESTS
-// Forward declare stuff, to avoid cluttering the global namespace with every ScoreForest class.
 class EnsembleLearner;
 class Learner;
 class PredictionGaussianMean;
@@ -24,23 +23,54 @@ class PredictionGaussianMean;
 namespace grove {
 
 /**
- * \brief An instance of a class deriving from this one represents a binary decision forest composed of a fixed number
- *        of trees.
+ * \brief An instance of a class deriving from this one represents a binary decision forest composed of a fixed number of trees.
  *
- * \note  Training is not performed by this class. We use the node indexing technique described in:
- *        "Toby Sharp, Implementing decision trees and forests on a GPU. (2008)"
+ * \note  Training is not performed by this class. We use the node indexing technique described in
+ *        "Implementing Decision Trees and Forests on a GPU" (Toby Sharp, 2008).
  *
- * \param DescriptorType  The type of descriptor used to find the leaves. Must have a floating-point member array named
- *                        "data".
- * \param TreeCount       The number of trees in the forest. Fixed at compilation time to allow the definition of a data
- *                        type representing the leaf indices.
+ * \param DescriptorType  The type of descriptor used to find the leaves. Must have a floating-point member array named "data".
+ * \param TreeCount       The number of trees in the forest. Fixed at compilation time to allow the definition of a data type
+ *                        representing the leaf indices.
  */
 template <typename DescriptorType, int TreeCount>
 class DecisionForest
 {
-  //#################### ENUMS ####################
+  //#################### ENUMERATIONS ####################
 public:
+  // Expose the tree count to client code.
   enum { TREE_COUNT = TreeCount };
+
+  //#################### NESTED TYPES ####################
+public:
+  /**
+   * \brief An instance of this struct represents a single node in a forest tree.
+   *
+   * \note Each branch node stores the parameters of a decision function that tests an individual feature against a threshold.
+   */
+  struct NodeEntry
+  {
+    /**
+     * The index of the feature in a feature descriptor that should be compared to the threshold.
+     * If the node is a leaf, this is set to 0.
+     */
+    uint32_t featureIdx;
+
+    /**
+     * The threshold against which to compare the feature. When routing a descriptor down the tree,
+     * we descend to the left child if descriptor.data[featureIdx] < featureThreshold, and descend
+     * to the right child otherwise. If the node is a leaf, this is set to 0.
+     */
+    float featureThreshold;
+
+    /** The index of the leaf associated with the node, if any, or -1 if the node is a branch. */
+    int leafIdx;
+
+    /**
+     * The index of the node's left child, if any, or -1 if the node is a leaf. Note that we don't
+     * need to store the index of the right child, because it's always either 1 + leftChildIdx or -1.
+     */
+    int leftChildIdx;
+  };
 
   //#################### TYPEDEFS ####################
 public:
@@ -48,63 +78,60 @@ public:
   typedef boost::shared_ptr<DescriptorImage> DescriptorImage_Ptr;
   typedef boost::shared_ptr<const DescriptorImage> DescriptorImage_CPtr;
 
-  typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
+  typedef ORUtils::VectorX<int,TREE_COUNT> LeafIndices;
   typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
   typedef boost::shared_ptr<LeafIndicesImage> LeafIndicesImage_Ptr;
   typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;
 
-  //#################### NESTED STRUCTS ####################
-public:
-  /**
-   * \brief An instance of this struct represents a single node in a forest tree.
-   */
-  struct NodeEntry
-  {
-    /** Index of the feature to evaluate. */
-    uint32_t featureIdx;
-
-    /** The threshold used to select the child when evaluating the node:
-     *  if descriptor.data[featureIdx] < featureThreshold then childIdx = leaftChildIdx else childIdx = leftChildIdx +
-     * 1.
-     */
-    float featureThreshold; // Feature threshold
-
-    /** The index of the leaf associated to the node. If the node is not a leaf, set to -1. */
-    int leafIdx;
-
-    /**
-     * \brief Index of the node's left child. We don't need to store the right child index because it's always
-     *        leftChildIdx + 1. Set to -1 if the node is a leaf.
-     */
-    int leftChildIdx;
-  };
-
-  //#################### TYPEDEFS ####################
-public:
+private:
   typedef ORUtils::Image<NodeEntry> NodeImage;
   typedef boost::shared_ptr<ORUtils::Image<NodeEntry> > NodeImage_Ptr;
-  typedef boost::shared_ptr<const ORUtils::Image<NodeEntry> > NodeImage_CPtr;
+
+  //#################### PROTECTED MEMBER VARIABLES ####################
+protected:
+  /** The number of leaves in each tree. */
+  std::vector<uint32_t> m_nbLeavesPerTree;
+
+  /** The number of nodes in each tree. */
+  std::vector<uint32_t> m_nbNodesPerTree;
+
+  /** The total number of leaves in the forest. */
+  uint32_t m_nbTotalLeaves;
+
+  /** An image storing the indexing structure of the forest. See the paper by Toby Sharp for details. */
+  NodeImage_Ptr m_nodeImage;
 
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Constructs an empty DecisionForest.
+   * \brief Constructs an empty decision forest.
    */
   DecisionForest();
 
   /**
-   * \brief Constructs an instance of a pretrained DecisionForest.
+   * \brief Loads a pre-trained decision forest from a file on disk.
    *
-   * \param fileName The path to a file representing a decision forest.
+   * \param filename The path to the file containing the forest.
    *
-   * \throws std::runtime_error if the forest cannot be loaded.
+   * \throws std::runtime_error If the forest cannot be loaded.
    */
-  explicit DecisionForest(const std::string &fileName);
+  explicit DecisionForest(const std::string& filename);
+
+#ifdef WITH_SCOREFORESTS
+  /**
+   * \brief Constructs a decision forest by converting an EnsembleLearner that was pre-trained using ScoreForests.
+   *
+   * \param pretrainedForest The pre-trained forest to convert.
+   *
+   * \throws std::runtime_error If the pre-trained forest cannot be converted.
+   */
+  explicit DecisionForest(const EnsembleLearner& pretrainedForest);
+#endif
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destructs a DecisionForest.
+   * \brief Destroys the decision forest.
    */
   virtual ~DecisionForest();
 
@@ -119,7 +146,7 @@ public:
    * \param leafIndices An image (of the same size as descriptors) wherein each element holds the TreeCount indices of
    *                    the leaves determined by the corresponding descriptor.
    */
-  virtual void find_leaves(const DescriptorImage_CPtr &descriptors, LeafIndicesImage_Ptr &leafIndices) const = 0;
+  virtual void find_leaves(const DescriptorImage_CPtr& descriptors, LeafIndicesImage_Ptr& leafIndices) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -181,7 +208,7 @@ public:
    * treeN_nodeN_leftChildIdx treeN_nodeN_leafIdx treeN_nodeN_featureIdx treeN_nodeN_featureThreshold
    *
    */
-  void load_structure_from_file(const std::string &fileName);
+  void load_structure_from_file(const std::string& fileName);
 
   /**
    * \brief Saves the forest into a file.
@@ -190,37 +217,11 @@ public:
    *
    * \throws std::runtime_error if the forest cannot be saved.
    */
-  void save_structure_to_file(const std::string &fileName) const;
-
-  //#################### PROTECTED MEMBER VARIABLES ####################
-protected:
-  /** The number of leaves in each tree. */
-  std::vector<uint32_t> m_nbLeavesPerTree;
-
-  /** The number of nodes in each tree. */
-  std::vector<uint32_t> m_nbNodesPerTree;
-
-  /** The total number of leaves in the forest. */
-  uint32_t m_nbTotalLeaves;
-
-  /** An image storing the indexing structure of the forest. See the paper by Toby Sharp for details. */
-  NodeImage_Ptr m_nodeImage;
-
-//#################### SCOREFOREST INTEROP FUNCTIONS ####################
-#ifdef WITH_SCOREFORESTS
-  //#################### CONSTRUCTORS ####################
-public:
-  /**
-   * \brief Constructs a DecisionForest converting an EnsembleLearner pretrained by the ScoreForests project.
-   *
-   * \param pretrainedForest The pretrained forest that will be converted into a DecisionForest.
-   *
-   * \throws std::runtime_error if the pretrained forest cannot be converted.
-   */
-  explicit DecisionForest(const EnsembleLearner &pretrainedForest);
+  void save_structure_to_file(const std::string& fileName) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+#ifdef WITH_SCOREFORESTS
   /**
    * \brief Converts a single node from a ScoreForest pretrained tree.
    *        This function is recursive, if called with the root of a tree converts the entire tree.
@@ -239,17 +240,11 @@ private:
    *
    * \return The y-index of the first free entry after the conversion of the node and all its descendents.
    */
-  int convert_node(const Learner *learner,
-                   uint32_t nodeIdx,
-                   uint32_t treeIdx,
-                   uint32_t nbTrees,
-                   uint32_t outputIdx,
-                   uint32_t outputFirstFreeIdx,
-                   NodeEntry *outputNodes,
-                   uint32_t &outputNbLeaves);
+  int convert_node(const Learner *learner, uint32_t nodeIdx, uint32_t treeIdx, uint32_t nbTrees, uint32_t outputIdx,
+                   uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves);
 #endif
 };
 
-} // namespace grove
+}
 
 #endif
