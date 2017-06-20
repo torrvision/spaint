@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_EXAMPLERESERVOIRSCUDA
-#define H_GROVE_EXAMPLERESERVOIRSCUDA
+#ifndef H_GROVE_EXAMPLERESERVOIRS_CUDA
+#define H_GROVE_EXAMPLERESERVOIRS_CUDA
 
 #include "../interface/ExampleReservoirs.h"
 #include "../../numbers/CUDARNG.h"
@@ -56,7 +56,7 @@ private:
   void add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
   /**
-   * \brief Reinitialises the random number generators with a known seed.
+   * \brief Reinitialises the random number generators using known seeds.
    */
   void reinit_rngs();
 
