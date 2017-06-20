@@ -12,10 +12,8 @@ namespace grove {
 //#################### CUDA KERNELS ####################
 
 template <typename NodeType, typename DescriptorType, typename LeafType>
-__global__ void ck_decision_forest_find_leaves(const NodeType *forestTexture,
-                                               const DescriptorType *descriptorsData,
-                                               Vector2i descriptorsImgSize,
-                                               LeafType *leafData)
+__global__ void ck_decision_forest_find_leaves(const NodeType *forestTexture, const DescriptorType *descriptorsData,
+                                               Vector2i descriptorsImgSize, LeafType *leafData)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -28,10 +26,16 @@ __global__ void ck_decision_forest_find_leaves(const NodeType *forestTexture,
 //#################### CONSTRUCTORS ####################
 
 template <typename DescriptorType, int TreeCount>
-DecisionForest_CUDA<DescriptorType, TreeCount>::DecisionForest_CUDA(const std::string &fileName)
-  : DecisionForest<DescriptorType, TreeCount>(fileName)
-{
-}
+DecisionForest_CUDA<DescriptorType,TreeCount>::DecisionForest_CUDA(const std::string& filename)
+: Base(filename)
+{}
+
+#ifdef WITH_SCOREFORESTS
+template <typename DescriptorType, int TreeCount>
+DecisionForest_CUDA<DescriptorType,TreeCount>::DecisionForest_CUDA(const EnsembleLearner& pretrainedForest)
+: Base(pretrainedForest)
+{}
+#endif
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -54,15 +58,4 @@ void DecisionForest_CUDA<DescriptorType, TreeCount>::find_leaves(const Descripto
   ORcudaKernelCheck;
 }
 
-//#################### SCOREFOREST INTEROP FUNCTIONS ####################
-#ifdef WITH_SCOREFORESTS
-
-template <typename DescriptorType, int TreeCount>
-DecisionForest_CUDA<DescriptorType, TreeCount>::DecisionForest_CUDA(const EnsembleLearner &pretrainedForest)
-  : DecisionForest<DescriptorType, TreeCount>(pretrainedForest)
-{
 }
-
-#endif
-
-} // namespace grove
