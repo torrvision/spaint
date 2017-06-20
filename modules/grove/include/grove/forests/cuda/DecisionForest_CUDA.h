@@ -17,8 +17,8 @@ namespace grove {
  * \note  Training is not performed by this class. We use the node indexing technique described in:
  *        "Implementing Decision Trees and Forests on a GPU" (Toby Sharp, 2008).
  *
- * \param DescriptorType  The type of descriptor used to find the leaves. Must have a floating-point member array named "data".
- * \param TreeCount       The number of trees in the forest. Fixed at compilation time to allow the definition of a data type
+ * \tparam DescriptorType The type of descriptor used to find the leaves. Must have a floating-point member array named "data".
+ * \tparam TreeCount      The number of trees in the forest. Fixed at compilation time to allow the definition of a data type
  *                        representing the leaf indices.
  */
 template <typename DescriptorType, int TreeCount>

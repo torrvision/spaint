@@ -54,8 +54,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CUDA));
 
   // Forest.
-  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(ITMLibSettings::DEVICE_CUDA,
-                                                                                        m_forestFilename);
+  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, ITMLibSettings::DEVICE_CUDA);
 
   // These variables have to be set here, since they depend on the forest that has just been loaded.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();

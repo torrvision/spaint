@@ -36,8 +36,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CPU));
 
   // Forest.
-  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(ITMLibSettings::DEVICE_CPU,
-                                                                                        m_forestFilename);
+  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, ITMLibSettings::DEVICE_CPU);
 
   // These variables have to be set here, since they depend on the forest.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
