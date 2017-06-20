@@ -12,16 +12,21 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename DescriptorType, int TreeCount>
-DecisionForest_CPU<DescriptorType, TreeCount>::DecisionForest_CPU(const std::string &fileName)
-  : DecisionForest<DescriptorType, TreeCount>(fileName)
-{
-}
+DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const std::string& filename)
+: Base(filename)
+{}
+
+#ifdef WITH_SCOREFORESTS
+template <typename DescriptorType, int TreeCount>
+DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const EnsembleLearner& pretrainedForest)
+: Base(pretrainedForest)
+{}
+#endif
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename DescriptorType, int TreeCount>
-void DecisionForest_CPU<DescriptorType, TreeCount>::find_leaves(const DescriptorImage_CPtr &descriptors,
-                                                                LeafIndicesImage_Ptr &leafIndices) const
+void DecisionForest_CPU<DescriptorType,TreeCount>::find_leaves(const DescriptorImage_CPtr& descriptors, LeafIndicesImage_Ptr& leafIndices) const
 {
   const NodeEntry *forestTexture = this->m_nodeImage->GetData(MEMORYDEVICE_CPU);
 
@@ -43,17 +48,4 @@ void DecisionForest_CPU<DescriptorType, TreeCount>::find_leaves(const Descriptor
   }
 }
 
-//#################### SCOREFOREST INTEROP FUNCTIONS ####################
-#ifdef WITH_SCOREFORESTS
-
-//#################### CONSTRUCTORS ####################
-
-template <typename DescriptorType, int TreeCount>
-DecisionForest_CPU<DescriptorType, TreeCount>::DecisionForest_CPU(const EnsembleLearner &pretrainedForest)
-  : DecisionForest<DescriptorType, TreeCount>(pretrainedForest)
-{
 }
-
-#endif
-
-} // namespace grove
