@@ -79,7 +79,7 @@ uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_trees() const
 }
 
 template <typename DescriptorType, int TreeCount>
-void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const std::string &fileName)
+void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const std::string& filename)
 {
   // Clean current forest.
   m_nodeImage.reset();
@@ -87,9 +87,9 @@ void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const s
   m_nbLeavesPerTree.clear();
   m_nbTotalLeaves = 0;
 
-  std::ifstream in(fileName.c_str());
+  std::ifstream in(filename.c_str());
 
-  if (!in) throw std::runtime_error("Couldn't load a forest from: " + fileName);
+  if (!in) throw std::runtime_error("Couldn't load a forest from: " + filename);
 
   // Check that the number of trees is the same as the template instantiation.
   uint32_t nbTrees;
@@ -189,9 +189,9 @@ void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const s
 }
 
 template <typename DescriptorType, int TreeCount>
-void DecisionForest<DescriptorType, TreeCount>::save_structure_to_file(const std::string &fileName) const
+void DecisionForest<DescriptorType, TreeCount>::save_structure_to_file(const std::string& filename) const
 {
-  std::ofstream out(fileName.c_str(), std::ios::trunc);
+  std::ofstream out(filename.c_str(), std::ios::trunc);
 
   // Write the number of trees
   const uint32_t nbTrees = get_nb_trees();
@@ -215,7 +215,7 @@ void DecisionForest<DescriptorType, TreeCount>::save_structure_to_file(const std
     }
   }
 
-  if (!out) throw std::runtime_error("Error saving the forest to a file: " + fileName);
+  if (!out) throw std::runtime_error("Error saving the forest to a file: " + filename);
 }
 
 //#################### SCOREFOREST INTEROP FUNCTIONS ####################
