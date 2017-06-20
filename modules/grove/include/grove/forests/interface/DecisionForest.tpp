@@ -128,34 +128,37 @@ uint32_t DecisionForest<DescriptorType,TreeCount>::get_nb_trees() const
 template <typename DescriptorType, int TreeCount>
 void DecisionForest<DescriptorType,TreeCount>::load_structure_from_file(const std::string& filename)
 {
-  // Clean current forest.
+  // Clear the current forest.
   m_nodeImage.reset();
   m_nbNodesPerTree.clear();
   m_nbLeavesPerTree.clear();
   m_nbTotalLeaves = 0;
 
   std::ifstream in(filename.c_str());
-
-  if (!in) throw std::runtime_error("Couldn't load a forest from: " + filename);
+  if(!in) throw std::runtime_error("Couldn't load a forest from: " + filename);
 
   // Check that the number of trees is the same as the template instantiation.
   uint32_t nbTrees;
   in >> nbTrees;
-  if (!in || nbTrees != get_nb_trees())
-    throw std::runtime_error("Number of trees of the loaded forest is incorrect. Should be " +
-                             boost::lexical_cast<std::string>(get_nb_trees()) + " - Read: " +
-                             boost::lexical_cast<std::string>(nbTrees));
+  if(!in || nbTrees != get_nb_trees())
+  {
+    throw std::runtime_error(
+      "Number of trees of the loaded forest is incorrect. Should be " +
+      boost::lexical_cast<std::string>(get_nb_trees()) + " - Read: " +
+      boost::lexical_cast<std::string>(nbTrees)
+    );
+  }
 
-  // Used to allocate the indexing texture (height = the maximum number of nodes, width = nbTrees)
+  // Used to allocate the indexing texture (height = the maximum number of nodes, width = nbTrees).
   uint32_t maxNbNodes = 0;
 
   // For each tree, first read the number of nodes, then the number of leaves.
-  for (uint32_t i = 0; i < nbTrees; ++i)
+  for(uint32_t i = 0; i < nbTrees; ++i)
   {
     uint32_t nbNodes, nbLeaves;
     in >> nbNodes >> nbLeaves;
 
-    if (!in) throw std::runtime_error("Error reading the dimensions of tree: " + boost::lexical_cast<std::string>(i));
+    if(!in) throw std::runtime_error("Error reading the dimensions of tree: " + boost::lexical_cast<std::string>(i));
 
     m_nbNodesPerTree.push_back(nbNodes);
     m_nbLeavesPerTree.push_back(nbLeaves);
@@ -165,12 +168,12 @@ void DecisionForest<DescriptorType,TreeCount>::load_structure_from_file(const st
   }
 
   std::cout << "Loading a forest with " << nbTrees << " trees.\n";
-  for (uint32_t i = 0; i < nbTrees; ++i)
+  for(uint32_t i = 0; i < nbTrees; ++i)
   {
     std::cout << "\tTree " << i << ": " << m_nbNodesPerTree[i] << " nodes and " << m_nbLeavesPerTree[i] << " leaves.\n";
   }
 
-  // Allocate data
+  // Allocate and clear the node image.
   const itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
   m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
   m_nodeImage->Clear();
@@ -179,22 +182,25 @@ void DecisionForest<DescriptorType,TreeCount>::load_structure_from_file(const st
   tvgutil::RandomNumberGenerator rng(42);
 #endif
 
-  // Read all nodes from the file.
-  NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
-  for (uint32_t treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
+  // Read all the nodes from the file.
+  NodeEntry *forestNodes = m_nodeImage->GetData(MEMORYDEVICE_CPU);
+  for(uint32_t treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
   {
-    for (uint32_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
+    for(uint32_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
     {
-      NodeEntry &node = forestData[nodeIdx * nbTrees + treeIdx];
+      NodeEntry &node = forestNodes[nodeIdx * nbTrees + treeIdx];
       in >> node.leftChildIdx >> node.leafIdx >> node.featureIdx >> node.featureThreshold;
 
-      if (!in)
-        throw std::runtime_error("Error reading node " + boost::lexical_cast<std::string>(nodeIdx) + " of tree " +
-                                 boost::lexical_cast<std::string>(treeIdx));
+      if(!in)
+      {
+        throw std::runtime_error(
+          "Error reading node " + boost::lexical_cast<std::string>(nodeIdx) + " of tree " +
+          boost::lexical_cast<std::string>(treeIdx)
+        );
+      }
 
 #if RANDOM_FEATURES
-      // Magic numbers to mimic the distribution found in the pre-trained office forest.
-
+      // The magic numbers mimic the distribution found in the pre-trained office forest.
       bool depthFeature = rng.generate_real_from_uniform(0.f, 1.f) < 0.3886f;
 
       if (depthFeature)
@@ -231,7 +237,7 @@ void DecisionForest<DescriptorType,TreeCount>::load_structure_from_file(const st
     }
   }
 
-  // Update forest on the device (NOP if CPU-only).
+  // Ensure that the node image is available on the GPU (if we're using it).
   m_nodeImage->UpdateDeviceFromHost();
 }
 

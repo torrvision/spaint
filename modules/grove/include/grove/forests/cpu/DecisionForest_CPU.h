@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_DECISIONFORESTCPU
-#define H_GROVE_DECISIONFORESTCPU
+#ifndef H_GROVE_DECISIONFOREST_CPU
+#define H_GROVE_DECISIONFOREST_CPU
 
 #include "../interface/DecisionForest.h"
 

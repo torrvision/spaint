@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_DECISIONFORESTSHARED
-#define H_GROVE_DECISIONFORESTSHARED
+#ifndef H_GROVE_DECISIONFOREST_SHARED
+#define H_GROVE_DECISIONFOREST_SHARED
 
 #include <ORUtils/PlatformIndependence.h>
 #include <ORUtils/Vector.h>

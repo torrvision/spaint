@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_EXAMPLERESERVOIRSSHARED
-#define H_GROVE_EXAMPLERESERVOIRSSHARED
+#ifndef H_GROVE_EXAMPLERESERVOIRS_SHARED
+#define H_GROVE_EXAMPLERESERVOIRS_SHARED
 
 #include <ORUtils/PlatformIndependence.h>
 
