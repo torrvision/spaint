@@ -43,7 +43,7 @@ void DecisionForest_CPU<DescriptorType,TreeCount>::find_leaves(const DescriptorI
   {
     for (int x = 0; x < imgSize.x; ++x)
     {
-      decision_forest_find_leaves_shared(forestTexture, descriptorsData, leafData, imgSize, x, y);
+      compute_leaf_indices(x, y, descriptorsData, imgSize, forestTexture, leafData);
     }
   }
 }

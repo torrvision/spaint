@@ -20,7 +20,7 @@ __global__ void ck_decision_forest_find_leaves(const NodeType *forestTexture, co
 
   if (x >= descriptorsImgSize.x || y >= descriptorsImgSize.y) return;
 
-  decision_forest_find_leaves_shared(forestTexture, descriptorsData, leafData, descriptorsImgSize, x, y);
+  compute_leaf_indices(x, y, descriptorsData, descriptorsImgSize, forestTexture, leafData);
 }
 
 //#################### CONSTRUCTORS ####################
@@ -40,8 +40,7 @@ DecisionForest_CUDA<DescriptorType,TreeCount>::DecisionForest_CUDA(const Ensembl
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename DescriptorType, int TreeCount>
-void DecisionForest_CUDA<DescriptorType, TreeCount>::find_leaves(const DescriptorImage_CPtr &descriptors,
-                                                                 LeafIndicesImage_Ptr &leafIndices) const
+void DecisionForest_CUDA<DescriptorType,TreeCount>::find_leaves(const DescriptorImage_CPtr& descriptors, LeafIndicesImage_Ptr& leafIndices) const
 {
   const NodeEntry *forestTexture = this->m_nodeImage->GetData(MEMORYDEVICE_CUDA);
 

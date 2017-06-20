@@ -6,53 +6,52 @@
 #ifndef H_GROVE_DECISIONFOREST_SHARED
 #define H_GROVE_DECISIONFOREST_SHARED
 
-#include <ORUtils/PlatformIndependence.h>
 #include <ORUtils/Vector.h>
 
 namespace grove {
 
 /**
- * \brief Find the leaf indices associated to a descriptor.
+ * \brief Finds the leaf indices associated with a descriptor and writes them into the leaf indices image.
  *
- * \param forestTexture      The forest indexing structure.
- * \param descriptorsData    Pointer to an image of descriptors.
- * \param leafData           Pointer to the image wherein the leaf indices will be stored.
- * \param descriptorsImgSize Size of the descriptor image.
- * \param x                  The x coordinate of the descriptor to evaluate.
- * \param y                  The y coordinate of the descriptor to evaluate.
+ * \param x           The x coordinate of the descriptor to evaluate.
+ * \param y           The y coordinate of the descriptor to evaluate.
+ * \param descriptors The descriptors image.
+ * \param imgSize     The size of the descriptors and leaf indices images.
+ * \param nodeImage   The forest indexing structure.
+ * \param leafIndices An image in which to store the leaf indices computed for the descriptor.
  */
 template <typename NodeType, typename DescriptorType, int TreeCount>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void decision_forest_find_leaves_shared(const NodeType *forestTexture,
-                                                                           const DescriptorType *descriptorsData,
-                                                                           ORUtils::VectorX<int, TreeCount> *leafData,
-                                                                           Vector2i descriptorsImgSize,
-                                                                           int x,
-                                                                           int y)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_leaf_indices(int x, int y, const DescriptorType *descriptors, Vector2i imgSize,
+                                 const NodeType *nodeImage, ORUtils::VectorX<int,TreeCount> *leafIndices)
 {
-  const int nbTrees = TreeCount;
-  const int rasterDescriptorIdx = y * descriptorsImgSize.width + x;
-  const DescriptorType &currentDescriptor = descriptorsData[rasterDescriptorIdx];
+  // Look up the descriptor whose leaf indices we want to compute.
+  const int rasterIdx = y * imgSize.width + x;
+  const DescriptorType& currentDescriptor = descriptors[rasterIdx];
 
-  for (int treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
+  // For each tree in the forest:
+  for(int treeIdx = 0; treeIdx < TreeCount; ++treeIdx)
   {
+    // Start from the root node and iteratively walk down the tree until a leaf is reached.
     uint32_t currentNodeIdx = 0;
-    NodeType node = forestTexture[currentNodeIdx * nbTrees + treeIdx];
+    NodeType node = nodeImage[currentNodeIdx * TreeCount + treeIdx];
+
+    // Note: This is for clarity: we could (if desired) test node.leafIdx directly in the while condition.
     bool isLeaf = node.leafIdx >= 0;
 
-    while (!isLeaf)
+    while(!isLeaf)
     {
-      // Evaluate split function
-      currentNodeIdx = node.leftChildIdx + (currentDescriptor.data[node.featureIdx] > node.featureThreshold);
-
-      // Update node
-      node = forestTexture[currentNodeIdx * nbTrees + treeIdx];
-      isLeaf = node.leafIdx >= 0; // A bit redundant (could test in the while condition), but clearer.
+      // Descend to either the left or right subtree.
+      currentNodeIdx = node.leftChildIdx + static_cast<int>(currentDescriptor.data[node.featureIdx] > node.featureThreshold);
+      node = nodeImage[currentNodeIdx * TreeCount + treeIdx];
+      isLeaf = node.leafIdx >= 0;
     }
 
-    leafData[rasterDescriptorIdx][treeIdx] = node.leafIdx;
+    // Write the index of the leaf that has been reached into the leaf indices image.
+    leafIndices[rasterIdx][treeIdx] = node.leafIdx;
   }
 }
 
-} // namespace grove
+}
 
 #endif
