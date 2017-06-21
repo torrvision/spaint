@@ -4,11 +4,13 @@
  */
 
 #include "RelocaliserFiguresGenerator.h"
+using namespace spaint;
 
 #include <fstream>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
+using boost::assign::list_of;
 
 #include <opencv2/opencv.hpp>
 
@@ -25,9 +27,11 @@ using namespace grove;
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 using namespace tvgutil;
 
-using namespace spaint;
+//#################### NAMESPACE ALIASES ####################
 
-namespace spaintgui {
+namespace fs = boost::filesystem;
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model)
 {
@@ -46,7 +50,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
   ScoreRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreRelocaliser>(
       boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser());
 
-  std::vector<uint32_t> predictionIndices{3234, 4335, 4545, 6565, 6666};
+  std::vector<uint32_t> predictionIndices = list_of(3234)(4335)(4545)(6565)(6666);
 
   // Save cluster contents.
   {
@@ -137,7 +141,7 @@ void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
 
   // Leaf indices for apt1-kitchen
   //  std::vector<uint32_t> predictionIndices{4242, 42, 4545, 5555, 6666};
-  std::vector<uint32_t> predictionIndices{3234, 4335, 4545, 6565, 6666};
+  std::vector<uint32_t> predictionIndices = list_of(3234)(4335)(4545)(6565)(6666);
 
   //    std::vector<uint32_t> predictionIndices
   //    { 5198, 447, 5438, 1664, 4753 };
@@ -209,7 +213,7 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
   std::vector<cv::Mat> rgbWithPoints;
   std::vector<cv::Mat> raycastedPoses;
 
-  std::vector<cv::Scalar> colours{CV_RGB(255, 0, 0), CV_RGB(0, 255, 0), CV_RGB(0, 0, 255)};
+  std::vector<cv::Scalar> colours = list_of(CV_RGB(255, 0, 0))(CV_RGB(0, 255, 0))(CV_RGB(0, 0, 255));
 
   for(size_t candidateIdx = 0; candidateIdx < candidates.size(); ++candidateIdx)
   {
@@ -325,5 +329,4 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
     }
 #endif
   exit(0);
-}
 }
