@@ -188,7 +188,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
   // for all.
   m_nbMaxInliers =
-      m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(std::log2(m_maxPoseCandidatesAfterCull)));
+      m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
 
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 

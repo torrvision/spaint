@@ -58,7 +58,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
 
     std::cout << "Saving clusters in " << fileName << '\n';
 
-    std::ofstream outFile(fileName);
+    std::ofstream outFile(fileName.c_str());
 
     // For each prediction print centroids, covariances, nbInliers
     for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
@@ -92,7 +92,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
 
     std::cout << "Saving reservoir contents in " << fileName << '\n';
 
-    std::ofstream outFile(fileName);
+    std::ofstream outFile(fileName.c_str());
 
     // For each prediction print centroids, covariances, nbInliers
     for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
