@@ -14,17 +14,13 @@ namespace grove {
  * \param T         The array element type.
  * \param Capacity  The array capacity.
  */
-template <typename T, int Capacity>
+template <typename T, int CAPACITY>
 struct Array
 {
-  //#################### TYPEDEFS ####################
-
-  typedef T ClusterType;
-
   //#################### ENUMERATIONS ####################
 
   /** Expose the array capacity. */
-  enum { CAPACITY = Capacity };
+  enum { Capacity = CAPACITY };
 
   //#################### PUBLIC MEMBER VARIABLES ####################
 

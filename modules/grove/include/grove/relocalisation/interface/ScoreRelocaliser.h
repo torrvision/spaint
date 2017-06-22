@@ -51,7 +51,7 @@ public:
   typedef RGBDPatchDescriptor DescriptorType;
   typedef ScorePrediction PredictionType;
 
-  typedef ExampleClusterer<ExampleType, ClusterType, PredictionType::CAPACITY> Clusterer;
+  typedef ExampleClusterer<ExampleType, ClusterType, PredictionType::Capacity> Clusterer;
   typedef boost::shared_ptr<Clusterer> Clusterer_Ptr;
 
   typedef ORUtils::VectorX<int, FOREST_TREE_COUNT> LeafIndices;

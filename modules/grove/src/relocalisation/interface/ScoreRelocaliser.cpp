@@ -43,10 +43,10 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
   //
   m_clustererSigma = m_settings->get_first_value<float>(settingsNamespace + "clustererSigma", 0.1f);
   m_clustererTau = m_settings->get_first_value<float>(settingsNamespace + "clustererTau", 0.05f);
-  m_maxClusterCount = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxClusterCount", ScorePrediction::CAPACITY);
+  m_maxClusterCount = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxClusterCount", ScorePrediction::Capacity);
   m_minClusterSize = m_settings->get_first_value<uint32_t>(settingsNamespace + "minClusterSize", 20);
 
-  if(m_maxClusterCount > ScorePrediction::CAPACITY)
+  if(m_maxClusterCount > ScorePrediction::Capacity)
   {
     throw std::invalid_argument(settingsNamespace + "maxClusterCount > ScorePrediction::MAX_CLUSTERS");
   }
