@@ -101,6 +101,9 @@ SET(reservoirs_interface_templates include/grove/reservoirs/interface/ExampleRes
 ##
 SET(reservoirs_shared_headers include/grove/reservoirs/shared/ExampleReservoirs_Shared.h)
 
+##
+SET(util_headers include/grove/util/Array.h)
+
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
@@ -126,6 +129,7 @@ ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
 ${reservoirs_shared_headers}
+${util_headers}
 )
 
 SET(templates
@@ -176,6 +180,7 @@ SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_te
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_templates})
 SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})
 SOURCE_GROUP(reservoirs\\shared FILES ${reservoirs_shared_headers})
+SOURCE_GROUP(util FILES ${util_headers})
 
 ##########################################
 # Specify additional include directories #
