@@ -83,7 +83,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
     }
 
     // Normalise the energy.
-    energy /= static_cast<float>(pred.nbClusters);
+    energy /= static_cast<float>(pred.size);
     energy /= static_cast<float>(pred.clusters[argmax].nbInliers);
 
     if (energy < 1e-6f) energy = 1e-6f;
@@ -155,11 +155,11 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
     // Grab its associated score prediction.
     const ScorePrediction &selectedPrediction = predictionsData[linearFeatureIdx];
     // If the prediction has no modes, try again.
-    if (selectedPrediction.nbClusters == 0) continue;
+    if (selectedPrediction.size == 0) continue;
 
     // Either use the first mode or select one randomly, depending on the parameters.
     const int selectedModeIdx = useAllModesPerLeafInPoseHypothesisGeneration
-                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.nbClusters - 1)
+                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.size - 1)
                                     : 0;
 
     // Cache camera and world points, used for the following checks.
@@ -297,7 +297,7 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
   // not be set.
   // We also assume that the inlier is valid (we checked that before, when we selected it).
   const int bestModeIdx = score_prediction_get_best_mode(prediction, inlierWorldPosition);
-  if (bestModeIdx < 0 || bestModeIdx >= prediction.nbClusters)
+  if (bestModeIdx < 0 || bestModeIdx >= prediction.size)
   {
     // This point should not have been selected as inlier.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
@@ -357,7 +357,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Key
     if (!keypointsData[linearIdx].valid) continue;
 
     // Check that we have a prediction with a non null number of modes.
-    if (predictionsData[linearIdx].nbClusters == 0) continue;
+    if (predictionsData[linearIdx].size == 0) continue;
 
     // Finally, check the mask if necessary.
     bool validIndex = !useMask;

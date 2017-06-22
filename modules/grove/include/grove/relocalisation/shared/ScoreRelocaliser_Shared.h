@@ -64,11 +64,11 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
 
   // Not using a reference to the output image to avoid global memory accesses.
   ScorePrediction finalPrediction;
-  finalPrediction.nbClusters = 0;
+  finalPrediction.size = 0;
 
   // Merge the first nbMaxPredictions from the selected cluster arrays.
   // The assumption is that the modal clusters in leafPredictions are already sorted by descending number of inliers.
-  while (finalPrediction.nbClusters < nbMaxPredictions)
+  while (finalPrediction.size < nbMaxPredictions)
   {
     int bestTreeIdx = 0;
     int bestTreeNbInliers = 0;
@@ -80,7 +80,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
       const int currentModeIdx = treeModeIdx[treeIdx];
 
       // The number of modes for the prediction associated to the current tree.
-      const int predictionModeCount = selectedPredictions[treeIdx].nbClusters;
+      const int predictionModeCount = selectedPredictions[treeIdx].size;
 
       // If the prediction has less modes than currentModeIdx we cannot do anything for this tree.
       if (predictionModeCount <= currentModeIdx)
@@ -107,7 +107,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
     }
 
     // Copy the chosen mode into the output array.
-    finalPrediction.clusters[finalPrediction.nbClusters++] =
+    finalPrediction.clusters[finalPrediction.size++] =
         selectedPredictions[bestTreeIdx].clusters[treeModeIdx[bestTreeIdx]];
 
     // Increment the starting index for the associated tree.

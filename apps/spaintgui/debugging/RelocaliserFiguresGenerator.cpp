@@ -68,8 +68,8 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
     for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
       const ScorePrediction p = scoreRelocaliser->get_raw_prediction(treeIdx, predictionIndices[treeIdx]);
-      outFile << p.nbClusters << ' ' << predictionIndices[treeIdx] << '\n';
-      for(int modeIdx = 0; modeIdx < p.nbClusters; ++modeIdx)
+      outFile << p.size << ' ' << predictionIndices[treeIdx] << '\n';
+      for(int modeIdx = 0; modeIdx < p.size; ++modeIdx)
       {
         const Mode3DColour &m = p.clusters[modeIdx];
         outFile << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
@@ -150,8 +150,8 @@ void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
   for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
   {
     const ScorePrediction p = scoreRelocaliser->get_raw_prediction(treeIdx, predictionIndices[treeIdx]);
-    std::cout << p.nbClusters << ' ' << predictionIndices[treeIdx] << '\n';
-    for(int modeIdx = 0; modeIdx < p.nbClusters; ++modeIdx)
+    std::cout << p.size << ' ' << predictionIndices[treeIdx] << '\n';
+    for(int modeIdx = 0; modeIdx < p.size; ++modeIdx)
     {
       const Mode3DColour &m = p.clusters[modeIdx];
       std::cout << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
@@ -311,8 +311,8 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
     for (int i = 0; i < 3; ++i)
     {
       const ScorePrediction p = predictions[i];
-      std::cout << p.nbClusters << ' ' << linearIdxDownsampled[i] << '\n';
-      for (int modeIdx = 0; modeIdx < p.nbClusters; ++modeIdx)
+      std::cout << p.size << ' ' << linearIdxDownsampled[i] << '\n';
+      for (int modeIdx = 0; modeIdx < p.size; ++modeIdx)
       {
         const Mode3DColour &m = p.clusters[modeIdx];
         std::cout << 1 << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';

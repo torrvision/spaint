@@ -48,7 +48,7 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction &pred
   //    maxScore = 0.0f;
 
   // Iterate over all the modal clusters stored in the struct.
-  for (int m = 0; m < prediction.nbClusters; ++m)
+  for (int m = 0; m < prediction.size; ++m)
   {
     const Mode3DColour &currentMode = prediction.clusters[m];
 

@@ -156,12 +156,12 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
     int outputClusterIdx = -1;
 
 #ifdef __CUDACC__
-    outputClusterIdx = atomicAdd(&currentClusterContainer.nbClusters, 1);
+    outputClusterIdx = atomicAdd(&currentClusterContainer.size, 1);
 #else
 #ifdef WITH_OPENMP
 #pragma omp atomic capture
 #endif
-    outputClusterIdx = currentClusterContainer.nbClusters++;
+    outputClusterIdx = currentClusterContainer.size++;
 #endif
 
     // Grab the size of the current example set.
@@ -360,7 +360,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
                                               int containerIdx)
 {
   // Just reset the number of clusters, no need to reset the actual clusters since they will be overwritten later.
-  clusterContainers[containerIdx].nbClusters = 0;
+  clusterContainers[containerIdx].size = 0;
 }
 
 /**

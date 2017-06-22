@@ -9,30 +9,33 @@
 namespace grove {
 
 /**
- * \brief An instance of this struct represents a fixed-size container of typed clusters output
- *        by the ExampleClusterer class.
+ * \brief An instance of an instantiation of this struct template represents a fixed-capacity container
+ *        of typed clusters (e.g. as output by an example clusterer).
  *
- * \param T    The type of the contained clusters.
- * \param SIZE The maximum number of clusters contained in a ClusterContainer.
+ * \param T         The type of the contained clusters.
+ * \param Capacity  The maximum number of clusters that can be stored in the container.
  */
-template <typename T, int SIZE>
+template <typename T, int Capacity>
 struct ClusterContainer
 {
   //#################### TYPEDEFS ####################
+
   typedef T ClusterType;
 
-  //#################### ENUMS ####################
-  /** The maximum number of modal clusters associated to the prediction. */
-  enum { MAX_CLUSTERS = SIZE };
+  //#################### ENUMERATIONS ####################
 
-  //#################### MEMBER VARIABLES ####################
-  /** The modal clusters. */
+  /** The maximum number of modal clusters associated to the prediction. */
+  enum { MAX_CLUSTERS = Capacity };
+
+  //#################### PUBLIC MEMBER VARIABLES ####################
+
+  /** The clusters. */
   T clusters[MAX_CLUSTERS];
 
-  /** The actual number of modes stored in the struct. */
-  int nbClusters;
+  /** The number of clusters currently stored in the container. */
+  int size;
 };
 
-} // namespace grove
+}
 
-#endif // H_GROVE_CLUSTERCONTAINER
+#endif
