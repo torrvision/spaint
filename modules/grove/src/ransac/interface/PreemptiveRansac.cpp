@@ -163,9 +163,25 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_minSquaredDistanceBetweenSampledModes =
       m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
 
+  // Optimisation parameters defaulted as in Valentin's paper.
+
+  m_poseOptimisationEnergyThreshold =
+      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);
+
+  // Sets the termination condition for the pose optimisation.
+  m_poseOptimisationGradientThreshold =
+      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);
+
   // In m.
-  m_poseOptimizationInlierThreshold =
+  m_poseOptimisationInlierThreshold =
       m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);
+
+  // Maximum number of LM iterations.
+  m_poseOptimisationMaxIterations =
+      m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);
+
+  m_poseOptimisationStepThreshold =
+      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);
 
   // Whether or not to optimise the poses with LM.
   m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "poseUpdate", true);
@@ -329,7 +345,6 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     // inliers.
     if(m_poseUpdate)
     {
-      ORcudaSafeCall(cudaDeviceSynchronize());
       m_timerPrepareOptimisation[iteration].start();
       prepare_inliers_for_optimisation();
       m_timerPrepareOptimisation[iteration].stop();
@@ -361,6 +376,11 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     m_timerInlierSampling[iteration].start();
     sample_inlier_candidates(true);
     m_timerInlierSampling[iteration].stop();
+
+    // Having selected the inlier points, find the best associated modes to use during optimisation.
+    m_timerPrepareOptimisation[iteration].start();
+    prepare_inliers_for_optimisation();
+    m_timerPrepareOptimisation[iteration].stop();
 
     // Run optimisation.
     m_timerOptimisation[iteration].start();
@@ -469,18 +489,24 @@ namespace {
  */
 struct PointsForLM
 {
-  uint32_t nbPoints; // Comes first to avoid padding.
   const Vector4f *cameraPoints;
   const Mode3DColour *predictedModes;
+  uint32_t nbPoints; // Comes last to avoid padding.
 };
 
 /**
  * \brief Compute the energy using the Mahalanobis distance.
  */
 static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM &pts,
-                                                                   const ORUtils::SE3Pose &candidateCameraPose)
+                                                                   const ORUtils::SE3Pose &candidateCameraPose,
+                                                                   double *jac = NULL)
 {
   double res = 0.0;
+
+  if(jac)
+  {
+    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
+  }
 
   for(uint32_t i = 0; i < pts.nbPoints; ++i)
   {
@@ -488,8 +514,39 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
 
     const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
     const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-    const double err = dot(diff, pts.predictedModes[i].positionInvCovariance * diff); // Mahalanobis sqr distance
+    const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
+//    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // Mahalanobis distance
+    const float err = dot(diff, invCovarianceTimesDiff); // sqr Mahalanobis distance
+
     res += err;
+
+    if(jac)
+    {
+      const Vector3f normGradient = 2 * invCovarianceTimesDiff;
+//      const Vector3f normGradient = invCovarianceTimesDiff / err;
+
+      //      jac[0] += normGradient.x;
+      //      jac[1] += normGradient.y;
+      //      jac[2] += normGradient.z;
+
+      //      jac[3] -= normGradient.y * transformedPt.z - normGradient.z * transformedPt.y;
+      //      jac[4] -= normGradient.x * -transformedPt.z + normGradient.z * transformedPt.x;
+      //      jac[5] -= normGradient.x * transformedPt.y - normGradient.y * transformedPt.x;
+
+      const Vector3f poseGradient[6] = {
+          Vector3f(1, 0, 0),
+          Vector3f(0, 1, 0),
+          Vector3f(0, 0, 1),
+          -Vector3f(0, transformedPt.z, -transformedPt.y),
+          -Vector3f(-transformedPt.z, 0, transformedPt.x),
+          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+      };
+
+      for(uint32_t i = 0; i < 6; ++i)
+      {
+        jac[i] += dot(normGradient, poseGradient[i]);
+      }
+    }
   }
 
   return res;
@@ -501,12 +558,31 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
 static void
     Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array &ksi, alglib::real_1d_array &fi, void *ptr)
 {
+  //  static int count = 0;
+  //  std::cout << "F: " << count++ << '\n';
+
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
   const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
 
   // Compute the current energy.
   fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
+}
+
+static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array &ksi,
+                                                           alglib::real_1d_array &fi,
+                                                           alglib::real_2d_array &jac,
+                                                           void *ptr)
+{
+  //  static int count = 0;
+  //  std::cout << "FJ: " << count++ << '\n';
+
+  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+
+  // Compute the current energy.
+  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
 }
 
 /***************************************************/
@@ -517,18 +593,57 @@ static void
  * \brief Compute the energy using the L2 distance between the points.
  */
 static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM &pts,
-                                                       const ORUtils::SE3Pose &candidateCameraPose)
+                                                       const ORUtils::SE3Pose &candidateCameraPose,
+                                                       double *jac = NULL)
 {
   double res = 0.0;
+
+  if(jac)
+  {
+    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
+  }
 
   for(uint32_t i = 0; i < pts.nbPoints; ++i)
   {
     if(pts.cameraPoints[i].w == 0.f) continue;
 
-    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
+    const Vector3f cameraPoint = pts.cameraPoints[i].toVector3();
+    const Vector3f transformedPt = candidateCameraPose.GetM() * cameraPoint;
     const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-    const double err = length(diff); // sqr distance
+    const double err = length(diff); // distance
+//    const double err = dot(diff, diff); // sqr distance
     res += err;
+
+    if(jac)
+    {
+      //      const Vector3f normGradient = 2 * diff;
+      const Vector3f normGradient = diff / err;
+
+      //      const Vector3f translationGradient = normGradient;
+      //      const Vector3f rotationGradient = -cross(normGradient, transformedPt);
+
+      //      jac[0] += translationGradient[0];
+      //      jac[1] += translationGradient[1];
+      //      jac[2] += translationGradient[2];
+
+      //      jac[3] += rotationGradient[0];
+      //      jac[4] += rotationGradient[1];
+      //      jac[5] += rotationGradient[2];
+
+      const Vector3f poseGradient[6] = {
+          Vector3f(1, 0, 0),
+          Vector3f(0, 1, 0),
+          Vector3f(0, 0, 1),
+          -Vector3f(0, transformedPt.z, -transformedPt.y),
+          -Vector3f(-transformedPt.z, 0, transformedPt.x),
+          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+      };
+
+      for(uint32_t i = 0; i < 6; ++i)
+      {
+        jac[i] += dot(normGradient, poseGradient[i]);
+      }
+    }
   }
 
   return res;
@@ -545,6 +660,19 @@ static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &ksi, al
 
   // Compute the current energy.
   fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
+}
+
+static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array &ksi,
+                                               alglib::real_1d_array &fi,
+                                               alglib::real_2d_array &jac,
+                                               void *ptr)
+{
+  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+
+  // Compute the current energy.
+  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
 }
 
 /** Alglib's diagnostic function. Currently does nothing, but could print stuff. */
@@ -578,63 +706,57 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
 
   // Convert the 6 parameters to a format that alglib likes.
-  const float *ksiF = candidateCameraPose.GetParams();
-  double ksiD[6];
-
-  // Cast to double
-  for(int i = 0; i < 6; ++i) ksiD[i] = static_cast<double>(ksiF[i]);
-
   alglib::real_1d_array ksi_;
-  ksi_.setcontent(6, ksiD);
-
-  // Parameters harcoded as in Valentin's paper.
-  double differentiationStep = 0.0001;
-  double epsf = 0;
-  double epsg = 0.000001;
-  double epsx = 0;
-  alglib::ae_int_t maxits = 100;
+  ksi_.setlength(6);
+  for(int i = 0; i < 6; ++i) ksi_[i] = static_cast<double>(candidateCameraPose.GetParams()[i]);
 
   // Set up the optimiser.
   alglib::minlmstate state;
-  alglib::minlmreport rep;
-  alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
-  alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
+//  const double differentiationStep = 0.0001;
+//  alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
+  alglib::minlmcreatevj(6, 1, ksi_, state);
+  alglib::minlmsetcond(state,
+                       m_poseOptimisationGradientThreshold,
+                       m_poseOptimisationEnergyThreshold,
+                       m_poseOptimisationStepThreshold,
+                       m_poseOptimisationMaxIterations);
 
-  // Compute the energy and run the optimiser.
-  double energyBefore, energyAfter;
+  // Run the optimiser.
   if(m_usePredictionCovarianceForPoseOptimization)
   {
-    energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(ptsForLM, candidateCameraPose);
-    alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance, call_after_each_step, &ptsForLM);
+    alglib::minlmoptimize(state,
+                          Continuous3DOptimizationUsingFullCovariance,
+                          Continuous3DOptimizationUsingFullCovarianceJac,
+                          call_after_each_step,
+                          &ptsForLM);
   }
   else
   {
-    energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM, candidateCameraPose);
-    alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, call_after_each_step, &ptsForLM);
+    alglib::minlmoptimize(state,
+                          Continuous3DOptimizationUsingL2,
+                          Continuous3DOptimizationUsingL2Jac,
+                          call_after_each_step,
+                          &ptsForLM);
   }
 
   // Extract the results and update the SE3Pose accordingly.
+  alglib::minlmreport rep;
   alglib::minlmresults(state, ksi_, rep);
-  candidateCameraPose.SetFrom(ksi_[0], ksi_[1], ksi_[2], ksi_[3], ksi_[4], ksi_[5]);
+  candidateCameraPose.SetFrom(static_cast<float>(ksi_[0]),
+                              static_cast<float>(ksi_[1]),
+                              static_cast<float>(ksi_[2]),
+                              static_cast<float>(ksi_[3]),
+                              static_cast<float>(ksi_[4]),
+                              static_cast<float>(ksi_[5]));
 
-  // Compute the final energy.
-  if(m_usePredictionCovarianceForPoseOptimization)
-  {
-    energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(ptsForLM, candidateCameraPose);
-  }
-  else
-  {
-    energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM, candidateCameraPose);
-  }
-
-  // Store the updated pose iff the final energy is better than the initial one.
-  if(energyAfter < energyBefore)
+  // Store the updated pose iff the optimisation succeeded.
+  if(rep.terminationtype >= 0)
   {
     poseCandidate.cameraPose = candidateCameraPose.GetM();
     return true;
   }
 
-  // Got a worse energy at the end.
+  // Optimisation failed.
   return false;
 }
 

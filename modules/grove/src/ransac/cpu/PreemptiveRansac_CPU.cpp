@@ -126,7 +126,7 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
                                                          poseCandidatesData,
                                                          candidateCameraPoints,
                                                          candidateModes,
-                                                         m_poseOptimizationInlierThreshold,
+                                                         m_poseOptimisationInlierThreshold,
                                                          candidateIdx,
                                                          inlierIdx);
     }

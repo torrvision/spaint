@@ -142,14 +142,26 @@ protected:
   /** The camera points used for the pose optimisation step. Each row represents the points for a pose candidate. */
   ITMFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
 
-  /** The modes used for the pose optimisation step. Each row represents the modes for a pose candidate. */
-  Mode3DColourMemoryBlock_Ptr m_poseOptimisationPredictedModes;
+  /** The minimum value that has to be reached by the energy function during pose optimisation to terminate. */
+  double m_poseOptimisationEnergyThreshold;
+
+  /** The minimum value that has to be reached by the gradient's norm during pose optimisation to terminate. */
+  double m_poseOptimisationGradientThreshold;
 
   /**
    * The maximum distance between the estimated world coordinates of a point and its predicted mode to be considered as
    * inlier during the pose optimisation step.
    */
-  float m_poseOptimizationInlierThreshold;
+  float m_poseOptimisationInlierThreshold;
+
+  /** The maximum number of Levenberg-Marquardt iterations to perform during pose optimisation. */
+  uint32_t m_poseOptimisationMaxIterations;
+
+  /** The modes used for the pose optimisation step. Each row represents the modes for a pose candidate. */
+  Mode3DColourMemoryBlock_Ptr m_poseOptimisationPredictedModes;
+
+  /** The minimum value that has to be reached by the step's norm during pose optimisation to terminate. */
+  double m_poseOptimisationStepThreshold;
 
   /** Whether or not to optimise the surviving poses after each P-RANSAC iteration. */
   bool m_poseUpdate;

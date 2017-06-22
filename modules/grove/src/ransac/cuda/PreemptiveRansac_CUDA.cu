@@ -303,7 +303,7 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
                                                                                  nbPoseCandidates,
                                                                                  candidateCameraPoints,
                                                                                  candidateModes,
-                                                                                 m_poseOptimizationInlierThreshold);
+                                                                                 m_poseOptimisationInlierThreshold);
   ORcudaKernelCheck;
 
   // Compute the actual size of the buffers to avoid unnecessary copies.
