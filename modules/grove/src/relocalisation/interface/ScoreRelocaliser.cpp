@@ -48,7 +48,7 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
 
   if(m_maxClusterCount > ScorePrediction::Capacity)
   {
-    throw std::invalid_argument(settingsNamespace + "maxClusterCount > ScorePrediction::MAX_CLUSTERS");
+    throw std::invalid_argument(settingsNamespace + "maxClusterCount > ScorePrediction::Capacity");
   }
 
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();

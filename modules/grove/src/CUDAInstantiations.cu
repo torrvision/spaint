@@ -22,7 +22,7 @@ namespace {
 //#################### EXPLICIT INSTANTIATIONS ####################
 
 template class DecisionForest_CUDA<RGBDPatchDescriptor,FOREST_TREES>;
-template class ExampleClusterer_CUDA<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
+template class ExampleClusterer_CUDA<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
 template class ExampleReservoirs_CUDA<Keypoint2D>;
 template class ExampleReservoirs_CUDA<Keypoint3DColour>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>;
