@@ -10,14 +10,14 @@
 
 #include <itmx/base/ITMImagePtrTypes.h>
 
-#include "../clustering/base/ClusterContainer.h"
+#include "../util/Array.h"
 #include "Mode3DColour.h"
 
 namespace grove {
 
 //#################### TYPEDEFS ####################
 
-typedef ClusterContainer<Mode3DColour, 50> ScorePrediction;
+typedef Array<Mode3DColour, 50> ScorePrediction;
 
 typedef ORUtils::MemoryBlock<ScorePrediction> ScorePredictionsBlock;
 typedef boost::shared_ptr<ScorePredictionsBlock> ScorePredictionsBlock_Ptr;

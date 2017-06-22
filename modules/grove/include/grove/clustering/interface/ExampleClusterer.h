@@ -14,7 +14,7 @@
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
-#include "../base/ClusterContainer.h"
+#include "../../util/Array.h"
 
 namespace grove {
 
@@ -45,7 +45,7 @@ class ExampleClusterer
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef ClusterContainer<ClusterType, MAX_CLUSTERS> Clusters;
+  typedef Array<ClusterType, MAX_CLUSTERS> Clusters;
 
   typedef ORUtils::MemoryBlock<Clusters> ClustersBlock;
   typedef boost::shared_ptr<ClustersBlock> ClustersBlock_Ptr;

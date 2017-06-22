@@ -49,7 +49,7 @@ __global__ void ck_compute_modes(const ExampleType *examples,
                                  const int *exampleSetSizes,
                                  const int *clusterIndices,
                                  const int *selectedClusters,
-                                 ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers,
+                                 Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
                                  uint32_t exampleSetCapacity,
                                  uint32_t maxSelectedClusters)
 {
@@ -111,7 +111,7 @@ __global__ void ck_link_neighbors(const ExampleType *examples,
 }
 
 template <typename ClusterType, int MAX_CLUSTERS>
-__global__ void ck_reset_cluster_containers(ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers,
+__global__ void ck_reset_cluster_containers(Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
                                             uint32_t containersCount)
 {
   const uint32_t containerIdx = blockIdx.x * blockDim.x + threadIdx.x;

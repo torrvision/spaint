@@ -1,22 +1,21 @@
 /**
- * grove: ClusterContainer.h
+ * grove: Array.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_CLUSTERCONTAINER
-#define H_GROVE_CLUSTERCONTAINER
+#ifndef H_GROVE_ARRAY
+#define H_GROVE_ARRAY
 
 namespace grove {
 
 /**
- * \brief An instance of an instantiation of this struct template represents a fixed-capacity container
- *        of typed clusters (e.g. as output by an example clusterer).
+ * \brief An instance of an instantiation of this struct template represents a fixed-capacity array.
  *
- * \param T         The type of the contained clusters.
- * \param Capacity  The maximum number of clusters that can be stored in the container.
+ * \param T         The element type.
+ * \param Capacity  The array capacity.
  */
 template <typename T, int Capacity>
-struct ClusterContainer
+struct Array
 {
   //#################### TYPEDEFS ####################
 

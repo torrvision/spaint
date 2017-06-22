@@ -25,11 +25,15 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
 #############################
 
 ##
-SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
-SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
+SET(toplevel_sources src/CPUInstantiations.cpp)
+
+IF(WITH_CUDA)
+  SET(toplevel_sources ${toplevel_sources} src/CUDAInstantiations.cu)
+ENDIF()
 
 ##
-SET(clustering_base_headers include/grove/clustering/base/ClusterContainer.h)
+SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
+SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
 
 ##
 SET(clustering_cpu_headers include/grove/clustering/cpu/ExampleClusterer_CPU.h)
@@ -175,11 +179,7 @@ include/grove/scoreforests/ScorePrediction.h
 )
 
 ##
-SET(toplevel_sources src/CPUInstantiations.cpp)
-
-IF(WITH_CUDA)
-  SET(toplevel_sources ${toplevel_sources} src/CUDAInstantiations.cu)
-ENDIF()
+SET(util_headers include/grove/util/Array.h)
 
 #################################################################
 # Collect the project files into sources, headers and templates #
@@ -199,7 +199,6 @@ ${toplevel_sources}
 
 SET(headers
 ${clustering_headers}
-${clustering_base_headers}
 ${clustering_cpu_headers}
 ${clustering_interface_headers}
 ${clustering_shared_headers}
@@ -228,6 +227,7 @@ ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
 ${reservoirs_shared_headers}
 ${scoreforests_headers}
+${util_headers}
 )
 
 SET(templates
@@ -277,7 +277,6 @@ ENDIF()
 
 SOURCE_GROUP("" FILES ${toplevel_sources})
 SOURCE_GROUP(clustering FILES ${clustering_headers} ${clustering_templates})
-SOURCE_GROUP(clustering\\base FILES ${clustering_base_headers})
 SOURCE_GROUP(clustering\\cpu FILES ${clustering_cpu_headers} ${clustering_cpu_templates})
 SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
 SOURCE_GROUP(clustering\\interface FILES ${clustering_interface_headers} ${clustering_interface_templates})
@@ -312,6 +311,7 @@ SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda
 SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})
 SOURCE_GROUP(reservoirs\\shared FILES ${reservoirs_shared_headers})
 SOURCE_GROUP(scoreforests FILES ${scoreforests_headers})
+SOURCE_GROUP(util FILES ${util_headers})
 
 ##########################################
 # Specify additional include directories #

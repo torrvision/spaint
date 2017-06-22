@@ -8,7 +8,7 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
-#include "../base/ClusterContainer.h"
+#include "../../util/Array.h"
 
 namespace grove {
 
@@ -135,7 +135,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
                                     const int *exampleSetSizes,
                                     const int *clusterIndices,
                                     const int *selectedClusters,
-                                    ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers,
+                                    Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
                                     int exampleSetCapacity,
                                     int exampleSetIdx,
                                     int maxSelectedClusters,
@@ -150,7 +150,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
   if (selectedClusterId >= 0)
   {
     // Grab a reference to the cluster container for the current example set.
-    ClusterContainer<ClusterType, MAX_CLUSTERS> &currentClusterContainer = clusterContainers[exampleSetIdx];
+    Array<ClusterType, MAX_CLUSTERS> &currentClusterContainer = clusterContainers[exampleSetIdx];
 
     // Atomically get the output index associated to the cluster.
     int outputClusterIdx = -1;
@@ -356,7 +356,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_link_neighbors(const E
  */
 template <typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_ inline void
-    example_clusterer_reset_cluster_container(ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers,
+    example_clusterer_reset_cluster_container(Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
                                               int containerIdx)
 {
   // Just reset the number of clusters, no need to reset the actual clusters since they will be overwritten later.
