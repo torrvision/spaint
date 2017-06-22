@@ -181,7 +181,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
                               exampleSetClusterIndices,
                               exampleSetSize,
                               selectedClusterId,
-                              currentClusterContainer.clusters[outputClusterIdx]);
+                              currentClusterContainer.elts[outputClusterIdx]);
   }
 }
 

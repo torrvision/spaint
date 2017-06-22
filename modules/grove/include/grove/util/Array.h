@@ -11,7 +11,7 @@ namespace grove {
 /**
  * \brief An instance of an instantiation of this struct template represents a fixed-capacity array.
  *
- * \param T         The element type.
+ * \param T         The array element type.
  * \param Capacity  The array capacity.
  */
 template <typename T, int Capacity>
@@ -23,15 +23,15 @@ struct Array
 
   //#################### ENUMERATIONS ####################
 
-  /** The maximum number of modal clusters associated to the prediction. */
-  enum { MAX_CLUSTERS = Capacity };
+  /** Expose the array capacity. */
+  enum { CAPACITY = Capacity };
 
   //#################### PUBLIC MEMBER VARIABLES ####################
 
-  /** The clusters. */
-  T clusters[MAX_CLUSTERS];
+  /** The array elements. */
+  T elts[Capacity];
 
-  /** The number of clusters currently stored in the container. */
+  /** The number of elements currently stored in the container. */
   int size;
 };
 

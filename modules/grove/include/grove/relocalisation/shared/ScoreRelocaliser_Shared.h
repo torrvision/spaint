@@ -89,7 +89,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
       }
 
       // The mode that we are evaluating (the first non processed mode).
-      const Mode3DColour &currentMode = selectedPredictions[treeIdx].clusters[currentModeIdx];
+      const Mode3DColour &currentMode = selectedPredictions[treeIdx].elts[currentModeIdx];
 
       // The current mode has more inliers than the currently best mode.
       if (currentMode.nbInliers > bestTreeNbInliers)
@@ -107,8 +107,8 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
     }
 
     // Copy the chosen mode into the output array.
-    finalPrediction.clusters[finalPrediction.size++] =
-        selectedPredictions[bestTreeIdx].clusters[treeModeIdx[bestTreeIdx]];
+    finalPrediction.elts[finalPrediction.size++] =
+        selectedPredictions[bestTreeIdx].elts[treeModeIdx[bestTreeIdx]];
 
     // Increment the starting index for the associated tree.
     treeModeIdx[bestTreeIdx]++;

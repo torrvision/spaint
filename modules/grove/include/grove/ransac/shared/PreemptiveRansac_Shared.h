@@ -72,7 +72,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
 
     // If the best mode had no inliers throw (shouldn't be a mode, so something obviously went wrong during the
     // clustering). The original implementation (from Valentin's paper) had a simple continue.
-    if (pred.clusters[argmax].nbInliers == 0)
+    if (pred.elts[argmax].nbInliers == 0)
     {
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
       printf("mode has no inliers\n");
@@ -84,7 +84,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
 
     // Normalise the energy.
     energy /= static_cast<float>(pred.size);
-    energy /= static_cast<float>(pred.clusters[argmax].nbInliers);
+    energy /= static_cast<float>(pred.elts[argmax].nbInliers);
 
     if (energy < 1e-6f) energy = 1e-6f;
     energy = -log10f(energy);
@@ -163,14 +163,14 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
                                     : 0;
 
     // Cache camera and world points, used for the following checks.
-    const Vector3f selectedModeWorldPt = selectedPrediction.clusters[selectedModeIdx].position;
+    const Vector3f selectedModeWorldPt = selectedPrediction.elts[selectedModeIdx].position;
     const Vector3f selectedFeatureCameraPt = selectedKeypoint.position;
 
     // If this is the first pixel, check that the pixel colour corresponds with the selected mode's colour.
     if (selectedPixelCount == 0)
     {
       const Vector3i colourDiff =
-          selectedKeypoint.colour.toInt() - selectedPrediction.clusters[selectedModeIdx].colour.toInt();
+          selectedKeypoint.colour.toInt() - selectedPrediction.elts[selectedModeIdx].colour.toInt();
       const bool consistentColour = abs(colourDiff.x) <= MAX_COLOUR_DELTA && abs(colourDiff.y) <= MAX_COLOUR_DELTA &&
                                     abs(colourDiff.z) <= MAX_COLOUR_DELTA;
 
@@ -189,7 +189,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
         const int otherModeIdx = selectedPixelMode[idxOther];
         const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
 
-        const Vector3f otherModeWorldPt = otherPrediction.clusters[otherModeIdx].position;
+        const Vector3f otherModeWorldPt = otherPrediction.elts[otherModeIdx].position;
         const Vector3f diff = otherModeWorldPt - selectedModeWorldPt;
 
         // If they are too close, drop the current pixel and try to sample another one.
@@ -228,7 +228,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
         // Then check that the distance between the current keypoint and the other keypoint and the distance between the
         // current mode and the other mode are similar enough.
-        const Vector3f otherModeWorldPt = otherPrediction.clusters[otherModeIdx].position;
+        const Vector3f otherModeWorldPt = otherPrediction.elts[otherModeIdx].position;
         const Vector3f diffWorld = otherModeWorldPt - selectedModeWorldPt;
 
         const float distWorld = length(diffWorld);
@@ -266,7 +266,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
     const Keypoint3DColour &selectedKeypoint = keypointsData[linearIdx];
     const ScorePrediction &selectedPrediction = predictionsData[linearIdx];
-    const Mode3DColour &selectedMode = selectedPrediction.clusters[modeIdx];
+    const Mode3DColour &selectedMode = selectedPrediction.elts[modeIdx];
 
     poseCandidate.pointsCamera[s] = selectedKeypoint.position;
     poseCandidate.pointsWorld[s] = selectedMode.position;
@@ -308,7 +308,7 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
 #endif
   }
 
-  const Mode3DColour &bestMode = prediction.clusters[bestModeIdx];
+  const Mode3DColour &bestMode = prediction.elts[bestModeIdx];
 
   uint32_t outputIdx = candidateIdx * nbInliers + inlierIdx; // The index in the row associated to the current candidate.
 

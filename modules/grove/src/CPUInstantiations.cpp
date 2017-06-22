@@ -31,9 +31,9 @@ namespace {
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
-template class ExampleClusterer<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
-template class ExampleClusterer_CPU<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
-template class ExampleClustererFactory<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
+template class ExampleClusterer<Keypoint3DColour, Mode3DColour, ScorePrediction::CAPACITY>;
+template class ExampleClusterer_CPU<Keypoint3DColour, Mode3DColour, ScorePrediction::CAPACITY>;
+template class ExampleClustererFactory<Keypoint3DColour, Mode3DColour, ScorePrediction::CAPACITY>;
 
 template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescriptor> >
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint2D,RGBDPatchDescriptor>(

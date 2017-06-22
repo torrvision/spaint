@@ -71,7 +71,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
       outFile << p.size << ' ' << predictionIndices[treeIdx] << '\n';
       for(int modeIdx = 0; modeIdx < p.size; ++modeIdx)
       {
-        const Mode3DColour &m = p.clusters[modeIdx];
+        const Mode3DColour &m = p.elts[modeIdx];
         outFile << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
 
         // Invert and transpose the covariance to print it in row-major format.
@@ -153,7 +153,7 @@ void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
     std::cout << p.size << ' ' << predictionIndices[treeIdx] << '\n';
     for(int modeIdx = 0; modeIdx < p.size; ++modeIdx)
     {
-      const Mode3DColour &m = p.clusters[modeIdx];
+      const Mode3DColour &m = p.elts[modeIdx];
       std::cout << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
 
       // Invert and transpose the covariance to print it in row-major format.
