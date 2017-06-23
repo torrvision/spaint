@@ -682,21 +682,18 @@ static void call_after_each_step(const alglib::real_1d_array &x, double func, vo
 
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
-  // The current number of inlier points.
-  const uint32_t nbInliers = m_inliersIndicesBlock->dataSize;
-
-  // The linearised offset in the pose optimisation buffers.
-  const uint32_t candidateOffset = nbInliers * candidateIdx;
-
-  const Vector4f *cameraPointsData = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU) + candidateOffset;
-  const Mode3DColour *predictedModesData =
-      m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU) + candidateOffset;
-
   // Fill the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
-  ptsForLM.nbPoints = nbInliers;
-  ptsForLM.cameraPoints = cameraPointsData;
-  ptsForLM.predictedModes = predictedModesData;
+
+  // The current number of inlier points.
+  ptsForLM.nbPoints = m_inliersIndicesBlock->dataSize;
+
+  // The linearised offset in the pose optimisation buffers.
+  const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;
+
+  // Pointers to the data for this candidate.
+  ptsForLM.cameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU) + candidateOffset;
+  ptsForLM.predictedModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU) + candidateOffset;
 
   // Assumption is that they have been already copied onto the CPU memory, the CUDA subclass should make sure of that.
   // In the long term we will move the whole optimisation step on the GPU (as proper shared code).
