@@ -11,6 +11,8 @@
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
+#include <Eigen/Geometry>
+
 #include <opencv2/opencv.hpp>
 
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
@@ -93,7 +95,7 @@ struct RelocalisationExample
 
 //#################### FUNCTIONS ####################
 
-void show_example(const RelocalisationExample &example)
+void show_example(const RelocalisationExample &example, const std::string &text = "")
 {
   cv::namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
 
@@ -109,8 +111,61 @@ void show_example(const RelocalisationExample &example)
                canvas(cv::Rect(example.rgbImage.cols, 0, example.depthImage.cols, example.depthImage.rows)),
                CV_GRAY2BGR);
 
+  if(!text.empty())
+  {
+    const double fontSize = 1.5;
+    const int thickness = 2;
+    int baseLine = 0;
+    cv::Size textSize = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, fontSize, thickness, &baseLine);
+
+    // Poor man's shadow.
+    cv::putText(canvas,
+                text,
+                cv::Point(12, 12 + textSize.height),
+                cv::FONT_HERSHEY_SIMPLEX,
+                fontSize,
+                cv::Scalar::all(0),
+                thickness);
+    cv::putText(canvas,
+                text,
+                cv::Point(10, 10 + textSize.height),
+                cv::FONT_HERSHEY_SIMPLEX,
+                fontSize,
+                cv::Scalar::all(255),
+                thickness);
+  }
+
   cv::imshow(WINDOW_NAME, canvas);
   cv::waitKey(1);
+}
+
+float angular_separation(const Eigen::Matrix3f &r1, const Eigen::Matrix3f &r2)
+{
+  // First calculate the rotation matrix which maps r1 to r2.
+  Eigen::Matrix3f dr = r2 * r1.transpose();
+
+  Eigen::AngleAxisf aa(dr);
+  return aa.angle();
+}
+
+bool pose_matches(const Matrix4f &gtPose, const Matrix4f &testPose)
+{
+  static const float translationMaxError = 0.05f;
+  static const float angleMaxError = 5.f * M_PI / 180.f;
+
+  // Both our Matrix type and Eigen's are column major, so we can just use Map here.
+  const Eigen::Map<const Eigen::Matrix4f> gtPoseEigen(gtPose.m);
+  const Eigen::Map<const Eigen::Matrix4f> testPoseEigen(testPose.m);
+
+  const Eigen::Matrix3f gtR = gtPoseEigen.block<3, 3>(0, 0);
+  const Eigen::Matrix3f testR = testPoseEigen.block<3, 3>(0, 0);
+  const Eigen::Vector3f gtT = gtPoseEigen.block<3, 1>(0, 3);
+  const Eigen::Vector3f testT = testPoseEigen.block<3, 1>(0, 3);
+
+  const float translationError = (gtT - testT).norm();
+  const float angleError = angular_separation(gtR, testR);
+
+  return translationError <= translationMaxError && angleError <= angleMaxError;
 }
 
 Matrix4f read_pose_from_file(const bf::path &fileName)
@@ -284,10 +339,6 @@ int main(int argc, char *argv[]) try
     quit("Couldn't read calibration parameters.");
   }
 
-//  std::cout << "Depth intrinsics: " << cameraCalibration.intrinsics_d.projectionParamsSimple.all << '\n';
-//  std::cout << "Affine factors: " << cameraCalibration.disparityCalib.GetParams() << '\n';
-//  exit(0);
-
   // Useful paths.
   const bf::path resourcesFolder = find_subdir_from_executable("resources");
   const bf::path trainingSequencePath(args.trainFolder);
@@ -375,6 +426,9 @@ int main(int argc, char *argv[]) try
   std::cout << "Training done.\n";
 
   // Now test the relocaliser.
+  uint32_t testedExamples = 0;
+  uint32_t successfulExamples = 0;
+
   while((currentExample =
              read_example(args.depthImageMask, args.rgbImageMask, args.poseFileMask, testingSequencePathGenerator)))
   {
@@ -417,11 +471,22 @@ int main(int argc, char *argv[]) try
     PosePersister::save_pose_on_thread(inverseCameraPose, outputPosesPathGenerator.make_path("pose-%06i.reloc.txt"));
     PosePersister::save_pose_on_thread(inverseCameraPose, outputPosesPathGenerator.make_path("pose-%06i.icp.txt"));
 
-    show_example(*currentExample);
+    // Show the example and print whether the relocalisation succeeded or not.
+    bool relocalisationSucceeded = pose_matches(currentExample->cameraPose.GetInvM(), inverseCameraPose);
+    show_example(*currentExample, relocalisationSucceeded ? "Relocalisation OK" : "Relocalisation Failed");
+
+    testedExamples++;
+    successfulExamples += relocalisationSucceeded;
 
     testingSequencePathGenerator.increment_index();
     outputPosesPathGenerator.increment_index();
   }
+
+  std::cout << "Testing done.\n\nEvaluated " << testedExamples << " RGBD frames.\n";
+  std::cout << successfulExamples << " were relocalised correctly (<5cm and <5deg error).\n";
+  const float accuracy =
+      100.f * testedExamples > 0 ? static_cast<float>(successfulExamples) / static_cast<float>(testedExamples) : 0.0f;
+  std::cout << "Overall accuracy: " << accuracy << '\n';
 
   return EXIT_SUCCESS;
 }
