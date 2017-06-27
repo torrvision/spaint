@@ -59,7 +59,7 @@ inline void example_clusterer_compute_cluster_histogram(const int *clusterSizes,
  * \brief Compute the density of examples around a certain element of the example sets.
  *
  * \param exampleSets        A pointer to the sets of examples (one set per row, one example per column).
- * \param exampleSetsSizes   A pointer to the actual sizes of each example set (number of valid elements in each row of
+ * \param exampleSetSizes    A pointer to the actual sizes of each example set (number of valid elements in each row of
  *                           exampleSets).
  * \param densities          A pointer to the memory wherein to store the density of each example (one example set per
  *                           row, one density value per column).
@@ -70,7 +70,7 @@ inline void example_clusterer_compute_cluster_histogram(const int *clusterSizes,
  */
 template <typename ExampleType>
 _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_compute_density(const ExampleType *exampleSets,
-                                                                          const int *exampleSetsSizes,
+                                                                          const int *exampleSetSizes,
                                                                           float *densities,
                                                                           int exampleSetCapacity,
                                                                           int exampleSetIdx,
@@ -80,7 +80,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_compute_density(const 
   // Compute the linear offset to the beginning of the data associated to the current example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
   // The size of the current example set.
-  const int exampleSetSize = exampleSetsSizes[exampleSetIdx];
+  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
   // Offset of the current element from the beginning of the exampleSets array.
   const int elementOffset = exampleSetOffset + elementIdx;
 

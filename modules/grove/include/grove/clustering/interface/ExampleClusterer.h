@@ -120,17 +120,17 @@ public:
   /**
    * \brief Clusters several sets of examples in parallel.
    *
-   * \param exampleSets       Sets of examples to be clustered. Each row of the image represents a set of size up to
-   *                          "width".
-   * \param exampleSetsSize   The number of valid examples for each row of the exampleSets image.
-   * \param clusterContainers Output containers that will hold the clusters extracted for each set of examples.
-   * \param startIdx          First row considered when computing the clusters.
-   * \param count             Clustering is performed on count rows of the examleSets image, starting from startIdx.
+   * \param exampleSets       An image containing the sets of examples to be clustered (one set per row). The width of
+   *                          the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetSizes   The number of valid examples in each row of the exampleSets image.
+   * \param startIdx          The index of the first example set for which to compute clusters.
+   * \param count             The number of example sets for which to compute clusters.
+   * \param clusterContainers Output containers that will hold the clusters computed for each example set.
    *
-   * \throws std::invalid_argument if startIdx + count would result in out of bounds access in exampleSets.
+   * \throws std::invalid_argument If startIdx + count would result in out-of-bounds access in exampleSets.
    */
-  void find_modes(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetsSize,
-                  ClustersBlock_Ptr& clusterContainers, uint32_t startIdx, uint32_t count);
+  void find_modes(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
+                  uint32_t startIdx, uint32_t count, ClustersBlock_Ptr& clusterContainers);
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
@@ -148,12 +148,12 @@ private:
    * \brief Compute the density of examples around each example in the input sets.
    *
    * \param exampleSets         A pointer to the example sets.
-   * \param exampleSetsSizes    A pointer to the size of each example set.
+   * \param exampleSetSizes     A pointer to the size of each example set.
    * \param exampleSetsCapacity The maximum size of each exampleSet.
    * \param exampleSetsCount    The number of example sets.
    * \param sigma               The sigma used when computing the density.
    */
-  virtual void compute_density(const ExampleType *exampleSets, const int *exampleSetsSizes, uint32_t exampleSetsCapacity,
+  virtual void compute_density(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
                                uint32_t exampleSetsCount, float sigma) = 0;
 
   /**
@@ -161,14 +161,14 @@ private:
    *        (e.g. centroid, covariances etc...).
    *
    * \param exampleSets        A pointer to the example sets.
-   * \param exampleSetsSizes   A pointer to the size of each example set.
+   * \param exampleSetSizes    A pointer to the size of each example set.
    * \param predictionsData    A pointer to the output containers wherein to store the clusters
    *                           extracted from each set of examples.
    * \param maxClusterCount    Maximum number of clusters to select for each example set.
    * \param exampleSetCapacity Maximum size of each example set.
    * \param exampleSetCount    Number of example sets to be clustered.
    */
-  virtual void compute_cluster_parameters(const ExampleType *exampleSets, const int *exampleSetsSizes, Clusters *clustersData,
+  virtual void compute_cluster_parameters(const ExampleType *exampleSets, const int *exampleSetSizes, Clusters *clustersData,
                                           uint32_t maxClusterCount, uint32_t exampleSetsCapacity, uint32_t exampleSetsCount) = 0;
 
   /**
@@ -197,12 +197,12 @@ private:
    * \brief Virtual function returning a pointer to the size of the example set setIdx.
    *        Used to get a raw pointer, independent from the memory type.
    *
-   * \param exampleSetsSize The example set sizes.
+   * \param exampleSetSizes The example set sizes.
    * \param setIdx          The index to the first set of interest.
    *
    * \return                A raw pointer to the size of the example set setIdx.
    */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetsSize, uint32_t setIdx) const = 0;
+  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const = 0;
 
   /**
    * \brief Analyse the tree structure to identify clusters of neighboring examples.
@@ -216,12 +216,12 @@ private:
    * \brief Link neighboring examples in order to form a tree structure.
    *
    * \param exampleSets         A pointer to the example sets.
-   * \param exampleSetsSizes    A pointer to the size of each example set.
+   * \param exampleSetSizes     A pointer to the size of each example set.
    * \param exampleSetsCapacity The maximum size of each exampleSet.
    * \param exampleSetsCount    The number of example sets.
    * \param tauSq               Maximum distance (squared) between examples that are to be linked.
    */
-  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetsSizes, uint32_t exampleSetsCapacity,
+  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
                               uint32_t exampleSetsCount, float tauSq) = 0;
 
   /**

@@ -117,9 +117,9 @@ const ExampleType *ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>:
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 const int *ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>::get_pointer_to_example_set_size(
-    const ITMIntMemoryBlock_CPtr &exampleSetsSize, uint32_t setIdx) const
+    const ITMIntMemoryBlock_CPtr &exampleSetSizes, uint32_t setIdx) const
 {
-  return exampleSetsSize->GetData(MEMORYDEVICE_CPU) + setIdx;
+  return exampleSetSizes->GetData(MEMORYDEVICE_CPU) + setIdx;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>

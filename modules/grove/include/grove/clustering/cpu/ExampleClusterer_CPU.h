@@ -51,7 +51,7 @@ private:
   virtual void compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
-  virtual void compute_density(const ExampleType *exampleSets, const int *exampleSetsSizes, uint32_t exampleSetsCapacity,
+  virtual void compute_density(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
                                uint32_t exampleSetsCount, float sigma);
 
   /** Override */
@@ -65,13 +65,13 @@ private:
   virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const;
 
   /** Override */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetsSize, uint32_t setIdx) const;
+  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const;
 
   /** Override */
   virtual void identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
-  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetsSizes, uint32_t exampleSetsCapacity,
+  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
                               uint32_t exampleSetsCount, float tauSq);
 
   /** Override */
