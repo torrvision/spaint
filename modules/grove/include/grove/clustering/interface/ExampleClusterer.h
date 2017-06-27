@@ -57,41 +57,45 @@ protected:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** Cluster index to which each example is associated. Has count rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_clusterIdx;
-
-  /** Size of each cluster. Has count rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_clusterSizes;
-
-  /** Histogram representing the number of clusters having a certain size. Has count rows and exampleSets->width
-   * columns. */
-  ITMIntImage_Ptr m_clusterSizesHistogram;
-
-  /** An image representing the density of examples around each example in the input sets. Has count rows and
-   * exampleSets->width columns. */
-  ITMFloatImage_Ptr m_densities;
-
   /** The maximum number of clusters to return for each set of examples. */
   uint32_t m_maxClusterCount;
 
   /** The minimum number of examples in a valid cluster. */
   uint32_t m_minClusterSize;
 
-  /** Stores the number of valid clusters in each example set. Has count elements. */
-  ITMIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
-
-  /** Defines the cluster tree structure. Holds the index to the parent for each example in the input sets. Has count
-   * rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_parents;
-
-  /** Stores the index of selected clusters in each example set. Has count rows and m_maxClusterCount columns. */
-  ITMIntImage_Ptr m_selectedClusters;
-
   /** The sigma used to estimate example densities. */
   float m_sigma;
 
   /** The maximum distance between examples in the same set. */
   float m_tau;
+
+  //########################### FIND MODES STATE VARIABLES ###########################
+  //                                                                                //
+  // These variables are used to store the state needed when calling                //
+  // find_modes(exampleSets, exampleSetSizes, startIdx, count, clusterContainers).  //
+  //                                                                                //
+  //##################################################################################
+protected:
+  /** Cluster index to which each example is associated. Has count rows and exampleSets->width columns. */
+  ITMIntImage_Ptr m_clusterIdx;
+
+  /** Size of each cluster. Has count rows and exampleSets->width columns. */
+  ITMIntImage_Ptr m_clusterSizes;
+
+  /** Histogram representing the number of clusters having a certain size. Has count rows and exampleSets->width columns. */
+  ITMIntImage_Ptr m_clusterSizesHistogram;
+
+  /** An image representing the density of examples around each example in the input sets. Has count rows and exampleSets->width columns. */
+  ITMFloatImage_Ptr m_densities;
+
+  /** Stores the number of valid clusters in each example set. Has count elements. */
+  ITMIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
+
+  /** Defines the cluster tree structure. Holds the index to the parent for each example in the input sets. Has count rows and exampleSets->width columns. */
+  ITMIntImage_Ptr m_parents;
+
+  /** Stores the index of selected clusters in each example set. Has count rows and m_maxClusterCount columns. */
+  ITMIntImage_Ptr m_selectedClusters;
 
   //#################### CONSTRUCTORS ####################
 public:
