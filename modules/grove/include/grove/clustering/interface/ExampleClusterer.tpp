@@ -17,14 +17,16 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
 : m_maxClusterCount(maxClusterCount), m_minClusterSize(minClusterSize), m_sigma(sigma), m_tau(tau)
 {
+  // Check the preconditions.
   if(maxClusterCount > MAX_CLUSTERS)
   {
     throw std::invalid_argument("Error: maxClusterCount > MAX_CLUSTERS");
   }
 
+  // Initialise the temporary variables that are used as part of a find_modes call.
+  // Initially, all are empty. We resize them later, once we know the right sizes.
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
-  // Initially, everything is empty. We resize things as soon as we know the actual sizes.
   m_clusterIdx = mbf.make_image<int>();
   m_clusterSizes = mbf.make_image<int>();
   m_clusterSizesHistogram = mbf.make_image<int>();
@@ -54,8 +56,9 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
     throw std::invalid_argument("Error: startIdx + count > nbExampleSets");
   }
 
-  // Allocate local variables (a NOP except during the first run, smaller memory requirements do not cause
-  // reallocations).
+  // Reallocates the temporary variables needed for the call as necessary. In practice, this tends to be a no-op
+  // for all calls to find_modes except the first, since we only need to reallocate if more memory is required,
+  // and the way in which find_modes is usually called tends not to cause this to happen.
   allocate_temporaries(exampleSetCapacity, count);
 
   // Grab a pointer to the beginning of the first exampleSet of interest.

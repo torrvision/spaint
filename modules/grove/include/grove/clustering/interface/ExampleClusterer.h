@@ -69,9 +69,9 @@ protected:
   /** The maximum distance between examples in the same set. */
   float m_tau;
 
-  //########################### FIND MODES STATE VARIABLES ###########################
+  //######################### FIND MODES TEMPORARY VARIABLES #########################
   //                                                                                //
-  // These variables are used to store the state needed when calling                //
+  // These temporary variables are used to store the state needed when calling      //
   // find_modes(exampleSets, exampleSetSizes, startIdx, count, clusterContainers).  //
   //                                                                                //
   //##################################################################################
