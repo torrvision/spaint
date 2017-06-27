@@ -34,7 +34,8 @@ IF(WITH_SCOREFORESTS AND WITH_C++11)
   SET(ScoreForests_Learners_LIBRARY debug ${ScoreForests_Learners_LIBRARY_DEBUG} optimized ${ScoreForests_Learners_LIBRARY_RELEASE})
   SET(ScoreForests_StatisticalTools_LIBRARY debug ${ScoreForests_StatisticalTools_LIBRARY_DEBUG} optimized ${ScoreForests_StatisticalTools_LIBRARY_RELEASE})
 
-  SET(ScoreForests_LIBRARIES ${ScoreForests_Datasets_LIBRARY} ${ScoreForests_Learners_LIBRARY} ${ScoreForests_Features_LIBRARY} ${ScoreForests_Hashes_LIBRARY} ${ScoreForests_Helpers_LIBRARY} ${ScoreForests_StatisticalTools_LIBRARY})
+  # The order in the variables allows linking on Linux. Do not reorder.
+  SET(ScoreForests_LIBRARIES ${ScoreForests_Datasets_LIBRARY} ${ScoreForests_Learners_LIBRARY} ${ScoreForests_Features_LIBRARY} ${ScoreForests_Hashes_LIBRARY} ${ScoreForests_StatisticalTools_LIBRARY} ${ScoreForests_Helpers_LIBRARY})
 
   INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Datasets/include/Datasets")
   INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Features/include/Features")
