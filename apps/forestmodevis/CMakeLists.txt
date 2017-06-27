@@ -16,8 +16,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
-FIND_PACKAGE(VTK REQUIRED)
-INCLUDE(${VTK_USE_FILE})
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 
 #############################
 # Specify the project files #
@@ -45,14 +44,15 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 ##########################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
-TARGET_LINK_LIBRARIES(${targetname} tvgutil ${VTK_LIBRARIES})
 
 #################################
 # Specify the libraries to link #
 #################################
 
+TARGET_LINK_LIBRARIES(${targetname} tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVTK.cmake)
 
 #############################
 # Specify things to install #

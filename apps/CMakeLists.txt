@@ -21,7 +21,9 @@ IF(BUILD_AUXILIARY_APPS)
     ENDIF()
 
     IF(WITH_OPENCV)
-      ADD_SUBDIRECTORY(forestmodevis)
+      IF(WITH_VTK)
+        ADD_SUBDIRECTORY(forestmodevis)
+      ENDIF()
 
       IF(BUILD_RELOCVIS)
         ADD_SUBDIRECTORY(relocvis)

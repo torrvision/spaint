@@ -34,6 +34,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTBB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 
 #############################
 # Specify the project files #
