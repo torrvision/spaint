@@ -132,10 +132,10 @@ public:
   void find_modes(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetsSize,
                   ClustersBlock_Ptr& clusterContainers, uint32_t startIdx, uint32_t count);
 
-  //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
-protected:
+  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
+private:
   /**
-   * \brief Build a histgram of cluster sizes.
+   * \brief Builds a histogram of cluster sizes.
    *        One histogram per example set, each element of the histogram represents the number of clusters having a
    * certain size.
    *
