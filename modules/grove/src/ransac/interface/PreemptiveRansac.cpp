@@ -525,27 +525,27 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
       const Vector3f normGradient = 2 * invCovarianceTimesDiff;
 //      const Vector3f normGradient = invCovarianceTimesDiff / err;
 
-      //      jac[0] += normGradient.x;
-      //      jac[1] += normGradient.y;
-      //      jac[2] += normGradient.z;
+      jac[0] += normGradient.x;
+      jac[1] += normGradient.y;
+      jac[2] += normGradient.z;
 
-      //      jac[3] -= normGradient.y * transformedPt.z - normGradient.z * transformedPt.y;
-      //      jac[4] -= normGradient.x * -transformedPt.z + normGradient.z * transformedPt.x;
-      //      jac[5] -= normGradient.x * transformedPt.y - normGradient.y * transformedPt.x;
+      jac[3] -= normGradient.y * transformedPt.z - normGradient.z * transformedPt.y;
+      jac[4] -= normGradient.x * -transformedPt.z + normGradient.z * transformedPt.x;
+      jac[5] -= normGradient.x * transformedPt.y - normGradient.y * transformedPt.x;
 
-      const Vector3f poseGradient[6] = {
-          Vector3f(1, 0, 0),
-          Vector3f(0, 1, 0),
-          Vector3f(0, 0, 1),
-          -Vector3f(0, transformedPt.z, -transformedPt.y),
-          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-          -Vector3f(transformedPt.y, -transformedPt.x, 0),
-      };
+//      const Vector3f poseGradient[6] = {
+//          Vector3f(1, 0, 0),
+//          Vector3f(0, 1, 0),
+//          Vector3f(0, 0, 1),
+//          -Vector3f(0, transformedPt.z, -transformedPt.y),
+//          -Vector3f(-transformedPt.z, 0, transformedPt.x),
+//          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+//      };
 
-      for(uint32_t i = 0; i < 6; ++i)
-      {
-        jac[i] += dot(normGradient, poseGradient[i]);
-      }
+//      for(uint32_t i = 0; i < 6; ++i)
+//      {
+//        jac[i] += dot(normGradient, poseGradient[i]);
+//      }
     }
   }
 
@@ -558,9 +558,6 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
 static void
     Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array &ksi, alglib::real_1d_array &fi, void *ptr)
 {
-  //  static int count = 0;
-  //  std::cout << "F: " << count++ << '\n';
-
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
   const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
@@ -569,14 +566,14 @@ static void
   fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
 }
 
+/**
+ * \brief Function that will be called by alglib's optimiser.
+ */
 static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array &ksi,
                                                            alglib::real_1d_array &fi,
                                                            alglib::real_2d_array &jac,
                                                            void *ptr)
 {
-  //  static int count = 0;
-  //  std::cout << "FJ: " << count++ << '\n';
-
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
   const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
@@ -610,14 +607,14 @@ static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM &pts,
     const Vector3f cameraPoint = pts.cameraPoints[i].toVector3();
     const Vector3f transformedPt = candidateCameraPose.GetM() * cameraPoint;
     const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-    const double err = length(diff); // distance
-//    const double err = dot(diff, diff); // sqr distance
+//    const double err = length(diff); // distance
+    const double err = dot(diff, diff); // sqr distance
     res += err;
 
     if(jac)
     {
-      //      const Vector3f normGradient = 2 * diff;
-      const Vector3f normGradient = diff / err;
+      const Vector3f normGradient = 2 * diff;
+//      const Vector3f normGradient = diff / err;
 
       //      const Vector3f translationGradient = normGradient;
       //      const Vector3f rotationGradient = -cross(normGradient, transformedPt);
@@ -709,9 +706,9 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 
   // Set up the optimiser.
   alglib::minlmstate state;
-//  const double differentiationStep = 0.0001;
-//  alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
-  alglib::minlmcreatevj(6, 1, ksi_, state);
+  const double differentiationStep = 0.0001;
+  alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
+//  alglib::minlmcreatevj(6, 1, ksi_, state);
   alglib::minlmsetcond(state,
                        m_poseOptimisationGradientThreshold,
                        m_poseOptimisationEnergyThreshold,
