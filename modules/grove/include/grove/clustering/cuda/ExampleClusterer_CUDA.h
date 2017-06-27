@@ -37,15 +37,11 @@ class ExampleClusterer_CUDA : public ExampleClusterer<ExampleType, ClusterType, 
 {
   //#################### USINGS ####################
 public:
-  using typename ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::Clusters;
-
-  using typename ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ClustersBlock;
-  using typename ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ClustersBlock_Ptr;
-  using typename ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ClustersBlock_CPtr;
-
-  using typename ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleImage;
-  using typename ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleImage_Ptr;
-  using typename ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleImage_CPtr;
+  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::Clusters;
+  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ClustersBlock;
+  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ClustersBlock_Ptr;
+  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleImage;
+  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleImage_CPtr;
 
   //#################### CONSTRUCTORS ####################
 public:

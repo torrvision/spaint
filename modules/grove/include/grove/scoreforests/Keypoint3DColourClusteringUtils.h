@@ -22,7 +22,7 @@ namespace grove {
  * \return  The squared distance between a and b.
  */
 _CPU_AND_GPU_CODE_
-inline float distanceSquared(const Keypoint3DColour &a, const Keypoint3DColour &b)
+inline float distanceSquared(const Keypoint3DColour& a, const Keypoint3DColour& b)
 {
   const Vector3f diff = b.position - a.position;
   return dot(diff, diff);

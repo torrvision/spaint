@@ -19,62 +19,61 @@
 namespace grove {
 
 /**
- * \brief An instance of a class deriving from this one can find clusters from a set of "examples".
- *        Clustering is performed via the "Really Quick shift" algorithm by Fulkerson and Soatto.
- *        See: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf for details.
+ * \brief An instance of a class deriving from this one can find clusters from a set of examples.
+ *        Clustering is performed via the "Really quick shift" algorithm by Fulkerson and Soatto.
+ *        See http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf for details.
  *
- * \note  The clusterer is capable of clustering multiple sets of examples (in parallel, when using CUDA or OpenMP),
- *        for this reason the interface to the main clustering method expects not a single set of examples but an
- *        "image" wherein each row contains a certain number examples to be clustered.
- *        Different rows are then clustered independently.
+ * \note  The clusterer is capable of clustering multiple sets of examples (in parallel, when using CUDA or OpenMP).
+ *        For this reason, the interface to the main clustering method expects not a single set of examples, but an
+ *        image in which each row contains a certain number of examples to be clustered. Different rows are then
+ *        clustered independently.
  *
- * \note  The following functions are required to be defined:
- *        - _CPU_AND_GPU_CODE_ inline float distanceSquared(const ExampleType &a, const ExampleType &b)
- *          Returns the squared distancebetween two examples.
- *        - _CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples,
- *                                                                   const int *exampleKeys, int examplesCount,
- *                                                                   int key, ClusterType &outputCluster)
- *          Aggregates all the examples in the examples array having a certain key into a single cluster mode.
+ * \note  The following functions must be defined for each example type:
  *
- * \param ExampleType  The type of examples to cluster.
- * \param ClusterType  The type of clusters being generated.
+ *        1) _CPU_AND_GPU_CODE_ inline float distanceSquared(const ExampleType& a, const ExampleType& b);
+ *
+ *           Returns the squared distance between two examples.
+ *
+ *        2) _CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples,
+ *                                                                    const int *exampleKeys, int examplesCount,
+ *                                                                    int key, ClusterType& outputCluster);
+ *
+ *           Aggregates all the examples in the examples array that have a certain key into a single cluster mode.
+ *
+ * \param ExampleType  The type of example to cluster.
+ * \param ClusterType  The type of cluster being generated.
  * \param MAX_CLUSTERS The maximum number of clusters being generated for each set of examples.
  */
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 class ExampleClusterer
 {
   //#################### TYPEDEFS ####################
-public:
-  typedef Array<ClusterType, MAX_CLUSTERS> Clusters;
-
+protected:
+  typedef Array<ClusterType,MAX_CLUSTERS> Clusters;
   typedef ORUtils::MemoryBlock<Clusters> ClustersBlock;
   typedef boost::shared_ptr<ClustersBlock> ClustersBlock_Ptr;
-  typedef boost::shared_ptr<const ClustersBlock> ClustersBlock_CPtr;
-
   typedef ORUtils::Image<ExampleType> ExampleImage;
-  typedef boost::shared_ptr<ExampleImage> ExampleImage_Ptr;
   typedef boost::shared_ptr<const ExampleImage> ExampleImage_CPtr;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of ExampleClusterer.
+   * \brief Constructs an example clusterer.
    *
    * \param sigma            The sigma distance used when estimating the example density.
-   * \param tau              The maximum distance that two examples must have to be part of the same cluster.
-   * \param maxClusterCount  The maximum number of clusters retained for each set of examples
-   *                         (all clusters are estimated but only the maxClusterCount largest ones are returned).
-   *                         Must be <= than MAX_CLUSTERS.
-   * \param minClusterSize   The minimum number of elements that have to be in a cluster for it to be valid.
+   * \param tau              The maximum distance there can be between two examples that are part of the same cluster.
+   * \param maxClusterCount  The maximum number of clusters retained for each set of examples (all clusters are estimated
+   *                         but only the maxClusterCount largest ones are returned). Must be <= MAX_CLUSTERS.
+   * \param minClusterSize   The minimum number of elements there must be in a cluster for it to be valid.
    *
-   * \throws std::invalid_argument if maxClusterCount is > than MAX_CLUSTERS.
+   * \throws std::invalid_argument If maxClusterCount > MAX_CLUSTERS.
    */
   ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 
   //#################### DESTRUCTORS ####################
 public:
   /**
-   * \brief Destroys an instance of ExampleClusterer.
+   * \brief Destroys the example clusterer.
    */
   virtual ~ExampleClusterer();
 
@@ -92,9 +91,9 @@ public:
    *
    * \throws std::invalid_argument if startIdx + count would result in out of bounds access in exampleSets.
    */
-  void find_modes(const ExampleImage_CPtr &exampleSets,
-                  const ITMIntMemoryBlock_CPtr &exampleSetsSize,
-                  ClustersBlock_Ptr &clusterContainers,
+  void find_modes(const ExampleImage_CPtr& exampleSets,
+                  const ITMIntMemoryBlock_CPtr& exampleSetsSize,
+                  ClustersBlock_Ptr& clusterContainers,
                   uint32_t startIdx,
                   uint32_t count);
 
@@ -191,7 +190,7 @@ protected:
    *
    * \return         A raw pointer to the output cluster container for set setIdx.
    */
-  virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr &clusters, uint32_t clusterIdx) const = 0;
+  virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const = 0;
 
   /**
    * \brief Virtual function returning a pointer to the first example of the example set setIdx.
@@ -202,8 +201,7 @@ protected:
    *
    * \return            A raw pointer to the first example of the example set setIdx.
    */
-  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr &exampleSets,
-                                                        uint32_t setIdx) const = 0;
+  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const = 0;
 
   /**
    * \brief Virtual function returning a pointer to the size of the example set setIdx.
@@ -214,8 +212,7 @@ protected:
    *
    * \return                A raw pointer to the size of the example set setIdx.
    */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr &exampleSetsSize,
-                                                     uint32_t setIdx) const = 0;
+  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetsSize, uint32_t setIdx) const = 0;
 
   /**
    * \brief Analyse the tree structure to identify clusters of neighboring examples.
