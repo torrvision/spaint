@@ -92,7 +92,7 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
   , m_settingsContainer(settings)
 {
   // Read camera calibration parameters.
-  if(!ITMLib::readRGBDCalib(calibrationPath.c_str(), m_cameraCalibration))
+  if(!ITMLib::readRGBDCalib(m_calibrationFilePath.string().c_str(), m_cameraCalibration))
   {
     throw std::invalid_argument("Couldn't read calibration parameters.");
   }
