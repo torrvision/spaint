@@ -25,9 +25,14 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
-SET(toplevel_sources main.cpp)
+SET(toplevel_sources
+  main.cpp
+  RelocaliserApplication.cpp
+)
 
-SET(toplevel_headers)
+SET(toplevel_headers
+  RelocaliserApplication.h
+)
 
 #################################################################
 # Collect the project files into sources, headers and templates #
