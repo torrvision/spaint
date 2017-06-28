@@ -59,7 +59,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   // Reallocates the temporary variables needed for the call as necessary. In practice, this tends to be a no-op
   // for all calls to find_modes except the first, since we only need to reallocate if more memory is required,
   // and the way in which find_modes is usually called tends not to cause this to happen.
-  allocate_temporaries(exampleSetCapacity, count);
+  reallocate_temporaries(exampleSetCapacity, count);
 
   // Grab a pointer to the beginning of the first exampleSet of interest.
   const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, startIdx);
@@ -116,24 +116,31 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::allocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::reallocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  const Vector2i temporariesSize(static_cast<int>(exampleSetCapacity), static_cast<int>(exampleSetCount));
+  // Get the current size of (most of) the temporary images.
+  const Vector2i oldImgSize = m_densities->noDims;
 
-  // We perform the check instead of relying on ChangeDims performing a NOP because reservoirCount
-  // might be smaller than the current size and we want to avoid reallocating the blocks.
-  if(m_densities->noDims.x < temporariesSize.x || m_densities->noDims.y < temporariesSize.y)
+  // Work out the new size needed for (most of) the temporary images.
+  const Vector2i newImgSize(static_cast<int>(exampleSetCapacity), static_cast<int>(exampleSetCount));
+
+  // If the new image size is larger (in either dimension), reallocate the temporaries.
+  // We perform this check explicitly instead of relying on ChangeDims performing a no-op
+  // because exampleSetCount might be smaller than the current size and we want to avoid
+  // reallocating the blocks.
+  if(newImgSize.width > oldImgSize.width || newImgSize.height > oldImgSize.height)
   {
-    // The following variables have a column per each element of the example sets and a row per each example set to cluster.
-    m_clusterIdx->ChangeDims(temporariesSize);
-    m_clusterSizes->ChangeDims(temporariesSize);
-    m_clusterSizesHistogram->ChangeDims(temporariesSize);
-    m_densities->ChangeDims(temporariesSize);
-    m_parents->ChangeDims(temporariesSize);
+    // The following images have a row for each example set to cluster and a column for each element of the example sets.
+    m_clusterIdx->ChangeDims(newImgSize);
+    m_clusterSizes->ChangeDims(newImgSize);
+    m_clusterSizesHistogram->ChangeDims(newImgSize);
+    m_densities->ChangeDims(newImgSize);
+    m_parents->ChangeDims(newImgSize);
 
-    // One column per each potential cluster to output and a row for each example set.
+    // The selected clusters image has a row for each example set and a column for each potential cluster to output.
     m_selectedClusters->ChangeDims(Vector2i(m_maxClusterCount, exampleSetCount));
-    // One element per example set.
+
+    // Finally, we store a single number for each example set that denotes the number of valid clusters in the set.
     m_nbClustersPerExampleSet->Resize(exampleSetCount);
   }
 }

@@ -258,12 +258,12 @@ private:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Allocate memory to store the temporary data used to perform clustering.
+   * \brief Reallocates the temporary variables needed for a find_modes call as necessary.
    *
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets to be clustered.
    */
-  void allocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
+  void reallocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 };
 
 }
