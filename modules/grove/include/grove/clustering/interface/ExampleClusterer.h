@@ -148,6 +148,21 @@ public:
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Having selected the examples part of each cluster, compute the cluster parameters
+   *        (e.g. centroid, covariances etc...).
+   *
+   * \param exampleSets        A pointer to the example sets.
+   * \param exampleSetSizes    A pointer to the size of each example set.
+   * \param predictionsData    A pointer to the output containers wherein to store the clusters
+   *                           extracted from each set of examples.
+   * \param maxClusterCount    Maximum number of clusters to select for each example set.
+   * \param exampleSetCapacity Maximum size of each example set.
+   * \param exampleSetCount    Number of example sets to be clustered.
+   */
+  virtual void compute_cluster_parameters(const ExampleType *exampleSets, const int *exampleSetSizes, Clusters *clustersData,
+                                          uint32_t maxClusterCount, uint32_t exampleSetsCapacity, uint32_t exampleSetsCount) = 0;
+
+  /**
    * \brief Builds a histogram of cluster sizes.
    *        One histogram per example set, each element of the histogram represents the number of clusters having a
    * certain size.
@@ -168,21 +183,6 @@ private:
    */
   virtual void compute_density(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
                                uint32_t exampleSetsCount, float sigma) = 0;
-
-  /**
-   * \brief Having selected the examples part of each cluster, compute the cluster parameters
-   *        (e.g. centroid, covariances etc...).
-   *
-   * \param exampleSets        A pointer to the example sets.
-   * \param exampleSetSizes    A pointer to the size of each example set.
-   * \param predictionsData    A pointer to the output containers wherein to store the clusters
-   *                           extracted from each set of examples.
-   * \param maxClusterCount    Maximum number of clusters to select for each example set.
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
-   */
-  virtual void compute_cluster_parameters(const ExampleType *exampleSets, const int *exampleSetSizes, Clusters *clustersData,
-                                          uint32_t maxClusterCount, uint32_t exampleSetsCapacity, uint32_t exampleSetsCount) = 0;
 
   /**
    * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
@@ -238,12 +238,12 @@ private:
                               uint32_t exampleSetsCount, float tauSq) = 0;
 
   /**
-   * \brief Reset output cluster containers.
+   * \brief Resets the output cluster containers.
    *
-   * \param clustersData  Pointer to the storage for the extracted clusters.
-   * \param clustersCount Number of example sets to be clustered.
+   * \param clustersData    A pointer to the start of the cluster container for the first example set being clustered.
+   * \param exampleSetCount The number of example sets being clustered.
    */
-  virtual void reset_clusters(Clusters *clustersData, uint32_t clustersCount) const = 0;
+  virtual void reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const = 0;
 
   /**
    * \brief Resets the temporary variables needed during a find_modes call.

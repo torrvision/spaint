@@ -346,17 +346,18 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_link_neighbors(const E
 }
 
 /**
- * \brief Reset a cluster container.
+ * \brief Resets a cluster container.
  *
  * \param clusterContainers A pointer to the cluster containers.
- * \param containerIdx      The index of the cluster container to reset.
+ * \param containerIdx      The index of the example set whose cluster container we want to reset.
  */
 template <typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void example_clusterer_reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int containerIdx)
+inline void example_clusterer_reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int exampleSetIdx)
 {
-  // Just reset the number of clusters, no need to reset the actual clusters since they will be overwritten later.
-  clusterContainers[containerIdx].size = 0;
+  // It is sufficient to just reset the size of the container (i.e. the number of clusters) to zero.
+  // There is no need to modify the actual clusters, since they will be overwritten later.
+  clusterContainers[exampleSetIdx].size = 0;
 }
 
 /**

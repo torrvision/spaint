@@ -106,14 +106,13 @@ __global__ void ck_link_neighbors(const ExampleType *examples,
 }
 
 template <typename ClusterType, int MAX_CLUSTERS>
-__global__ void ck_reset_cluster_containers(Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
-                                            uint32_t containersCount)
+__global__ void ck_reset_cluster_containers(Array<ClusterType,MAX_CLUSTERS> *clusterContainers, uint32_t exampleSetCount)
 {
-  const uint32_t containerIdx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(containerIdx >= containersCount) return;
-
-  example_clusterer_reset_cluster_container(clusterContainers, containerIdx);
+  const uint32_t exampleSetIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  if(exampleSetIdx < exampleSetCount)
+  {
+    example_clusterer_reset_cluster_container(clusterContainers, exampleSetIdx);
+  }
 }
 
 __global__ void ck_reset_temporaries(int *clustersPerExampleSet,
@@ -293,13 +292,12 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::link_neighbo
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::reset_clusters(Clusters *clustersData,
-                                                                                   uint32_t clustersCount) const
+void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const
 {
   dim3 blockSize(256);
-  dim3 gridSize((clustersCount + blockSize.x - 1) / blockSize.x);
+  dim3 gridSize((exampleSetCount + blockSize.x - 1) / blockSize.x);
 
-  ck_reset_cluster_containers<<<gridSize, blockSize>>>(clustersData, clustersCount);
+  ck_reset_cluster_containers<<<gridSize, blockSize>>>(clustersData, exampleSetCount);
   ORcudaKernelCheck;
 }
 

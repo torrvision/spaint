@@ -75,7 +75,7 @@ private:
                               uint32_t exampleSetsCount, float tauSq);
 
   /** Override */
-  virtual void reset_clusters(Clusters *clustersData, uint32_t clustersCount) const;
+  virtual void reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const;
 
   /** Override */
   virtual void reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);

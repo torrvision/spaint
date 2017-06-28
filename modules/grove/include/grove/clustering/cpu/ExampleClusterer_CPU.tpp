@@ -143,12 +143,12 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors(
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(Clusters *clustersData, uint32_t clustersCount) const
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const
 {
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(int predictionIdx = 0; predictionIdx < static_cast<int>(clustersCount); ++predictionIdx)
+  for(int predictionIdx = 0; predictionIdx < static_cast<int>(exampleSetCount); ++predictionIdx)
   {
     example_clusterer_reset_cluster_container(clustersData, predictionIdx);
   }
