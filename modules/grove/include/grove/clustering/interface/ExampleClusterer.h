@@ -94,7 +94,7 @@ protected:
    */
   ITMIntImage_Ptr m_clusterSizesHistogram;
 
-  /** An image representing the density of examples around each example in the input sets. Has count rows and exampleSets->width columns. */
+  /** An image storing the density of examples around each example in the input sets. Has count rows and exampleSets->width columns. */
   ITMFloatImage_Ptr m_densities;
 
   /** Stores the number of valid clusters in each example set. Has count elements. */

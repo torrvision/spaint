@@ -56,28 +56,24 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
     throw std::invalid_argument("Error: startIdx + count > nbExampleSets");
   }
 
-  // Reallocates the temporary variables needed for the call as necessary. In practice, this tends to be a no-op
+  // Reallocate the temporary variables needed for the call as necessary. In practice, this tends to be a no-op
   // for all calls to find_modes except the first, since we only need to reallocate if more memory is required,
   // and the way in which find_modes is usually called tends not to cause this to happen.
   reallocate_temporaries(exampleSetCapacity, count);
 
-  // Grab a pointer to the beginning of the first exampleSet of interest.
-  const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, startIdx);
-  // Grab a pointer to the size of the first exampleSet of interest.
-  const int *exampleSetSizesData = get_pointer_to_example_set_size(exampleSetSizes, startIdx);
-  // Grab a pointer to the first cluster to compute.
-  Clusters *clustersData = get_pointer_to_cluster(clusterContainers, startIdx);
-
-  // Reset working variables.
+  // Reset the temporary variables needed for the call.
   reset_temporaries(exampleSetCapacity, count);
 
-  // Reset output predictions.
+  // Reset the output clusters for each example set of interest.
+  Clusters *clustersData = get_pointer_to_cluster(clusterContainers, startIdx);
   reset_clusters(clustersData, count);
 
-  // Compute densities.
+  // Compute the density of examples around each example in the example sets of interest.
+  const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, startIdx);
+  const int *exampleSetSizesData = get_pointer_to_example_set_size(exampleSetSizes, startIdx);
   compute_density(exampleSetsData, exampleSetSizesData, exampleSetCapacity, count, m_sigma);
 
-  // Link neighbors in a tree structure and cut the branches according to the maximum distance tau.
+  // Link neighbouring examples in a tree structure and cut the branches according to the maximum distance tau.
   link_neighbors(exampleSetsData, exampleSetSizesData, exampleSetCapacity, count, m_tau * m_tau);
 
   // Identify clusters (assign identifiers to the clusters).

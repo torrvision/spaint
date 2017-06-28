@@ -196,7 +196,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
  * \param clusterIndices     A pointer to a memory area wherein is stored the index of the cluster associated to each example.
  * \param clusterSizes       A pointer to a memory area wherein is stored the size of each cluster.
  * \param exampleSetCapacity The maximum size of each example set.
- * \param exampleSetIdx      The idnex of the current example set.
+ * \param exampleSetIdx      The index of the current example set.
  * \param elementIdx         The index of the current element.
  */
 _CPU_AND_GPU_CODE_
