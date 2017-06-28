@@ -77,6 +77,7 @@ Matrix4f read_pose_from_file(const bf::path &fileName)
 
   return res;
 }
+
 }
 
 //#################### CONSTRUCTOR ####################
@@ -85,11 +86,11 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
                                                const std::string &trainingPath,
                                                const std::string &testingPath,
                                                const SettingsContainer_CPtr &settings)
-  : m_saveRelocalisedPoses(true)
-  , m_calibrationFilePath(calibrationPath)
-  , m_trainSequencePath(trainingPath)
-  , m_testSequencePath(testingPath)
+  : m_calibrationFilePath(calibrationPath)
+  , m_saveRelocalisedPoses(true)
   , m_settingsContainer(settings)
+  , m_testSequencePath(testingPath)
+  , m_trainSequencePath(trainingPath)
 {
   // Read camera calibration parameters.
   if(!ITMLib::readRGBDCalib(m_calibrationFilePath.string().c_str(), m_cameraCalibration))
@@ -110,8 +111,8 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
 
   // Setup the image masks.
   m_depthImageMask = m_settingsContainer->get_first_value<std::string>("depthImageMask", "frame-%06d.depth.png");
-  m_rgbImageMask = m_settingsContainer->get_first_value<std::string>("rgbImageMask", "frame-%06d.color.png");
   m_poseFileMask = m_settingsContainer->get_first_value<std::string>("poseFileMask", "frame-%06d.pose.txt");
+  m_rgbImageMask = m_settingsContainer->get_first_value<std::string>("rgbImageMask", "frame-%06d.color.png");
 
   // Create the folder that will store the relocalised poses.
   if(m_saveRelocalisedPoses)
@@ -128,9 +129,9 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
   }
 
   // Set up the path generators.
-  m_trainingSequencePathGenerator = boost::make_shared<SequentialPathGenerator>(m_trainSequencePath);
-  m_testingSequencePathGenerator = boost::make_shared<SequentialPathGenerator>(m_testSequencePath);
   m_outputPosesPathGenerator = boost::make_shared<SequentialPathGenerator>(m_outputPosesPath);
+  m_testingSequencePathGenerator = boost::make_shared<SequentialPathGenerator>(m_testSequencePath);
+  m_trainingSequencePathGenerator = boost::make_shared<SequentialPathGenerator>(m_trainSequencePath);
 
   // We try to run everything on the GPU.
   const ITMLibSettings::DeviceType deviceType = ITMLibSettings::DEVICE_CUDA;
@@ -148,21 +149,20 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
 
   // Allocate the ITM Images used to train/test the relocaliser (empty for now, will be resized later).
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_currentRawDepthImage = mbf.make_image<short>();
   m_currentDepthImage = mbf.make_image<float>();
+  m_currentRawDepthImage = mbf.make_image<short>();
   m_currentRgbImage = mbf.make_image<Vector4u>();
 }
 
 void RelocaliserApplication::run()
 {
   boost::optional<RelocalisationExample> currentExample;
-  AverageTimer<boost::chrono::milliseconds> trainingTimer("Training Timer");
-  AverageTimer<boost::chrono::milliseconds> testingTimer("Testing Timer");
 
   std::cout << "Start training.\n";
 
   // First of all, train the relocaliser processing each image from the training folder.
-  while(currentExample = read_example(m_trainingSequencePathGenerator))
+  AverageTimer<boost::chrono::milliseconds> trainingTimer("Training Timer");
+  while((currentExample = read_example(m_trainingSequencePathGenerator)))
   {
     trainingTimer.start();
 
@@ -188,8 +188,8 @@ void RelocaliserApplication::run()
 
   // Now test the relocaliser accumulating the number of successful relocalisations.
   uint32_t successfulExamples = 0;
-
-  while(currentExample = read_example(m_testingSequencePathGenerator))
+  AverageTimer<boost::chrono::milliseconds> testingTimer("Testing Timer");
+  while((currentExample = read_example(m_testingSequencePathGenerator)))
   {
     testingTimer.start();
     prepare_example_images(*currentExample);
@@ -219,7 +219,7 @@ void RelocaliserApplication::run()
     // Check whether the relocalisation succeeded or not by looking at the ground truth pose (using the 7-scenes
     // 5cm/5deg criterion).
     static const float translationMaxError = 0.05f;
-    static const float angleMaxError = 5.f * M_PI / 180.f;
+    static const float angleMaxError = 5.f * static_cast<float>(M_PI) / 180.f;
     const bool relocalisationSucceeded =
         pose_matches(currentExample->cameraPose.GetInvM(), inverseCameraPose, translationMaxError, angleMaxError);
 
@@ -308,28 +308,35 @@ void RelocaliserApplication::show_example(const RelocalisationExample &example, 
 {
   static const std::string WINDOW_NAME = "Relocalisation GUI";
 
+  // Setup a named window.
   cv::namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
 
+  // Allocate a canvas big enough to hold the colour and depth image side by side.
   cv::Mat canvas = cv::Mat::zeros(std::max(example.depthImage.rows, example.rgbImage.rows),
                                   example.depthImage.cols + example.rgbImage.cols,
                                   CV_8UC3);
 
+  // Copy the colour image to its location on the canvas (converting it into BGR format since that's what OpenCV uses for visualization).
   cv::cvtColor(example.rgbImage, canvas(cv::Rect(0, 0, example.rgbImage.cols, example.rgbImage.rows)), CV_RGBA2BGR);
 
+  // Normalize the depth image (black is very close, white is far away) and copy it to its location on the canvas.
   cv::Mat processedDepth;
   cv::normalize(example.depthImage, processedDepth, 0, 255, cv::NORM_MINMAX, CV_8U);
   cv::cvtColor(processedDepth,
                canvas(cv::Rect(example.rgbImage.cols, 0, example.depthImage.cols, example.depthImage.rows)),
                CV_GRAY2BGR);
 
+  // Draw the text in the top-left corner, if required.
   if(!uiText.empty())
   {
     const double fontSize = 1.5;
     const int thickness = 2;
+
+    // Compute the text's bounding box (we actually only care about its height).
     int baseLine = 0;
     cv::Size textSize = cv::getTextSize(uiText, cv::FONT_HERSHEY_SIMPLEX, fontSize, thickness, &baseLine);
 
-    // Poor man's shadow effect.
+    // Write the text on the image applying a "Poor man's shadow effect".
     cv::putText(canvas,
                 uiText,
                 cv::Point(12, 12 + textSize.height),
@@ -346,6 +353,7 @@ void RelocaliserApplication::show_example(const RelocalisationExample &example, 
                 thickness);
   }
 
+  // Actualy show the image.
   cv::imshow(WINDOW_NAME, canvas);
   cv::waitKey(1);
 }
