@@ -53,7 +53,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
 
   if(exampleSetStart + exampleSetCount > nbExampleSets)
   {
-    throw std::invalid_argument("Error: startIdx + count > nbExampleSets");
+    throw std::invalid_argument("Error: exampleSetStart + exampleSetCount > nbExampleSets");
   }
 
   // Reallocate the temporary variables needed for the call as necessary. In practice, this tends to be a no-op

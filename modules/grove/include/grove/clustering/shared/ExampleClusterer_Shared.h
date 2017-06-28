@@ -349,7 +349,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_link_neighbors(const E
  * \brief Resets a cluster container.
  *
  * \param clusterContainers A pointer to the cluster containers.
- * \param containerIdx      The index of the example set whose cluster container we want to reset.
+ * \param exampleSetIdx     The index of the example set whose cluster container we want to reset.
  */
 template <typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_

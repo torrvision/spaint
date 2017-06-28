@@ -35,74 +35,52 @@ __global__ void ck_compute_density(const ExampleType *examples, const int *examp
 
   // The speed of this could probably be improved by writing a proper reduction tree using the shuffle operations. Not
   // now, maybe later.
-  example_clusterer_compute_density(
-      examples, exampleSetSizes, densities, exampleSetCapacity, exampleSetIdx, elementIdx, sigma);
+  example_clusterer_compute_density(examples, exampleSetSizes, densities, exampleSetCapacity, exampleSetIdx, elementIdx, sigma);
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-__global__ void ck_compute_modes(const ExampleType *examples,
-                                 const int *exampleSetSizes,
-                                 const int *clusterIndices,
-                                 const int *selectedClusters,
-                                 Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
-                                 uint32_t exampleSetCapacity,
-                                 uint32_t maxSelectedClusters)
+__global__ void ck_compute_modes(const ExampleType *examples, const int *exampleSetSizes, const int *clusterIndices, const int *selectedClusters,
+                                 Array<ClusterType,MAX_CLUSTERS> *clusterContainers, uint32_t exampleSetCapacity, uint32_t maxSelectedClusters)
 {
   const uint32_t clusterIdx = blockIdx.x * blockDim.x + threadIdx.x;
   const uint32_t exampleSetIdx = blockIdx.y;
 
-  if(clusterIdx >= maxSelectedClusters) return;
-
-  example_clusterer_compute_modes(examples,
-                                  exampleSetSizes,
-                                  clusterIndices,
-                                  selectedClusters,
-                                  clusterContainers,
-                                  exampleSetCapacity,
-                                  exampleSetIdx,
-                                  maxSelectedClusters,
-                                  clusterIdx);
+  if(clusterIdx < maxSelectedClusters)
+  {
+    example_clusterer_compute_modes(
+      examples, exampleSetSizes, clusterIndices, selectedClusters, clusterContainers,
+      exampleSetCapacity, exampleSetIdx, maxSelectedClusters, clusterIdx
+    );
+  }
 }
 
-__global__ void
-    ck_identify_clusters(const int *parents, int *clusterIndices, int *clusterSizes, uint32_t exampleSetCapacity)
+__global__ void ck_identify_clusters(const int *parents, int *clusterIndices, int *clusterSizes, uint32_t exampleSetCapacity)
 {
   // The element index is determined by the threadIdx and X coordinate of the block.
   const uint32_t elementIdx = blockIdx.x * blockDim.x + threadIdx.x;
   const uint32_t exampleSetIdx = blockIdx.y;
 
-  if(elementIdx >= exampleSetCapacity) return;
-
-  example_clusterer_identify_clusters(
-      parents, clusterIndices, clusterSizes, exampleSetCapacity, exampleSetIdx, elementIdx);
+  if(elementIdx < exampleSetCapacity)
+  {
+    example_clusterer_identify_clusters(parents, clusterIndices, clusterSizes, exampleSetCapacity, exampleSetIdx, elementIdx);
+  }
 }
 
 template <typename ExampleType>
-__global__ void ck_link_neighbors(const ExampleType *examples,
-                                  const int *exampleSetSizes,
-                                  const float *densities,
-                                  int *parents,
-                                  int *clusterIndices,
-                                  int *nbClustersPerExampleSet,
-                                  uint32_t exampleSetCapacity,
-                                  float tauSq)
+__global__ void ck_link_neighbors(const ExampleType *examples, const int *exampleSetSizes, const float *densities, int *parents,
+                                  int *clusterIndices, int *nbClustersPerExampleSet, uint32_t exampleSetCapacity, float tauSq)
 {
   // The element index is determined by the threadIdx and X coordinate of the block.
   const uint32_t elementIdx = blockIdx.x * blockDim.x + threadIdx.x;
   const uint32_t reservoirIdx = blockIdx.y;
 
-  if(elementIdx >= exampleSetCapacity) return;
-
-  example_clusterer_link_neighbors(examples,
-                                   exampleSetSizes,
-                                   densities,
-                                   parents,
-                                   clusterIndices,
-                                   nbClustersPerExampleSet,
-                                   exampleSetCapacity,
-                                   reservoirIdx,
-                                   elementIdx,
-                                   tauSq);
+  if(elementIdx < exampleSetCapacity)
+  {
+    example_clusterer_link_neighbors(
+      examples, exampleSetSizes, densities, parents, clusterIndices, nbClustersPerExampleSet,
+      exampleSetCapacity, reservoirIdx, elementIdx, tauSq
+    );
+  }
 }
 
 template <typename ClusterType, int MAX_CLUSTERS>
@@ -115,63 +93,40 @@ __global__ void ck_reset_cluster_containers(Array<ClusterType,MAX_CLUSTERS> *clu
   }
 }
 
-__global__ void ck_reset_temporaries(int *clustersPerExampleSet,
-                                     int *clusterSizes,
-                                     int *clusterSizesHistogram,
-                                     uint32_t exampleSetCapacity,
-                                     uint32_t exampleSetCount)
+__global__ void ck_reset_temporaries(int *clustersPerExampleSet, int *clusterSizes, int *clusterSizesHistogram, uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   const uint32_t exampleSetIdx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(exampleSetIdx >= exampleSetCount) return;
-
-  example_clusterer_reset_temporaries(exampleSetIdx, exampleSetCapacity, clustersPerExampleSet, clusterSizes, clusterSizesHistogram);
+  if(exampleSetIdx < exampleSetCount)
+  {
+    example_clusterer_reset_temporaries(exampleSetIdx, exampleSetCapacity, clustersPerExampleSet, clusterSizes, clusterSizesHistogram);
+  }
 }
 
-__global__ void ck_select_clusters(const int *clusterSizes,
-                                   const int *clusterSizesHistogram,
-                                   const int *nbClustersPerExampleSet,
-                                   int *selectedClusters,
-                                   uint32_t exampleSetCapacity,
-                                   uint32_t exampleSetCount,
-                                   int maxSelectedClusters,
-                                   int minClusterSize)
+__global__ void ck_select_clusters(const int *clusterSizes, const int *clusterSizesHistogram, const int *nbClustersPerExampleSet, int *selectedClusters,
+                                   uint32_t exampleSetCapacity, uint32_t exampleSetCount, int maxSelectedClusters, int minClusterSize)
 {
   const uint32_t exampleSetIdx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(exampleSetIdx >= exampleSetCount) return;
-
-  example_clusterer_select_clusters(clusterSizes,
-                                    clusterSizesHistogram,
-                                    nbClustersPerExampleSet,
-                                    selectedClusters,
-                                    exampleSetCapacity,
-                                    exampleSetIdx,
-                                    maxSelectedClusters,
-                                    minClusterSize);
+  if(exampleSetIdx < exampleSetCount)
+  {
+    example_clusterer_select_clusters(
+      clusterSizes, clusterSizesHistogram, nbClustersPerExampleSet, selectedClusters,
+      exampleSetCapacity, exampleSetIdx, maxSelectedClusters, minClusterSize
+    );
+  }
 }
 
 //#################### CONSTRUCTORS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer_CUDA(float sigma,
-                                                                                     float tau,
-                                                                                     uint32_t maxClusterCount,
-                                                                                     uint32_t minClusterSize)
-  : ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize)
-{
-}
+ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleClusterer_CUDA(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
+: ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize)
+{}
 
-//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::compute_cluster_parameters(
-    const ExampleType *examples,
-    const int *exampleSetSizes,
-    Clusters *clustersData,
-    uint32_t maxClusterCount,
-    uint32_t exampleSetCapacity,
-    uint32_t exampleSetCount)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_parameters(const ExampleType *examples, const int *exampleSetSizes, Clusters *clustersData,
+                                                                                             uint32_t maxClusterCount, uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   // Launch one thread per cluster, also using the X coordinate in the grid for indexing (not really needed but safer in
   // case we ever want to compute more than 1024 clusters).
@@ -181,14 +136,12 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::compute_clus
   int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
 
-  ck_compute_modes<<<gridSize, blockSize>>>(
-      examples, exampleSetSizes, clusterIndices, selectedClusters, clustersData, exampleSetCapacity, maxClusterCount);
+  ck_compute_modes<<<gridSize,blockSize>>>(examples, exampleSetSizes, clusterIndices, selectedClusters, clustersData, exampleSetCapacity, maxClusterCount);
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::compute_cluster_size_histograms(
-    uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
   // the grid. The grid's Y coordinate selects the exampleSet.
@@ -199,17 +152,13 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::compute_clus
   int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CUDA);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CUDA);
 
-  ck_compute_cluster_size_histograms<<<gridSize, blockSize>>>(
-      clusterSizes, nbClustersPerExampleSet, clusterSizesHistogram, exampleSetCapacity);
+  ck_compute_cluster_size_histograms<<<gridSize,blockSize>>>(clusterSizes, nbClustersPerExampleSet, clusterSizesHistogram, exampleSetCapacity);
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::compute_density(const ExampleType *exampleSets,
-                                                                                    const int *exampleSetSizes,
-                                                                                    uint32_t exampleSetsCapacity,
-                                                                                    uint32_t exampleSetsCount,
-                                                                                    float sigma)
+void ExampleClusterer_CUDA<ExampleType,ClusterType, MAX_CLUSTERS>::compute_density(const ExampleType *exampleSets, const int *exampleSetSizes,
+                                                                                   uint32_t exampleSetsCapacity, uint32_t exampleSetsCount, float sigma)
 {
   float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
 
@@ -218,36 +167,32 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::compute_dens
   dim3 blockSize(256);
   dim3 gridSize((exampleSetsCapacity + blockSize.x - 1) / blockSize.x, exampleSetsCount);
 
-  ck_compute_density<<<gridSize, blockSize>>>(exampleSets, exampleSetSizes, densities, exampleSetsCapacity, sigma);
+  ck_compute_density<<<gridSize,blockSize>>>(exampleSets, exampleSetSizes, densities, exampleSetsCapacity, sigma);
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 typename ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::Clusters *
-    ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::get_pointer_to_cluster(
-        const ClustersBlock_Ptr &clusters, uint32_t clusterIdx) const
+ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const
 {
   return clusters->GetData(MEMORYDEVICE_CUDA) + clusterIdx;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-const ExampleType *ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::get_pointer_to_example_set(
-    const ExampleImage_CPtr &exampleSets, uint32_t setIdx) const
+const ExampleType *ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const
 {
   const int exampleSetCapacity = exampleSets->noDims.width;
   return exampleSets->GetData(MEMORYDEVICE_CUDA) + setIdx * exampleSetCapacity;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-const int *ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::get_pointer_to_example_set_size(
-    const ITMIntMemoryBlock_CPtr &exampleSetSizes, uint32_t setIdx) const
+const int *ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const
 {
   return exampleSetSizes->GetData(MEMORYDEVICE_CUDA) + setIdx;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::identify_clusters(uint32_t exampleSetCapacity,
-                                                                                      uint32_t exampleSetCount)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
   // the grid. The grid's Y coordinate selects the exampleSet.
@@ -258,16 +203,13 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::identify_clu
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
 
-  ck_identify_clusters<<<gridSize, blockSize>>>(parents, clusterIndices, clusterSizes, exampleSetCapacity);
+  ck_identify_clusters<<<gridSize,blockSize>>>(parents, clusterIndices, clusterSizes, exampleSetCapacity);
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::link_neighbors(const ExampleType *exampleSets,
-                                                                                   const int *exampleSetSizes,
-                                                                                   uint32_t exampleSetsCapacity,
-                                                                                   uint32_t exampleSetsCount,
-                                                                                   float tauSq)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes,
+                                                                                 uint32_t exampleSetsCapacity, uint32_t exampleSetsCount, float tauSq)
 {
   // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
   // the grid. The grid's Y coordinate selects the exampleSet.
@@ -280,30 +222,25 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::link_neighbo
   int *nbClustersPerReservoir = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CUDA);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
 
-  ck_link_neighbors<<<gridSize, blockSize>>>(exampleSets,
-                                             exampleSetSizes,
-                                             densities,
-                                             parents,
-                                             clusterIndices,
-                                             nbClustersPerReservoir,
-                                             exampleSetsCapacity,
-                                             tauSq);
+  ck_link_neighbors<<<gridSize,blockSize>>>(
+    exampleSets, exampleSetSizes, densities, parents, clusterIndices,
+    nbClustersPerReservoir, exampleSetsCapacity, tauSq
+  );
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const
 {
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCount + blockSize.x - 1) / blockSize.x);
 
-  ck_reset_cluster_containers<<<gridSize, blockSize>>>(clustersData, exampleSetCount);
+  ck_reset_cluster_containers<<<gridSize,blockSize>>>(clustersData, exampleSetCount);
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::reset_temporaries(uint32_t exampleSetCapacity,
-                                                                                      uint32_t exampleSetCount)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
   int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CUDA);
@@ -312,16 +249,13 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::reset_tempor
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCount + blockSize.x - 1) / blockSize.x);
 
-  ck_reset_temporaries<<<gridSize, blockSize>>>(
-      nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram, exampleSetCapacity, exampleSetCount);
+  ck_reset_temporaries<<<gridSize,blockSize>>>(nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram, exampleSetCapacity, exampleSetCount);
   ORcudaKernelCheck;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::select_clusters(uint32_t maxClusterCount,
-                                                                                    uint32_t minClusterSize,
-                                                                                    uint32_t exampleSetCapacity,
-                                                                                    uint32_t exampleSetCount)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize,
+                                                                                  uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
   int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CUDA);
@@ -331,15 +265,11 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::select_clust
   // Launch one thread per example set.
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCount + blockSize.x - 1) / blockSize.x);
-  ck_select_clusters<<<gridSize, blockSize>>>(clusterSizes,
-                                              clusterSizesHistogram,
-                                              nbClustersPerExampleSet,
-                                              selectedClusters,
-                                              exampleSetCapacity,
-                                              exampleSetCount,
-                                              maxClusterCount,
-                                              minClusterSize);
+  ck_select_clusters<<<gridSize,blockSize>>>(
+    clusterSizes, clusterSizesHistogram, nbClustersPerExampleSet, selectedClusters,
+    exampleSetCapacity, exampleSetCount, maxClusterCount, minClusterSize
+  );
   ORcudaKernelCheck;
 }
 
-} // namespace grove
+}

@@ -148,9 +148,9 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(int predictionIdx = 0; predictionIdx < static_cast<int>(exampleSetCount); ++predictionIdx)
+  for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    example_clusterer_reset_cluster_container(clustersData, predictionIdx);
+    example_clusterer_reset_cluster_container(clustersData, exampleSetIdx);
   }
 }
 
