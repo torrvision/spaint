@@ -46,12 +46,12 @@ ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::~ExampleClusterer()
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
-                                                                        uint32_t startIdx, uint32_t count, ClustersBlock_Ptr& clusterContainers)
+                                                                        uint32_t exampleSetStart, uint32_t exampleSetCount, ClustersBlock_Ptr& clusterContainers)
 {
   const uint32_t nbExampleSets = exampleSets->noDims.height;
   const uint32_t exampleSetCapacity = exampleSets->noDims.width;
 
-  if(startIdx + count > nbExampleSets)
+  if(exampleSetStart + exampleSetCount > nbExampleSets)
   {
     throw std::invalid_argument("Error: startIdx + count > nbExampleSets");
   }
@@ -59,34 +59,34 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   // Reallocate the temporary variables needed for the call as necessary. In practice, this tends to be a no-op
   // for all calls to find_modes except the first, since we only need to reallocate if more memory is required,
   // and the way in which find_modes is usually called tends not to cause this to happen.
-  reallocate_temporaries(exampleSetCapacity, count);
+  reallocate_temporaries(exampleSetCapacity, exampleSetCount);
 
   // Reset the temporary variables needed for the call.
-  reset_temporaries(exampleSetCapacity, count);
+  reset_temporaries(exampleSetCapacity, exampleSetCount);
 
   // Reset the output clusters for each example set of interest.
-  Clusters *clustersData = get_pointer_to_cluster(clusterContainers, startIdx);
-  reset_clusters(clustersData, count);
+  Clusters *clustersData = get_pointer_to_cluster(clusterContainers, exampleSetStart);
+  reset_clusters(clustersData, exampleSetCount);
 
   // Compute the density of examples around each example in the example sets of interest.
-  const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, startIdx);
-  const int *exampleSetSizesData = get_pointer_to_example_set_size(exampleSetSizes, startIdx);
-  compute_density(exampleSetsData, exampleSetSizesData, exampleSetCapacity, count, m_sigma);
+  const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, exampleSetStart);
+  const int *exampleSetSizesData = get_pointer_to_example_set_size(exampleSetSizes, exampleSetStart);
+  compute_density(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_sigma);
 
   // Link neighbouring examples in a tree structure and cut the branches according to the maximum distance tau.
-  link_neighbors(exampleSetsData, exampleSetSizesData, exampleSetCapacity, count, m_tau * m_tau);
+  link_neighbors(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_tau * m_tau);
 
   // Identify clusters (assign identifiers to the clusters).
-  identify_clusters(exampleSetCapacity, count);
+  identify_clusters(exampleSetCapacity, exampleSetCount);
 
   // Compute cluster size histograms (used to select the largest clusters).
-  compute_cluster_size_histograms(exampleSetCapacity, count);
+  compute_cluster_size_histograms(exampleSetCapacity, exampleSetCount);
 
   // Select largest clusters.
-  select_clusters(m_maxClusterCount, m_minClusterSize, exampleSetCapacity, count);
+  select_clusters(m_maxClusterCount, m_minClusterSize, exampleSetCapacity, exampleSetCount);
 
   // Finally, compute parameters for each cluster and store the predictions.
-  compute_cluster_parameters(exampleSetsData, exampleSetSizesData, clustersData, m_maxClusterCount, exampleSetCapacity, count);
+  compute_cluster_parameters(exampleSetsData, exampleSetSizesData, clustersData, m_maxClusterCount, exampleSetCapacity, exampleSetCount);
 
 // Debug.
 #if 0
@@ -94,16 +94,16 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   m_clusterSizes->UpdateHostFromDevice();
   exampleSetSizes->UpdateHostFromDevice();
 
-  for (uint32_t i = 0; i < count; ++i)
+  for (uint32_t i = 0; i < exampleSetCount; ++i)
   {
-    std::cout << "Example set " << i + startIdx << " has "
-              << m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU)[i + startIdx] << " clusters and "
-              << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[i + startIdx] << " elements.\n";
+    std::cout << "Example set " << i + exampleSetStart << " has "
+              << m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU)[i + exampleSetStart] << " clusters and "
+              << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[i + exampleSetStart] << " elements.\n";
 
-    for (int j = 0; j < m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU)[i + startIdx]; ++j)
+    for (int j = 0; j < m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU)[i + exampleSetStart]; ++j)
     {
       std::cout << "\tCluster " << j << ": "
-                << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[(i + startIdx) * exampleSetCapacity + j] << " elements.\n";
+                << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[(i + exampleSetStart) * exampleSetCapacity + j] << " elements.\n";
     }
   }
 #endif

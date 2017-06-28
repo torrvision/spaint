@@ -69,12 +69,14 @@ protected:
   /** The maximum distance between examples in the same set. */
   float m_tau;
 
-  //######################### FIND MODES TEMPORARY VARIABLES #########################
-  //                                                                                //
-  // These temporary variables are used to store the state needed when calling      //
-  // find_modes(exampleSets, exampleSetSizes, startIdx, count, clusterContainers).  //
-  //                                                                                //
-  //##################################################################################
+  //######################## FIND MODES TEMPORARY VARIABLES ########################
+  //                                                                              //
+  // These temporary variables are used to store the state needed when invoking:  //
+  //                                                                              //
+  // find_modes(exampleSets, exampleSetSizes, exampleSetStart,                    //
+  //            exampleSetCount, clusterContainers);                              //
+  //                                                                              //
+  //################################################################################
 protected:
   /** Cluster index to which each example is associated. Has count rows and exampleSets->width columns. */
   ITMIntImage_Ptr m_clusterIdx;
@@ -136,14 +138,14 @@ public:
    * \param exampleSets       An image containing the sets of examples to be clustered (one set per row). The width of
    *                          the image specifies the maximum number of examples that can be contained in each set.
    * \param exampleSetSizes   The number of valid examples in each row of the exampleSets image.
-   * \param startIdx          The index of the first example set for which to compute clusters.
-   * \param count             The number of example sets for which to compute clusters.
+   * \param exampleSetStart   The index of the first example set for which to compute clusters.
+   * \param exampleSetCount   The number of example sets for which to compute clusters.
    * \param clusterContainers Output containers that will hold the clusters computed for each example set.
    *
-   * \throws std::invalid_argument If startIdx + count would result in out-of-bounds access in exampleSets.
+   * \throws std::invalid_argument If exampleSetStart + exampleSetCount would result in out-of-bounds access in exampleSets.
    */
   void find_modes(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
-                  uint32_t startIdx, uint32_t count, ClustersBlock_Ptr& clusterContainers);
+                  uint32_t exampleSetStart, uint32_t exampleSetCount, ClustersBlock_Ptr& clusterContainers);
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
