@@ -6,8 +6,7 @@ OPTION(WITH_SCOREFORESTS "Build with ScoreForests support?" OFF)
 
 # Scoreforests needs C++11 support.
 IF(WITH_SCOREFORESTS AND WITH_C++11)
-
-  # ScoreForests needs Eigen
+  INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseALGLIB.cmake)
   INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
   SET(ScoreForests_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/" CACHE PATH "The ScoreForests main directory")
