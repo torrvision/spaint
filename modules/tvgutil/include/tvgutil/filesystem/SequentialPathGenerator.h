@@ -44,6 +44,13 @@ public:
   const boost::filesystem::path& get_base_dir() const;
 
   /**
+   * \brief Gets the current value of the index in the sequence.
+   *
+   * \return The value of the index in the sequence.
+   */
+  int get_index() const;
+
+  /**
    * \brief Increments the current index in the sequence.
    */
   void increment_index();
