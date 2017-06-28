@@ -195,8 +195,8 @@ boost::optional<RelocalisationExample> read_example(const std::string &depthMask
   if(bf::is_regular(currentDepthPath) && bf::is_regular(currentRgbPath) && bf::is_regular(currentPosePath))
   {
     RelocalisationExample example;
-    example.depthImage = cv::imread(currentDepthPath.c_str(), cv::IMREAD_ANYDEPTH);
-    example.rgbImage = cv::imread(currentRgbPath.c_str());
+    example.depthImage = cv::imread(currentDepthPath.string().c_str(), cv::IMREAD_ANYDEPTH);
+    example.rgbImage = cv::imread(currentRgbPath.string().c_str());
     example.cameraPose.SetInvM(read_pose_from_file(currentPosePath));
 
     // Convert BGR to RGBA.
