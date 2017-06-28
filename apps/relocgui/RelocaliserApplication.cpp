@@ -21,8 +21,8 @@
 #include <itmx/persistence/PosePersister.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/timing/TimeUtil.h>
 #include <tvgutil/timing/AverageTimer.h>
+#include <tvgutil/timing/TimeUtil.h>
 
 namespace bf = boost::filesystem;
 
@@ -37,6 +37,14 @@ namespace relocgui {
 
 namespace {
 
+/**
+ * \brief Computes the angular separation between two rotation matrices.
+ *
+ * \param r1 The first rotation matrix.
+ * \param r2 The second rotation matrix.
+ *
+ * \return The angle of the transformation mapping r1 to r2.
+ */
 float angular_separation(const Eigen::Matrix3f &r1, const Eigen::Matrix3f &r2)
 {
   // First calculate the rotation matrix which maps r1 to r2.
@@ -46,6 +54,17 @@ float angular_separation(const Eigen::Matrix3f &r1, const Eigen::Matrix3f &r2)
   return aa.angle();
 }
 
+/**
+ * \brief Check whether a pose matrix is similar enough to a ground truth pose matrix.
+ *
+ * \param gtPose               The ground truth pose matrix.
+ * \param testPose             The candidate pose matrix.
+ * \param translationMaxError  The maximum difference (in m) between the translation components of the two matrices.
+ * \param angleMaxError        The maximum angular difference between the two rotation components (when converted to the
+ *                             axis-angle representation).
+ *
+ * \return Whether or not the two poses differ for less or equal than translationMaxError and angleMaxError.
+ */
 bool pose_matches(const Matrix4f &gtPose, const Matrix4f &testPose, float translationMaxError, float angleMaxError)
 {
   // Both our Matrix type and Eigen's are column major, so we can just use Map here.
@@ -63,6 +82,15 @@ bool pose_matches(const Matrix4f &gtPose, const Matrix4f &testPose, float transl
   return translationError <= translationMaxError && angleError <= angleMaxError;
 }
 
+/**
+ * \brief Read a 4x4 pose matrix from a text file.
+ *
+ * \param fileName Path to the text file.
+ *
+ * \return The pose matrix.
+ *
+ * \throws std::runtime_error if the file is missing or has the wrong format.
+ */
 Matrix4f read_pose_from_file(const bf::path &fileName)
 {
   if(!bf::is_regular(fileName)) throw std::runtime_error("File not found: " + fileName.string());
@@ -75,9 +103,10 @@ Matrix4f read_pose_from_file(const bf::path &fileName)
   in >> res(0, 2) >> res(1, 2) >> res(2, 2) >> res(3, 2);
   in >> res(0, 3) >> res(1, 3) >> res(2, 3) >> res(3, 3);
 
+  if(!in) throw std::runtime_error("Error reading a pose matrix from: " + fileName.string());
+
   return res;
 }
-
 }
 
 //#################### CONSTRUCTOR ####################
@@ -316,7 +345,8 @@ void RelocaliserApplication::show_example(const RelocalisationExample &example, 
                                   example.depthImage.cols + example.rgbImage.cols,
                                   CV_8UC3);
 
-  // Copy the colour image to its location on the canvas (converting it into BGR format since that's what OpenCV uses for visualization).
+  // Copy the colour image to its location on the canvas (converting it into BGR format since that's what OpenCV uses
+  // for visualization).
   cv::cvtColor(example.rgbImage, canvas(cv::Rect(0, 0, example.rgbImage.cols, example.rgbImage.rows)), CV_RGBA2BGR);
 
   // Normalize the depth image (black is very close, white is far away) and copy it to its location on the canvas.
