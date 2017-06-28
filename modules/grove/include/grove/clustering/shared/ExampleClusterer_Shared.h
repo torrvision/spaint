@@ -192,10 +192,8 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
  *        of each subtree. With this function we navigate each example's subtree until we find the root and copy the
  *        cluster index. We also update a counter storing the size of each cluster.
  *
- * \param parents            A pointer to a memory area wherein is stored the parent for each example in the example
- * sets.
- * \param clusterIndices     A pointer to a memory area wherein is stored the index of the cluster associated to each
- * example.
+ * \param parents            A pointer to a memory area wherein is stored the parent for each example in the example sets.
+ * \param clusterIndices     A pointer to a memory area wherein is stored the index of the cluster associated to each example.
  * \param clusterSizes       A pointer to a memory area wherein is stored the size of each cluster.
  * \param exampleSetCapacity The maximum size of each example set.
  * \param exampleSetIdx      The idnex of the current example set.
@@ -254,8 +252,7 @@ inline void example_clusterer_identify_clusters(const int *parents,
  *        with higher density. For details, see the RQS paper by Fulkerson and Soatto.
  *        http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
  *
- * \param exampleSets             The examples to link in subtrees (rectangular array, one row per example set, one
- *                                column per example).
+ * \param exampleSets             The examples to link in subtrees (rectangular array, one row per example set, one column per example).
  * \param exampleSetSizes         The actual size of each example set. One element per row in exampleSets.
  * \param densities               The densities associated to each example.
  * \param parents                 Output array where each element represents the parent of an example in the exampleSet.
@@ -355,39 +352,33 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_link_neighbors(const E
  * \param containerIdx      The index of the cluster container to reset.
  */
 template <typename ClusterType, int MAX_CLUSTERS>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void
-    example_clusterer_reset_cluster_container(Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
-                                              int containerIdx)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void example_clusterer_reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int containerIdx)
 {
   // Just reset the number of clusters, no need to reset the actual clusters since they will be overwritten later.
   clusterContainers[containerIdx].size = 0;
 }
 
 /**
- * \brief Reset temporary working variables associated to a certain example set.
+ * \brief Resets the temporary variables associated with the specified example set.
  *
- * \param clustersPerExampleSet Pointer to the variables containing the number of clusters extracted
- *                              from each example set.
- * \param clusterSizes          Pointer to the variables storing the size of each extracted cluster.
- * \param clusterSizesHistogram Pointer to the variables storing the histogram of cluster sizes.
- * \param exampleSetCapacity    Maximum size of each example set.
- * \param exampleSetIdx         Index of the example set for which we are resetting the working variables.
+ * \param exampleSetIdx           The index of the example set for which we are resetting the temporary variables.
+ * \param exampleSetCapacity      The maximum size of each example set.
+ * \param nbClustersPerExampleSet The number of clusters extracted from each example set.
+ * \param clusterSizes            An image containing the sizes of the extracted clusters (for all example sets).
+ * \param clusterSizesHistogram   The histogram of cluster sizes.
  */
 _CPU_AND_GPU_CODE_
-inline void example_clusterer_reset_temporaries(int *clustersPerExampleSet,
-                                                int *clusterSizes,
-                                                int *clusterSizesHistogram,
-                                                int exampleSetCapacity,
-                                                int exampleSetIdx)
+inline void example_clusterer_reset_temporaries(int exampleSetIdx, int exampleSetCapacity, int *nbClustersPerExampleSet, int *clusterSizes, int *clusterSizesHistogram)
 {
-  // Reset number of clusters per example set.
-  clustersPerExampleSet[exampleSetIdx] = 0;
+  // Reset the number of clusters extracted from this example set to zero.
+  nbClustersPerExampleSet[exampleSetIdx] = 0;
 
-  // Compute the memory offset to the beginning of any data associated to the current example set.
+  // Compute the memory offset to the beginning of any data associated with this example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-  // Reset cluster sizes and histogram associated to the current example set.
-  for (int i = 0; i < exampleSetCapacity; ++i)
+  // Reset the cluster sizes and histogram values associated with the current example set.
+  for(int i = 0; i < exampleSetCapacity; ++i)
   {
     clusterSizes[exampleSetOffset + i] = 0;
     clusterSizesHistogram[exampleSetOffset + i] = 0;
@@ -495,6 +486,6 @@ inline void example_clusterer_select_clusters(const int *clusterSizes,
   }
 }
 
-} // namespace grove
+}
 
-#endif // H_GROVE_EXAMPLECLUSTERER_SHARED
+#endif

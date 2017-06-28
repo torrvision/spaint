@@ -155,7 +155,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType, MAX_CLUSTERS>::reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CPU);
@@ -166,7 +166,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType, MAX_CLUSTERS>::reset_temporar
 #endif
   for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
   {
-    example_clusterer_reset_temporaries(nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram, exampleSetCapacity, setIdx);
+    example_clusterer_reset_temporaries(setIdx, exampleSetCapacity, nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram);
   }
 }
 

@@ -79,10 +79,19 @@ protected:
   /** Cluster index to which each example is associated. Has count rows and exampleSets->width columns. */
   ITMIntImage_Ptr m_clusterIdx;
 
-  /** Size of each cluster. Has count rows and exampleSets->width columns. */
+  /**
+   * The size of each cluster (for each example set under consideration). Has count rows and exampleSets->width columns.
+   * The number of clusters for each example set can range between 1 (i.e. a single cluster of size exampleSets->width)
+   * and exampleSets->width (i.e. a cluster for each individual example). Within the row of the image corresponding to
+   * example set i, the first m_nbClustersPerExampleSet[i] pixels store the sizes of the clusters for that example set.
+   * The remaining pixels on the row are ignored.
+   */
   ITMIntImage_Ptr m_clusterSizes;
 
-  /** Histogram representing the number of clusters having a certain size. Has count rows and exampleSets->width columns. */
+  /**
+   * A histogram representing the number of clusters for each example set that have a certain size. Has count rows and
+   * exampleSets->width columns. Pixel (i,j) represents the number of clusters in example set i that have size j.
+   */
   ITMIntImage_Ptr m_clusterSizesHistogram;
 
   /** An image representing the density of examples around each example in the input sets. Has count rows and exampleSets->width columns. */
@@ -91,7 +100,7 @@ protected:
   /** Stores the number of valid clusters in each example set. Has count elements. */
   ITMIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
 
-  /** Defines the cluster tree structure. Holds the index to the parent for each example in the input sets. Has count rows and exampleSets->width columns. */
+  /** Defines the cluster tree structure. Holds the index of the parent for each example in the input sets. Has count rows and exampleSets->width columns. */
   ITMIntImage_Ptr m_parents;
 
   /** Stores the index of selected clusters in each example set. Has count rows and m_maxClusterCount columns. */
@@ -237,10 +246,10 @@ private:
   virtual void reset_clusters(Clusters *clustersData, uint32_t clustersCount) const = 0;
 
   /**
-   * \brief Reset temporary values used during the clustering operation.
+   * \brief Resets the temporary variables needed during a find_modes call.
    *
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
    */
   virtual void reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
@@ -258,10 +267,10 @@ private:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Reallocates the temporary variables needed for a find_modes call as necessary.
+   * \brief Reallocates the temporary variables needed during a find_modes call as necessary.
    *
    * \param exampleSetCapacity The maximum size of each example set.
-   * \param exampleSetCount    The number of example sets to be clustered.
+   * \param exampleSetCount    The number of example sets being clustered.
    */
   void reallocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 };

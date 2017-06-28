@@ -13,10 +13,7 @@ namespace grove {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_compute_cluster_size_histograms(const int *clusterSizes,
-                                                   const int *nbClustersPerExampleSet,
-                                                   int *clusterSizesHistogram,
-                                                   uint32_t exampleSetCapacity)
+__global__ void ck_compute_cluster_size_histograms(const int *clusterSizes, const int *nbClustersPerExampleSet, int *clusterSizesHistogram, uint32_t exampleSetCapacity)
 {
   // The potential cluster index is determined by the threadIdx and X coordinate of the block.
   const uint32_t clusterIdx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -24,13 +21,11 @@ __global__ void ck_compute_cluster_size_histograms(const int *clusterSizes,
 
   if(clusterIdx >= exampleSetCapacity) return;
 
-  example_clusterer_compute_cluster_histogram(
-      clusterSizes, nbClustersPerExampleSet, clusterSizesHistogram, exampleSetCapacity, exampleSetIdx, clusterIdx);
+  example_clusterer_compute_cluster_histogram(clusterSizes, nbClustersPerExampleSet, clusterSizesHistogram, exampleSetCapacity, exampleSetIdx, clusterIdx);
 }
 
 template <typename ExampleType>
-__global__ void ck_compute_density(
-    const ExampleType *examples, const int *exampleSetSizes, float *densities, uint32_t exampleSetCapacity, float sigma)
+__global__ void ck_compute_density(const ExampleType *examples, const int *exampleSetSizes, float *densities, uint32_t exampleSetCapacity, float sigma)
 {
   // The element index is determined by the threadIdx and X coordinate of the block.
   const uint32_t elementIdx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -131,8 +126,7 @@ __global__ void ck_reset_temporaries(int *clustersPerExampleSet,
 
   if(exampleSetIdx >= exampleSetCount) return;
 
-  example_clusterer_reset_temporaries(
-      clustersPerExampleSet, clusterSizes, clusterSizesHistogram, exampleSetCapacity, exampleSetIdx);
+  example_clusterer_reset_temporaries(exampleSetIdx, exampleSetCapacity, clustersPerExampleSet, clusterSizes, clusterSizesHistogram);
 }
 
 __global__ void ck_select_clusters(const int *clusterSizes,
