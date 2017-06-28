@@ -485,7 +485,7 @@ int main(int argc, char *argv[]) try
   std::cout << "Testing done.\n\nEvaluated " << testedExamples << " RGBD frames.\n";
   std::cout << successfulExamples << " were relocalised correctly (<5cm and <5deg error).\n";
   const float accuracy =
-      100.f * testedExamples > 0 ? static_cast<float>(successfulExamples) / static_cast<float>(testedExamples) : 0.0f;
+      100.f * (testedExamples > 0 ? static_cast<float>(successfulExamples) / static_cast<float>(testedExamples) : 0.0f);
   std::cout << "Overall accuracy: " << accuracy << '\n';
 
   return EXIT_SUCCESS;
