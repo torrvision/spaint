@@ -8,10 +8,7 @@
 #include <map>
 #include <vector>
 
-// Workaround for this: https://stackoverflow.com/questions/15634114/cant-link-program-using-boost-filesystem
-#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <opencv2/opencv.hpp>
 
@@ -227,7 +224,10 @@ int main(int argc, char *argv[]) try
 
   // Create calibration file.
   {
-    std::ofstream calibrationFile((datasetRoot / "calib.txt").string().c_str());
+    const bf::path calibrationFileName = datasetRoot / "calib.txt";
+    std::cout << "Creating calibration file: " << calibrationFileName << '\n';
+
+    std::ofstream calibrationFile(calibrationFileName.string().c_str());
     calibrationFile << "640 480\n"
                     << "585 585\n"
                     << "320 240\n"
@@ -235,6 +235,7 @@ int main(int argc, char *argv[]) try
                     << "640 480\n"
                     << "585 585\n"
                     << "320 240\n"
+                    << '\n'
                     << "1 0 0 0\n"
                     << "0 1 0 0\n"
                     << "0 0 1 0\n"
