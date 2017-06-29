@@ -31,6 +31,7 @@ IF(BUILD_AUXILIARY_APPS)
     ENDIF()
 
     IF(BUILD_EVALUATION_MODULES)
+      ADD_SUBDIRECTORY(prepare_7scenes)
       ADD_SUBDIRECTORY(relocperf)
     ENDIF()
   ENDIF()
