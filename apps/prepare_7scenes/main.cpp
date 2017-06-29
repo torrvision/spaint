@@ -8,10 +8,7 @@
 #include <map>
 #include <vector>
 
-// Workaround for this: https://stackoverflow.com/questions/15634114/cant-link-program-using-boost-filesystem
-#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
-#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <opencv2/opencv.hpp>
 
