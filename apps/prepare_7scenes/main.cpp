@@ -224,7 +224,10 @@ int main(int argc, char *argv[]) try
 
   // Create calibration file.
   {
-    std::ofstream calibrationFile((datasetRoot / "calib.txt").string().c_str());
+    const bf::path calibrationFileName = datasetRoot / "calib.txt";
+    std::cout << "Creating calibration file: " << calibrationFileName << '\n';
+
+    std::ofstream calibrationFile(calibrationFileName.string().c_str());
     calibrationFile << "640 480\n"
                     << "585 585\n"
                     << "320 240\n"
