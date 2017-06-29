@@ -33,7 +33,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
   {
     for(uint32_t clusterIdx = 0; clusterIdx < maxClusterCount; ++clusterIdx)
     {
-      example_clusterer_compute_modes(
+      compute_modes(
         examples, exampleSetSizes, clusterIndices, selectedClusters, clustersData,
         exampleSetCapacity, exampleSetIdx, maxClusterCount, clusterIdx
       );
@@ -55,7 +55,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
   {
     for(uint32_t clusterIdx = 0; clusterIdx < exampleSetCapacity; ++clusterIdx)
     {
-      example_clusterer_compute_cluster_histogram(clusterSizes, nbClustersPerExampleSet, clusterSizesHistogram, exampleSetCapacity, setIdx, clusterIdx);
+      compute_cluster_histogram(clusterSizes, nbClustersPerExampleSet, clusterSizesHistogram, exampleSetCapacity, setIdx, clusterIdx);
     }
   }
 }
@@ -112,7 +112,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::identify_cluste
   {
     for(uint32_t elementIdx = 0; elementIdx < exampleSetCapacity; ++elementIdx)
     {
-      example_clusterer_identify_clusters(parents, clusterIndices, clusterSizes, exampleSetCapacity, setIdx, elementIdx);
+      identify_clusters_for_set(parents, clusterIndices, clusterSizes, exampleSetCapacity, setIdx, elementIdx);
     }
   }
 }
@@ -134,7 +134,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors(
   {
     for(uint32_t elementIdx = 0; elementIdx < exampleSetCapacity; ++elementIdx)
     {
-      example_clusterer_link_neighbors(
+      link_neighbors_for_example(
         examples, exampleSetSizes, densities, parents, clusterIndices, nbClustersPerExampleSet,
         exampleSetCapacity, setIdx, elementIdx, tauSq
       );
@@ -166,7 +166,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporari
 #endif
   for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
   {
-    example_clusterer_reset_temporaries(setIdx, exampleSetCapacity, nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram);
+    reset_temporaries_for_set(setIdx, exampleSetCapacity, nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram);
   }
 }
 
@@ -184,7 +184,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    example_clusterer_select_clusters(
+    select_clusters_for_set(
       clusterSizes, clusterSizesHistogram, nbClustersPerExampleSet, selectedClusters,
       exampleSetCapacity, exampleSetIdx, maxClusterCount, minClusterSize
     );

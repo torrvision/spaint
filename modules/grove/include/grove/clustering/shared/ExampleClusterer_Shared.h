@@ -26,12 +26,7 @@ namespace grove {
  * \param clusterIdx              The index of the current cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void example_clusterer_compute_cluster_histogram(const int *clusterSizes,
-                                                        const int *nbClustersPerExampleSet,
-                                                        int *clusterSizesHistogram,
-                                                        int exampleSetCapacity,
-                                                        int exampleSetIdx,
-                                                        int clusterIdx)
+inline void compute_cluster_histogram(const int *clusterSizes, const int *nbClustersPerExampleSet, int *clusterSizesHistogram, int exampleSetCapacity, int exampleSetIdx, int clusterIdx)
 {
   // Linear offset to the start of the current example set (or its associated data).
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
@@ -106,7 +101,6 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
     }
   }
 
-  // Store the density in the output variable.
   densities[exampleOffset] = density;
 }
 
@@ -127,16 +121,9 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
  * \param clusterIdx          The index of the current cluster.
  */
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void
-    example_clusterer_compute_modes(const ExampleType *exampleSets,
-                                    const int *exampleSetSizes,
-                                    const int *clusterIndices,
-                                    const int *selectedClusters,
-                                    Array<ClusterType, MAX_CLUSTERS> *clusterContainers,
-                                    int exampleSetCapacity,
-                                    int exampleSetIdx,
-                                    int maxSelectedClusters,
-                                    int clusterIdx)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_modes(const ExampleType *exampleSets, const int *exampleSetSizes, const int *clusterIndices, const int *selectedClusters,
+                          Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int exampleSetCapacity, int exampleSetIdx, int maxSelectedClusters, int clusterIdx)
 {
   // Linear offset to the first selected cluster of the current example set.
   const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
@@ -174,18 +161,14 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
 
     // Build the actual cluster by calling the createClusterFromExamples function that MUST be defined
     // for the current ExampleType.
-    createClusterFromExamples(exampleSetExamples,
-                              exampleSetClusterIndices,
-                              exampleSetSize,
-                              selectedClusterId,
-                              currentClusterContainer.elts[outputClusterIdx]);
+    createClusterFromExamples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, selectedClusterId, currentClusterContainer.elts[outputClusterIdx]);
   }
 }
 
 /**
  * \brief Find the cluster index for each example in the example sets.
  *
- * \note  example_clusterer_link_neighbors split all the examples in subtrees and allocated a cluster index to the root
+ * \note  link_neighbors split all the examples in subtrees and allocated a cluster index to the root
  *        of each subtree. With this function we navigate each example's subtree until we find the root and copy the
  *        cluster index. We also update a counter storing the size of each cluster.
  *
@@ -197,12 +180,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
  * \param elementIdx         The index of the current element.
  */
 _CPU_AND_GPU_CODE_
-inline void example_clusterer_identify_clusters(const int *parents,
-                                                int *clusterIndices,
-                                                int *clusterSizes,
-                                                int exampleSetCapacity,
-                                                int exampleSetIdx,
-                                                int elementIdx)
+inline void identify_clusters_for_set(const int *parents, int *clusterIndices, int *clusterSizes, int exampleSetCapacity, int exampleSetIdx, int elementIdx)
 {
   // Linear offset to the first example (or associated data) of the example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
@@ -212,7 +190,7 @@ inline void example_clusterer_identify_clusters(const int *parents,
   // Walk up on the tree until we find the root of the current subtree.
 
   // No need to check if the current element is valid
-  // example_clusterer_link_neighbors sets the parent for invalid elements to themselves
+  // link_neighbors sets the parent for invalid elements to themselves
   int parentIdx = parents[elementOffset];
   int currentIdx = elementIdx;
 
@@ -264,16 +242,9 @@ inline void example_clusterer_identify_clusters(const int *parents,
  * \param tauSq                   Maximum (squared) distance between examples to consider them linked together.
  */
 template <typename ExampleType>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_link_neighbors(const ExampleType *exampleSets,
-                                                                         const int *exampleSetSizes,
-                                                                         const float *densities,
-                                                                         int *parents,
-                                                                         int *clusterIndices,
-                                                                         int *nbClustersPerExampleSet,
-                                                                         int exampleSetCapacity,
-                                                                         int exampleSetIdx,
-                                                                         int elementIdx,
-                                                                         float tauSq)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void link_neighbors_for_example(const ExampleType *exampleSets, const int *exampleSetSizes, const float *densities, int *parents, int *clusterIndices,
+                                       int *nbClustersPerExampleSet, int exampleSetCapacity, int exampleSetIdx, int elementIdx, float tauSq)
 {
   // Linear offset to the first element of the current example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
@@ -367,7 +338,7 @@ inline void reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterCont
  * \param clusterSizesHistogram   The histogram of cluster sizes.
  */
 _CPU_AND_GPU_CODE_
-inline void example_clusterer_reset_temporaries(int exampleSetIdx, int exampleSetCapacity, int *nbClustersPerExampleSet, int *clusterSizes, int *clusterSizesHistogram)
+inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity, int *nbClustersPerExampleSet, int *clusterSizes, int *clusterSizesHistogram)
 {
   // Reset the number of clusters extracted from this example set to zero.
   nbClustersPerExampleSet[exampleSetIdx] = 0;
@@ -397,14 +368,8 @@ inline void example_clusterer_reset_temporaries(int exampleSetIdx, int exampleSe
  * \param minClusterSize          The minimum size of a cluster to be kept.
  */
 _CPU_AND_GPU_CODE_
-inline void example_clusterer_select_clusters(const int *clusterSizes,
-                                              const int *clusterSizesHistogram,
-                                              const int *nbClustersPerExampleSet,
-                                              int *selectedClusters,
-                                              int exampleSetCapacity,
-                                              int exampleSetIdx,
-                                              int maxSelectedClusters,
-                                              int minClusterSize)
+inline void select_clusters_for_set(const int *clusterSizes, const int *clusterSizesHistogram, const int *nbClustersPerExampleSet, int *selectedClusters,
+                                    int exampleSetCapacity, int exampleSetIdx, int maxSelectedClusters, int minClusterSize)
 {
   // Linear index to the first example (and associated data) of the current example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
