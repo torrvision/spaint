@@ -56,33 +56,28 @@ inline void example_clusterer_compute_cluster_histogram(const int *clusterSizes,
 }
 
 /**
- * \brief Compute the density of examples around a certain element of the example sets.
+ * \brief Compute the density of examples around an individual example in one of the example sets.
  *
+ * \param exampleSetIdx      The index of the example set containing the example of interest.
+ * \param exampleIdx         The index of the example of interest within its example set.
  * \param exampleSets        A pointer to the sets of examples (one set per row, one example per column).
- * \param exampleSetSizes    A pointer to the actual sizes of each example set (number of valid elements in each row of
- *                           exampleSets).
+ * \param exampleSetSizes    A pointer to the actual sizes of each example set (number of valid elements in each row of exampleSets).
+ * \param exampleSetCapacity The maximum size of each example set (number of columns in exampleSets).
+ * \param sigma              Sigma of the gaussian used when computing the density.
  * \param densities          A pointer to the memory wherein to store the density of each example (one example set per
  *                           row, one density value per column).
- * \param exampleSetCapacity The maximum size of each example set (number of columns in exampleSets).
- * \param exampleSetIdx      The index of the current example set.
- * \param elementIdx         The index of the element for which we are computing the density.
- * \param sigma              Sigma of the gaussian used when computing the density.
  */
 template <typename ExampleType>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_compute_density(const ExampleType *exampleSets,
-                                                                          const int *exampleSetSizes,
-                                                                          float *densities,
-                                                                          int exampleSetCapacity,
-                                                                          int exampleSetIdx,
-                                                                          int elementIdx,
-                                                                          float sigma)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, const int *exampleSetSizes,
+                            int exampleSetCapacity, float sigma, float *densities)
 {
   // Compute the linear offset to the beginning of the data associated to the current example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
   // The size of the current example set.
   const int exampleSetSize = exampleSetSizes[exampleSetIdx];
   // Offset of the current element from the beginning of the exampleSets array.
-  const int elementOffset = exampleSetOffset + elementIdx;
+  const int elementOffset = exampleSetOffset + exampleIdx;
 
   // Points farther away than three sigma have small contribution to the density.
   const float threeSigmaSq = (3.f * sigma) * (3.f * sigma);
@@ -90,7 +85,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_compute_density(const 
 
   float density = 0.f;
 
-  if (elementIdx < exampleSetSize)
+  if(exampleIdx < exampleSetSize)
   {
     const ExampleType centerExample = exampleSets[elementOffset];
 
@@ -353,7 +348,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_link_neighbors(const E
  */
 template <typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void example_clusterer_reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int exampleSetIdx)
+inline void reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int exampleSetIdx)
 {
   // It is sufficient to just reset the size of the container (i.e. the number of clusters) to zero.
   // There is no need to modify the actual clusters, since they will be overwritten later.

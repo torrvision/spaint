@@ -61,19 +61,19 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_density(const ExampleType *examples, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                                                                 uint32_t exampleSetCount, float sigma)
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densities(const ExampleType *examples, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                                                                   uint32_t exampleSetCount, float sigma)
 {
   float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
+  for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    for(uint32_t elementIdx = 0; elementIdx < exampleSetCapacity; ++elementIdx)
+    for(uint32_t exampleIdx = 0; exampleIdx < exampleSetCapacity; ++exampleIdx)
     {
-      example_clusterer_compute_density(examples, exampleSetSizes, densities, exampleSetCapacity, setIdx, elementIdx, sigma);
+      compute_density(exampleSetIdx, exampleIdx, examples, exampleSetSizes, exampleSetCapacity, sigma, densities);
     }
   }
 }
@@ -86,14 +86,14 @@ ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_clust
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-const ExampleType *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set(const ExampleImage_CPtr &exampleSets, uint32_t setIdx) const
+const ExampleType *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const
 {
   const int setCapacity = exampleSets->noDims.width;
   return exampleSets->GetData(MEMORYDEVICE_CPU) + setIdx * setCapacity;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-const int *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr &exampleSetSizes, uint32_t setIdx) const
+const int *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const
 {
   return exampleSetSizes->GetData(MEMORYDEVICE_CPU) + setIdx;
 }
@@ -150,7 +150,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    example_clusterer_reset_cluster_container(clustersData, exampleSetIdx);
+    reset_cluster_container(clustersData, exampleSetIdx);
   }
 }
 

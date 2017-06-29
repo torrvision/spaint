@@ -179,12 +179,12 @@ private:
    *
    * \param exampleSets         A pointer to the example sets.
    * \param exampleSetSizes     A pointer to the size of each example set.
-   * \param exampleSetsCapacity The maximum size of each exampleSet.
+   * \param exampleSetsCapacity The maximum size of each example set.
    * \param exampleSetsCount    The number of example sets.
    * \param sigma               The sigma used when computing the density.
    */
-  virtual void compute_density(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
-                               uint32_t exampleSetsCount, float sigma) = 0;
+  virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
+                                 uint32_t exampleSetsCount, float sigma) = 0;
 
   /**
    * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
