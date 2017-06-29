@@ -73,8 +73,9 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   const int *exampleSetSizesData = get_pointer_to_example_set_size(exampleSetSizes, exampleSetStart);
   compute_densities(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_sigma);
 
-  // Link neighbouring examples in a tree structure and cut the branches according to the maximum distance tau.
-  link_neighbors(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_tau * m_tau);
+  // Link neighbouring examples in a tree structure, cutting the branches based on a distance tau,
+  // the maximum distance between examples if they are to be linked.
+  link_neighbours(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_tau * m_tau);
 
   // Identify clusters (assign identifiers to the clusters).
   identify_clusters(exampleSetCapacity, exampleSetCount);

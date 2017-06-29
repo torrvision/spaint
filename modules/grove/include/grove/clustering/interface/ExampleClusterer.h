@@ -228,7 +228,10 @@ private:
   virtual void identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
-   * \brief Link neighboring examples in order to form a tree structure.
+   * \brief Links neighbouring examples to form a tree structure.
+   *
+   * \note This implements the neighbour-linking step of the really quick shift algorithm.
+   *       For details, see the RQS paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
    *
    * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
    *                            the image specifies the maximum number of examples that can be contained in each set.
@@ -237,8 +240,8 @@ private:
    * \param exampleSetCount     The number of example sets being clustered.
    * \param tauSq               The square of the maximum distance allowed between examples if they are to be linked.
    */
-  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                              uint32_t exampleSetCount, float tauSq) = 0;
+  virtual void link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                               uint32_t exampleSetCount, float tauSq) = 0;
 
   /**
    * \brief Resets the output cluster containers.

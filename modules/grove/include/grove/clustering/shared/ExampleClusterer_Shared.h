@@ -169,8 +169,8 @@ inline void compute_modes(const ExampleType *exampleSets, const int *exampleSetS
  * \brief Computes the parent and initial cluster index to assign to the specified example as part of the neighbour-linking step
  *        of the really quick shift algorithm.
  *
- * \note  Each example becomes part of a subtree in which each example has as its parent the closest example with higher density.
- *        For details, see the RQS paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
+ * \note Each example becomes part of a subtree in which each example has as its parent the closest example with higher density.
+ *       For details, see the RQS paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
  *
  * \param exampleSetIdx           The index of the example set containing the example.
  * \param exampleIdx              The index of the example within its example set.
@@ -263,7 +263,7 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
 /**
  * \brief Find the cluster index for each example in the example sets.
  *
- * \note  link_neighbors split all the examples in subtrees and allocated a cluster index to the root
+ * \note  compute_parent split all the examples into subtrees and allocated a cluster index to the root
  *        of each subtree. With this function we navigate each example's subtree until we find the root and copy the
  *        cluster index. We also update a counter storing the size of each cluster.
  *
@@ -285,7 +285,7 @@ inline void identify_clusters_for_set(const int *parents, int *clusterIndices, i
   // Walk up on the tree until we find the root of the current subtree.
 
   // No need to check if the current element is valid
-  // link_neighbors sets the parent for invalid elements to themselves
+  // compute_parent set the parent for invalid elements to themselves
   int parentIdx = parents[elementOffset];
   int currentIdx = elementIdx;
 

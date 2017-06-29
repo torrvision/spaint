@@ -118,8 +118,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::identify_cluste
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                                                                uint32_t exampleSetCount, float tauSq)
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                                                                 uint32_t exampleSetCount, float tauSq)
 {
   const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
 

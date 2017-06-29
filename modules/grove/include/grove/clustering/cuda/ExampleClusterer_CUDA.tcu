@@ -69,8 +69,8 @@ __global__ void ck_identify_clusters(const int *parents, int *clusterIndices, in
 }
 
 template <typename ExampleType>
-__global__ void ck_link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, const float *densities, int *parents,
-                                  int *clusterIndices, int *nbClustersPerExampleSet, uint32_t exampleSetCapacity, float tauSq)
+__global__ void ck_link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes, const float *densities, int *parents,
+                                   int *clusterIndices, int *nbClustersPerExampleSet, uint32_t exampleSetCapacity, float tauSq)
 {
   // The example index is determined by the threadIdx and x coordinate of the block.
   const uint32_t exampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -210,8 +210,8 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::identify_clust
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes,
-                                                                                 uint32_t exampleSetCapacity, uint32_t exampleSetCount, float tauSq)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes,
+                                                                                  uint32_t exampleSetCapacity, uint32_t exampleSetCount, float tauSq)
 {
   // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
   // the grid. The grid's Y coordinate selects the exampleSet.
@@ -224,7 +224,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors
   int *nbClustersPerReservoir = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CUDA);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
 
-  ck_link_neighbors<<<gridSize,blockSize>>>(
+  ck_link_neighbours<<<gridSize,blockSize>>>(
     exampleSets, exampleSetSizes, densities, parents, clusterIndices,
     nbClustersPerReservoir, exampleSetCapacity, tauSq
   );

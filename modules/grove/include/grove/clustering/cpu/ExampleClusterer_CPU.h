@@ -71,8 +71,8 @@ private:
   virtual void identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
-  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                              uint32_t exampleSetCount, float tauSq);
+  virtual void link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                               uint32_t exampleSetCount, float tauSq);
 
   /** Override */
   virtual void reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const;
