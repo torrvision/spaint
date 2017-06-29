@@ -134,7 +134,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors(
   {
     for(uint32_t exampleIdx = 0; exampleIdx < exampleSetCapacity; ++exampleIdx)
     {
-      link_neighbors_for_example(
+      compute_parent(
         exampleSetIdx, exampleIdx, exampleSets, exampleSetCapacity, exampleSetSizes,
         densities, tauSq, parents, clusterIndices, nbClustersPerExampleSet
       );

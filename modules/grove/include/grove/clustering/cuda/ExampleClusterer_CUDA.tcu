@@ -78,7 +78,7 @@ __global__ void ck_link_neighbors(const ExampleType *exampleSets, const int *exa
 
   if(exampleIdx < exampleSetCapacity)
   {
-    link_neighbors_for_example(
+    compute_parent(
       exampleSetIdx, exampleIdx, exampleSets, exampleSetCapacity, exampleSetSizes,
       densities, tauSq, parents, clusterIndices, nbClustersPerExampleSet
     );

@@ -166,66 +166,11 @@ inline void compute_modes(const ExampleType *exampleSets, const int *exampleSetS
 }
 
 /**
- * \brief Find the cluster index for each example in the example sets.
+ * \brief Computes the parent and initial cluster index to assign to the specified example as part of the neighbour-linking step
+ *        of the really quick shift algorithm.
  *
- * \note  link_neighbors split all the examples in subtrees and allocated a cluster index to the root
- *        of each subtree. With this function we navigate each example's subtree until we find the root and copy the
- *        cluster index. We also update a counter storing the size of each cluster.
- *
- * \param parents            A pointer to a memory area wherein is stored the parent for each example in the example sets.
- * \param clusterIndices     A pointer to a memory area wherein is stored the index of the cluster associated to each example.
- * \param clusterSizes       A pointer to a memory area wherein is stored the size of each cluster.
- * \param exampleSetCapacity The maximum size of each example set.
- * \param exampleSetIdx      The index of the current example set.
- * \param elementIdx         The index of the current element.
- */
-_CPU_AND_GPU_CODE_
-inline void identify_clusters_for_set(const int *parents, int *clusterIndices, int *clusterSizes, int exampleSetCapacity, int exampleSetIdx, int elementIdx)
-{
-  // Linear offset to the first example (or associated data) of the example set.
-  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Offset to the current element.
-  const int elementOffset = exampleSetOffset + elementIdx;
-
-  // Walk up on the tree until we find the root of the current subtree.
-
-  // No need to check if the current element is valid
-  // link_neighbors sets the parent for invalid elements to themselves
-  int parentIdx = parents[elementOffset];
-  int currentIdx = elementIdx;
-
-  while (parentIdx != currentIdx)
-  {
-    currentIdx = parentIdx;
-    parentIdx = parents[exampleSetOffset + parentIdx];
-  }
-
-  // Found the root of the subtree, get its cluster index.
-  const int clusterIdx = clusterIndices[exampleSetOffset + parentIdx];
-
-  // Save the cluster index into the current element's cluster index variable.
-  clusterIndices[elementOffset] = clusterIdx;
-
-  // If it's a valid cluster then atomically increase its size (might be invalid if we started from an invalid example).
-  if (clusterIdx >= 0)
-  {
-#if defined(__CUDACC__) && defined(__CUDA_ARCH__) // Non templated function, need the __CUDA_ARCH__ check.
-    atomicAdd(&clusterSizes[exampleSetOffset + clusterIdx], 1);
-#else
-#ifdef WITH_OPENMP
-#pragma omp atomic
-#endif
-    clusterSizes[exampleSetOffset + clusterIdx]++;
-#endif
-  }
-}
-
-/**
- * \brief Links neighbouring examples in a tree structure.
- *
- * \note  Each example becomes part of a subtree in which each example has as its parent the closest example
- *        with higher density. For details, see the RQS paper by Fulkerson and Soatto.
- *        http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
+ * \note  Each example becomes part of a subtree in which each example has as its parent the closest example with higher density.
+ *        For details, see the RQS paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
  *
  * \param exampleSetIdx           The index of the example set containing the example.
  * \param exampleIdx              The index of the example within its example set.
@@ -234,18 +179,18 @@ inline void identify_clusters_for_set(const int *parents, int *clusterIndices, i
  * \param exampleSetCapacity      The maximum number of examples in an example set.
  * \param exampleSetSizes         The number of valid examples in each example set.
  * \param densities               An image containing the density of each example (one set per row, one density value per column).
- * \param tauSq                   The square of the maximum distance allowed between examples if they are to be considered linked.
- * \param parents                 Output array where each element represents the parent of an example in the exampleSet.
- *                                Set to the element index itself if the example is the root of a subtree.
- * \param clusterIndices          Index of the cluster associated to each subtree.
- *                                Set to -1 unless the element is root of a subtree.
- * \param nbClustersPerExampleSet Will contain the number of subtrees in each example set.
- *                                Must be 0 when calling the function.
+ * \param tauSq                   The square of the maximum distance allowed between examples if they are to be linked.
+ * \param parents                 An image in which to store a parent index for each example. This will generally be the index of
+ *                                another example in the same set, but may be that of the example itself if it is a subtree root.
+ * \param clusterIndices          An image in which to store an initial cluster index for each example. The initial cluster index
+ *                                for an example will be set to -1 unless the example is a subtree root.
+ * \param nbClustersPerExampleSet An array in which to keep track of the number of clusters in each example set. Must contain zeros
+ *                                at the point at which the function is called.
  */
 template <typename ExampleType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void link_neighbors_for_example(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, int exampleSetCapacity, const int *exampleSetSizes,
-                                       const float *densities, float tauSq, int *parents, int *clusterIndices, int *nbClustersPerExampleSet)
+inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, int exampleSetCapacity, const int *exampleSetSizes,
+                           const float *densities, float tauSq, int *parents, int *clusterIndices, int *nbClustersPerExampleSet)
 {
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
@@ -313,6 +258,61 @@ inline void link_neighbors_for_example(int exampleSetIdx, int exampleIdx, const 
 
   // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root).
   clusterIndices[exampleOffset] = clusterIdx;
+}
+
+/**
+ * \brief Find the cluster index for each example in the example sets.
+ *
+ * \note  link_neighbors split all the examples in subtrees and allocated a cluster index to the root
+ *        of each subtree. With this function we navigate each example's subtree until we find the root and copy the
+ *        cluster index. We also update a counter storing the size of each cluster.
+ *
+ * \param parents            A pointer to a memory area wherein is stored the parent for each example in the example sets.
+ * \param clusterIndices     A pointer to a memory area wherein is stored the index of the cluster associated to each example.
+ * \param clusterSizes       A pointer to a memory area wherein is stored the size of each cluster.
+ * \param exampleSetCapacity The maximum size of each example set.
+ * \param exampleSetIdx      The index of the current example set.
+ * \param elementIdx         The index of the current element.
+ */
+_CPU_AND_GPU_CODE_
+inline void identify_clusters_for_set(const int *parents, int *clusterIndices, int *clusterSizes, int exampleSetCapacity, int exampleSetIdx, int elementIdx)
+{
+  // Linear offset to the first example (or associated data) of the example set.
+  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+  // Offset to the current element.
+  const int elementOffset = exampleSetOffset + elementIdx;
+
+  // Walk up on the tree until we find the root of the current subtree.
+
+  // No need to check if the current element is valid
+  // link_neighbors sets the parent for invalid elements to themselves
+  int parentIdx = parents[elementOffset];
+  int currentIdx = elementIdx;
+
+  while (parentIdx != currentIdx)
+  {
+    currentIdx = parentIdx;
+    parentIdx = parents[exampleSetOffset + parentIdx];
+  }
+
+  // Found the root of the subtree, get its cluster index.
+  const int clusterIdx = clusterIndices[exampleSetOffset + parentIdx];
+
+  // Save the cluster index into the current element's cluster index variable.
+  clusterIndices[elementOffset] = clusterIdx;
+
+  // If it's a valid cluster then atomically increase its size (might be invalid if we started from an invalid example).
+  if (clusterIdx >= 0)
+  {
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__) // Non templated function, need the __CUDA_ARCH__ check.
+    atomicAdd(&clusterSizes[exampleSetOffset + clusterIdx], 1);
+#else
+#ifdef WITH_OPENMP
+#pragma omp atomic
+#endif
+    clusterSizes[exampleSetOffset + clusterIdx]++;
+#endif
+  }
 }
 
 /**
