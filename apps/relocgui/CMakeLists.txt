@@ -20,6 +20,14 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
+############################
+# Check build requirements #
+############################
+
+IF(NOT WITH_OPENCV)
+  MESSAGE(FATAL_ERROR "relocgui needs WITH_OPENCV be enabled.")
+ENDIF()
+
 #############################
 # Specify the project files #
 #############################
