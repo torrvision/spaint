@@ -227,6 +227,8 @@ inline void identify_clusters_for_set(const int *parents, int *clusterIndices, i
  *        with higher density. For details, see the RQS paper by Fulkerson and Soatto.
  *        http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
  *
+ * \param exampleSetIdx           Index of the current example set.
+ * \param exampleIdx              Index of the element to process.
  * \param exampleSets             The examples to link in subtrees (rectangular array, one row per example set, one column per example).
  * \param exampleSetSizes         The actual size of each example set. One element per row in exampleSets.
  * \param densities               The densities associated to each example.
@@ -237,29 +239,27 @@ inline void identify_clusters_for_set(const int *parents, int *clusterIndices, i
  * \param nbClustersPerExampleSet Will contain the number of subtrees in each example set.
  *                                Must be 0 when calling the function.
  * \param exampleSetCapacity      The maximum number of examples in an example set. Width of exampleSets.
- * \param exampleSetIdx           Index of the current example set.
- * \param elementIdx              Index of the element to process.
  * \param tauSq                   Maximum (squared) distance between examples to consider them linked together.
  */
 template <typename ExampleType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void link_neighbors_for_example(const ExampleType *exampleSets, const int *exampleSetSizes, const float *densities, int *parents, int *clusterIndices,
-                                       int *nbClustersPerExampleSet, int exampleSetCapacity, int exampleSetIdx, int elementIdx, float tauSq)
+inline void link_neighbors_for_example(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, const int *exampleSetSizes, const float *densities,
+                                       int *parents, int *clusterIndices, int *nbClustersPerExampleSet, int exampleSetCapacity, float tauSq)
 {
   // Linear offset to the first element of the current example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
   // Actual size of the current example set.
   const int exampleSetSize = exampleSetSizes[exampleSetIdx];
   // Linear offset of the current element wrt. the beginning of the exampleSets array.
-  const int elementOffset = exampleSetOffset + elementIdx;
+  const int elementOffset = exampleSetOffset + exampleIdx;
 
   // Unless it becomes part of a subtree, each element starts as its own parent.
-  int parentIdx = elementIdx;
+  int parentIdx = exampleIdx;
   // Index of the cluster associated to the current element.
   int clusterIdx = -1;
 
   // Proceed only if the current element is actually valid.
-  if (elementIdx < exampleSetSize)
+  if(exampleIdx < exampleSetSize)
   {
     // Copy the current element in a temporary variable.
     const ExampleType centerExample = exampleSets[elementOffset];
@@ -270,10 +270,10 @@ inline void link_neighbors_for_example(const ExampleType *exampleSets, const int
     float minDistance = tauSq;
 
     // Check all the other examples.
-    for (int i = 0; i < exampleSetSize; ++i)
+    for(int i = 0; i < exampleSetSize; ++i)
     {
       // Ignore the element being processed.
-      if (i == elementIdx) continue;
+      if(i == exampleIdx) continue;
 
       // Grab a copy of the other example and its density.
       const ExampleType otherExample = exampleSets[exampleSetOffset + i];
@@ -285,7 +285,7 @@ inline void link_neighbors_for_example(const ExampleType *exampleSets, const int
 
       // We are looking for the *closest* example with a higher density (doesn't matter how much) than the current
       // example's one.
-      if (normSq < minDistance && centerDensity < otherDensity)
+      if(normSq < minDistance && centerDensity < otherDensity)
       {
         minDistance = normSq;
         parentIdx = i;
@@ -294,7 +294,7 @@ inline void link_neighbors_for_example(const ExampleType *exampleSets, const int
 
     // Current element is the root of a subtree (didn't find any close example with higher density than itself).
     // Grab a unique cluster index.
-    if (parentIdx == elementIdx)
+    if(parentIdx == exampleIdx)
     {
 #ifdef __CUDACC__
       clusterIdx = atomicAdd(&nbClustersPerExampleSet[exampleSetIdx], 1);
