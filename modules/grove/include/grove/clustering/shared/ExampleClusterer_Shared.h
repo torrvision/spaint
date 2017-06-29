@@ -58,46 +58,48 @@ inline void example_clusterer_compute_cluster_histogram(const int *clusterSizes,
 /**
  * \brief Compute the density of examples around an individual example in one of the example sets.
  *
- * \param exampleSetIdx      The index of the example set containing the example of interest.
- * \param exampleIdx         The index of the example of interest within its example set.
- * \param exampleSets        A pointer to the sets of examples (one set per row, one example per column).
- * \param exampleSetSizes    A pointer to the actual sizes of each example set (number of valid elements in each row of exampleSets).
- * \param exampleSetCapacity The maximum size of each example set (number of columns in exampleSets).
- * \param sigma              Sigma of the gaussian used when computing the density.
- * \param densities          A pointer to the memory wherein to store the density of each example (one example set per
- *                           row, one density value per column).
+ * \param exampleSetIdx      The index of the example set containing the example.
+ * \param exampleIdx         The index of the example within its example set.
+ * \param exampleSets        An image containing the sets of examples to be clustered (one set per row). The width of
+ *                           the image specifies the maximum number of examples that can be contained in each set.
+ * \param exampleSetSizes    The number of valid examples in each example set.
+ * \param exampleSetCapacity The maximum size of each example set.
+ * \param sigma              The sigma of the Gaussian used when computing the example density.
+ * \param densities          The memory in which to store the density of each example (one example set per row,
+ *                           one density value per column).
  */
 template <typename ExampleType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, const int *exampleSetSizes,
                             int exampleSetCapacity, float sigma, float *densities)
 {
-  // Compute the linear offset to the beginning of the data associated to the current example set.
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // The size of the current example set.
+
+  // Look up the size of the specified example set.
   const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-  // Offset of the current element from the beginning of the exampleSets array.
-  const int elementOffset = exampleSetOffset + exampleIdx;
 
-  // Points farther away than three sigma have small contribution to the density.
-  const float threeSigmaSq = (3.f * sigma) * (3.f * sigma);
-  const float minusOneOverTwoSigmaSq = -1.f / (2.f * sigma * sigma);
+  // Compute the raster offset of the specified example in the example sets image.
+  const int exampleOffset = exampleSetOffset + exampleIdx;
 
-  float density = 0.f;
+  float density = 0.0f;
 
+  // If the example is valid, loop over all of the examples in its set and
+  // compute the density based on the examples that are within 3 * sigma of it
+  // (points further away would only make a small contribution to the density).
   if(exampleIdx < exampleSetSize)
   {
-    const ExampleType centerExample = exampleSets[elementOffset];
+    const float threeSigmaSq = (3.0f * sigma) * (3.0f * sigma);
+    const float minusOneOverTwoSigmaSq = -1.0f / (2.0f * sigma * sigma);
 
-    for (int i = 0; i < exampleSetSize; ++i)
+    const ExampleType centreExample = exampleSets[exampleOffset];
+    for(int i = 0; i < exampleSetSize; ++i)
     {
       const ExampleType otherExample = exampleSets[exampleSetOffset + i];
 
-      // ExampleType MUST have a distanceSquared function defined for it.
-      const float normSq = distanceSquared(centerExample, otherExample);
-
-      // we ignore points farther away than three sigma.
-      if (normSq < threeSigmaSq)
+      // Note: ExampleType must have a distanceSquared function defined for it.
+      const float normSq = distanceSquared(centreExample, otherExample);
+      if(normSq < threeSigmaSq)
       {
         density += expf(normSq * minusOneOverTwoSigmaSq);
       }
@@ -105,7 +107,7 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
   }
 
   // Store the density in the output variable.
-  densities[elementOffset] = density;
+  densities[exampleOffset] = density;
 }
 
 /**

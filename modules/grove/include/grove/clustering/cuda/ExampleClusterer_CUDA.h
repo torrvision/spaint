@@ -35,7 +35,7 @@ public:
   /**
    * \brief Constructs a CUDA-based example clusterer.
    *
-   * \param sigma            The sigma distance used when estimating the example density.
+   * \param sigma            The sigma of the Gaussian used when computing the example densities.
    * \param tau              The maximum distance there can be between two examples that are part of the same cluster.
    * \param maxClusterCount  The maximum number of clusters retained for each set of examples (all clusters are estimated
    *                         but only the maxClusterCount largest ones are returned). Must be <= MAX_CLUSTERS.
@@ -55,8 +55,8 @@ private:
   virtual void compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
-  virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
-                                 uint32_t exampleSetsCount, float sigma);
+  virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                 uint32_t exampleSetCount, float sigma);
 
   /** Override */
   virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const;
@@ -71,8 +71,8 @@ private:
   virtual void identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
-  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetsCapacity,
-                              uint32_t exampleSetsCount, float tauSq);
+  virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                              uint32_t exampleSetCount, float tauSq);
 
   /** Override */
   virtual void reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const;

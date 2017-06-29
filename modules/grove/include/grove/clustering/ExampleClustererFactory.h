@@ -50,7 +50,7 @@ public:
    * \brief Instantiate an ExampleClusterer.
    *
    * \param deviceType      The device used to cluster examples.
-   * \param sigma           The sigma of the gaussian used to compute the example density.
+   * \param sigma           The sigma of the Gaussian used when computing the example densities.
    * \param tau             The maximum distance between examples to be considered part of the same example.
    * \param maxClusterCount The maximum number of clusters to extract from each example set.
    * \param minClusterSize  The minimum number of examples in a valid cluster.
@@ -66,6 +66,6 @@ public:
                                       uint32_t minClusterSize);
 };
 
-} // namespace grove
+}
 
-#endif // H_GROVE_EXAMPLECLUSTERERFACTORY
+#endif

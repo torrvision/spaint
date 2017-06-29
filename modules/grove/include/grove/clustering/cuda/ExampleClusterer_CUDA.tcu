@@ -160,16 +160,16 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluste
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType, MAX_CLUSTERS>::compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes,
-                                                                                     uint32_t exampleSetsCapacity, uint32_t exampleSetsCount, float sigma)
+                                                                                     uint32_t exampleSetCapacity, uint32_t exampleSetCount, float sigma)
 {
   float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
 
   // Ideally we would launch a thread per item in each example set, since example sets may be larger than 1024 we also
   // use the X coordinate of the gridSize to achieve this.
   dim3 blockSize(256);
-  dim3 gridSize((exampleSetsCapacity + blockSize.x - 1) / blockSize.x, exampleSetsCount);
+  dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
-  ck_compute_densities<<<gridSize,blockSize>>>(exampleSets, exampleSetSizes, densities, exampleSetsCapacity, sigma);
+  ck_compute_densities<<<gridSize,blockSize>>>(exampleSets, exampleSetSizes, densities, exampleSetCapacity, sigma);
   ORcudaKernelCheck;
 }
 
@@ -211,12 +211,12 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::identify_clust
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes,
-                                                                                 uint32_t exampleSetsCapacity, uint32_t exampleSetsCount, float tauSq)
+                                                                                 uint32_t exampleSetCapacity, uint32_t exampleSetCount, float tauSq)
 {
   // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
   // the grid. The grid's Y coordinate selects the exampleSet.
   dim3 blockSize(256);
-  dim3 gridSize((exampleSetsCapacity + blockSize.x - 1) / blockSize.x, exampleSetsCount);
+  dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
   const float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
 
@@ -226,7 +226,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbors
 
   ck_link_neighbors<<<gridSize,blockSize>>>(
     exampleSets, exampleSetSizes, densities, parents, clusterIndices,
-    nbClustersPerReservoir, exampleSetsCapacity, tauSq
+    nbClustersPerReservoir, exampleSetCapacity, tauSq
   );
   ORcudaKernelCheck;
 }
