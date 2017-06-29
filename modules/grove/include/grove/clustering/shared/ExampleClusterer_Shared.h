@@ -221,96 +221,98 @@ inline void identify_clusters_for_set(const int *parents, int *clusterIndices, i
 }
 
 /**
- * \brief This function allows the linking of neighboring examples in a "tree" structure.
+ * \brief Links neighbouring examples in a tree structure.
  *
- * \note  Each example becomes part of a subtree where each element has as parent the closest example
+ * \note  Each example becomes part of a subtree in which each example has as its parent the closest example
  *        with higher density. For details, see the RQS paper by Fulkerson and Soatto.
  *        http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
  *
- * \param exampleSetIdx           Index of the current example set.
- * \param exampleIdx              Index of the element to process.
- * \param exampleSets             The examples to link in subtrees (rectangular array, one row per example set, one column per example).
- * \param exampleSetSizes         The actual size of each example set. One element per row in exampleSets.
- * \param densities               The densities associated to each example.
+ * \param exampleSetIdx           The index of the example set containing the example.
+ * \param exampleIdx              The index of the example within its example set.
+ * \param exampleSets             An image containing the sets of examples to be clustered (one set per row). The width of
+ *                                the image specifies the maximum number of examples that can be contained in each set.
+ * \param exampleSetCapacity      The maximum number of examples in an example set.
+ * \param exampleSetSizes         The number of valid examples in each example set.
+ * \param densities               An image containing the density of each example (one set per row, one density value per column).
+ * \param tauSq                   The square of the maximum distance allowed between examples if they are to be considered linked.
  * \param parents                 Output array where each element represents the parent of an example in the exampleSet.
  *                                Set to the element index itself if the example is the root of a subtree.
  * \param clusterIndices          Index of the cluster associated to each subtree.
  *                                Set to -1 unless the element is root of a subtree.
  * \param nbClustersPerExampleSet Will contain the number of subtrees in each example set.
  *                                Must be 0 when calling the function.
- * \param exampleSetCapacity      The maximum number of examples in an example set. Width of exampleSets.
- * \param tauSq                   Maximum (squared) distance between examples to consider them linked together.
  */
 template <typename ExampleType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void link_neighbors_for_example(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, const int *exampleSetSizes, const float *densities,
-                                       int *parents, int *clusterIndices, int *nbClustersPerExampleSet, int exampleSetCapacity, float tauSq)
+inline void link_neighbors_for_example(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, int exampleSetCapacity, const int *exampleSetSizes,
+                                       const float *densities, float tauSq, int *parents, int *clusterIndices, int *nbClustersPerExampleSet)
 {
-  // Linear offset to the first element of the current example set.
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Actual size of the current example set.
-  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-  // Linear offset of the current element wrt. the beginning of the exampleSets array.
-  const int elementOffset = exampleSetOffset + exampleIdx;
 
-  // Unless it becomes part of a subtree, each element starts as its own parent.
+  // Look up the size of the specified example set.
+  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
+
+  // Compute the raster offset of the specified example in the example sets image.
+  const int exampleOffset = exampleSetOffset + exampleIdx;
+
+  // Unless it becomes part of a subtree, each example starts as its own parent.
   int parentIdx = exampleIdx;
-  // Index of the cluster associated to the current element.
+
+  // The index of the cluster associated with the specified example (-1 except for subtree roots).
   int clusterIdx = -1;
 
-  // Proceed only if the current element is actually valid.
+  // If the specified example is valid:
   if(exampleIdx < exampleSetSize)
   {
-    // Copy the current element in a temporary variable.
-    const ExampleType centerExample = exampleSets[elementOffset];
-    // Density of examples around the current element.
-    const float centerDensity = densities[elementOffset];
+    // Read in the example and its density from global memory.
+    const ExampleType centreExample = exampleSets[exampleOffset];
+    const float centreDensity = densities[exampleOffset];
 
-    // We are only interested in examples closer to the current element than a tau distance.
-    float minDistance = tauSq;
+    // We are only interested in examples whose distance to the specified example is less than tau.
+    float minDistanceSq = tauSq;
 
-    // Check all the other examples.
+    // For each other example in the specified example's set:
     for(int i = 0; i < exampleSetSize; ++i)
     {
-      // Ignore the element being processed.
       if(i == exampleIdx) continue;
 
-      // Grab a copy of the other example and its density.
+      // Read in the other example and its density from global memory.
       const ExampleType otherExample = exampleSets[exampleSetOffset + i];
       const float otherDensity = densities[exampleSetOffset + i];
 
-      // Compute the squared distance between the current example and the other.
-      // ExampleType MUST have a distanceSquared function defined for it.
-      const float normSq = distanceSquared(centerExample, otherExample);
+      // Compute the squared distance between the specified example and the other example.
+      // Note: ExampleType must have a distanceSquared function defined for it.
+      const float otherDistSq = distanceSquared(centreExample, otherExample);
 
-      // We are looking for the *closest* example with a higher density (doesn't matter how much) than the current
-      // example's one.
-      if(normSq < minDistance && centerDensity < otherDensity)
+      // We are looking for the closest example with a higher density (doesn't matter by how much) than that of the specified example.
+      if(otherDensity > centreDensity && otherDistSq < minDistanceSq)
       {
-        minDistance = normSq;
+        minDistanceSq = otherDistSq;
         parentIdx = i;
       }
     }
 
-    // Current element is the root of a subtree (didn't find any close example with higher density than itself).
-    // Grab a unique cluster index.
+    // If the specified example is still its own parent (i.e. it is a subtree root), we didn't find any close
+    // example with a higher density, so grab a unique cluster index for the example.
     if(parentIdx == exampleIdx)
     {
 #ifdef __CUDACC__
       clusterIdx = atomicAdd(&nbClustersPerExampleSet[exampleSetIdx], 1);
 #else
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
+    #ifdef WITH_OPENMP
+      #pragma omp atomic capture
+    #endif
       clusterIdx = nbClustersPerExampleSet[exampleSetIdx]++;
 #endif
     }
   }
 
-  // Store the parent of the current element (set to itself if the root of a subtree).
-  parents[elementOffset] = parentIdx;
-  // Store the cluster index (-1 unless the current element is the root of a subtree).
-  clusterIndices[elementOffset] = clusterIdx;
+  // Write the parent of the specified example to global memory.
+  parents[exampleOffset] = parentIdx;
+
+  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root).
+  clusterIndices[exampleOffset] = clusterIdx;
 }
 
 /**

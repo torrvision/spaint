@@ -235,7 +235,7 @@ private:
    * \param exampleSetSizes     The number of valid examples in each example set.
    * \param exampleSetCapacity  The maximum size of each example set.
    * \param exampleSetCount     The number of example sets being clustered.
-   * \param tauSq               The square of the maximum distance allowed between examples that are to be linked.
+   * \param tauSq               The square of the maximum distance allowed between examples if they are to be considered linked.
    */
   virtual void link_neighbors(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
                               uint32_t exampleSetCount, float tauSq) = 0;
