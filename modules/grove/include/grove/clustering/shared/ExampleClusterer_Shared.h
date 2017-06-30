@@ -352,8 +352,8 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
 
   // Starting from the largest clusters, scan downwards in the histogram to find the minimum size of cluster
   // we need to consider in order to try to select maxSelectedClusters clusters. Note that we will not be
-  // able to select maxSelectedClusters if there are fewer clusters than that to start with; if that happens,
-  // we simply keep all of the clusters we do have.
+  // able to select maxSelectedClusters if there are fewer suitable clusters than that to start with; if
+  // that happens, we simply keep all of the suitable clusters we do have.
   int nbSelectedClusters = 0;
   int nbSmallestClustersToKeep = 0;
   int minSelectedClusterSize = exampleSetCapacity;
@@ -364,7 +364,7 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
     nbSelectedClusters += nbSmallestClustersToKeep;
   }
 
-  // If we couldn't find any clusters at all, early out (this only happens when the example set itself is empty).
+  // If we couldn't find any suitable clusters at all, early out.
   if(nbSelectedClusters == 0) return;
 
   // Now walk through all of the clusters we do have, selecting (a) all of those whose size is strictly greater
@@ -382,24 +382,25 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
     }
   }
 
-  // Sort clusters by descending number of inliers.
-  // Note: this implementation is quadratic but the number of clusters is small enough to not care for now.
+  // Sort the selected clusters in non-increasing order of size using a simple selection sort.
+  // Note: Selection sort is quadratic, but the number of clusters is small enough for now that it doesn't matter.
   for(int i = 0; i < nbSelectedClusters; ++i)
   {
+    // Find a cluster with maximum size in selectedClusters[i..nbSelectedClusters).
     int maxSize = clusterSizes[exampleSetOffset + selectedClusters[selectedClustersOffset + i]];
     int maxIdx = i;
 
-    for (int j = i + 1; j < nbSelectedClusters; ++j)
+    for(int j = i + 1; j < nbSelectedClusters; ++j)
     {
       int size = clusterSizes[exampleSetOffset + selectedClusters[selectedClustersOffset + j]];
-      if (size > maxSize)
+      if(size > maxSize)
       {
         maxSize = size;
         maxIdx = j;
       }
     }
 
-    // Swap.
+    // If selectedClusters[i] wasn't the maximal cluster, swap it with the cluster that was.
     if(maxIdx != i)
     {
       int temp = selectedClusters[selectedClustersOffset + i];
