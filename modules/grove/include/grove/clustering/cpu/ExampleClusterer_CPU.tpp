@@ -61,6 +61,25 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+{
+  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
+  int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+#pragma omp parallel for
+#endif
+  for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
+  {
+    for(uint32_t exampleIdx = 0; exampleIdx < exampleSetCapacity; ++exampleIdx)
+    {
+      compute_cluster(exampleSetIdx, exampleIdx, parents, clusterIndices, clusterSizes, exampleSetCapacity);
+    }
+  }
+}
+
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densities(const ExampleType *examples, const int *exampleSetSizes, uint32_t exampleSetCapacity,
                                                                                    uint32_t exampleSetCount, float sigma)
 {
@@ -74,6 +93,31 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densiti
     for(uint32_t exampleIdx = 0; exampleIdx < exampleSetCapacity; ++exampleIdx)
     {
       compute_density(exampleSetIdx, exampleIdx, examples, exampleSetSizes, exampleSetCapacity, sigma, densities);
+    }
+  }
+}
+
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                                                                 uint32_t exampleSetCount, float tauSq)
+{
+  const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
+
+  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
+  int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
+  int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+#pragma omp parallel for
+#endif
+  for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
+  {
+    for(uint32_t exampleIdx = 0; exampleIdx < exampleSetCapacity; ++exampleIdx)
+    {
+      compute_parent(
+        exampleSetIdx, exampleIdx, exampleSets, exampleSetCapacity, exampleSetSizes,
+        densities, tauSq, parents, clusterIndices, nbClustersPerExampleSet
+      );
     }
   }
 }
@@ -96,50 +140,6 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 const int *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const
 {
   return exampleSetSizes->GetData(MEMORYDEVICE_CPU) + setIdx;
-}
-
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
-{
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
-  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
-  int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-#pragma omp parallel for
-#endif
-  for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
-  {
-    for(uint32_t elementIdx = 0; elementIdx < exampleSetCapacity; ++elementIdx)
-    {
-      identify_clusters_for_set(parents, clusterIndices, clusterSizes, exampleSetCapacity, setIdx, elementIdx);
-    }
-  }
-}
-
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                                                                 uint32_t exampleSetCount, float tauSq)
-{
-  const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
-
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
-  int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
-  int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-#pragma omp parallel for
-#endif
-  for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
-  {
-    for(uint32_t exampleIdx = 0; exampleIdx < exampleSetCapacity; ++exampleIdx)
-    {
-      compute_parent(
-        exampleSetIdx, exampleIdx, exampleSets, exampleSetCapacity, exampleSetSizes,
-        densities, tauSq, parents, clusterIndices, nbClustersPerExampleSet
-      );
-    }
-  }
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>

@@ -75,10 +75,10 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
 
   // Link neighbouring examples in a tree structure, cutting the branches based on a distance tau,
   // the maximum distance between examples if they are to be linked.
-  link_neighbours(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_tau * m_tau);
+  compute_parents(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_tau * m_tau);
 
   // Identify clusters (assign identifiers to the clusters).
-  identify_clusters(exampleSetCapacity, exampleSetCount);
+  compute_clusters(exampleSetCapacity, exampleSetCount);
 
   // Compute cluster size histograms (used to select the largest clusters).
   compute_cluster_size_histograms(exampleSetCapacity, exampleSetCount);

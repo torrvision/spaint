@@ -176,6 +176,14 @@ private:
   virtual void compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
+   * \brief Computes final cluster indices for the examples by following the parent links previously computed.
+   *
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
+   */
+  virtual void compute_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
+
+  /**
    * \brief Compute the density of examples around each example in the input sets.
    *
    * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
@@ -187,6 +195,22 @@ private:
    */
   virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
                                  uint32_t exampleSetCount, float sigma) = 0;
+
+  /**
+   * \brief Computes parents and initial cluster indices for the examples as part of the neighbour-linking step of the
+   *        really quick shift (RQS) algorithm.
+   *
+   * \note For details of RQS, see the paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
+   *
+   * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
+   *                            the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetSizes     The number of valid examples in each example set.
+   * \param exampleSetCapacity  The maximum size of each example set.
+   * \param exampleSetCount     The number of example sets being clustered.
+   * \param tauSq               The square of the maximum distance allowed between examples if they are to be linked.
+   */
+  virtual void compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                               uint32_t exampleSetCount, float tauSq) = 0;
 
   /**
    * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
@@ -218,30 +242,6 @@ private:
    * \return                A raw pointer to the size of the example set setIdx.
    */
   virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const = 0;
-
-  /**
-   * \brief Analyse the tree structure to identify clusters of neighboring examples.
-   *
-   * \param exampleSetCapacity The maximum size of each example set.
-   * \param exampleSetCount    The number of example sets being clustered.
-   */
-  virtual void identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
-
-  /**
-   * \brief Links neighbouring examples to form a tree structure.
-   *
-   * \note This implements the neighbour-linking step of the really quick shift algorithm.
-   *       For details, see the RQS paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
-   *
-   * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
-   *                            the image specifies the maximum number of examples that can be contained in each set.
-   * \param exampleSetSizes     The number of valid examples in each example set.
-   * \param exampleSetCapacity  The maximum size of each example set.
-   * \param exampleSetCount     The number of example sets being clustered.
-   * \param tauSq               The square of the maximum distance allowed between examples if they are to be linked.
-   */
-  virtual void link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                               uint32_t exampleSetCount, float tauSq) = 0;
 
   /**
    * \brief Resets the output cluster containers.

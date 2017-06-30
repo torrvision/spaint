@@ -55,8 +55,15 @@ private:
   virtual void compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
+  virtual void compute_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
+
+  /** Override */
   virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
                                  uint32_t exampleSetCount, float sigma);
+
+  /** Override */
+  virtual void compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                               uint32_t exampleSetCount, float tauSq);
 
   /** Override */
   virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const;
@@ -66,13 +73,6 @@ private:
 
   /** Override */
   virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const;
-
-  /** Override */
-  virtual void identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
-
-  /** Override */
-  virtual void link_neighbours(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                               uint32_t exampleSetCount, float tauSq);
 
   /** Override */
   virtual void reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const;
