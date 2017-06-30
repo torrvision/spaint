@@ -45,7 +45,7 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
-  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CPU);
+  int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -55,7 +55,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
   {
     for(uint32_t clusterIdx = 0; clusterIdx < exampleSetCapacity; ++clusterIdx)
     {
-      compute_cluster_histogram(clusterSizes, nbClustersPerExampleSet, clusterSizesHistogram, exampleSetCapacity, setIdx, clusterIdx);
+      compute_cluster_histogram(clusterSizes, nbClustersPerExampleSet, clusterSizeHistograms, exampleSetCapacity, setIdx, clusterIdx);
     }
   }
 }
@@ -158,7 +158,7 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
-  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CPU);
+  int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -166,7 +166,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporari
 #endif
   for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
   {
-    reset_temporaries_for_set(setIdx, exampleSetCapacity, nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram);
+    reset_temporaries_for_set(setIdx, exampleSetCapacity, nbClustersPerExampleSet, clusterSizes, clusterSizeHistograms);
   }
 }
 
@@ -175,7 +175,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters
                                                                                  uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
-  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CPU);
+  int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
 
@@ -185,7 +185,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
     select_clusters_for_set(
-      clusterSizes, clusterSizesHistogram, nbClustersPerExampleSet, selectedClusters,
+      clusterSizes, clusterSizeHistograms, nbClustersPerExampleSet, selectedClusters,
       exampleSetCapacity, exampleSetIdx, maxClusterCount, minClusterSize
     );
   }

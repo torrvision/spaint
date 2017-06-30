@@ -91,10 +91,10 @@ protected:
   ITMIntImage_Ptr m_clusterSizes;
 
   /**
-   * A histogram representing the number of clusters for each example set that have a certain size. Has count rows and
-   * exampleSets->width columns. Pixel (i,j) represents the number of clusters in example set i that have size j.
+   * An image storing a cluster size histogram for each example set under consideration (one histogram per row).
+   * Pixel (i,j) in the image counts the number of clusters in example set i that have size j.
    */
-  ITMIntImage_Ptr m_clusterSizesHistogram;
+  ITMIntImage_Ptr m_clusterSizeHistograms;
 
   /** An image storing the density of examples around each example in the input sets. Has count rows and exampleSets->width columns. */
   ITMFloatImage_Ptr m_densities;

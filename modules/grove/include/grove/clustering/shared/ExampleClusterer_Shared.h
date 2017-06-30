@@ -18,7 +18,7 @@ namespace grove {
  * \param clusterSizes            Pointer to the memory area wherein are stored the sizes of the clusters.
  * \param nbClustersPerExampleSet Pointer to an array wherein is stored the number of clusters extracted from each
  * example set.
- * \param clusterSizesHistogram   Pointer to the memory wherein the histogram of sizes will be stored.
+ * \param clusterSizeHistograms   An image in which to store the histograms of cluster sizes for the different example sets.
  *                                One column for each element in the example sets (we might have either a single cluster
  *                                of maximum size or exampleSets.width clusters of size 1), one row per example set.
  * \param exampleSetCapacity      The maximum number of elements in each example set.
@@ -26,7 +26,7 @@ namespace grove {
  * \param clusterIdx              The index of the current cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void compute_cluster_histogram(const int *clusterSizes, const int *nbClustersPerExampleSet, int *clusterSizesHistogram, int exampleSetCapacity, int exampleSetIdx, int clusterIdx)
+inline void compute_cluster_histogram(const int *clusterSizes, const int *nbClustersPerExampleSet, int *clusterSizeHistograms, int exampleSetCapacity, int exampleSetIdx, int clusterIdx)
 {
   // Linear offset to the start of the current example set (or its associated data).
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
@@ -41,12 +41,12 @@ inline void compute_cluster_histogram(const int *clusterSizes, const int *nbClus
 
 // Atomically increment the associated bin.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__) // Non templated function, need the __CUDA_ARCH__ check.
-  atomicAdd(&clusterSizesHistogram[exampleSetOffset + clusterSize], 1);
+  atomicAdd(&clusterSizeHistograms[exampleSetOffset + clusterSize], 1);
 #else
 #ifdef WITH_OPENMP
 #pragma omp atomic
 #endif
-  clusterSizesHistogram[exampleSetOffset + clusterSize]++;
+  clusterSizeHistograms[exampleSetOffset + clusterSize]++;
 #endif
 }
 
@@ -336,10 +336,10 @@ inline void reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterCont
  * \param exampleSetCapacity      The maximum size of each example set.
  * \param nbClustersPerExampleSet The number of clusters extracted from each example set.
  * \param clusterSizes            An image containing the sizes of the extracted clusters (for all example sets).
- * \param clusterSizesHistogram   The histogram of cluster sizes.
+ * \param clusterSizeHistograms   The histograms of cluster sizes for the different example sets.
  */
 _CPU_AND_GPU_CODE_
-inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity, int *nbClustersPerExampleSet, int *clusterSizes, int *clusterSizesHistogram)
+inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity, int *nbClustersPerExampleSet, int *clusterSizes, int *clusterSizeHistograms)
 {
   // Reset the number of clusters extracted from this example set to zero.
   nbClustersPerExampleSet[exampleSetIdx] = 0;
@@ -351,7 +351,7 @@ inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity,
   for(int i = 0; i < exampleSetCapacity; ++i)
   {
     clusterSizes[exampleSetOffset + i] = 0;
-    clusterSizesHistogram[exampleSetOffset + i] = 0;
+    clusterSizeHistograms[exampleSetOffset + i] = 0;
   }
 }
 
@@ -359,7 +359,7 @@ inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity,
  * \brief Select the largest clusters from each example set.
  *
  * \param clusterSizes            A pointer to the sizes of each extracted cluster.
- * \param clusterSizesHistogram   A pointer to the histogram of cluster sizes for each example set.
+ * \param clusterSizeHistograms   The histograms of cluster sizes for the different example sets.
  * \param nbClustersPerExampleSet A pointer to the number of clusters found in each example set.
  * \param selectedClusters        A pointer to the memory area where we will store the indices of the clusters selected
  *                                from each example set.
@@ -369,7 +369,7 @@ inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity,
  * \param minClusterSize          The minimum size of a cluster to be kept.
  */
 _CPU_AND_GPU_CODE_
-inline void select_clusters_for_set(const int *clusterSizes, const int *clusterSizesHistogram, const int *nbClustersPerExampleSet, int *selectedClusters,
+inline void select_clusters_for_set(const int *clusterSizes, const int *clusterSizeHistograms, const int *nbClustersPerExampleSet, int *selectedClusters,
                                     int exampleSetCapacity, int exampleSetIdx, int maxSelectedClusters, int minClusterSize)
 {
   // Linear index to the first example (and associated data) of the current example set.
@@ -392,7 +392,7 @@ inline void select_clusters_for_set(const int *clusterSizes, const int *clusterS
 
   for (; selectedClusterSize >= minClusterSize && nbSelectedClusters < maxSelectedClusters; --selectedClusterSize)
   {
-    nbSelectedClusters += clusterSizesHistogram[exampleSetOffset + selectedClusterSize];
+    nbSelectedClusters += clusterSizeHistograms[exampleSetOffset + selectedClusterSize];
   }
 
   // If we couldn't find any cluster early out. Means that the current example set was empty.

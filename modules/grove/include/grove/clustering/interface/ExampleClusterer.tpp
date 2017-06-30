@@ -29,7 +29,7 @@ ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float
 
   m_clusterIdx = mbf.make_image<int>();
   m_clusterSizes = mbf.make_image<int>();
-  m_clusterSizesHistogram = mbf.make_image<int>();
+  m_clusterSizeHistograms = mbf.make_image<int>();
   m_densities = mbf.make_image<float>();
   m_nbClustersPerExampleSet = mbf.make_block<int>();
   m_parents = mbf.make_image<int>();
@@ -81,7 +81,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   // Compute the final cluster indices to assign to each example by following the parent links just computed.
   compute_clusters(exampleSetCapacity, exampleSetCount);
 
-  // Compute cluster size histograms (used to select the largest clusters).
+  // Compute histograms of the cluster sizes for each example set (these are used to select the largest clusters).
   compute_cluster_size_histograms(exampleSetCapacity, exampleSetCount);
 
   // Select largest clusters.
@@ -131,7 +131,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::reallocate_temporar
     // The following images have a row for each example set to cluster and a column for each element of the example sets.
     m_clusterIdx->ChangeDims(newImgSize);
     m_clusterSizes->ChangeDims(newImgSize);
-    m_clusterSizesHistogram->ChangeDims(newImgSize);
+    m_clusterSizeHistograms->ChangeDims(newImgSize);
     m_densities->ChangeDims(newImgSize);
     m_parents->ChangeDims(newImgSize);
 
