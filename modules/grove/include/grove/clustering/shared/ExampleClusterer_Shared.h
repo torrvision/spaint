@@ -6,6 +6,8 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER_SHARED
 #define H_GROVE_EXAMPLECLUSTERER_SHARED
 
+#include <helper_math.h>
+
 #include <ORUtils/PlatformIndependence.h>
 
 #include "../../util/Array.h"
@@ -353,38 +355,30 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
   // able to select maxSelectedClusters if there are fewer clusters than that to start with; if that happens,
   // we simply keep all of the clusters we do have.
   int nbSelectedClusters = 0;
-  int selectedClusterSize = exampleSetCapacity - 1;
-  while(selectedClusterSize >= minClusterSize && nbSelectedClusters < maxSelectedClusters)
+  int nbSmallestClustersToKeep = 0;
+  int minSelectedClusterSize = exampleSetCapacity;
+  while(minSelectedClusterSize > minClusterSize && nbSelectedClusters < maxSelectedClusters)
   {
-    nbSelectedClusters += clusterSizeHistograms[exampleSetOffset + selectedClusterSize];
-    --selectedClusterSize;
+    --minSelectedClusterSize;
+    nbSmallestClustersToKeep = min(clusterSizeHistograms[exampleSetOffset + minSelectedClusterSize], maxSelectedClusters - nbSelectedClusters);
+    nbSelectedClusters += nbSmallestClustersToKeep;
   }
 
   // If we couldn't find any clusters at all, early out (this only happens when the example set itself is empty).
   if(nbSelectedClusters == 0) return;
 
-  // nbSelectedClusters might be greater than maxSelectedClusters if more clusters had the same size during the last
-  // check, need to keep this into account: at first add all clusters with size strictly greater than minClusterSize,
-  // then perform another loop over the clusters add as many clusters with size equal to selectedClusterSize as possible
-
+  // Now walk through all of the clusters we do have, selecting (a) all of those whose size is strictly greater
+  // than the minimum selected cluster size, and (b) as many as necessary of those whose size is exactly equal
+  // to the minimum selected cluster size.
   nbSelectedClusters = 0;
-
-  // First pass, strictly greater.
-  for(int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
+  int nbSmallestClustersKept = 0;
+  for(int clusterIdx = 0; clusterIdx < nbValidClusters; ++clusterIdx)
   {
-    // If the current cluster size is greater than the threshold then keep it.
-    if(clusterSizes[exampleSetOffset + i] > selectedClusterSize)
+    const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];
+    if(clusterSize > minSelectedClusterSize ||
+       (clusterSize == minSelectedClusterSize && nbSmallestClustersKept++ < nbSmallestClustersToKeep))
     {
-      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
-    }
-  }
-
-  // Second pass, equal, keep as many clusters as possible.
-  for(int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
-  {
-    if(clusterSizes[exampleSetOffset + i] == selectedClusterSize)
-    {
-      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
+      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = clusterIdx;
     }
   }
 
