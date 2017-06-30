@@ -117,7 +117,7 @@ public:
    * \param tau              The maximum distance there can be between two examples that are part of the same cluster.
    * \param maxClusterCount  The maximum number of clusters retained for each set of examples (all clusters are estimated
    *                         but only the maxClusterCount largest ones are returned). Must be <= MAX_CLUSTERS.
-   * \param minClusterSize   The minimum number of elements there must be in a cluster for it to be valid.
+   * \param minClusterSize   The minimum size of cluster to keep.
    *
    * \throws std::invalid_argument If maxClusterCount > MAX_CLUSTERS.
    */
@@ -264,7 +264,7 @@ private:
    *        Prefers larger clusters.
    *
    * \param maxClusterCount    The maximum number of clusters to select for each example set.
-   * \param minClusterSize     The minimum size of a cluster to be selected.
+   * \param minClusterSize     The minimum size of cluster to keep.
    * \param exampleSetCapacity The maximum size of each example set.
    * \param exampleSetCount    The number of example sets being clustered.
    */

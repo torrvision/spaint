@@ -303,13 +303,13 @@ inline void reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterCont
 _CPU_AND_GPU_CODE_
 inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity, int *nbClustersPerExampleSet, int *clusterSizes, int *clusterSizeHistograms)
 {
-  // Reset the number of clusters extracted from this example set to zero.
+  // Reset the number of clusters extracted from the specified example set to zero.
   nbClustersPerExampleSet[exampleSetIdx] = 0;
 
-  // Compute the memory offset to the beginning of any data associated with this example set.
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-  // Reset the cluster sizes and histogram values associated with the current example set.
+  // Reset the cluster sizes and histogram values associated with the specified example set.
   for(int i = 0; i < exampleSetCapacity; ++i)
   {
     clusterSizes[exampleSetOffset + i] = 0;
@@ -318,68 +318,71 @@ inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity,
 }
 
 /**
- * \brief Select the largest clusters from each example set.
+ * \brief Selects the largest clusters for the specified example set and writes their indices into the selected clusters image.
  *
- * \param clusterSizes            A pointer to the sizes of each extracted cluster.
+ * \param exampleSetIdx           The index of the example set for which to select clusters.
+ * \param clusterSizes            An image containing the sizes of the extracted clusters (for all example sets).
  * \param clusterSizeHistograms   The histograms of cluster sizes for the different example sets.
- * \param nbClustersPerExampleSet A pointer to the number of clusters found in each example set.
- * \param selectedClusters        A pointer to the memory area where we will store the indices of the clusters selected
- *                                from each example set.
+ * \param nbClustersPerExampleSet The number of clusters extracted from each example set.
  * \param exampleSetCapacity      The mamimum size of each example set.
- * \param exampleSetIdx           The index of the current example set.
- * \param maxSelectedClusters     The maximum number of clusters to keep in each example set.
- * \param minClusterSize          The minimum size of a cluster to be kept.
+ * \param maxSelectedClusters     The maximum number of clusters to keep for each example set.
+ * \param minClusterSize          The minimum size of cluster to keep.
+ * \param selectedClusters        An image in which to store the indices of the clusters selected for each example set.
  */
 _CPU_AND_GPU_CODE_
-inline void select_clusters_for_set(const int *clusterSizes, const int *clusterSizeHistograms, const int *nbClustersPerExampleSet, int *selectedClusters,
-                                    int exampleSetCapacity, int exampleSetIdx, int maxSelectedClusters, int minClusterSize)
+inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, const int *clusterSizeHistograms, const int *nbClustersPerExampleSet,
+                                    int exampleSetCapacity, int maxSelectedClusters, int minClusterSize, int *selectedClusters)
 {
-  // Linear index to the first example (and associated data) of the current example set.
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Number of clusters found in the current example set.
+
+  // Look up the number of valid clusters associated with the specified example set.
   const int nbValidClusters = nbClustersPerExampleSet[exampleSetIdx];
-  // Linear offset to the current cluster in the output array.
+
+  // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
   const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
 
-  // Reset output (set all cluster indices to invalid values).
-  for (int i = 0; i < maxSelectedClusters; ++i)
+  // Reset the selected clusters for the specified example set (by setting all selected cluster indices to an invalid value).
+  for(int i = 0; i < maxSelectedClusters; ++i)
   {
     selectedClusters[selectedClustersOffset + i] = -1;
   }
 
-  // Scan the histogram from the top end to find the minimum cluster size we want to select.
-  // We want up to maxSelectedClusters clusters.
+  // Starting from the largest clusters, scan downwards in the histogram to find the minimum size of cluster
+  // we need to consider in order to try to select maxSelectedClusters clusters. Note that we will not be
+  // able to select maxSelectedClusters if there are fewer clusters than that to start with; if that happens,
+  // we simply keep all of the clusters we do have.
   int nbSelectedClusters = 0;
   int selectedClusterSize = exampleSetCapacity - 1;
-
-  for (; selectedClusterSize >= minClusterSize && nbSelectedClusters < maxSelectedClusters; --selectedClusterSize)
+  while(selectedClusterSize >= minClusterSize && nbSelectedClusters < maxSelectedClusters)
   {
     nbSelectedClusters += clusterSizeHistograms[exampleSetOffset + selectedClusterSize];
+    --selectedClusterSize;
   }
 
-  // If we couldn't find any cluster early out. Means that the current example set was empty.
-  if (nbSelectedClusters == 0) return;
+  // If we couldn't find any clusters at all, early out (this only happens when the example set itself is empty).
+  if(nbSelectedClusters == 0) return;
 
-  // nbSelectedClusters might be greater than maxSelectedClusters if more clusters had the same size during the alst
+  // nbSelectedClusters might be greater than maxSelectedClusters if more clusters had the same size during the last
   // check, need to keep this into account: at first add all clusters with size strictly greater than minClusterSize,
   // then perform another loop over the clusters add as many clusters with size equal to selectedClusterSize as possible
 
   nbSelectedClusters = 0;
 
   // First pass, strictly greater.
-  for (int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
+  for(int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
   {
     // If the current cluster size is greater than the threshold then keep it.
-    if (clusterSizes[exampleSetOffset + i] > selectedClusterSize)
+    if(clusterSizes[exampleSetOffset + i] > selectedClusterSize)
     {
       selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
     }
   }
 
   // Second pass, equal, keep as many clusters as possible.
-  for (int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
+  for(int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
   {
-    if (clusterSizes[exampleSetOffset + i] == selectedClusterSize)
+    if(clusterSizes[exampleSetOffset + i] == selectedClusterSize)
     {
       selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
     }
@@ -387,7 +390,7 @@ inline void select_clusters_for_set(const int *clusterSizes, const int *clusterS
 
   // Sort clusters by descending number of inliers.
   // Note: this implementation is quadratic but the number of clusters is small enough to not care for now.
-  for (int i = 0; i < nbSelectedClusters; ++i)
+  for(int i = 0; i < nbSelectedClusters; ++i)
   {
     int maxSize = clusterSizes[exampleSetOffset + selectedClusters[selectedClustersOffset + i]];
     int maxIdx = i;
@@ -403,7 +406,7 @@ inline void select_clusters_for_set(const int *clusterSizes, const int *clusterS
     }
 
     // Swap.
-    if (maxIdx != i)
+    if(maxIdx != i)
     {
       int temp = selectedClusters[selectedClustersOffset + i];
       selectedClusters[selectedClustersOffset + i] = selectedClusters[selectedClustersOffset + maxIdx];

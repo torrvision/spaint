@@ -53,7 +53,7 @@ public:
    * \param sigma           The sigma of the Gaussian used when computing the example densities.
    * \param tau             The maximum distance between examples to be considered part of the same example.
    * \param maxClusterCount The maximum number of clusters to extract from each example set.
-   * \param minClusterSize  The minimum number of examples in a valid cluster.
+   * \param minClusterSize  The minimum size of cluster to keep.
    *
    * \return                An instance of ExampleClusterer.
    *

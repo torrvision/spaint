@@ -111,8 +111,8 @@ __global__ void ck_select_clusters(const int *clusterSizes, const int *clusterSi
   if(exampleSetIdx < exampleSetCount)
   {
     select_clusters_for_set(
-      clusterSizes, clusterSizeHistograms, nbClustersPerExampleSet, selectedClusters,
-      exampleSetCapacity, exampleSetIdx, maxSelectedClusters, minClusterSize
+      exampleSetIdx, clusterSizes, clusterSizeHistograms, nbClustersPerExampleSet,
+      exampleSetCapacity, maxSelectedClusters, minClusterSize, selectedClusters
     );
   }
 }
