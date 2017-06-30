@@ -55,7 +55,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
   {
     for(uint32_t clusterIdx = 0; clusterIdx < nbClustersPerExampleSet[exampleSetIdx]; ++clusterIdx)
     {
-      update_cluster_size_histogram(clusterSizes, clusterSizeHistograms, exampleSetCapacity, exampleSetIdx, clusterIdx);
+      update_cluster_size_histogram(exampleSetIdx, clusterIdx, clusterSizes, clusterSizeHistograms, exampleSetCapacity);
     }
   }
 }

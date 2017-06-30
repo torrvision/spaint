@@ -13,37 +13,6 @@
 namespace grove {
 
 /**
- * \brief Compute an histogram of cluster sizes for each example set. Used later to select the largest clusters.
- *
- * \param clusterSizes            Pointer to the memory area wherein are stored the sizes of the clusters.
- * \param clusterSizeHistograms   An image in which to store the histograms of cluster sizes for the different example sets.
- *                                One column for each element in the example sets (we might have either a single cluster
- *                                of maximum size or exampleSets.width clusters of size 1), one row per example set.
- * \param exampleSetCapacity      The maximum number of elements in each example set.
- * \param exampleSetIdx           The index of the current example set.
- * \param clusterIdx              The index of the current cluster.
- */
-_CPU_AND_GPU_CODE_
-inline void update_cluster_size_histogram(const int *clusterSizes, int *clusterSizeHistograms, int exampleSetCapacity, int exampleSetIdx, int clusterIdx)
-{
-  // Linear offset to the start of the current example set (or its associated data).
-  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-
-  // Grab the size for the current cluster.
-  const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];
-
-// Atomically increment the associated bin.
-#if defined(__CUDACC__) && defined(__CUDA_ARCH__) // Non templated function, need the __CUDA_ARCH__ check.
-  atomicAdd(&clusterSizeHistograms[exampleSetOffset + clusterSize], 1);
-#else
-#ifdef WITH_OPENMP
-#pragma omp atomic
-#endif
-  clusterSizeHistograms[exampleSetOffset + clusterSize]++;
-#endif
-}
-
-/**
  * \brief Compute the density of examples around an individual example in one of the example sets.
  *
  * \param exampleSetIdx      The index of the example set containing the example.
@@ -441,6 +410,38 @@ inline void select_clusters_for_set(const int *clusterSizes, const int *clusterS
       selectedClusters[selectedClustersOffset + maxIdx] = temp;
     }
   }
+}
+
+/**
+ * \brief Updates the cluster size histogram for the specified example set based on the size of the specified cluster.
+ *
+ * \note The cluster size histograms will be used later to select the largest clusters in each example set.
+ *
+ * \param exampleSetIdx           The index of the example set whose histogram should be updated.
+ * \param clusterIdx              The index of the cluster whose size should be used to update the histogram.
+ * \param clusterSizes            An image containing the sizes of the extracted clusters (for all example sets).
+ * \param clusterSizeHistograms   An image storing a cluster size histogram for each example set under consideration (one histogram per row).
+ * \param exampleSetCapacity      The maximum number of elements in each example set.
+ */
+_CPU_AND_GPU_CODE_
+inline void update_cluster_size_histogram(int exampleSetIdx, int clusterIdx, const int *clusterSizes, int *clusterSizeHistograms, int exampleSetCapacity)
+{
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
+  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+
+  // Look up the size of the specified cluster.
+  const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];
+
+  // Atomically increment the corresponding bin in the histogram.
+  // Note: The __CUDA_ARCH__ check is needed because this function is not a template.
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
+  atomicAdd(&clusterSizeHistograms[exampleSetOffset + clusterSize], 1);
+#else
+#ifdef WITH_OPENMP
+  #pragma omp atomic
+#endif
+  clusterSizeHistograms[exampleSetOffset + clusterSize]++;
+#endif
 }
 
 }

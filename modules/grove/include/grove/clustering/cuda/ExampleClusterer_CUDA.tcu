@@ -21,7 +21,7 @@ __global__ void ck_compute_cluster_size_histograms(const int *clusterSizes, cons
 
   if(clusterIdx < nbClustersPerExampleSet[exampleSetIdx])
   {
-    update_cluster_size_histogram(clusterSizes, clusterSizeHistograms, exampleSetCapacity, exampleSetIdx, clusterIdx);
+    update_cluster_size_histogram(exampleSetIdx, clusterIdx, clusterSizes, clusterSizeHistograms, exampleSetCapacity);
   }
 }
 
