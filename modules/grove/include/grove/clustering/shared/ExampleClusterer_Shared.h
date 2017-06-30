@@ -220,11 +220,11 @@ inline void compute_cluster(int exampleSetIdx, int exampleIdx, int exampleSetCap
 }
 
 /**
- * \brief Computes the parent and initial cluster index to assign to the specified example as part of the neighbour-linking step
- *        of the really quick shift algorithm.
+ * \brief Computes the parent and initial cluster indices to assign to the specified example as part of the neighbour-linking step
+ *        of the really quick shift (RQS) algorithm.
  *
  * \note Each example becomes part of a subtree in which each example has as its parent the closest example with higher density.
- *       For details, see the RQS paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
+ *       For details about RQS, see the paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
  *
  * \param exampleSetIdx           The index of the example set containing the example.
  * \param exampleIdx              The index of the example within its example set.

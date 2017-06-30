@@ -73,11 +73,12 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   const int *exampleSetSizesData = get_pointer_to_example_set_size(exampleSetSizes, exampleSetStart);
   compute_densities(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_sigma);
 
-  // Link neighbouring examples in a tree structure, cutting the branches based on a distance tau,
-  // the maximum distance between examples if they are to be linked.
+  // Compute the parent and initial cluster indices to assign to each example as part of the neighbour-linking
+  // step of the really quick shift (RQS) algorithm. The algorithm links neighbouring examples in a tree structure,
+  // separating example clusters based on a distance tau.
   compute_parents(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_tau * m_tau);
 
-  // Identify clusters (assign identifiers to the clusters).
+  // Compute the final cluster indices to assign to each example by following the parent links just computed.
   compute_clusters(exampleSetCapacity, exampleSetCount);
 
   // Compute cluster size histograms (used to select the largest clusters).
