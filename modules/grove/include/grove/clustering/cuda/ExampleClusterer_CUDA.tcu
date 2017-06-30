@@ -33,7 +33,7 @@ __global__ void ck_compute_clusters(const int *parents, int *clusterIndices, int
 
   if(exampleIdx < exampleSetCapacity)
   {
-    compute_cluster(exampleSetIdx, exampleIdx, parents, clusterIndices, clusterSizes, exampleSetCapacity);
+    compute_cluster(exampleSetIdx, exampleIdx, exampleSetCapacity, parents, clusterIndices, clusterSizes);
   }
 }
 
