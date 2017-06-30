@@ -16,8 +16,6 @@ namespace grove {
  * \brief Compute an histogram of cluster sizes for each example set. Used later to select the largest clusters.
  *
  * \param clusterSizes            Pointer to the memory area wherein are stored the sizes of the clusters.
- * \param nbClustersPerExampleSet Pointer to an array wherein is stored the number of clusters extracted from each
- * example set.
  * \param clusterSizeHistograms   An image in which to store the histograms of cluster sizes for the different example sets.
  *                                One column for each element in the example sets (we might have either a single cluster
  *                                of maximum size or exampleSets.width clusters of size 1), one row per example set.
@@ -26,15 +24,10 @@ namespace grove {
  * \param clusterIdx              The index of the current cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void compute_cluster_histogram(const int *clusterSizes, const int *nbClustersPerExampleSet, int *clusterSizeHistograms, int exampleSetCapacity, int exampleSetIdx, int clusterIdx)
+inline void update_cluster_size_histogram(const int *clusterSizes, int *clusterSizeHistograms, int exampleSetCapacity, int exampleSetIdx, int clusterIdx)
 {
   // Linear offset to the start of the current example set (or its associated data).
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Number of valid clusters for the current example set.
-  const int nbValidClusters = nbClustersPerExampleSet[exampleSetIdx];
-
-  // If the current cluster is invalid early out.
-  if (clusterIdx >= nbValidClusters) return;
 
   // Grab the size for the current cluster.
   const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];

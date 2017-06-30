@@ -19,9 +19,9 @@ __global__ void ck_compute_cluster_size_histograms(const int *clusterSizes, cons
   const uint32_t clusterIdx = blockIdx.x * blockDim.x + threadIdx.x;
   const uint32_t exampleSetIdx = blockIdx.y;
 
-  if(clusterIdx < exampleSetCapacity)
+  if(clusterIdx < nbClustersPerExampleSet[exampleSetIdx])
   {
-    compute_cluster_histogram(clusterSizes, nbClustersPerExampleSet, clusterSizeHistograms, exampleSetCapacity, exampleSetIdx, clusterIdx);
+    update_cluster_size_histogram(clusterSizes, clusterSizeHistograms, exampleSetCapacity, exampleSetIdx, clusterIdx);
   }
 }
 

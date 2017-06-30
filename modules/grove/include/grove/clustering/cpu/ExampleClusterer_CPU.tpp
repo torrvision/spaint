@@ -51,11 +51,11 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
+  for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    for(uint32_t clusterIdx = 0; clusterIdx < exampleSetCapacity; ++clusterIdx)
+    for(uint32_t clusterIdx = 0; clusterIdx < nbClustersPerExampleSet[exampleSetIdx]; ++clusterIdx)
     {
-      compute_cluster_histogram(clusterSizes, nbClustersPerExampleSet, clusterSizeHistograms, exampleSetCapacity, setIdx, clusterIdx);
+      update_cluster_size_histogram(clusterSizes, clusterSizeHistograms, exampleSetCapacity, exampleSetIdx, clusterIdx);
     }
   }
 }
