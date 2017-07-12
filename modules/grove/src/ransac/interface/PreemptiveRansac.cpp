@@ -525,27 +525,19 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
       const Vector3f normGradient = 2 * invCovarianceTimesDiff;
 //      const Vector3f normGradient = invCovarianceTimesDiff / err;
 
-      jac[0] += normGradient.x;
-      jac[1] += normGradient.y;
-      jac[2] += normGradient.z;
+      const Vector3f poseGradient[6] = {
+          Vector3f(1, 0, 0),
+          Vector3f(0, 1, 0),
+          Vector3f(0, 0, 1),
+          -Vector3f(0, transformedPt.z, -transformedPt.y),
+          -Vector3f(-transformedPt.z, 0, transformedPt.x),
+          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+      };
 
-      jac[3] -= normGradient.y * transformedPt.z - normGradient.z * transformedPt.y;
-      jac[4] -= normGradient.x * -transformedPt.z + normGradient.z * transformedPt.x;
-      jac[5] -= normGradient.x * transformedPt.y - normGradient.y * transformedPt.x;
-
-//      const Vector3f poseGradient[6] = {
-//          Vector3f(1, 0, 0),
-//          Vector3f(0, 1, 0),
-//          Vector3f(0, 0, 1),
-//          -Vector3f(0, transformedPt.z, -transformedPt.y),
-//          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-//          -Vector3f(transformedPt.y, -transformedPt.x, 0),
-//      };
-
-//      for(uint32_t i = 0; i < 6; ++i)
-//      {
-//        jac[i] += dot(normGradient, poseGradient[i]);
-//      }
+      for(uint32_t i = 0; i < 6; ++i)
+      {
+        jac[i] += dot(normGradient, poseGradient[i]);
+      }
     }
   }
 
@@ -567,7 +559,7 @@ static void
 }
 
 /**
- * \brief Function that will be called by alglib's optimiser.
+ * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
  */
 static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array &ksi,
                                                            alglib::real_1d_array &fi,
@@ -616,17 +608,6 @@ static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM &pts,
       const Vector3f normGradient = 2 * diff;
 //      const Vector3f normGradient = diff / err;
 
-      //      const Vector3f translationGradient = normGradient;
-      //      const Vector3f rotationGradient = -cross(normGradient, transformedPt);
-
-      //      jac[0] += translationGradient[0];
-      //      jac[1] += translationGradient[1];
-      //      jac[2] += translationGradient[2];
-
-      //      jac[3] += rotationGradient[0];
-      //      jac[4] += rotationGradient[1];
-      //      jac[5] += rotationGradient[2];
-
       const Vector3f poseGradient[6] = {
           Vector3f(1, 0, 0),
           Vector3f(0, 1, 0),
@@ -659,6 +640,9 @@ static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &ksi, al
   fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
 }
 
+/**
+ * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
+ */
 static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array &ksi,
                                                alglib::real_1d_array &fi,
                                                alglib::real_2d_array &jac,
