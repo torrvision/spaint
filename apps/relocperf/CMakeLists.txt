@@ -51,8 +51,19 @@ TARGET_LINK_LIBRARIES(${targetname} tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
+#########################################
+# Copy resource files to the build tree #
+#########################################
+
+ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/relocperf/resources" "$<TARGET_FILE_DIR:${targetname}>/resources")
+
+IF(MSVC_IDE)
+  ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/relocperf/resources" "${PROJECT_BINARY_DIR}/apps/relocperf/resources")
+ENDIF()
+
 #############################
 # Specify things to install #
 #############################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/apps/relocperf/resources" DESTINATION "bin/apps/relocperf")
