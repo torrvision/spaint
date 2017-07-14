@@ -111,8 +111,8 @@ int main(int argc, char *argv[]) try
   std::vector<std::string> sequenceNames = {"chess", "fire", "heads", "office", "pumpkin", "redkitchen", "stairs"};
   std::vector<int> sequenceSplitLengths = {1000, 1000, 1000, 1000, 1000, 1000, 500};
 
-  std::map<std::string, std::vector<std::string>> trainingSplits;
-  std::map<std::string, std::vector<std::string>> testingSplits;
+  std::map<std::string, std::vector<std::string> > trainingSplits;
+  std::map<std::string, std::vector<std::string> > testingSplits;
 
   // Chess
   trainingSplits[sequenceNames[0]].push_back("seq-01");
