@@ -1,19 +1,28 @@
 /**
  * relocperf: main.cpp
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <Eigen/Geometry>
-#include <map>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <sstream>
+
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+
+#include <Eigen/Geometry>
+
+#include <tvgutil/filesystem/SequentialPathGenerator.h>
+using namespace tvgutil;
+
+//#################### NAMESPACE ALIASES ####################
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
+
+//#################### CONSTANTS ####################
 
 static const std::string trainFolderName = "train";
 static const std::string validationFolderName = "validation";
@@ -21,16 +30,28 @@ static const std::string testFolderName = "test";
 
 //#################### FUNCTIONS ####################
 
+/**
+ * \brief Finds the dataset sequences under a root folder.
+ *
+ *        The assumption is that each valid sequence folder will have both
+ *        "train" and "test" subfolders.
+ *
+ * \param dataset_path The path to a dataset.
+ *
+ * \return A list of sequence names.
+ */
 std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
 {
   std::vector<std::string> sequences;
 
+  // Iterate over every subfolder of the dataset.
   for(fs::directory_iterator it(dataset_path), end; it != end; ++it)
   {
     fs::path p = it->path();
     fs::path train_path = p / trainFolderName;
     fs::path test_path = p / testFolderName;
 
+    // If the current folder has both a train and test subfolder, we store its name as a valid sequence.
     if(fs::is_directory(train_path) && fs::is_directory(test_path))
     {
       sequences.push_back(p.filename().string());
@@ -43,22 +64,22 @@ std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
   return sequences;
 }
 
-fs::path generate_path(const fs::path basePath, const std::string &mask,
-    int index)
-{
-  char buf[2048];
-  sprintf(buf, mask.c_str(), index);
-
-  return basePath / buf;
-}
-
+/**
+ * \brief Reads a rigid pose from disk. The pose has to be stored as a 4x4 row-major matrix.
+ *
+ * \param fileName The filename.
+ *
+ * \return The rigid transformation.
+ *
+ * \throws std::runtime_error if the file is missing.
+ */
 Eigen::Matrix4f read_pose_from_file(const fs::path &fileName)
 {
-  if (!fs::is_regular(fileName))
-    throw std::runtime_error("File not found: " + fileName.string());
+  if(!fs::is_regular(fileName)) throw std::runtime_error("File not found: " + fileName.string());
 
   std::ifstream in(fileName.c_str());
 
+  // The Matrix is stored in row-major order on disk.
   Eigen::Matrix4f res;
   in >> res(0, 0) >> res(0, 1) >> res(0, 2) >> res(0, 3);
   in >> res(1, 0) >> res(1, 1) >> res(1, 2) >> res(1, 3);
@@ -68,42 +89,38 @@ Eigen::Matrix4f read_pose_from_file(const fs::path &fileName)
   return res;
 }
 
-float angular_separation(const Eigen::Vector3f& t1, const Eigen::Vector3f& t2)
-{
-  float divisor = t1.norm() * t1.norm();
-  if (divisor > 0.0f)
-  {
-    float cosineTheta = t1.dot(t2) / divisor;
-    if (cosineTheta > 1.0f)
-      cosineTheta = 1.0f;
-    return acos(cosineTheta);
-  }
-  else
-    return 0.0f;
-}
-
-float angular_separation_approx(const Eigen::Matrix3f& r1,
-    const Eigen::Matrix3f& r2)
-{
-  // Rotate a vector with each rotation matrix and return the angular difference.
-  Eigen::Vector3f v(1, 1, 1);
-  Eigen::Vector3f v1 = r1 * v;
-  Eigen::Vector3f v2 = r2 * v;
-  return angular_separation(v1, v2);
-}
-
-float angular_separation(const Eigen::Matrix3f& r1, const Eigen::Matrix3f& r2)
+/**
+ * \brief Computes the angular separation between two rotation matrices.
+ *
+ * \param r1 The first rotation matrix.
+ * \param r2 The second rotation matrix.
+ *
+ * \return The angular difference between the two transformations.
+ */
+float angular_separation(const Eigen::Matrix3f &r1, const Eigen::Matrix3f &r2)
 {
   // First calculate the rotation matrix which maps r1 to r2.
   Eigen::Matrix3f dr = r2 * r1.transpose();
 
+  // Then compute the corresponding angle-axis transform and return the angle.
   Eigen::AngleAxisf aa(dr);
   return aa.angle();
 }
 
-bool pose_matches(const Eigen::Matrix4f &gtPose,
-    const Eigen::Matrix4f &testPose)
+/**
+ * \brief Check whether the two poses are similar enough.
+ *
+ *        The check is performed according to the 7-scenes metric: succeeds if the translation between the
+ *        transformations is <= 5cm and the angle is <= 5 deg.
+ *
+ * \param gtPose   The ground truth pose.
+ * \param testPose The pose to be tested.
+ *
+ * \return Whether the two poses are similar enough.
+ */
+bool pose_matches(const Eigen::Matrix4f &gtPose, const Eigen::Matrix4f &testPose)
 {
+  // 7-scenes thresholds.
   static const float translationMaxError = 0.05f;
   static const float angleMaxError = 5.f * M_PI / 180.f;
 
@@ -112,94 +129,116 @@ bool pose_matches(const Eigen::Matrix4f &gtPose,
   const Eigen::Vector3f gtT = gtPose.block<3, 1>(0, 3);
   const Eigen::Vector3f testT = testPose.block<3, 1>(0, 3);
 
+  // Compute the difference between the transformations.
   const float translationError = (gtT - testT).norm();
   const float angleError = angular_separation(gtR, testR);
-//  const float angleError = angular_separation_approx(gtR, testR);
 
   return translationError <= translationMaxError && angleError <= angleMaxError;
 }
 
+/**
+ * \brief Check whether a pose stored in a text file matches with a ground truth pose, according to the 7-scenes metric.
+ *
+ * \param gtPose   The ground truth camera pose.
+ * \param poseFile The path to a file storing a transformation matrix.
+ *
+ * \return Whether the pose stored in the file matches the ground truth pose. False if the file is missing.
+ */
 bool pose_file_matches(const Eigen::Matrix4f &gtPose, const fs::path &poseFile)
 {
-  if(!fs::is_regular(poseFile))
-    return false;
+  if(!fs::is_regular(poseFile)) return false;
 
   const Eigen::Matrix4f otherPose = read_pose_from_file(poseFile);
   return pose_matches(gtPose, otherPose);
 }
 
+/**
+ * \brief Struct used to accumulate stats on a dataset sequence.
+ */
 struct SequenceResults
 {
-  int poseCount
-  { 0 };
-  int validPosesAfterReloc
-  { 0 };
-  int validPosesAfterICP
-  { 0 };
-  int validFinalPoses
-  { 0 };
+  /** The number of poses in the sequence. */
+  int poseCount{0};
 
+  /** The number of frames successfully relocalised. */
+  int validPosesAfterReloc{0};
+
+  /** The number of frames successfully relocalised after a round of ICP. */
+  int validPosesAfterICP{0};
+
+  /** The number of frames successfully relocalised after a round of ICP+SVM. */
+  int validFinalPoses{0};
+
+  /** The sequence of relocalisation results. Same element count as poseCount. */
   std::vector<bool> relocalizationResults;
+
+  /** The sequence of relocalisation results, after ICP. Same element count as poseCount. */
   std::vector<bool> icpResults;
+
+  /** The sequence of relocalisation results, after ICP+SVM. Same element count as poseCount. */
   std::vector<bool> finalResults;
 };
 
-SequenceResults evaluate_sequence(const fs::path &gtFolder,
-    const fs::path &relocFolder)
+/**
+ * \brief Process a dataset sequence computing how well the relocaliser performed on it.
+ *
+ * \param gtFolder    The folder storing the ground truth poses.
+ * \param relocFolder The folder storing the relocalisation results.
+ *
+ * \return The SequenceResults on this sequence.
+ */
+SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relocFolder)
 {
   SequenceResults res;
 
-  while (true)
+  // Create appropriate path generators.
+  SequentialPathGenerator gtPathGenerator(gtFolder);
+  SequentialPathGenerator relocPathGenerator(relocFolder);
+
+  while(true)
   {
-    const fs::path gtPath = generate_path(gtFolder, "frame-%06i.pose.txt", res.poseCount);
-    const fs::path relocPath = generate_path(relocFolder, "pose-%06i.reloc.txt",
-        res.poseCount);
-    const fs::path icpPath = generate_path(relocFolder, "pose-%06i.icp.txt",
-        res.poseCount);
-    const fs::path finalPath = generate_path(relocFolder, "pose-%06i.final.txt",
-        res.poseCount);
+    // Generate the paths to evaluate.
+    const fs::path gtPath = gtPathGenerator.make_path("frame-%06i.pose.txt");
+    const fs::path relocPath = relocPathGenerator.make_path("pose-%06i.reloc.txt");
+    const fs::path icpPath = relocPathGenerator.make_path("pose-%06i.icp.txt");
+    const fs::path finalPath = relocPathGenerator.make_path("pose-%06i.final.txt");
 
-    if (!fs::is_regular(gtPath))
-      break;
+    // If the GT file is missing this sequence is over.
+    if(!fs::is_regular(gtPath)) break;
 
-//    std::cout << "Reading GT from: " << gtPath << '\n';
-//    std::cout << "Reading relocalised pose from: " << relocPath << '\n';
-//    std::cout << "Reading refined pose from: " << icpPath << '\n';
-
+    // Read the GT camera pose.
     const Eigen::Matrix4f gtPose = read_pose_from_file(gtPath);
-    const Eigen::Matrix4f relocPose = read_pose_from_file(relocPath);
-    const Eigen::Matrix4f icpPose = read_pose_from_file(icpPath);
-//    const Eigen::Matrix4f finalPose = read_pose_from_file(finalPath);
 
-    bool validReloc = pose_matches(gtPose, relocPose);
-    bool validICP = pose_matches(gtPose, icpPose);
-//    bool validFinal = pose_matches(gtPose, finalPose);
+    // Check whether different kinds of relocalisations succeeded.
+    bool validReloc = pose_file_matches(gtPose, relocPath);
+    bool validICP = pose_file_matches(gtPose, icpPath);
+    bool validFinal = pose_file_matches(gtPose, finalPath);
 
-//    bool validReloc = pose_file_matches(gtPose, relocPath);
-//    bool validICP = pose_file_matches(gtPose, icpPath);
-//    bool validFinal = pose_file_matches(gtPose, finalPath);
-
-//    std::cout << res.poseCount << "-> Reloc: " << std::boolalpha << validReloc
-//        << " - ICP: " << validICP << std::noboolalpha << '\n';
-
-    ++res.poseCount;
+    // Accumulate stats.
     res.validPosesAfterReloc += validReloc;
     res.validPosesAfterICP += validICP;
-//    res.validFinalPoses += validFinal;
+    res.validFinalPoses += validFinal;
 
     res.relocalizationResults.push_back(validReloc);
     res.icpResults.push_back(validICP);
-//    res.finalResults.push_back(validFinal);
+    res.finalResults.push_back(validFinal);
+
+    // Increment counters.
+    ++res.poseCount;
+    gtPathGenerator.increment_index();
+    relocPathGenerator.increment_index();
   }
 
   return res;
 }
 
-template<typename T>
+/**
+ * \brief Print a variable allocating to it a certain width on screen.
+ */
+template <typename T>
 void printWidth(const T &item, int width, bool leftAlign = false)
 {
-  std::cerr << (leftAlign ? std::left : std::right) << std::setw(width)
-      << std::fixed << std::setprecision(2) << item;
+  std::cerr << (leftAlign ? std::left : std::right) << std::setw(width) << std::fixed << std::setprecision(2) << item;
 }
 
 int main(int argc, char *argv[])
@@ -210,6 +249,7 @@ int main(int argc, char *argv[])
   bool useValidation = false;
   bool onlineEvaluation = false;
 
+  // Declare some options for the evaluation.
   po::options_description options("Relocperf Options");
   options.add_options()
       ("datasetFolder,d", po::value(&datasetFolder)->required(), "The path to the dataset.")
@@ -233,31 +273,33 @@ int main(int argc, char *argv[])
   {
     po::notify(vm);
   }
-  catch (const po::error &e)
+  catch(const po::error &e)
   {
     std::cerr << "Error parsing the options: " << e.what() << '\n';
     std::cerr << options << '\n';
     exit(1);
   }
 
+  // Find the valid sequences in the dataset folder.
   const std::vector<std::string> sequenceNames = find_sequence_names(datasetFolder);
 
   std::map<std::string, SequenceResults> results;
 
-  for (auto sequence : sequenceNames)
+  // Evaluate each sequence.
+  for(size_t sequenceIdx = 0; sequenceIdx < sequenceNames.size(); ++sequenceIdx)
   {
-//    const fs::path gtPath = gtFolder / sequence / testFolderName;
-//    const fs::path gtPath = datasetFolder / sequence / validationFolderName;
+    const std::string &sequence = sequenceNames[sequenceIdx];
+
+    // Compute the full paths.
     const fs::path gtPath = datasetFolder / sequence / (useValidation ? validationFolderName : testFolderName);
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
-    std::cerr << "Processing sequence " << sequence << " in: " << gtPath
-        << "\t - " << relocFolder << std::endl;
+    std::cerr << "Processing sequence " << sequence << " in: " << gtPath << "\t - " << relocFolder << std::endl;
     try
     {
       results[sequence] = evaluate_sequence(gtPath, relocFolder);
     }
-    catch (std::runtime_error&)
+    catch(std::runtime_error &)
     {
       std::cerr << "\tSequence has not been evaluated.\n";
     }
@@ -271,16 +313,15 @@ int main(int argc, char *argv[])
   printWidth("Final", 8);
   std::cerr << '\n';
 
-  for (const auto &sequence : sequenceNames)
+  // Compute percentages for each sequence and print everything.
+  for(const auto &sequence : sequenceNames)
   {
     const auto &seqResult = results[sequence];
 
-    float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
-        / static_cast<float>(seqResult.poseCount) * 100.f;
-    float icpPct = static_cast<float>(seqResult.validPosesAfterICP)
-        / static_cast<float>(seqResult.poseCount) * 100.f;
-    float finalPct = static_cast<float>(seqResult.validFinalPoses)
-        / static_cast<float>(seqResult.poseCount) * 100.f;
+    float relocPct =
+        static_cast<float>(seqResult.validPosesAfterReloc) / static_cast<float>(seqResult.poseCount) * 100.f;
+    float icpPct = static_cast<float>(seqResult.validPosesAfterICP) / static_cast<float>(seqResult.poseCount) * 100.f;
+    float finalPct = static_cast<float>(seqResult.validFinalPoses) / static_cast<float>(seqResult.poseCount) * 100.f;
 
     printWidth(sequence, 15, true);
     printWidth(seqResult.poseCount, 8);
@@ -290,7 +331,7 @@ int main(int argc, char *argv[])
     std::cerr << '\n';
   }
 
-  // Compute average performance
+  // Compute average performance.
   float relocSum = 0.f;
   float icpSum = 0.f;
   float finalSum = 0.f;
@@ -300,17 +341,14 @@ int main(int argc, char *argv[])
   float finalRawSum = 0.f;
   int poseCount = 0;
 
-  for (const auto &sequence : sequenceNames)
+  for(const auto &sequence : sequenceNames)
   {
     const auto &seqResult = results[sequence];
 
     // Non-weighted average, we need percentages
-    const float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
-        / static_cast<float>(seqResult.poseCount);
-    const float icpPct = static_cast<float>(seqResult.validPosesAfterICP)
-        / static_cast<float>(seqResult.poseCount);
-    const float finalPct = static_cast<float>(seqResult.validFinalPoses)
-        / static_cast<float>(seqResult.poseCount);
+    const float relocPct = static_cast<float>(seqResult.validPosesAfterReloc) / static_cast<float>(seqResult.poseCount);
+    const float icpPct = static_cast<float>(seqResult.validPosesAfterICP) / static_cast<float>(seqResult.poseCount);
+    const float finalPct = static_cast<float>(seqResult.validFinalPoses) / static_cast<float>(seqResult.poseCount);
 
     relocSum += relocPct;
     icpSum += icpPct;
@@ -352,27 +390,25 @@ int main(int argc, char *argv[])
   }
 
   // Save results of online training-relocalization
-  if (onlineEvaluation)
+  if(onlineEvaluation)
   {
     std::string onlineResultsFilenameStem = relocTag;
 
     // Process every sequence
-    for (auto sequence : sequenceNames)
+    for(auto sequence : sequenceNames)
     {
       auto seqResult = results[sequence];
 
-      std::string outFilename = onlineResultsFilenameStem + '_' + sequence
-          + ".csv";
+      std::string outFilename = onlineResultsFilenameStem + '_' + sequence + ".csv";
       std::ofstream out(outFilename);
 
       // Print header
-      out
-          << "FrameIdx; FramePct; Reloc Success; Reloc Sum; Reloc Pct; ICP Success; ICP Sum; ICP Pct\n";
+      out << "FrameIdx; FramePct; Reloc Success; Reloc Sum; Reloc Pct; ICP Success; ICP Sum; ICP Pct\n";
 
       int relocSum = 0;
       int icpSum = 0;
 
-      for (int poseIdx = 0; poseIdx < seqResult.poseCount; ++poseIdx)
+      for(int poseIdx = 0; poseIdx < seqResult.poseCount; ++poseIdx)
       {
         bool relocSuccess = seqResult.relocalizationResults[poseIdx];
         bool icpSuccess = seqResult.icpResults[poseIdx];
@@ -384,9 +420,8 @@ int main(int argc, char *argv[])
         float relocPct = static_cast<float>(relocSum) / poseIdx;
         float icpPct = static_cast<float>(icpSum) / poseIdx;
 
-        out << poseIdx << "; " << framePct << "; " << relocSuccess << "; "
-            << relocSum << "; " << relocPct << "; " << icpSuccess << "; "
-            << icpSum << "; " << icpPct << '\n';
+        out << poseIdx << "; " << framePct << "; " << relocSuccess << "; " << relocSum << "; " << relocPct << "; "
+            << icpSuccess << "; " << icpSum << "; " << icpPct << '\n';
       }
     }
   }
