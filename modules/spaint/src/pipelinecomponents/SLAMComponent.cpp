@@ -18,6 +18,11 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 
+#ifdef WITH_GROVE
+#include <grove/relocalisation/ScoreRelocaliserFactory.h>
+using namespace grove;
+#endif
+
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 using namespace itmx;
@@ -363,11 +368,31 @@ void SLAMComponent::setup_relocaliser()
   // Look up the non-relocaliser-specific settings, such as the type of relocaliser to construct.
   static const std::string settingsNamespace = "SLAMComponent.";
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
+
+  // Default to ferns relocaliser if grove is not built.
+#ifdef WITH_GROVE
+  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "forest");
+#else
   m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "ferns");
+#endif
 
   // Construct a relocaliser of the specified type.
   Relocaliser_Ptr innerRelocaliser;
-  if(m_relocaliserType == "ferns")
+  if(m_relocaliserType == "forest")
+  {
+#ifdef WITH_GROVE
+    // If we're trying to set up a forest-based relocaliser, determine the path to the file containing the forest.
+    const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
+    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocalisationForestPath);
+    std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
+
+    // Load the relocaliser from the specified file.
+    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
+#else
+    throw std::invalid_argument("Cannot instantiate a \"forest\" relocaliser. Rebuild spaint with BUILD_GROVE turned ON.");
+#endif
+  }
+  else if(m_relocaliserType == "ferns")
   {
     innerRelocaliser.reset(new FernRelocaliser(
       depthImageSize,

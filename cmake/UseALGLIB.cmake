@@ -2,7 +2,7 @@
 # UseALGLIB.cmake #
 ###################
 
-OPTION(WITH_ALGLIB "Build with ALGLIB support?" OFF)
+OPTION(WITH_ALGLIB "Build with ALGLIB support?" ON)
 
 IF(WITH_ALGLIB)
   FIND_PATH(ALGLIB_ROOT gpl3.txt HINTS "${PROJECT_SOURCE_DIR}/libraries/alglib")

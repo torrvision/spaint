@@ -75,6 +75,7 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
@@ -111,6 +112,7 @@ struct CommandLineArguments
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
+      ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
@@ -249,8 +251,14 @@ std::string make_tracker_config(CommandLineArguments& args)
       }
       else if(chunks[i] == "Disk")
       {
-        const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
-        result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + "</params></tracker>";
+        if(args.poseFileMasks.size() < i)
+        {
+          // If this happens it's because at least one mask was specified with the -p flag,
+          // otherwise postprocess_arguments would have taken care of supplying the default masks.
+          throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
+        }
+
+        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
       }
       else
       {
@@ -277,10 +285,10 @@ std::string make_tracker_config(CommandLineArguments& args)
  */
 bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& settings)
 {
-  // If the user specifies both sequence and explicit depth / RGB image mask flags, print an error message.
-  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.rgbImageMasks.empty()))
+  // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
+  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth / RGB image mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
     return false;
   }
 
@@ -299,6 +307,7 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
 
     // Set the depth / RGB image masks.
     args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+    args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
     args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
   }
 
@@ -326,6 +335,54 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
   args.add_to_settings(settings);
 
   return true;
+}
+
+/**
+ * \brief Sets the scene parameters from GlobalParameters, allowing the user to specify ad hoc values for voxel size, truncation distance, etc...
+ *
+ * \param sceneParams The scene parameters to modify.
+ */
+void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMSceneParams &sceneParams)
+{
+#define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
+
+  // Use the default values from InfiniTAM.
+  GET_PARAM(int, maxW, 100);
+  GET_PARAM(float, mu, 0.02f);
+  GET_PARAM(bool, stopIntegratingAtMaxW, false);
+  GET_PARAM(float, viewFrustum_max, 3.0f);
+  GET_PARAM(float, viewFrustum_min, 0.2f);
+  GET_PARAM(float, voxelSize, 0.005f);
+
+#undef GET_PARAM
+}
+
+/**
+ * \brief Sets the surfel scene parameters from GlobalParameters, allowing the user to specify ad hoc values for surfel radius, etc...
+ *
+ * \param surfelSceneParams The surfel scene parameters to modify.
+ */
+void set_surfel_scene_params_from_global_options(const Settings_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
+{
+#define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
+
+  // Use the default values from InfiniTAM.
+  GET_PARAM(float, deltaRadius, 0.5f);
+  GET_PARAM(float, gaussianConfidenceSigma, 0.6f);
+  GET_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
+  GET_PARAM(float, maxMergeDist, 0.01f);
+  GET_PARAM(float, maxSurfelRadius, 0.004f);
+  GET_PARAM(float, minRadiusOverlapFactor, 3.5f);
+  GET_PARAM(float, stableSurfelConfidence, 25.0f);
+  GET_PARAM(int, supersamplingFactor, 4);
+  GET_PARAM(float, trackingSurfelMaxDepth, 1.0f);
+  GET_PARAM(float, trackingSurfelMinConfidence, 5.0f);
+  GET_PARAM(int, unstableSurfelPeriod, 20);
+  GET_PARAM(int, unstableSurfelZOffset, 10000000);
+  GET_PARAM(bool, useGaussianSampleConfidence, true);
+  GET_PARAM(bool, useSurfelMerging, true);
+
+#undef GET_PARAM
 }
 
 /**
@@ -369,6 +426,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
@@ -409,6 +467,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
 
   // Post-process any registered options and add them to the settings.
   if(!postprocess_arguments(args, settings)) return false;
+
+  std::cout << "Global settings:\n" << *settings << '\n';
 
   // If the user specifies the --help flag, print a help message.
   if(vm.count("help"))
@@ -464,6 +524,10 @@ try
   // If we built with Rift support, initialise the Rift SDK.
   ovr_Initialize();
 #endif
+
+  // Set scene parameters from configuration.
+  set_scene_params_from_global_options(settings, settings->sceneParams);
+  set_surfel_scene_params_from_global_options(settings, settings->surfelSceneParams);
 
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 

@@ -22,6 +22,11 @@ const boost::filesystem::path& SequentialPathGenerator::get_base_dir() const
   return m_baseDir;
 }
 
+int SequentialPathGenerator::get_index() const
+{
+  return m_index;
+}
+
 void SequentialPathGenerator::increment_index()
 {
   ++m_index;

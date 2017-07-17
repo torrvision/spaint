@@ -2,7 +2,7 @@
 # Top-level CMakeLists.txt for spaint #
 #######################################
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 
 PROJECT(spaint)
 
@@ -45,7 +45,7 @@ OPTION(BUILD_EVALUATION_MODULES "Build the evaluation modules?" ON)
 OPTION(BUILD_GROVE "Build grove?" ON)
 OPTION(BUILD_INFERMOUS "Build infermous?" OFF)
 OPTION(BUILD_SPAINT "Build spaint?" ON)
-OPTION(BUILD_TESTS "Build the tests?" ON)
+OPTION(BUILD_TESTS "Build the tests?" OFF)
 
 IF(BUILD_APPS)
   ADD_SUBDIRECTORY(apps)

@@ -68,6 +68,11 @@ build "out of the box". However, most users will probably want to install
 the remaining optional libraries in order to enable full functionality.
 
 ```
+  - ALGLIB
+    Status: Optional (needed to build Grove)
+    Default: Enabled
+    Flag: WITH_ALGLIB
+
   - ArrayFire
     Status: Optional (needed for touch interaction and median filtering)
     Default: Disabled
@@ -87,7 +92,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 2)
+  - InfiniTAM (version 3)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -101,8 +106,8 @@ the remaining optional libraries in order to enable full functionality.
     Flag: WITH_OVR
 
   - OpenCV (version 2.4.9)
-    Status: Optional (needed for feature inspection mode)
-    Default: Disabled
+    Status: Optional (needed for feature inspection mode and relocalisation apps)
+    Default: Enabled
     Flag: WITH_OPENCV
 
   - OpenGL

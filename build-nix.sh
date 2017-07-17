@@ -17,9 +17,10 @@ fi
 # Build/extract the libraries.
 cd libraries
 
+./build-alglib-nix.sh
 ./build-boost_1_56_0-nix.sh
 ./build-lodepng-20160501-nix.sh
-#./build-opencv-3.1.0-nix.sh
+./build-opencv-3.1.0-nix.sh
 ./build-SDL2-2.0.3-nix.sh
 ./extract-Eigen-3.2.2.sh
 

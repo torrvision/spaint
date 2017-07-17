@@ -11,10 +11,11 @@ fi
 ./require-msbuild.sh
 
 cd libraries
+./build-alglib-win.sh "Visual Studio $1 Win64"
 ./build-boost_1_56_0-win.sh "msvc-$1.0"
 ./build-glew-1.12.0-win.sh
 ./build-lodepng-20160501-win.sh "Visual Studio $1 Win64"
-#./build-opencv-3.1.0-win.sh "Visual Studio $1 Win64"
+./build-opencv-3.1.0-win.sh "Visual Studio $1 Win64"
 ./build-SDL2-2.0.3-win.sh "Visual Studio $1 Win64"
 ./extract-Eigen-3.2.2.sh
 cd ..
