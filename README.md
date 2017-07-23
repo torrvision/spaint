@@ -49,11 +49,11 @@ If you build on this framework for your research, please consider citing both ou
 If you rely on the ```grove``` relocalisation module, please cite the relevant paper:
 ```
 @inproceedings{Cavallari2017,
-author = {Tommaso Cavallari and Stuart Golodetz* and Nicholas A Lord* and Julien Valentin and Luigi Di Stefano and Philip H S Torr},
-title = {{On-The-Fly Adaptation of Regression Forests for Online Camera Relocalisation}},
-booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-month = {July},
-year = {2017}
+  author = {Tommaso Cavallari and Stuart Golodetz* and Nicholas A Lord* and Julien Valentin and Luigi Di Stefano and Philip H S Torr},
+  title = {{On-The-Fly Adaptation of Regression Forests for Online Camera Relocalisation}},
+  booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  month = {July},
+  year = {2017}
 }
 ```
 
