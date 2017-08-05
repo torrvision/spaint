@@ -8,13 +8,13 @@ This is an open-source, real-time implementation of the interactive *SemanticPai
 
 This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg).
 
-It is built on top of [InfiniTAM v2](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact either [Victor Adrian Prisacariu](mailto:victor@viprad.net) or [Olaf Kaehler](mailto:olaf@robots.ox.ac.uk).
+It is built on top of [InfiniTAM v3](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
 
 The original concept for *SemanticPaint* was developed by a large number of people both at the University of Oxford and at Microsoft Research: Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi and Philip H S Torr.
 
 ## Acknowledgements
 
-We gratefully acknowledge the help of Julien Valentin, for his help in getting us up to speed with the project, of Victor Adrian Prisacariu, Olaf Kaehler and Carl Yuheng Ren, for implementing the 3D reconstruction engine on which our work is based, without which our work would not be possible, of Anurag Arnab, for his help with the saving and loading of scenes, and of Stephen Hicks and Joram van Rheede, for helping us to exhibit our work at SIGGRAPH 2015.
+We gratefully acknowledge the help of Julien Valentin, for his help in getting us up to speed with the project, of Victor Adrian Prisacariu and Olaf Kaehler, for implementing the 3D reconstruction engine on which our work is based, without which our work would not be possible, of Anurag Arnab, for his help with the saving and loading of scenes, and of Stephen Hicks and Joram van Rheede, for helping us to exhibit our work at SIGGRAPH 2015.
 
 ## Context
 
@@ -87,7 +87,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 2)
+  - InfiniTAM (version 3)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -136,7 +136,7 @@ Common steps on all platforms:
 
   2. Clone the InfiniTAM repository into <root>/InfiniTAM.
 
-  3. Build the spaint_v2 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
+  3. Build the spaint_v3 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
 
   4. Clone SemanticPaint into <root>/spaint, e.g.
 
@@ -250,6 +250,7 @@ Contact details are: [philip.torr@eng.ox.ac.uk](mailto:philip.torr@eng.ox.ac.uk)
 
 # History
 
+* 2017-AUG-08: second public release
 * 2015-SEP-26: first public release
 * 2015-JUL-23: initial draft
 
