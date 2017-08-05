@@ -1,6 +1,6 @@
 This is the software bundle "SemanticPaint", created by:
 
-Stuart Golodetz <stuart.golodetz@eng.ox.ac.uk>
+Stuart Golodetz <smg@robots.ox.ac.uk>
 Michael Sapienza <michael.sapienza@eng.ox.ac.uk>
 Julien Valentin <julien.valentin@eng.ox.ac.uk>
 Vibhav Vineet <vibhav.vineet@gmail.com>
@@ -10,14 +10,14 @@ Stephen Hicks <stephen.hicks@ndcn.ox.ac.uk>
 Shahram Izadi <shahrami@microsoft.com>
 Philip H S Torr <philip.torr@eng.ox.ac.uk>
 
-It is built on top of InfiniTAM v2, a highly-efficient,
+It is built on top of InfiniTAM v3, a highly-efficient,
 open-source 3D reconstruction engine developed by Oxford's
-Active Vision Group. For more details about InfiniTAM v2,
+Active Vision Group. For more details about InfiniTAM v3,
 please get in touch with one of the following people:
 
 Victor Adrian Prisacariu <victor@robots.ox.ac.uk>
 Olaf Kaehler <olaf@robots.ox.ac.uk>
-Carl Yuheng Ren <carl@robots.ox.ac.uk>
+Stuart Golodetz <smg@robots.ox.ac.uk>
 
 1. Building the System
 ----------------------
@@ -199,6 +199,7 @@ If you have any trouble with the build, here are some of the likely causes:
 
 History:
 
+2017-AUG-08: second public release
 2017-JUL-17: release with Grove support
-2015-JUL-23: initial draft
 2015-SEP-26: first public release
+2015-JUL-23: initial draft
