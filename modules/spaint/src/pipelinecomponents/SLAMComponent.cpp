@@ -25,6 +25,7 @@ using namespace grove;
 
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
+#include <itmx/relocalisation/NullRelocaliser.h>
 using namespace itmx;
 
 #include <tvgutil/misc/SettingsContainer.h>
@@ -366,14 +367,19 @@ void SLAMComponent::setup_relocaliser()
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
   // Look up the non-relocaliser-specific settings, such as the type of relocaliser to construct.
+  // Note that the relocaliser type is a primary setting, so is not in the SLAMComponent namespace.
+  m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
+
   static const std::string settingsNamespace = "SLAMComponent.";
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
 
-  // Default to ferns relocaliser if grove is not built.
-#ifdef WITH_GROVE
-  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "forest");
-#else
-  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "ferns");
+#ifndef WITH_GROVE
+  // If the user is trying to use the Grove relocaliser and it has not been built, fall back to the ferns relocaliser and issue a warning.
+  if(m_relocaliserType == "forest")
+  {
+    m_relocaliserType = "ferns";
+    std::cerr << "Warning: Cannot use a Grove relocaliser because BUILD_GROVE is disabled in CMake. Falling back to random ferns.\n";
+  }
 #endif
 
   // Construct a relocaliser of the specified type.
@@ -388,8 +394,6 @@ void SLAMComponent::setup_relocaliser()
 
     // Load the relocaliser from the specified file.
     innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
-#else
-    throw std::invalid_argument("Cannot instantiate a \"forest\" relocaliser. Rebuild spaint with BUILD_GROVE turned ON.");
 #endif
   }
   else if(m_relocaliserType == "ferns")
@@ -403,6 +407,10 @@ void SLAMComponent::setup_relocaliser()
       FernRelocaliser::get_default_num_decisions_per_fern(),
       m_relocaliseEveryFrame ? FernRelocaliser::ALWAYS_TRY_ADD : FernRelocaliser::DELAY_AFTER_RELOCALISATION
     ));
+  }
+  else if(m_relocaliserType == "none")
+  {
+    innerRelocaliser.reset(new NullRelocaliser);
   }
   else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
 
