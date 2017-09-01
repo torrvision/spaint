@@ -43,9 +43,10 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction &pred
 {
   const float exponent = powf(2.0f * static_cast<float>(M_PI), 3);
 
-  int argmax = -1;
-  maxScore = -1.f; // If set to 0 the comparison later fails for very small values
-  //    maxScore = 0.0f;
+  // Set to -1 only if there are no modes, we set it to 0 otherwise, to force the selection of a mode
+  // in the case of a very small covariance that otherwise would cause numerical problems (large inverse covariance and small determinant).
+  int argmax = prediction.size > 0 ? 0 : -1;
+  maxScore = 0.0f;
 
   // Iterate over all the modal clusters stored in the struct.
   for (int m = 0; m < prediction.size; ++m)
