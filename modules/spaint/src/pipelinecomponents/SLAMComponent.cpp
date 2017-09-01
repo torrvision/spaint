@@ -48,6 +48,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
+  m_relocaliserTrainingCount(0),
+  m_relocaliserTrainingSkipFrames(0),
   m_sceneID(sceneID),
   m_trackerConfig(trackerConfig),
   m_trackingMode(trackingMode)
@@ -267,6 +269,7 @@ void SLAMComponent::reset_scene()
 
   // Reset the relocaliser.
   m_context->get_relocaliser(m_sceneID)->reset();
+  m_relocaliserTrainingCount = 0;
 
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
@@ -322,16 +325,23 @@ void SLAMComponent::process_relocalisation()
   // Save the current pose in case we need to restore it later.
   const SE3Pose oldPose(*trackingState->pose_d);
 
+  // Train if m_relocaliseEveryFrame is true OR (the tracking succeeded AND we don't have to skip the current frame).
+  const bool performTraining = m_relocaliseEveryFrame ||
+      (
+       trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD
+       &&
+       (m_relocaliserTrainingSkipFrames == 0 || (m_relocaliserTrainingCount++ % m_relocaliserTrainingSkipFrames == 0))
+      );
+
   // If we're not training in this frame, allow the relocaliser to perform any necessary internal bookkeeping.
   // Note that we prevent training and bookkeeping from both running in the same frame for performance reasons.
-  const bool performTraining = trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD || m_relocaliseEveryFrame;
   if(!performTraining)
   {
     relocaliser->update();
   }
 
   // Relocalise if either (a) the tracking has failed, or (b) we're forcibly relocalising every frame for evaluation purposes.
-  const bool performRelocalisation = trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED || m_relocaliseEveryFrame;
+  const bool performRelocalisation = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED;
   if(performRelocalisation)
   {
     boost::optional<Relocaliser::Result> relocalisationResult = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
@@ -428,6 +438,9 @@ void SLAMComponent::setup_relocaliser()
     innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
     voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
   ));
+
+  // Finally, set the number of frames to skip betwenn calls to the train method.
+  m_relocaliserTrainingSkipFrames = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkipFrames", 0);
 }
 
 void SLAMComponent::setup_tracker()
