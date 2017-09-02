@@ -1,5 +1,5 @@
 /**
- * spaint: GeometryUtil.cpp
+ * itmx: GeometryUtil.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -12,7 +12,7 @@ using namespace tvgutil;
 
 #include "geometry/DualQuaternion.h"
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

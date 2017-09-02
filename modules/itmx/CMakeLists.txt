@@ -36,6 +36,18 @@ include/itmx/base/Settings.h
 )
 
 ##
+SET(geometry_sources
+src/geometry/GeometryUtil.cpp
+)
+
+SET(geometry_headers
+include/itmx/geometry/DualNumber.h
+include/itmx/geometry/DualQuaternion.h
+include/itmx/geometry/GeometryUtil.h
+include/itmx/geometry/Screw.h
+)
+
+##
 SET(persistence_sources
 src/persistence/ImagePersister.cpp
 src/persistence/PosePersister.cpp
@@ -70,12 +82,14 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 
 SET(sources
 ${base_sources}
+${geometry_sources}
 ${persistence_sources}
 ${relocalisation_sources}
 )
 
 SET(headers
 ${base_headers}
+${geometry_headers}
 ${persistence_headers}
 ${relocalisation_headers}
 )
@@ -89,6 +103,7 @@ ${relocalisation_templates}
 #############################
 
 SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
+SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
 

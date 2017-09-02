@@ -1,10 +1,10 @@
 /**
- * spaint: GeometryUtil.h
+ * itmx: GeometryUtil.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GEOMETRYUTIL
-#define H_SPAINT_GEOMETRYUTIL
+#ifndef H_ITMX_GEOMETRYUTIL
+#define H_ITMX_GEOMETRYUTIL
 
 #include <cmath>
 #include <map>
@@ -14,7 +14,7 @@
 
 #include "DualQuaternion.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief This struct provides a number of useful geometric utility functions.

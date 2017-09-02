@@ -1,10 +1,10 @@
 /**
- * spaint: DualQuaternion.h
+ * itmx: DualQuaternion.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_DUALQUATERNION
-#define H_SPAINT_DUALQUATERNION
+#ifndef H_ITMX_DUALQUATERNION
+#define H_ITMX_DUALQUATERNION
 
 #include <stdexcept>
 
@@ -17,7 +17,7 @@
 #include "DualNumber.h"
 #include "Screw.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of an instantiation of this class template represents a dual quaternion,

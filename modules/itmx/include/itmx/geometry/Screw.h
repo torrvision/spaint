@@ -1,14 +1,14 @@
 /**
- * spaint: Screw.h
+ * itmx: Screw.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_SCREW
-#define H_SPAINT_SCREW
+#ifndef H_ITMX_SCREW
+#define H_ITMX_SCREW
 
 #include <ORUtils/Vector.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of an instantiation of this class template represents a transformation in screw form.

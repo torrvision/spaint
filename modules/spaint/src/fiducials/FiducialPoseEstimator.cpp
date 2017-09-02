@@ -5,7 +5,8 @@
 
 #include "fiducials/FiducialPoseEstimator.h"
 
-#include "geometry/GeometryUtil.h"
+#include <itmx/geometry/GeometryUtil.h>
+using namespace itmx;
 
 namespace spaint {
 
