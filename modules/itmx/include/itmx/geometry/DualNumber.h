@@ -1,16 +1,16 @@
 /**
- * spaint: DualNumber.h
+ * itmx: DualNumber.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_DUALNUMBER
-#define H_SPAINT_DUALNUMBER
+#ifndef H_ITMX_DUALNUMBER
+#define H_ITMX_DUALNUMBER
 
 #include <cassert>
 #include <cmath>
 #include <iostream>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of an instantiation of this class template represents a dual number
