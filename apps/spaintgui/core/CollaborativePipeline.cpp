@@ -67,21 +67,25 @@ bool CollaborativePipeline::run_main_section()
     Relocaliser_CPtr relocaliserJ = m_model->get_relocaliser(sceneIDs[j]);
     View_CPtr viewI = m_model->get_slam_state(sceneIDs[i])->get_view();
     View_CPtr viewJ = m_model->get_slam_state(sceneIDs[j])->get_view();
+    ORUtils::SE3Pose localPoseI = m_model->get_slam_state(sceneIDs[i])->get_pose();
+    ORUtils::SE3Pose localPoseJ = m_model->get_slam_state(sceneIDs[j])->get_pose();
 
     std::cout << "Attempting to relocalise " << j << " against " << i << '\n';
     boost::optional<Relocaliser::Result> resultIJ = relocaliserI->relocalise(viewJ->rgb, viewJ->depth, viewJ->calib.intrinsics_d.projectionParamsSimple.all);
     if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD)
     {
+      ORUtils::SE3Pose relativePoseIJ(resultIJ->pose.GetM() * localPoseJ.GetInvM());
       std::cout << "Succeeded!\n";
-      std::cout << resultIJ->pose.GetM() << '\n' << resultIJ->pose.GetInvM() << '\n';
+      std::cout << relativePoseIJ.GetM() << '\n' << relativePoseIJ.GetInvM() << '\n';
     }
 
     std::cout << "Attempting to relocalise " << i << " against " << j << '\n';
     boost::optional<Relocaliser::Result> resultJI = relocaliserJ->relocalise(viewI->rgb, viewI->depth, viewI->calib.intrinsics_d.projectionParamsSimple.all);
     if(resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD)
     {
+      ORUtils::SE3Pose relativePoseJI(resultJI->pose.GetM() * localPoseI.GetInvM());
       std::cout << "Succeeded!\n";
-      std::cout << resultJI->pose.GetM() << '\n' << resultJI->pose.GetInvM() << '\n';
+      std::cout << relativePoseJI.GetM() << '\n' << relativePoseJI.GetInvM() << '\n';
     }
   }
   ++count;
