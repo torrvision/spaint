@@ -28,6 +28,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
+  virtual bool run_main_section();
+
+  /** Override */
   virtual void set_mode(Mode mode);
 };
 

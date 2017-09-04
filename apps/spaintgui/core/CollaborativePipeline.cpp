@@ -4,6 +4,7 @@
  */
 
 #include "CollaborativePipeline.h"
+using namespace itmx;
 using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
@@ -27,6 +28,66 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool CollaborativePipeline::run_main_section()
+{
+  if(!MultiScenePipeline::run_main_section()) return false;
+
+  static std::map<std::pair<size_t,size_t>,ORUtils::SE3Pose> relativePoses;
+  static bool done = false;
+  if(!done)
+  {
+    for(size_t i = 0, size = m_slamComponents.size(); i < size - 1; ++i)
+    {
+      for(size_t j = i + 1; j < size; ++j)
+      {
+        Matrix4f m;
+        m.setIdentity();
+        relativePoses[std::make_pair(i,j)].SetM(m);
+      }
+    }
+    done = true;
+  }
+
+  static int count = 0;
+  if(count > 0 && count % 10 == 0)
+  {
+    // Pick a relative pose to optimise.
+    // TODO
+    size_t i = 0, j = 1;
+
+    // Try to relocalise the current frame of each against the other.
+    std::vector<std::string> sceneIDs;
+    for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
+    {
+      sceneIDs.push_back(it->first);
+    }
+
+    Relocaliser_CPtr relocaliserI = m_model->get_relocaliser(sceneIDs[i]);
+    Relocaliser_CPtr relocaliserJ = m_model->get_relocaliser(sceneIDs[j]);
+    View_CPtr viewI = m_model->get_slam_state(sceneIDs[i])->get_view();
+    View_CPtr viewJ = m_model->get_slam_state(sceneIDs[j])->get_view();
+
+    std::cout << "Attempting to relocalise " << j << " against " << i << '\n';
+    boost::optional<Relocaliser::Result> resultIJ = relocaliserI->relocalise(viewJ->rgb, viewJ->depth, viewJ->calib.intrinsics_d.projectionParamsSimple.all);
+    if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD)
+    {
+      std::cout << "Succeeded!\n";
+      std::cout << resultIJ->pose.GetM() << '\n' << resultIJ->pose.GetInvM() << '\n';
+    }
+
+    std::cout << "Attempting to relocalise " << i << " against " << j << '\n';
+    boost::optional<Relocaliser::Result> resultJI = relocaliserJ->relocalise(viewI->rgb, viewI->depth, viewI->calib.intrinsics_d.projectionParamsSimple.all);
+    if(resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD)
+    {
+      std::cout << "Succeeded!\n";
+      std::cout << resultJI->pose.GetM() << '\n' << resultJI->pose.GetInvM() << '\n';
+    }
+  }
+  ++count;
+
+  return true;
+}
 
 void CollaborativePipeline::set_mode(Mode mode)
 {

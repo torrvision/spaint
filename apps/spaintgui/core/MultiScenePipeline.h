@@ -168,7 +168,7 @@ public:
    *
    * \return  true, if a new frame was available for the world scene, or false otherwise.
    */
-  bool run_main_section();
+  virtual bool run_main_section();
 
   /**
    * \brief Runs the mode-specific section of the pipeline for the specified scene.
