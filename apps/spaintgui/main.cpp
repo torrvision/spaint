@@ -39,6 +39,7 @@
 
 #include <tvgutil/filesystem/PathFinder.h>
 
+#include "core/CollaborativePipeline.h"
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 #include "core/SLAMPipeline.h"
@@ -541,87 +542,143 @@ try
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
-  // Construct the image source engine.
-  boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
-
-  // Add a subengine for each disk sequence specified.
-  for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
-  {
-    const std::string& depthImageMask = args.depthImageMasks[i];
-    const std::string& rgbImageMask = args.rgbImageMasks[i];
-
-    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-    ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-      args.prefetchBufferCapacity
-    ));
-  }
-
-  // If no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
-  if(args.depthImageMasks.empty() || args.cameraAfterDisk)
-  {
-    ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
-    if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
-  }
-
-  // Construct the fiducial detector (if any).
-  FiducialDetector_CPtr fiducialDetector;
-#ifdef WITH_OPENCV
-  fiducialDetector.reset(new ArUcoFiducialDetector(settings));
-#endif
-
   // Construct the pipeline.
-  const size_t maxLabelCount = 10;
-  SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
-  SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-
   MultiScenePipeline_Ptr pipeline;
-  if(args.pipelineType == "slam")
+  if(args.pipelineType != "collaborative")
   {
-    pipeline.reset(new SLAMPipeline(
+    // Construct the image source engine.
+    boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
+
+    // Add a subengine for each disk sequence specified.
+    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    {
+      const std::string& depthImageMask = args.depthImageMasks[i];
+      const std::string& rgbImageMask = args.rgbImageMasks[i];
+
+      std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
+      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        args.prefetchBufferCapacity
+      ));
+    }
+
+    // If no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+    if(args.depthImageMasks.empty() || args.cameraAfterDisk)
+    {
+      ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
+      if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
+    }
+
+    // Construct the fiducial detector (if any).
+    FiducialDetector_CPtr fiducialDetector;
+  #ifdef WITH_OPENCV
+    fiducialDetector.reset(new ArUcoFiducialDetector(settings));
+  #endif
+
+    // Construct the pipeline itself.
+    const size_t maxLabelCount = 10;
+    SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
+    SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
+
+    if(args.pipelineType == "slam")
+    {
+      pipeline.reset(new SLAMPipeline(
+        settings,
+        Application::resources_dir().string(),
+        imageSourceEngine,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        fiducialDetector,
+        args.detectFiducials
+      ));
+    }
+    else if(args.pipelineType == "semantic")
+    {
+      const unsigned int seed = 12345;
+      pipeline.reset(new SemanticPipeline(
+        settings,
+        Application::resources_dir().string(),
+        maxLabelCount,
+        imageSourceEngine,
+        seed,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        fiducialDetector,
+        args.detectFiducials
+      ));
+    }
+    else if(args.pipelineType == "objective")
+    {
+      pipeline.reset(new ObjectivePipeline(
+        settings,
+        Application::resources_dir().string(),
+        maxLabelCount,
+        imageSourceEngine,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        fiducialDetector,
+        args.detectFiducials,
+        !args.trackObject
+      ));
+    }
+    else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
+  }
+  else
+  {
+    // Construct the image source engines.
+    std::vector<CompositeImageSourceEngine_Ptr> imageSourceEngines;
+
+    // Add an image source engine for each disk sequence specified.
+    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    {
+      const std::string& depthImageMask = args.depthImageMasks[i];
+      const std::string& rgbImageMask = args.rgbImageMasks[i];
+
+      std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
+      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        args.prefetchBufferCapacity
+      ));
+
+      imageSourceEngines.push_back(imageSourceEngine);
+    }
+
+    // Construct the fiducial detector (if any).
+    FiducialDetector_CPtr fiducialDetector;
+  #ifdef WITH_OPENCV
+    fiducialDetector.reset(new ArUcoFiducialDetector(settings));
+  #endif
+
+    // Construct the pipeline itself.
+    std::vector<SLAMComponent::MappingMode> mappingModes;
+    std::vector<SLAMComponent::TrackingMode> trackingModes;
+    std::vector<std::string> trackerConfigs;
+    const std::string trackerConfig = make_tracker_config(args);
+
+    for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
+    {
+      mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
+      trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
+      trackerConfigs.push_back(trackerConfig);
+    }
+
+    pipeline.reset(new CollaborativePipeline(
       settings,
       Application::resources_dir().string(),
-      imageSourceEngine,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
+      imageSourceEngines,
+      trackerConfigs,
+      mappingModes,
+      trackingModes,
       fiducialDetector,
       args.detectFiducials
     ));
   }
-  else if(args.pipelineType == "semantic")
-  {
-    const unsigned int seed = 12345;
-    pipeline.reset(new SemanticPipeline(
-      settings,
-      Application::resources_dir().string(),
-      maxLabelCount,
-      imageSourceEngine,
-      seed,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
-      fiducialDetector,
-      args.detectFiducials
-    ));
-  }
-  else if(args.pipelineType == "objective")
-  {
-    pipeline.reset(new ObjectivePipeline(
-      settings,
-      Application::resources_dir().string(),
-      maxLabelCount,
-      imageSourceEngine,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
-      fiducialDetector,
-      args.detectFiducials,
-      !args.trackObject
-    ));
-  }
-  else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
 #ifdef WITH_LEAP
   // Set the ID of the fiducial to use for the Leap Motion (if any).
