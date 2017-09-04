@@ -4,8 +4,10 @@
  */
 
 #include "CollaborativePipeline.h"
-using namespace itmx;
 using namespace spaint;
+
+#include <itmx/geometry/GeometryUtil.h>
+using namespace itmx;
 
 //#################### CONSTRUCTORS ####################
 
@@ -31,9 +33,9 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 
 bool CollaborativePipeline::run_main_section()
 {
-  if(!MultiScenePipeline::run_main_section()) return false;
+  bool result = MultiScenePipeline::run_main_section();
 
-  static std::map<std::pair<size_t,size_t>,ORUtils::SE3Pose> relativePoses;
+  static std::map<std::pair<size_t,size_t>,std::vector<ORUtils::SE3Pose> > relativePoses;
   static bool done = false;
   if(!done)
   {
@@ -41,9 +43,7 @@ bool CollaborativePipeline::run_main_section()
     {
       for(size_t j = i + 1; j < size; ++j)
       {
-        Matrix4f m;
-        m.setIdentity();
-        relativePoses[std::make_pair(i,j)].SetM(m);
+        relativePoses[std::make_pair(i, j)] = std::vector<ORUtils::SE3Pose>();
       }
     }
     done = true;
@@ -70,27 +70,46 @@ bool CollaborativePipeline::run_main_section()
     ORUtils::SE3Pose localPoseI = m_model->get_slam_state(sceneIDs[i])->get_pose();
     ORUtils::SE3Pose localPoseJ = m_model->get_slam_state(sceneIDs[j])->get_pose();
 
+    std::vector<ORUtils::SE3Pose>& relativePosesIJ = relativePoses[std::make_pair(i, j)];
+
     std::cout << "Attempting to relocalise " << j << " against " << i << '\n';
     boost::optional<Relocaliser::Result> resultIJ = relocaliserI->relocalise(viewJ->rgb, viewJ->depth, viewJ->calib.intrinsics_d.projectionParamsSimple.all);
+    ORUtils::SE3Pose relativePoseIJ;
     if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD)
     {
-      ORUtils::SE3Pose relativePoseIJ(resultIJ->pose.GetM() * localPoseJ.GetInvM());
+      relativePoseIJ = ORUtils::SE3Pose(resultIJ->pose.GetM() * localPoseJ.GetInvM());
       std::cout << "Succeeded!\n";
       std::cout << relativePoseIJ.GetM() << '\n' << relativePoseIJ.GetInvM() << '\n';
     }
 
     std::cout << "Attempting to relocalise " << i << " against " << j << '\n';
     boost::optional<Relocaliser::Result> resultJI = relocaliserJ->relocalise(viewI->rgb, viewI->depth, viewI->calib.intrinsics_d.projectionParamsSimple.all);
+    ORUtils::SE3Pose relativePoseJI;
     if(resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD)
     {
-      ORUtils::SE3Pose relativePoseJI(resultJI->pose.GetM() * localPoseI.GetInvM());
+      relativePoseJI = ORUtils::SE3Pose(resultJI->pose.GetM() * localPoseI.GetInvM());
       std::cout << "Succeeded!\n";
       std::cout << relativePoseJI.GetM() << '\n' << relativePoseJI.GetInvM() << '\n';
+    }
+
+    if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD && resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD &&
+       GeometryUtil::poses_are_similar(relativePoseIJ, ORUtils::SE3Pose(relativePoseJI.GetInvM())))
+    {
+      std::cout << "Similar poses\n";
+      relativePosesIJ.push_back(relativePoseIJ);
+      relativePosesIJ.push_back(ORUtils::SE3Pose(relativePoseJI.GetInvM()));
+    }
+
+    if(!relativePosesIJ.empty())
+    {
+      std::cout << "Blended:\n";
+      ORUtils::SE3Pose blended = GeometryUtil::blend_poses(relativePosesIJ);
+      std::cout << blended.GetM() << '\n' << blended.GetInvM() << '\n';
     }
   }
   ++count;
 
-  return true;
+  return result;
 }
 
 void CollaborativePipeline::set_mode(Mode mode)

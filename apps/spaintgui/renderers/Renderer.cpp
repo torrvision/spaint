@@ -474,7 +474,30 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
     for(size_t i = 0; i < m_subwindowConfiguration->subwindow_count(); ++i)
     {
-      ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*m_subwindowConfiguration->subwindow(i).get_camera());
+      //ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*m_subwindowConfiguration->subwindow(i).get_camera());
+      ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*m_subwindowConfiguration->subwindow(0).get_camera());
+
+      if(i == 1)
+      {
+        Matrix4f m;
+        float values[] = {
+/*0.9081,    0.2572,   -0.3304,         0,
+   -0.2284,    0.9656,    0.1240,         0,
+    0.3509,   -0.0371,    0.9357,         0,
+    0.4124,    0.0441,    0.1301,    1.0000*/
+/*0.9635,    0.2078,   -0.1691,         0,
+   -0.1916,    0.9756,    0.1072,         0,
+    0.1872,   -0.0708,    0.9798,         0,
+    0.4133,    0.0980,    0.0910,    1.0000*/
+0.9090,    0.2488,   -0.3344,         0,
+   -0.2213,    0.9680,    0.1187,         0,
+    0.3532,   -0.0339,    0.9349,         0,
+    0.5003,    0.1072,    0.1042,    1.0000
+        };
+        m.setValues(values);
+
+        tempPose.SetInvM(m * tempPose.GetInvM());
+      }
 
       SLAMState_CPtr slamState = m_model->get_slam_state(m_subwindowConfiguration->subwindow(i).get_scene_id());
       generate_visualisation(
