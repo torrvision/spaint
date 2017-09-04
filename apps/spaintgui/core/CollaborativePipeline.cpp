@@ -77,7 +77,8 @@ bool CollaborativePipeline::run_main_section()
     ORUtils::SE3Pose relativePoseIJ;
     if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD)
     {
-      relativePoseIJ = ORUtils::SE3Pose(resultIJ->pose.GetM() * localPoseJ.GetInvM());
+      //relativePoseIJ = ORUtils::SE3Pose(resultIJ->pose.GetM() * localPoseJ.GetInvM());
+      relativePoseIJ = ORUtils::SE3Pose(localPoseJ.GetInvM() * resultIJ->pose.GetM());
       std::cout << "Succeeded!\n";
       std::cout << relativePoseIJ.GetM() << '\n' << relativePoseIJ.GetInvM() << '\n';
     }
@@ -87,7 +88,8 @@ bool CollaborativePipeline::run_main_section()
     ORUtils::SE3Pose relativePoseJI;
     if(resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD)
     {
-      relativePoseJI = ORUtils::SE3Pose(resultJI->pose.GetM() * localPoseI.GetInvM());
+      //relativePoseJI = ORUtils::SE3Pose(resultJI->pose.GetM() * localPoseI.GetInvM());
+      relativePoseJI = ORUtils::SE3Pose(localPoseI.GetInvM() * resultJI->pose.GetM());
       std::cout << "Succeeded!\n";
       std::cout << relativePoseJI.GetM() << '\n' << relativePoseJI.GetInvM() << '\n';
     }
