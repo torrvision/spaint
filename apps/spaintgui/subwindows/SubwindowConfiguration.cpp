@@ -57,7 +57,7 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
 
       if(pipelineType == "semantic")            specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR));
       else if(pipelineType == "objective")      specifiers.push_back(SubwindowSpecifier(objectSceneID, VisualisationGenerator::VT_SCENE_COLOUR));
-      else if(pipelineType == "collaborative")  specifiers.push_back(SubwindowSpecifier("Agent1", VisualisationGenerator::VT_SCENE_COLOUR));
+      else if(pipelineType == "collaborative")  specifiers.push_back(SubwindowSpecifier("Agent1", VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN));
       else                                      specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_COLOUR));
 
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), specifiers[0].m_sceneID, specifiers[0].m_visualisationType, imgSize));

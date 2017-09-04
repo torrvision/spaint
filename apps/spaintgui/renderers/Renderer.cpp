@@ -27,6 +27,8 @@ using namespace spaint;
 #include <spaint/selectors/LeapSelector.h>
 #endif
 
+#include <spaint/visualisation/VisualiserFactory.h>
+
 //#################### LOCAL TYPES ####################
 
 /**
@@ -431,6 +433,12 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
+// TEMPORARY
+Vector3f to_itm(const Eigen::Vector3f& v)
+{
+  return Vector3f(v[0], v[1], v[2]);
+}
+
 void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
@@ -450,12 +458,71 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
+
+#if 1
+  // FIXME: This is a disgusting hack.
+  static std::vector<ITMUChar4Image_Ptr> images;
+  static std::vector<ITMFloatImage_Ptr> depthImages;
+  static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
+  if(sceneID == "World")
+  {
+    while(images.size() < m_subwindowConfiguration->subwindow_count())
+    {
+      images.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
+      depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
+    }
+
+    for(size_t i = 0; i < m_subwindowConfiguration->subwindow_count(); ++i)
+    {
+      ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*m_subwindowConfiguration->subwindow(i).get_camera());
+
+      SLAMState_CPtr slamState = m_model->get_slam_state(m_subwindowConfiguration->subwindow(i).get_scene_id());
+      generate_visualisation(
+        images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
+        subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+        tempPose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+      );
+
+      SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
+
+      depthVisualiser->render_depth(
+        DepthVisualiser::DT_EUCLIDEAN, to_itm(camera.p()), to_itm(camera.n()),
+        subwindow.get_voxel_render_state(viewIndex).get(),
+        m_model->get_settings()->sceneParams.voxelSize, -1.0f,
+        depthImages[i]
+      );
+
+      depthImages[i]->UpdateHostFromDevice();
+    }
+  }
+#endif
+
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
     subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
     pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
+
+#if 1
+  // FIXME: This is also a disgusting hack.
+  if(sceneID == "World")
+  {
+    for(size_t k = 0; k < image->noDims.width * image->noDims.height; ++k)
+    {
+      float smallestDepth = static_cast<float>(INT_MAX);
+      for(size_t i = 0, size = images.size(); i < size; ++i)
+      {
+        const float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
+        if(depth != -1.0f && depth < smallestDepth)
+        {
+          smallestDepth = depth;
+          image->GetData(MEMORYDEVICE_CPU)[k] = images[i]->GetData(MEMORYDEVICE_CPU)[k];
+        }
+      }
+    }
+  }
+#endif
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
