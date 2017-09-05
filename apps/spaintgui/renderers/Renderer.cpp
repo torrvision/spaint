@@ -479,40 +479,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
       if(sceneIDs[i] != "World")
       {
-        Matrix4f m;
-        float values[] = {
-/*0.9081,    0.2572,   -0.3304,         0,
-   -0.2284,    0.9656,    0.1240,         0,
-    0.3509,   -0.0371,    0.9357,         0,
-    0.4124,    0.0441,    0.1301,    1.0000*/
-/*0.9635,    0.2078,   -0.1691,         0,
-   -0.1916,    0.9756,    0.1072,         0,
-    0.1872,   -0.0708,    0.9798,         0,
-    0.4133,    0.0980,    0.0910,    1.0000*/
-/*0.9090,    0.2488,   -0.3344,         0,
-   -0.2213,    0.9680,    0.1187,         0,
-    0.3532,   -0.0339,    0.9349,         0,
-    0.5003,    0.1072,    0.1042,    1.0000*/
-// Maml1, Maml4
-/*0.1680,   -0.6328,    0.7559,         0,
-    0.6578,    0.6430,    0.3922,         0,
-   -0.7342,    0.4313,    0.5243,         0,
-    0.0073,    0.0435,   -0.0171,    1.0000*/
-// Maml1, Maml3
-/*-0.1255,   -0.3219,    0.9384,         0,
-    0.1976,    0.9188,    0.3416,         0,
-   -0.9722,    0.2283,   -0.0517,         0,
-   -0.7029,    0.2144,   -0.4781,    1.0000*/
-   -0.1266,    0.1984,   -0.9719,         0,
-   -0.3216,    0.9186,    0.2294,         0,
-    0.9384,    0.3416,   -0.0525,         0,
-    0.4276,    0.1066,   -0.7574,    1.0000
-        };
-        m.setValues(values);
-
-        //tempPose.SetM(tempPose.GetM() * ORUtils::SE3Pose(m).GetM());
         boost::optional<ORUtils::SE3Pose> relativeTransform = m_model->try_get_relative_transform("World", sceneIDs[i]);
-        if(!relativeTransform) relativeTransform = ORUtils::SE3Pose(2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        if(!relativeTransform) relativeTransform = ORUtils::SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         tempPose.SetM(tempPose.GetM() * relativeTransform->GetM());
       }
 

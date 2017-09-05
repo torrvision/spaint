@@ -9,6 +9,9 @@
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
+#include <tvgutil/numbers/RandomNumberGenerator.h>
+using namespace tvgutil;
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -22,33 +25,18 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
 void CollaborativeComponent::run_collaborative_pose_estimation()
 {
   std::vector<std::string> sceneIDs = m_context->get_scene_ids();
+  int sceneCount = static_cast<int>(sceneIDs.size());
 
-#if 0
-  static std::map<std::pair<size_t,size_t>,std::vector<ORUtils::SE3Pose> > relativePoses;
-  static bool done = false;
-  if(!done)
-  {
-    for(size_t i = 0, size = sceneIDs.size(); i < size - 1; ++i)
-    {
-      for(size_t j = i + 1; j < size; ++j)
-      {
-        relativePoses[std::make_pair(i, j)] = std::vector<ORUtils::SE3Pose>();
-      }
-    }
-    done = true;
-  }
-#endif
+  static RandomNumberGenerator rng(12345);
 
   static int count = 0;
   if(count > 0 && count % 10 == 0)
   {
-    // Pick a relative pose to optimise.
-    // TODO
-#if 0
-    size_t i = 0, j = 1;
-#endif
-    const std::string sceneI = sceneIDs[0];
-    const std::string sceneJ = sceneIDs[1];
+    // Pick a pair of scenes to relocalise with respect to each other.
+    int i = rng.generate_int_from_uniform(0, sceneCount - 1);
+    int j = (i + rng.generate_int_from_uniform(1, sceneCount - 1)) % sceneCount;
+    const std::string sceneI = sceneIDs[i];
+    const std::string sceneJ = sceneIDs[j];
 
     // Try to relocalise the current frame of each against the other.
     Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(sceneI);
@@ -58,16 +46,11 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     ORUtils::SE3Pose localPoseI = m_context->get_slam_state(sceneI)->get_pose();
     ORUtils::SE3Pose localPoseJ = m_context->get_slam_state(sceneJ)->get_pose();
 
-#if 0
-    std::vector<ORUtils::SE3Pose>& relativePosesIJ = relativePoses[std::make_pair(i, j)];
-#endif
-
     std::cout << "Attempting to relocalise " << sceneJ << " against " << sceneI << '\n';
     boost::optional<Relocaliser::Result> resultIJ = relocaliserI->relocalise(viewJ->rgb, viewJ->depth, viewJ->calib.intrinsics_d.projectionParamsSimple.all);
     ORUtils::SE3Pose relativePoseIJ;
     if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD)
     {
-      //relativePoseIJ = ORUtils::SE3Pose(localPoseJ.GetInvM() * resultIJ->pose.GetM());
       relativePoseIJ = ORUtils::SE3Pose(resultIJ->pose.GetInvM() * localPoseJ.GetM());
       std::cout << "Succeeded!\n";
       std::cout << relativePoseIJ.GetM() << '\n';// << relativePoseIJ.GetInvM() << '\n';
@@ -78,7 +61,6 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     ORUtils::SE3Pose relativePoseJI;
     if(resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD)
     {
-      //relativePoseJI = ORUtils::SE3Pose(localPoseI.GetInvM() * resultJI->pose.GetM());
       relativePoseJI = ORUtils::SE3Pose(resultJI->pose.GetInvM() * localPoseI.GetM());
       std::cout << "Succeeded!\n";
       std::cout << relativePoseJI.GetM() << '\n';// << relativePoseJI.GetInvM() << '\n';
@@ -90,20 +72,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
       std::cout << "Similar poses\n";
       m_context->add_relative_transform_sample(sceneI, sceneJ, relativePoseIJ);
       m_context->add_relative_transform_sample(sceneJ, sceneI, relativePoseJI);
-#if 0
-      relativePosesIJ.push_back(relativePoseIJ);
-      relativePosesIJ.push_back(ORUtils::SE3Pose(relativePoseJI.GetInvM()));
-#endif
     }
-
-#if 0
-    if(!relativePosesIJ.empty())
-    {
-      std::cout << "Blended:\n";
-      ORUtils::SE3Pose blended = GeometryUtil::blend_poses(relativePosesIJ);
-      std::cout << blended.GetM() << '\n' << blended.GetInvM() << '\n';
-    }
-#endif
   }
   ++count;
 }
