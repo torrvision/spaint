@@ -464,20 +464,20 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   static std::vector<ITMUChar4Image_Ptr> images;
   static std::vector<ITMFloatImage_Ptr> depthImages;
   static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
+  std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   if(sceneID == "World")
   {
-    while(images.size() < m_subwindowConfiguration->subwindow_count())
+    while(images.size() < sceneIDs.size())
     {
       images.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
       depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
     }
 
-    for(size_t i = 0; i < m_subwindowConfiguration->subwindow_count(); ++i)
+    for(size_t i = 0; i < sceneIDs.size(); ++i)
     {
-      //ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*m_subwindowConfiguration->subwindow(i).get_camera());
-      ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*m_subwindowConfiguration->subwindow(0).get_camera());
+      ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
 
-      if(i == 1)
+      if(sceneIDs[i] != "World")
       {
         Matrix4f m;
         float values[] = {
@@ -499,17 +499,24 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
    -0.7342,    0.4313,    0.5243,         0,
     0.0073,    0.0435,   -0.0171,    1.0000*/
 // Maml1, Maml3
--0.1255,   -0.3219,    0.9384,         0,
+/*-0.1255,   -0.3219,    0.9384,         0,
     0.1976,    0.9188,    0.3416,         0,
    -0.9722,    0.2283,   -0.0517,         0,
-   -0.7029,    0.2144,   -0.4781,    1.0000
+   -0.7029,    0.2144,   -0.4781,    1.0000*/
+   -0.1266,    0.1984,   -0.9719,         0,
+   -0.3216,    0.9186,    0.2294,         0,
+    0.9384,    0.3416,   -0.0525,         0,
+    0.4276,    0.1066,   -0.7574,    1.0000
         };
         m.setValues(values);
 
-        tempPose.SetInvM(m * tempPose.GetInvM());
+        //tempPose.SetM(tempPose.GetM() * ORUtils::SE3Pose(m).GetM());
+        boost::optional<ORUtils::SE3Pose> relativeTransform = m_model->try_get_relative_transform("World", sceneIDs[i]);
+        if(!relativeTransform) relativeTransform = ORUtils::SE3Pose(2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        tempPose.SetM(tempPose.GetM() * relativeTransform->GetM());
       }
 
-      SLAMState_CPtr slamState = m_model->get_slam_state(m_subwindowConfiguration->subwindow(i).get_scene_id());
+      SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
         subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),

@@ -19,7 +19,11 @@ class CollaborativeContext
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  // TODO
+  /**
+   * Accumulated samples of the relative transformations between the different submaps. Each sample for (scene i, scene j)
+   * expresses an estimate of the transformation from the coordinate system of scene j to that of scene i.
+   */
+  std::map<std::pair<std::string,std::string>,std::vector<ORUtils::SE3Pose> > m_relativeTransformSamples;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -37,7 +41,26 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  // TODO
+  /**
+   * \brief Attempts to get an estimate of the transformation from the coordinate system of scene j to that of scene i.
+   *
+   * \param sceneI  The ID of scene i.
+   * \param sceneJ  The ID of scene j.
+   * \return        An estimate of the transformation from the coordinate system of scene j to that of scene i,
+   *                if possible, or boost::none otherwise.
+   */
+  virtual boost::optional<ORUtils::SE3Pose> try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const;
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Adds a sample of the transformation from the coordinate system of scene j to that of scene i.
+   *
+   * \param sceneI  The ID of scene i.
+   * \param sceneJ  The ID of scene j.
+   * \param sample  A sample of the transformation from the coordinate system of scene j to that of scene i.
+   */
+  void add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
 
   //#################### FRIENDS ####################
 
