@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_COLLABORATIVEPIPELINE
 
 #include <spaint/fiducials/FiducialDetector.h>
+#include <spaint/pipelinecomponents/CollaborativeComponent.h>
 
 #include "MultiScenePipeline.h"
 
@@ -15,6 +16,11 @@
  */
 class CollaborativePipeline : public MultiScenePipeline
 {
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The collaborative SLAM component used to determine the relative poses between the different agents. */
+  spaint::CollaborativeComponent_Ptr m_collaborativeComponent;
+
   //#################### CONSTRUCTORS ####################
 public:
   CollaborativePipeline(const Settings_Ptr& settings, const std::string& resourcesDir,

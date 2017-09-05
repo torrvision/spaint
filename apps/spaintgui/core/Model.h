@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_MODEL
 
 #include <spaint/markers/interface/VoxelMarker.h>
+#include <spaint/pipelinecomponents/CollaborativeContext.h>
 #include <spaint/pipelinecomponents/ObjectSegmentationContext.h>
 #include <spaint/pipelinecomponents/PropagationContext.h>
 #include <spaint/pipelinecomponents/SemanticSegmentationContext.h>
@@ -24,7 +25,8 @@
  * and labelling it interactively using various user input modalities.
  */
 class Model
-: public spaint::ObjectSegmentationContext,
+: public spaint::CollaborativeContext,
+  public spaint::ObjectSegmentationContext,
   public spaint::PropagationContext,
   public spaint::SemanticSegmentationContext,
   public spaint::SLAMContext,
@@ -242,6 +244,8 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
+  virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+  virtual std::vector<std::string> get_scene_ids() const;
   virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
   virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
 };

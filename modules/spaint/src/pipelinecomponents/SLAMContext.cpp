@@ -22,6 +22,17 @@ itmx::RefiningRelocaliser_CPtr SLAMContext::get_relocaliser(const std::string& s
   return MapUtil::lookup(m_relocalisers, sceneID);
 }
 
+std::vector<std::string> SLAMContext::get_scene_ids() const
+{
+  std::vector<std::string> result;
+  result.reserve(m_slamStates.size());
+  for(std::map<std::string,SLAMState_Ptr>::const_iterator it = m_slamStates.begin(), iend = m_slamStates.end(); it != iend; ++it)
+  {
+    result.push_back(it->first);
+  }
+  return result;
+}
+
 const SLAMState_Ptr& SLAMContext::get_slam_state(const std::string& sceneID)
 {
   SLAMState_Ptr& result = m_slamStates[sceneID];

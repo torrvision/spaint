@@ -70,6 +70,13 @@ public:
   virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
 
   /**
+   * \brief Gets the IDs of all existing scenes.
+   *
+   * \return  A vector containing the IDs of all existing scenes.
+   */
+  virtual std::vector<std::string> get_scene_ids() const;
+
+  /**
    * \brief Gets the SLAM state for the specified scene.
    *
    * \param sceneID The scene ID.
