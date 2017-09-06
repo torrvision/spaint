@@ -20,7 +20,7 @@ CollaborativeContext::~CollaborativeContext() {}
 boost::optional<SE3Pose> CollaborativeContext::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
 {
   boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster(sceneI, sceneJ);
-  return largestCluster ? boost::optional<SE3Pose>(GeometryUtil::blend_poses(*largestCluster)) : boost::none;
+  return largestCluster/* && largestCluster->size() >= 3*/ ? boost::optional<SE3Pose>(GeometryUtil::blend_poses(*largestCluster)) : boost::none;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

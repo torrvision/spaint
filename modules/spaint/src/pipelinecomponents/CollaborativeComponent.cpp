@@ -56,16 +56,17 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     View_CPtr viewJ = m_context->get_slam_state(sceneJ)->get_view();
     SE3Pose localPoseJ = m_context->get_slam_state(sceneJ)->get_pose();
 
-    std::cout << "Attempting to relocalise " << sceneJ << " against " << sceneI << '\n';
+    std::cout << "Attempting to relocalise " << sceneJ << " against " << sceneI << "...";
     boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(viewJ->rgb, viewJ->depth, viewJ->calib.intrinsics_d.projectionParamsSimple.all);
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
       // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
       SE3Pose relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * localPoseJ.GetM());
-      std::cout << "Succeeded!\n";
-      std::cout << relativePose.GetM() << '\n';
+      std::cout << "succeeded!\n";
+      //std::cout << relativePose.GetM() << '\n';
       m_context->add_relative_transform_sample(sceneI, sceneJ, relativePose);
     }
+    else std::cout << "failed :(\n";
   }
   ++count;
 }
