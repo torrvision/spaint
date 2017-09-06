@@ -29,27 +29,40 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   int sceneCount = static_cast<int>(sceneIDs.size());
 
   static RandomNumberGenerator rng(12345);
+  static std::deque<CollaborativeContext::SceneIDPair> recentSceneIDPairs;
 
   static int count = 0;
   if(count > 0 && count % 100 == 0)
   {
     // Pick a pair of scenes to relocalise with respect to each other.
     std::map<int,std::vector<CollaborativeContext::SceneIDPair> > largestClusterSizeToSceneIDPairs;
+    std::map<int,std::vector<CollaborativeContext::SceneIDPair> > filteredLargestClusterSizeToSceneIDPairs;
     for(size_t i = 0; i < sceneCount; ++i)
     {
       for(size_t j = 0; j < sceneCount; ++j)
       {
         if(j == i) continue;
         boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(sceneIDs[i], sceneIDs[j]);
-        largestClusterSizeToSceneIDPairs[largestCluster ? (int)largestCluster->size() : 0].push_back(std::make_pair(sceneIDs[i], sceneIDs[j]));
+        int largestClusterSize = largestCluster ? (int)largestCluster->size() : 0;
+        const std::pair<std::string,std::string> sceneIDs(sceneIDs[i], sceneIDs[j]);
+        largestClusterSizeToSceneIDPairs[largestClusterSize].push_back(sceneIDs);
+        if(std::find(recentSceneIDPairs.begin(), recentSceneIDPairs.end(), sceneIDs) == recentSceneIDPairs.end())
+        {
+          filteredLargestClusterSizeToSceneIDPairs[largestClusterSize].push_back(sceneIDs);
+        }
       }
     }
 
     if(largestClusterSizeToSceneIDPairs.begin()->first >= 3) return;
-    const std::vector<CollaborativeContext::SceneIDPair>& candidates = largestClusterSizeToSceneIDPairs.begin()->second;
+    std::map<int,std::vector<CollaborativeContext::SceneIDPair> >& m = filteredLargestClusterSizeToSceneIDPairs.empty() ? largestClusterSizeToSceneIDPairs : filteredLargestClusterSizeToSceneIDPairs;
+    const std::vector<CollaborativeContext::SceneIDPair>& candidates = m.begin()->second;
     int k = rng.generate_int_from_uniform(0, static_cast<int>(candidates.size()) - 1);
     const std::string sceneI = candidates[k].first;
     const std::string sceneJ = candidates[k].second;
+
+    // TODO: Comment here.
+    recentSceneIDPairs.push_back(std::make_pair(sceneI, sceneJ));
+    if(recentSceneIDPairs.size() > 5) recentSceneIDPairs.pop_front();
 
     // Try to relocalise the current frame of scene j against scene i.
     Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(sceneI);
