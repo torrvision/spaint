@@ -481,6 +481,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       {
         boost::optional<ORUtils::SE3Pose> relativeTransform = m_model->try_get_relative_transform("World", sceneIDs[i]);
         if(!relativeTransform) relativeTransform = ORUtils::SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+
+        // ciTwi * wiTwj = ciTwj
         tempPose.SetM(tempPose.GetM() * relativeTransform->GetM());
       }
 

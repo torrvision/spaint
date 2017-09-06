@@ -18,7 +18,7 @@ namespace spaint {
 class CollaborativeContext
 {
   //#################### TYPEDEFS ####################
-private:
+public:
   typedef std::pair<std::string,std::string> SceneIDPair;
   typedef std::vector<ORUtils::SE3Pose> SE3PoseCluster;
 
@@ -70,6 +70,11 @@ private:
    * \brief TODO
    */
   void add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
+
+  /**
+   * \brief TODO
+   */
+  boost::optional<SE3PoseCluster> try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const;
 
   //#################### FRIENDS ####################
 

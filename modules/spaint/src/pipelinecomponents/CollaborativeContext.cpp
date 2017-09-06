@@ -19,27 +19,8 @@ CollaborativeContext::~CollaborativeContext() {}
 
 boost::optional<SE3Pose> CollaborativeContext::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
 {
-  // Try to look up the sample clusters of the relative transformation from the coordinate system of scene j to that of scene i.
-  std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
-
-  // If there aren't any, it's because we haven't found the relative transformation between the two scenes yet, so early out.
-  if(it == m_relativeTransformSamples.end()) return boost::none;
-
-  // Otherwise, find a largest cluster and blend its samples together to get a better estimate of the relative transformation.
-  const std::vector<SE3PoseCluster>& clusters = it->second;
-  const SE3PoseCluster *bestCluster = NULL;
-  size_t bestClusterSize = 0;
-  for(size_t i = 0, clusterCount = clusters.size(); i < clusterCount; ++i)
-  {
-    size_t clusterSize = clusters[i].size();
-    if(clusterSize > bestClusterSize)
-    {
-      bestCluster = &clusters[i];
-      bestClusterSize = clusterSize;
-    }
-  }
-
-  return bestCluster ? boost::optional<SE3Pose>(GeometryUtil::blend_poses(*bestCluster)) : boost::none;
+  boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster(sceneI, sceneJ);
+  return largestCluster ? boost::optional<SE3Pose>(GeometryUtil::blend_poses(*largestCluster)) : boost::none;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -73,6 +54,32 @@ void CollaborativeContext::add_relative_transform_sample_sub(const std::string& 
   SE3PoseCluster newCluster;
   newCluster.push_back(sample);
   clusters.push_back(newCluster);
+}
+
+boost::optional<CollaborativeContext::SE3PoseCluster>
+CollaborativeContext::try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const
+{
+  // Try to look up the sample clusters of the relative transformation from the coordinate system of scene j to that of scene i.
+  std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
+
+  // If there aren't any, it's because we haven't found the relative transformation between the two scenes yet, so early out.
+  if(it == m_relativeTransformSamples.end()) return boost::none;
+
+  // Otherwise, find a largest cluster and return it.
+  const std::vector<SE3PoseCluster>& clusters = it->second;
+  const SE3PoseCluster *largestCluster = NULL;
+  size_t largestClusterSize = 0;
+  for(size_t i = 0, clusterCount = clusters.size(); i < clusterCount; ++i)
+  {
+    size_t clusterSize = clusters[i].size();
+    if(clusterSize > largestClusterSize)
+    {
+      largestCluster = &clusters[i];
+      largestClusterSize = clusterSize;
+    }
+  }
+
+  return largestCluster ? boost::optional<SE3PoseCluster>(*largestCluster) : boost::none;
 }
 
 }

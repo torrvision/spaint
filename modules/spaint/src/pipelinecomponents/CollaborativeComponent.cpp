@@ -4,6 +4,7 @@
  */
 
 #include "pipelinecomponents/CollaborativeComponent.h"
+using namespace ORUtils;
 
 #include <itmx/geometry/GeometryUtil.h>
 #include <itmx/relocalisation/Relocaliser.h>
@@ -30,52 +31,41 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   static RandomNumberGenerator rng(12345);
 
   static int count = 0;
-  if(count > 0 && count % 10 == 0)
+  if(count > 0 && count % 100 == 0)
   {
     // Pick a pair of scenes to relocalise with respect to each other.
-    int i = rng.generate_int_from_uniform(0, sceneCount - 1);
-    int j = (i + rng.generate_int_from_uniform(1, sceneCount - 1)) % sceneCount;
-    const std::string sceneI = sceneIDs[i];
-    const std::string sceneJ = sceneIDs[j];
+    std::map<int,std::vector<CollaborativeContext::SceneIDPair> > largestClusterSizeToSceneIDPairs;
+    for(size_t i = 0; i < sceneCount; ++i)
+    {
+      for(size_t j = 0; j < sceneCount; ++j)
+      {
+        if(j == i) continue;
+        boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(sceneIDs[i], sceneIDs[j]);
+        largestClusterSizeToSceneIDPairs[largestCluster ? (int)largestCluster->size() : 0].push_back(std::make_pair(sceneIDs[i], sceneIDs[j]));
+      }
+    }
 
-    // Try to relocalise the current frame of each against the other.
+    if(largestClusterSizeToSceneIDPairs.begin()->first >= 3) return;
+    const std::vector<CollaborativeContext::SceneIDPair>& candidates = largestClusterSizeToSceneIDPairs.begin()->second;
+    int k = rng.generate_int_from_uniform(0, static_cast<int>(candidates.size()) - 1);
+    const std::string sceneI = candidates[k].first;
+    const std::string sceneJ = candidates[k].second;
+
+    // Try to relocalise the current frame of scene j against scene i.
     Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(sceneI);
-    Relocaliser_CPtr relocaliserJ = m_context->get_relocaliser(sceneJ);
-    View_CPtr viewI = m_context->get_slam_state(sceneI)->get_view();
     View_CPtr viewJ = m_context->get_slam_state(sceneJ)->get_view();
-    ORUtils::SE3Pose localPoseI = m_context->get_slam_state(sceneI)->get_pose();
-    ORUtils::SE3Pose localPoseJ = m_context->get_slam_state(sceneJ)->get_pose();
+    SE3Pose localPoseJ = m_context->get_slam_state(sceneJ)->get_pose();
 
     std::cout << "Attempting to relocalise " << sceneJ << " against " << sceneI << '\n';
-    boost::optional<Relocaliser::Result> resultIJ = relocaliserI->relocalise(viewJ->rgb, viewJ->depth, viewJ->calib.intrinsics_d.projectionParamsSimple.all);
-    ORUtils::SE3Pose relativePoseIJ;
-    if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD)
+    boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(viewJ->rgb, viewJ->depth, viewJ->calib.intrinsics_d.projectionParamsSimple.all);
+    if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
-      relativePoseIJ = ORUtils::SE3Pose(resultIJ->pose.GetInvM() * localPoseJ.GetM());
+      // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
+      SE3Pose relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * localPoseJ.GetM());
       std::cout << "Succeeded!\n";
-      std::cout << relativePoseIJ.GetM() << '\n';// << relativePoseIJ.GetInvM() << '\n';
-      m_context->add_relative_transform_sample(sceneI, sceneJ, relativePoseIJ);
+      std::cout << relativePose.GetM() << '\n';
+      m_context->add_relative_transform_sample(sceneI, sceneJ, relativePose);
     }
-
-#if 0
-    std::cout << "Attempting to relocalise " << sceneI << " against " << sceneJ << '\n';
-    boost::optional<Relocaliser::Result> resultJI = relocaliserJ->relocalise(viewI->rgb, viewI->depth, viewI->calib.intrinsics_d.projectionParamsSimple.all);
-    ORUtils::SE3Pose relativePoseJI;
-    if(resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD)
-    {
-      relativePoseJI = ORUtils::SE3Pose(resultJI->pose.GetInvM() * localPoseI.GetM());
-      std::cout << "Succeeded!\n";
-      std::cout << relativePoseJI.GetM() << '\n';// << relativePoseJI.GetInvM() << '\n';
-    }
-
-    if(resultIJ && resultIJ->quality == Relocaliser::RELOCALISATION_GOOD && resultJI && resultJI->quality == Relocaliser::RELOCALISATION_GOOD &&
-       GeometryUtil::poses_are_similar(relativePoseIJ, ORUtils::SE3Pose(relativePoseJI.GetInvM())))
-    {
-      std::cout << "Similar poses\n";
-      m_context->add_relative_transform_sample(sceneI, sceneJ, relativePoseIJ);
-      m_context->add_relative_transform_sample(sceneJ, sceneI, relativePoseJI);
-    }
-#endif
   }
   ++count;
 }
