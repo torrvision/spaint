@@ -29,6 +29,23 @@ void CollaborativeContext::add_relative_transform_sample(const std::string& scen
 {
   add_relative_transform_sample_sub(sceneI, sceneJ, sample);
   add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
+
+  if(sceneI != "World" && sceneJ != "World")
+  {
+    boost::optional<SE3Pose> wTi = try_get_relative_transform("World", sceneI);
+    if(wTi)
+    {
+      // Note that sample is iTj and sample^-1 is jTi. We want wTj = wTi * iTj.
+      add_relative_transform_sample_sub("World", sceneJ, SE3Pose(wTi->GetM() * sample.GetM()));
+    }
+
+    boost::optional<SE3Pose> wTj = try_get_relative_transform("World", sceneJ);
+    if(wTj)
+    {
+      // Note that sample is iTj and sample^-1 is jTi. We want wTi = wTj * jTi.
+      add_relative_transform_sample_sub("World", sceneI, SE3Pose(wTj->GetM() * sample.GetInvM()));
+    }
+  }
 }
 
 void CollaborativeContext::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
