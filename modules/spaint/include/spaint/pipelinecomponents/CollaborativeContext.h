@@ -17,13 +17,18 @@ namespace spaint {
  */
 class CollaborativeContext
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef std::pair<std::string,std::string> SceneIDPair;
+  typedef std::vector<ORUtils::SE3Pose> SE3PoseCluster;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /**
    * Accumulated samples of the relative transformations between the different submaps. Each sample for (scene i, scene j)
    * expresses an estimate of the transformation from the coordinate system of scene j to that of scene i.
    */
-  std::map<std::pair<std::string,std::string>,std::vector<ORUtils::SE3Pose> > m_relativeTransformSamples;
+  std::map<SceneIDPair,std::vector<SE3PoseCluster> > m_relativeTransformSamples;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -36,7 +41,6 @@ public:
 public:
   virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const = 0;
   virtual std::vector<std::string> get_scene_ids() const = 0;
-  //virtual const Settings_CPtr& get_settings() const = 0;
   virtual SLAMState_CPtr get_slam_state(const std::string& sceneID) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -61,6 +65,11 @@ private:
    * \param sample  A sample of the transformation from the coordinate system of scene j to that of scene i.
    */
   void add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
+
+  /**
+   * \brief TODO
+   */
+  void add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
 
   //#################### FRIENDS ####################
 
