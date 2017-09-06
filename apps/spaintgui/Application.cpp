@@ -746,8 +746,14 @@ void Application::save_mesh() const
   boost::filesystem::create_directories(meshesSubdir);
 
   // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".obj";
-  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
+  std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "");
+  if(meshFilename == "")
+  {
+    // Not using the default parameter of the settings->get_first_value call because
+    // experimentTag is a registered program option in main.cpp, with a default value of "".
+    meshFilename = "spaint-" + TimeUtil::get_iso_timestamp();
+  }
+  const boost::filesystem::path meshPath = meshesSubdir / (meshFilename +  ".obj");
 
   // Save the mesh to disk.
   std::cout << "Saving mesh to: " << meshPath << '\n';
