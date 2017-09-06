@@ -30,6 +30,8 @@ void CollaborativeContext::add_relative_transform_sample(const std::string& scen
   add_relative_transform_sample_sub(sceneI, sceneJ, sample);
   add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
 
+#if 0
+  // Note: This is dangerous - it relies on getting the relative transformations right early on.
   if(sceneI != "World" && sceneJ != "World")
   {
     boost::optional<SE3Pose> wTi = try_get_relative_transform("World", sceneI);
@@ -46,6 +48,7 @@ void CollaborativeContext::add_relative_transform_sample(const std::string& scen
       add_relative_transform_sample_sub("World", sceneI, SE3Pose(wTj->GetM() * sample.GetInvM()));
     }
   }
+#endif
 }
 
 void CollaborativeContext::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
