@@ -14,8 +14,10 @@ SET(suitename tvgutil)
 
 SET(testnames
 ArgUtil
+AttitudeUtil
 CommandManager
 LimitedContainer
+MapUtil
 PriorityQueue
 RandomNumberGenerator
 )
@@ -29,6 +31,7 @@ SET(targetname "unittest_${suitename}_${testname}")
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #

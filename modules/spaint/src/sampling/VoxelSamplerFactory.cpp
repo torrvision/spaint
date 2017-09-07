@@ -4,6 +4,7 @@
  */
 
 #include "sampling/VoxelSamplerFactory.h"
+using namespace ITMLib;
 
 #include "sampling/cpu/PerLabelVoxelSampler_CPU.h"
 #include "sampling/cpu/UniformVoxelSampler_CPU.h"

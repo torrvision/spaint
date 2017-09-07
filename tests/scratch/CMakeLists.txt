@@ -2,6 +2,10 @@
 # CMakeLists.txt for tests/scratch #
 ####################################
 
+IF(WITH_ALGLIB)
+  ADD_SUBDIRECTORY(alglib)
+ENDIF()
+
 IF(WITH_ARRAYFIRE)
   ADD_SUBDIRECTORY(arrayfire)
 ENDIF()
@@ -23,6 +27,8 @@ ADD_SUBDIRECTORY(infinitam)
 IF(WITH_LEAP)
   ADD_SUBDIRECTORY(leap)
 ENDIF()
+
+ADD_SUBDIRECTORY(lodepng)
 
 IF(WITH_OPENCV)
   ADD_SUBDIRECTORY(opencv)

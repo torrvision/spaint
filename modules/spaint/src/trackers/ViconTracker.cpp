@@ -4,12 +4,14 @@
  */
 
 #include "trackers/ViconTracker.h"
+using namespace ITMLib;
 using namespace ViconDataStreamSDK::CPP;
 
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 
-#include <tvgutil/MapUtil.h>
+#include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
 
 #include "util/CameraPoseConverter.h"
@@ -46,6 +48,21 @@ ViconTracker::~ViconTracker()
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool ViconTracker::requiresColourRendering() const
+{
+  return false;
+}
+
+bool ViconTracker::requiresDepthReliability() const
+{
+  return false;
+}
+
+bool ViconTracker::requiresPointCloudRendering() const
+{
+  return false;
+}
 
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {

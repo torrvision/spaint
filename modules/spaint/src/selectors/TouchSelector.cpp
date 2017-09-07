@@ -18,6 +18,7 @@
 #include "picking/cuda/Picker_CUDA.h"
 #endif
 
+using namespace ITMLib;
 using namespace rigging;
 using namespace tvginput;
 
@@ -27,16 +28,13 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchSelector::TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
-                             const View_Ptr& view, size_t maxKeptTouchPoints)
+TouchSelector::TouchSelector(const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const Vector2i& touchImageSize, size_t maxKeptTouchPoints)
 : Selector(itmSettings),
   m_keptTouchPointCount(0),  
   m_keptTouchPointsFloatMB(new ORUtils::MemoryBlock<Vector3f>(maxKeptTouchPoints, true, true)),
   m_keptTouchPointsShortMB(new ORUtils::MemoryBlock<Vector3s>(maxKeptTouchPoints, true, true)),
   m_maxKeptTouchPoints(maxKeptTouchPoints),
-  m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
-  m_trackingState(trackingState),
-  m_view(view)
+  m_touchDetector(new TouchDetector(touchImageSize, itmSettings, touchSettings))
 {
   m_isActive = true;
 
@@ -63,7 +61,7 @@ void TouchSelector::accept(const SelectorVisitor& visitor) const
   visitor.visit(*this);
 }
 
-TouchSelector::ITMUChar4Image_CPtr TouchSelector::generate_touch_image(const View_CPtr& view) const
+ITMUChar4Image_CPtr TouchSelector::generate_touch_image(const View_CPtr& view) const
 {
   return m_touchDetector->generate_touch_image(view);
 }
@@ -73,20 +71,8 @@ std::vector<Eigen::Vector3f> TouchSelector::get_positions() const
   // If the last update did not yield any valid touch points, early out.
   if(m_keptTouchPointCount == 0) return std::vector<Eigen::Vector3f>();
 
-  // If the touch points are on the GPU, copy them across to the CPU.
-  m_keptTouchPointsFloatMB->UpdateHostFromDevice();
-
   // Convert the touch points from voxel coordinates into scene coordinates and return them.
-  float voxelSize = m_settings->sceneParams.voxelSize;
-  const Vector3f *keptTouchPointsFloat = m_keptTouchPointsFloatMB->GetData(MEMORYDEVICE_CPU);
-  std::vector<Eigen::Vector3f> touchPoints(m_keptTouchPointCount);
-  for(size_t i = 0; i < m_keptTouchPointCount; ++i)
-  {
-    const Vector3f& keptTouchPoint = keptTouchPointsFloat[i];
-    touchPoints[i] = Eigen::Vector3f(keptTouchPoint.x, keptTouchPoint.y, keptTouchPoint.z) * voxelSize;
-  }
-
-  return touchPoints;
+  return Picker::get_positions<Eigen::Vector3f>(*m_keptTouchPointsFloatMB, m_settings->sceneParams.voxelSize);
 }
 
 Selector::Selection_CPtr TouchSelector::get_selection() const
@@ -94,11 +80,11 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
   return m_keptTouchPointCount > 0 ? m_keptTouchPointsShortMB : Selection_CPtr();
 }
 
-void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
+void TouchSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Detect any points that the user is touching in the scene.
-  MoveableCamera_CPtr camera(new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));
-  ITMFloatImage_Ptr depthImage(m_view->depth, boost::serialization::null_deleter());
+  MoveableCamera_CPtr camera(new SimpleCamera(CameraPoseConverter::pose_to_camera(slamState->get_pose())));
+  ITMFloatImage_Ptr depthImage(slamState->get_view()->depth, boost::serialization::null_deleter());
   TIME(std::vector<Eigen::Vector2i> touchPoints = m_touchDetector->determine_touch_points(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
 #if DEBUGGING
   std::cout << runningTouchDetectorOnFrame << '\n';

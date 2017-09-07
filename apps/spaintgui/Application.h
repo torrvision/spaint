@@ -8,30 +8,35 @@
 
 #ifdef _MSC_VER
   // Suppress some VC++ warnings that are produced by boost/asio.hpp.
-  #pragma warning(disable:4267)
+  #pragma warning(disable:4267 4996)
 #endif
 
 #include <boost/asio.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/function.hpp>
 
 #ifdef _MSC_VER
   // Re-enable the VC++ warnings for the rest of the code.
-  #pragma warning(default:4267)
+  #pragma warning(default:4267 4996)
 #endif
+
+// Prevent SDL from trying to define M_PI.
+#define HAVE_M_PI
 
 #include <SDL.h>
 
-// Suppress the definition of M_PI provided by SDL - we want the one in <cmath>.
-#ifdef M_PI
-#undef M_PI
-#endif
+#include <ITMLib/Engines/Meshing/Interface/ITMMeshingEngine.h>
 
 #include <tvginput/InputState.h>
 
 #include <tvgutil/commands/CommandManager.h>
+#include <tvgutil/filesystem/SequentialPathGenerator.h>
 
-#include "core/Pipeline.h"
+#include "core/MultiScenePipeline.h"
 #include "renderers/Renderer.h"
+
+#ifdef WITH_OVR
+#include "renderers/RiftRenderer.h"
+#endif
 
 /**
  * \brief The main application class for spaintgui.
@@ -40,22 +45,66 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMLib::ITMMesh> Mesh_Ptr;
+  typedef ITMLib::ITMMeshingEngine<spaint::SpaintVoxel,ITMVoxelIndex> MeshingEngine;
+  typedef boost::shared_ptr<MeshingEngine> MeshingEngine_Ptr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
-  typedef Renderer::RenderState_CPtr RenderState_CPtr;
+
+public:
+  typedef boost::function<void(const Model_Ptr&)> FrameDebugHook;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The index of the sub-window with which the user is interacting. */
+  size_t m_activeSubwindowIndex;
+
+  /** Whether or not batch mode is enabled. */
+  bool m_batchModeEnabled;
+
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
+
+  /** The fractional position of the mouse within the window's viewport. */
+  Vector2f m_fracWindowPos;
+
+  /** The debug hook function (if any) to call after processing each frame. */
+  FrameDebugHook m_frameDebugHook;
 
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
 
-  /** The pipeline that the application should use. */
-  Pipeline_Ptr m_pipeline;
+  /** The meshing engine. */
+  MeshingEngine_Ptr m_meshingEngine;
+
+  /** Whether or not to pause between frames (for debugging purposes). */
+  bool m_pauseBetweenFrames;
+
+  /** Whether or not the application is currently paused. */
+  bool m_paused;
+
+  /** The multi-scene pipeline that the application should use. */
+  MultiScenePipeline_Ptr m_pipeline;
 
   /** The current renderer. */
   Renderer_Ptr m_renderer;
+
+  /** Whether or not to render the fiducials (if any) that have been detected in the 3D scene. */
+  bool m_renderFiducials;
+
+  /** Whether or not to save a mesh of the scene on exiting the application. */
+  bool m_saveMeshOnExit;
+
+  /** The path generator for the current sequence recording (if any). */
+  boost::optional<tvgutil::SequentialPathGenerator> m_sequencePathGenerator;
+
+  /** A set of sub-window configurations that the user can switch between as desired. */
+  mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
+
+  /** Whether or not to mirror poses between sub-windows that show the same scene. */
+  bool m_usePoseMirroring;
+
+  /** The path generator for the current video recording (if any). */
+  boost::optional<tvgutil::SequentialPathGenerator> m_videoPathGenerator;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
@@ -65,16 +114,40 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param pipeline  The pipeline that the application should use.
+   * \param pipeline        The multi-scene pipeline that the application should use.
+   * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  explicit Application(const Pipeline_Ptr& pipeline);
+  Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials = false);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Runs the application.
+   *
+   * \return  true, if the application terminated successfully, or false otherwise.
    */
-  void run();
+  bool run();
+
+  /**
+   * \brief Sets whether or not batch mode is enabled.
+   *
+   * \param batchModeEnabled  Whether or not batch mode is enabled.
+   */
+  void set_batch_mode_enabled(bool batchModeEnabled);
+
+  /**
+   * \brief Sets the debug hook function (if any) to call after processing each frame.
+   *
+   * \param frameDebugHook  The debug hook function (if any) to call after processing each frame.
+   */
+  void set_frame_debug_hook(const FrameDebugHook& frameDebugHook);
+
+  /**
+   * \brief Sets whether or not to save a mesh of the scene on exiting the application.
+   *
+   * \param saveMeshOnExit  Whether or not to save a mesh of the scene on exiting the application.
+   */
+  void set_save_mesh_on_exit(bool saveMeshOnExit);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -88,13 +161,42 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Gets the scene ID for the active sub-window.
+   *
+   * \return  The scene ID for the active sub-window.
+   */
+  const std::string& get_active_scene_id() const;
+
+  /**
+   * \brief Gets the sub-window with which the user is interacting.
+   *
+   * \return  The sub-window with which the user is interacting.
+   */
+  Subwindow& get_active_subwindow();
+
+  /**
+   * \brief Gets the sub-window with which the user is interacting.
+   *
+   * \return  The sub-window with which the user is interacting.
+   */
+  const Subwindow& get_active_subwindow() const;
+
+  /**
    * \brief Gets the current monocular render state.
    *
    * If we're rendering in stereo, this will return the render state corresponding to the left eye.
    *
    * \return  The current monocular render state.
    */
-  Renderer::RenderState_CPtr get_monocular_render_state() const;
+  VoxelRenderState_CPtr get_monocular_render_state() const;
+
+  /**
+   * \brief Gets the specified sub-window configuration.
+   *
+   * \param i The index of the sub-window configuration to get.
+   * \return  The specified sub-window configuration, if valid, or null otherwise.
+   */
+  SubwindowConfiguration_Ptr get_subwindow_configuration(size_t i) const;
 
   /**
    * \brief Handle key down events.
@@ -142,6 +244,11 @@ private:
   bool process_events();
 
   /**
+   * \brief Processes user input that deals with fiducials.
+   */
+  void process_fiducial_input();
+
+  /**
    * \brief Takes action as relevant based on the current input state.
    */
   void process_input();
@@ -167,9 +274,58 @@ private:
   void process_voice_input();
 
   /**
+   * \brief Saves a mesh of the scene to disk.
+   */
+  void save_mesh() const;
+
+  /**
+   * \brief Saves a screenshot to disk.
+   */
+  void save_screenshot() const;
+
+  /**
+   * \brief Saves the next frame of the sequence being recorded to disk.
+   */
+  void save_sequence_frame();
+
+  /**
+   * \brief Saves the next frame of the video being recorded to disk.
+   */
+  void save_video_frame();
+
+  /**
    * \brief Sets up the semantic labels with which the user can label the scene.
    */
   void setup_labels();
+
+  /**
+   * \brief Sets up the meshing engine if required.
+   */
+  void setup_meshing();
+
+#ifdef WITH_OVR
+  /**
+   * \brief Switches to a Rift renderer.
+   *
+   * \param mode  The Rift rendering mode to use.
+   */
+  void switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode);
+#endif
+
+  /**
+   * \brief Switches to a windowed renderer that uses the specified sub-window configuration.
+   *
+   * \param subwindowConfigurationIndex The index of the sub-window configuration to use.
+   */
+  void switch_to_windowed_renderer(size_t subwindowConfigurationIndex);
+
+  /**
+   * \brief Toggles sequence or video recording on or off.
+   *
+   * \param type          The type or recording (sequence or video).
+   * \param pathGenerator The path generator associated with that type of recording.
+   */
+  void toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator);
 };
 
 #endif

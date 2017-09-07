@@ -49,10 +49,10 @@ if [ $PLATFORM == "mac" ] && [ "$OSXVERSION" -ge 13 ]
 then
   STDLIBFLAGS='cxxflags="-stdlib=libstdc++" linkflags="-stdlib=libstdc++"'
 else
-  STDLIBFLAGS=''
+  STDLIBFLAGS='cxxflags="-std=c++11"'
 fi
 
-./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-serialization --with-test --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 $STDLIBFLAGS install >> $LOG
+./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-test --with-thread --with-timer --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 $STDLIBFLAGS install >> $LOG
 
 echo "[spaint] ...Fixing headers..."
 perl -i -pe 's/SPT<void>/SPT<const void>/g' ../boost_1_56_0/include/boost/serialization/shared_ptr_helper.hpp

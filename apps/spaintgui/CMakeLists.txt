@@ -8,28 +8,37 @@
 
 SET(targetname spaintgui)
 
-###########################
-# Offer low-power support #
-###########################
+############################################################################################
+# Offer a variety of options, e.g. for low power machines and those with low USB bandwidth #
+############################################################################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferFocusReacquisition.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowUSBBandwidthSupport.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferPixelDebugging.cmake)
 
 ################################
 # Specify the libraries to use #
 ################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLUT.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseRealSense.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 
@@ -48,18 +57,24 @@ commands/MarkVoxelsCommand.h
 
 ##
 SET(core_sources
-core/Interactor.cpp
 core/Model.cpp
-core/Pipeline.cpp
-core/Raycaster.cpp
+core/MultiScenePipeline.cpp
+core/ObjectivePipeline.cpp
+core/SemanticPipeline.cpp
+core/SLAMPipeline.cpp
 )
 
 SET(core_headers
-core/Interactor.h
 core/Model.h
-core/Pipeline.h
-core/Raycaster.h
+core/MultiScenePipeline.h
+core/ObjectivePipeline.h
+core/SemanticPipeline.h
+core/SLAMPipeline.h
 )
+
+##
+SET(debugging_sources )
+SET(debugging_headers )
 
 ##
 SET(renderers_sources
@@ -76,6 +91,17 @@ IF(WITH_OVR)
   SET(renderers_sources ${renderers_sources} renderers/RiftRenderer.cpp)
   SET(renderers_headers ${renderers_headers} renderers/RiftRenderer.h)
 ENDIF()
+
+##
+SET(subwindows_sources
+subwindows/Subwindow.cpp
+subwindows/SubwindowConfiguration.cpp
+)
+
+SET(subwindows_headers
+subwindows/Subwindow.h
+subwindows/SubwindowConfiguration.h
+)
 
 ##
 SET(toplevel_sources
@@ -99,14 +125,18 @@ ENDIF()
 SET(sources
 ${commands_sources}
 ${core_sources}
+${debugging_sources}
 ${renderers_sources}
+${subwindows_sources}
 ${toplevel_sources}
 )
 
 SET(headers
 ${commands_headers}
 ${core_headers}
+${debugging_headers}
 ${renderers_headers}
+${subwindows_headers}
 ${toplevel_headers}
 )
 
@@ -117,12 +147,15 @@ ${toplevel_headers}
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(debugging FILES ${debugging_sources} ${debugging_headers})
 SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
+SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
@@ -140,18 +173,24 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvginput tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} spaint itmx rafl rigging tvginput tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLUT.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLeap.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkRealSense.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVicon.cmake)
 
 #########################################
@@ -169,3 +208,4 @@ ENDIF()
 #############################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/apps/spaintgui/resources" DESTINATION "bin/apps/spaintgui")

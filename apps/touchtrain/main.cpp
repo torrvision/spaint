@@ -6,6 +6,7 @@
 #include <boost/assign/list_of.hpp>
 using boost::assign::list_of;
 
+#include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
@@ -20,7 +21,7 @@ using namespace raflevaluation;
 #include <spaint/touch/TouchDescriptorCalculator.h>
 using namespace spaint;
 
-#include <tvgutil/SerializationUtil.h>
+#include <tvgutil/persistence/SerializationUtil.h>
 #include <tvgutil/timing/Timer.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
@@ -33,7 +34,6 @@ using namespace tvgutil;
 typedef int Label;
 typedef DecisionTree<Label> DT;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 typedef RandomForest<Label> RF;
 typedef boost::shared_ptr<RF> RF_Ptr;
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
   for(size_t n = 0, size = params.size(); n < size; ++n)
   {
     evaluator.reset(new RandomForestEvaluator<Label>(splitGenerator, params[n]));
-    std::map<std::string,PerformanceMeasure> result = evaluator->evaluate(examples);
+    PerformanceResult result = evaluator->evaluate(examples);
     results.record_performance(params[n], result);
   }
 

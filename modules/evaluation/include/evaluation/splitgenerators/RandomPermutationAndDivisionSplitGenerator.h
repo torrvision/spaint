@@ -6,7 +6,7 @@
 #ifndef H_EVALUATION_RANDOMPERMUTATIONANDDIVISIONSPLITGENERATOR
 #define H_EVALUATION_RANDOMPERMUTATIONANDDIVISIONSPLITGENERATOR
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "SplitGenerator.h"
 

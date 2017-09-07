@@ -10,8 +10,6 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Utils/ITMLibSettings.h>
-
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
 
@@ -25,7 +23,7 @@ class PickingSelector : public Selector
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker. */
-  boost::shared_ptr<const Picker> m_picker;
+  Picker_CPtr m_picker;
 
   /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
   boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_pickPointFloatMB;
@@ -61,7 +59,7 @@ public:
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
-  virtual void update(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update(const tvginput::InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 };
 
 }

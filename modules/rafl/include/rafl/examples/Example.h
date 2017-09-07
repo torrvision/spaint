@@ -10,7 +10,7 @@
 
 #include <boost/serialization/serialization.hpp>
 
-#include <tvgutil/LimitedContainer.h>
+#include <tvgutil/containers/LimitedContainer.h>
 
 #include "../base/Descriptor.h"
 

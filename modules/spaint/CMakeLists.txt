@@ -23,8 +23,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
@@ -80,17 +82,54 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 
 ##
-SET(imageprocessing_sources
-src/imageprocessing/ImageProcessorFactory.cpp
+SET(fiducials_sources
+src/fiducials/AveragingFiducial.cpp
+src/fiducials/Fiducial.cpp
+src/fiducials/FiducialMeasurement.cpp
+src/fiducials/FiducialPoseEstimator.cpp
+src/fiducials/SimpleFiducial.cpp
 )
 
-SET(imageprocessing_headers
-include/spaint/imageprocessing/ImageProcessorFactory.h
+SET(fiducials_headers
+include/spaint/fiducials/AveragingFiducial.h
+include/spaint/fiducials/Fiducial.h
+include/spaint/fiducials/FiducialDetector.h
+include/spaint/fiducials/FiducialMeasurement.h
+include/spaint/fiducials/FiducialPoseEstimator.h
+include/spaint/fiducials/SimpleFiducial.h
 )
+
+IF(WITH_OPENCV)
+  SET(fiducials_sources ${fiducials_sources} src/fiducials/ArUcoFiducialDetector.cpp)
+  SET(fiducials_headers ${fiducials_headers} include/spaint/fiducials/ArUcoFiducialDetector.h)
+ENDIF()
+
+##
+SET(geometry_sources
+src/geometry/GeometryUtil.cpp
+)
+
+SET(geometry_headers
+include/spaint/geometry/DualNumber.h
+include/spaint/geometry/DualQuaternion.h
+include/spaint/geometry/GeometryUtil.h
+include/spaint/geometry/Screw.h
+)
+
+##
+SET(imageprocessing_sources)
+SET(imageprocessing_headers)
 
 IF(WITH_ARRAYFIRE)
-  SET(imageprocessing_sources ${imageprocessing_sources} src/imageprocessing/MedianFilterer.cpp)
-  SET(imageprocessing_headers ${imageprocessing_headers} include/spaint/imageprocessing/MedianFilterer.h)
+  SET(imageprocessing_sources ${imageprocessing_sources}
+    src/imageprocessing/ImageProcessorFactory.cpp
+    src/imageprocessing/MedianFilterer.cpp
+  )
+
+  SET(imageprocessing_headers ${imageprocessing_headers}
+    include/spaint/imageprocessing/ImageProcessorFactory.h
+    include/spaint/imageprocessing/MedianFilterer.h
+  )
 ENDIF()
 
 ##
@@ -123,6 +162,26 @@ include/spaint/imageprocessing/interface/ImageProcessor.h
 ##
 SET(imageprocessing_shared_headers
 include/spaint/imageprocessing/shared/ImageProcessor_Shared.h
+)
+
+##
+SET(imagesources_sources
+src/imagesources/AsyncImageSourceEngine.cpp
+src/imagesources/SingleRGBDImagePipe.cpp
+)
+
+SET(imagesources_headers
+include/spaint/imagesources/AsyncImageSourceEngine.h
+include/spaint/imagesources/SingleRGBDImagePipe.h
+)
+
+##
+SET(markers_sources
+src/markers/VoxelMarkerFactory.cpp
+)
+
+SET(markers_headers
+include/spaint/markers/VoxelMarkerFactory.h
 )
 
 ##
@@ -165,14 +224,26 @@ include/spaint/ocv/OpenCVUtil.h
 
 ##
 SET(ogl_sources
+src/ogl/CameraRenderer.cpp
 src/ogl/FrameBuffer.cpp
 src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
+include/spaint/ogl/CameraRenderer.h
 include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
+include/spaint/ogl/WrappedGLUT.h
+)
+
+##
+SET(picking_sources
+src/picking/PickerFactory.cpp
+)
+
+SET(picking_headers
+include/spaint/picking/PickerFactory.h
 )
 
 ##
@@ -201,6 +272,30 @@ include/spaint/picking/interface/Picker.h
 ##
 SET(picking_shared_headers
 include/spaint/picking/shared/Picker_Shared.h
+)
+
+##
+SET(pipelinecomponents_sources
+src/pipelinecomponents/ObjectSegmentationComponent.cpp
+src/pipelinecomponents/ObjectSegmentationContext.cpp
+src/pipelinecomponents/PropagationComponent.cpp
+src/pipelinecomponents/SemanticSegmentationComponent.cpp
+src/pipelinecomponents/SLAMComponent.cpp
+src/pipelinecomponents/SLAMContext.cpp
+src/pipelinecomponents/SmoothingComponent.cpp
+)
+
+SET(pipelinecomponents_headers
+include/spaint/pipelinecomponents/ObjectSegmentationComponent.h
+include/spaint/pipelinecomponents/ObjectSegmentationContext.h
+include/spaint/pipelinecomponents/PropagationComponent.h
+include/spaint/pipelinecomponents/PropagationContext.h
+include/spaint/pipelinecomponents/SemanticSegmentationComponent.h
+include/spaint/pipelinecomponents/SemanticSegmentationContext.h
+include/spaint/pipelinecomponents/SLAMComponent.h
+include/spaint/pipelinecomponents/SLAMContext.h
+include/spaint/pipelinecomponents/SmoothingComponent.h
+include/spaint/pipelinecomponents/SmoothingContext.h
 )
 
 ##
@@ -304,6 +399,24 @@ include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
 )
 
 ##
+SET(segmentation_sources
+src/segmentation/ColourAppearanceModel.cpp
+src/segmentation/SegmentationUtil.cpp
+src/segmentation/Segmenter.cpp
+)
+
+SET(segmentation_headers
+include/spaint/segmentation/ColourAppearanceModel.h
+include/spaint/segmentation/SegmentationUtil.h
+include/spaint/segmentation/Segmenter.h
+)
+
+IF(WITH_ARRAYFIRE AND WITH_OPENCV)
+  SET(segmentation_sources ${segmentation_sources} src/segmentation/BackgroundSubtractingObjectSegmenter.cpp)
+  SET(segmentation_headers ${segmentation_headers} include/spaint/segmentation/BackgroundSubtractingObjectSegmenter.h)
+ENDIF()
+
+##
 SET(selectiontransformers_sources
 src/selectiontransformers/SelectionTransformerFactory.cpp
 )
@@ -373,6 +486,15 @@ IF(WITH_ARRAYFIRE)
 ENDIF()
 
 ##
+SET(slamstate_sources
+src/slamstate/SLAMState.cpp
+)
+
+SET(slamstate_headers
+include/spaint/slamstate/SLAMState.h
+)
+
+##
 SET(smoothing_sources
 src/smoothing/LabelSmootherFactory.cpp
 )
@@ -427,10 +549,13 @@ include/spaint/touch/TouchSettings.h
 )
 
 ##
-SET(trackers_sources)
+SET(trackers_sources
+src/trackers/TrackerFactory.cpp
+)
 
 SET(trackers_headers
 include/spaint/trackers/FallibleTracker.h
+include/spaint/trackers/TrackerFactory.h
 )
 
 IF(WITH_OVR)
@@ -454,56 +579,69 @@ ENDIF()
 SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
-src/util/MemoryBlockFactory.cpp
 src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
+include/spaint/util/CameraFactory.h
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/LabelManager.h
-include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h
+include/spaint/util/SpaintSurfel.h
+include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
+include/spaint/util/SpaintVoxelScene.h
 )
 
 ##
-SET(visualisers_cpu_sources
-src/visualisers/cpu/DepthVisualiser_CPU.cpp
-src/visualisers/cpu/SemanticVisualiser_CPU.cpp
+SET(visualisation_sources
+src/visualisation/VisualisationGenerator.cpp
+src/visualisation/VisualiserFactory.cpp
 )
 
-SET(visualisers_cpu_headers
-include/spaint/visualisers/cpu/DepthVisualiser_CPU.h
-include/spaint/visualisers/cpu/SemanticVisualiser_CPU.h
-)
-
-##
-SET(visualisers_cuda_sources
-src/visualisers/cuda/DepthVisualiser_CUDA.cu
-src/visualisers/cuda/SemanticVisualiser_CUDA.cu
-)
-
-SET(visualisers_cuda_headers
-include/spaint/visualisers/cuda/DepthVisualiser_CUDA.h
-include/spaint/visualisers/cuda/SemanticVisualiser_CUDA.h
+SET(visualisation_headers
+include/spaint/visualisation/VisualisationGenerator.h
+include/spaint/visualisation/VisualiserFactory.h
 )
 
 ##
-SET(visualisers_interface_sources
-src/visualisers/interface/SemanticVisualiser.cpp
+SET(visualisation_cpu_sources
+src/visualisation/cpu/DepthVisualiser_CPU.cpp
+src/visualisation/cpu/SemanticVisualiser_CPU.cpp
 )
 
-SET(visualisers_interface_headers
-include/spaint/visualisers/interface/DepthVisualiser.h
-include/spaint/visualisers/interface/SemanticVisualiser.h
+SET(visualisation_cpu_headers
+include/spaint/visualisation/cpu/DepthVisualiser_CPU.h
+include/spaint/visualisation/cpu/SemanticVisualiser_CPU.h
 )
 
 ##
-SET(visualisers_shared_headers
-include/spaint/visualisers/shared/DepthVisualiser_Shared.h
-include/spaint/visualisers/shared/SemanticVisualiser_Settings.h
-include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
+SET(visualisation_cuda_sources
+src/visualisation/cuda/DepthVisualiser_CUDA.cu
+src/visualisation/cuda/SemanticVisualiser_CUDA.cu
+)
+
+SET(visualisation_cuda_headers
+include/spaint/visualisation/cuda/DepthVisualiser_CUDA.h
+include/spaint/visualisation/cuda/SemanticVisualiser_CUDA.h
+)
+
+##
+SET(visualisation_interface_sources
+src/visualisation/interface/SemanticVisualiser.cpp
+)
+
+SET(visualisation_interface_headers
+include/spaint/visualisation/interface/DepthVisualiser.h
+include/spaint/visualisation/interface/SemanticVisualiser.h
+)
+
+##
+SET(visualisation_shared_headers
+include/spaint/visualisation/shared/DepthVisualiser_Shared.h
+include/spaint/visualisation/shared/SemanticVisualiser_Settings.h
+include/spaint/visualisation/shared/SemanticVisualiser_Shared.h
 )
 
 #################################################################
@@ -514,9 +652,16 @@ SET(sources
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
+${fiducials_sources}
+${geometry_sources}
+${imageprocessing_sources}
+${imagesources_sources}
+${markers_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
+${picking_sources}
 ${picking_cpu_sources}
+${pipelinecomponents_sources}
 ${propagation_sources}
 ${propagation_cpu_sources}
 ${propagation_interface_sources}
@@ -524,17 +669,20 @@ ${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
+${segmentation_sources}
 ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
 ${selectors_sources}
+${slamstate_sources}
 ${smoothing_sources}
 ${smoothing_cpu_sources}
 ${smoothing_interface_sources}
 ${trackers_sources}
 ${util_sources}
-${visualisers_cpu_sources}
-${visualisers_interface_sources}
+${visualisation_sources}
+${visualisation_cpu_sources}
+${visualisation_interface_sources}
 )
 
 SET(headers
@@ -542,13 +690,20 @@ ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${fiducials_headers}
+${geometry_headers}
+${imageprocessing_headers}
+${imagesources_headers}
+${markers_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
 ${ogl_headers}
+${picking_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
 ${picking_shared_headers}
+${pipelinecomponents_headers}
 ${propagation_headers}
 ${propagation_cpu_headers}
 ${propagation_interface_headers}
@@ -558,31 +713,32 @@ ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
 ${sampling_shared_headers}
+${segmentation_headers}
 ${selectiontransformers_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
 ${selectiontransformers_shared_headers}
 ${selectors_headers}
+${slamstate_headers}
 ${smoothing_headers}
 ${smoothing_cpu_headers}
 ${smoothing_interface_headers}
 ${smoothing_shared_headers}
 ${trackers_headers}
 ${util_headers}
-${visualisers_cpu_headers}
-${visualisers_interface_headers}
-${visualisers_shared_headers}
+${visualisation_headers}
+${visualisation_cpu_headers}
+${visualisation_interface_headers}
+${visualisation_shared_headers}
 )
 
 IF(WITH_ARRAYFIRE)
   SET(sources ${sources}
-    ${imageprocessing_sources}
     ${imageprocessing_cpu_sources}
     ${imageprocessing_interface_sources}
     ${touch_sources}
   )
   SET(headers ${headers}
-    ${imageprocessing_headers}
     ${imageprocessing_cpu_headers}
     ${imageprocessing_interface_headers}
     ${imageprocessing_shared_headers}
@@ -599,7 +755,7 @@ IF(WITH_CUDA)
     ${sampling_cuda_sources}
     ${selectiontransformers_cuda_sources}
     ${smoothing_cuda_sources}
-    ${visualisers_cuda_sources}
+    ${visualisation_cuda_sources}
   )
 
   SET(headers ${headers}
@@ -610,7 +766,7 @@ IF(WITH_CUDA)
     ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
     ${smoothing_cuda_headers}
-    ${visualisers_cuda_headers}
+    ${visualisation_cuda_headers}
   )
 
   IF(WITH_ARRAYFIRE)
@@ -633,21 +789,27 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers}
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(fiducials FILES ${fiducials_sources} ${fiducials_headers})
+SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(imageprocessing FILES ${imageprocessing_sources} ${imageprocessing_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
 SOURCE_GROUP(imageprocessing\\interface FILES ${imageprocessing_interface_sources} ${imageprocessing_interface_headers})
 SOURCE_GROUP(imageprocessing\\shared FILES ${imageprocessing_shared_headers})
+SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
+SOURCE_GROUP(markers FILES ${markers_sources} ${markers_headers})
 SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
+SOURCE_GROUP(picking FILES ${picking_sources} ${picking_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
 SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
+SOURCE_GROUP(pipelinecomponents FILES ${pipelinecomponents_sources} ${pipelinecomponents_headers})
 SOURCE_GROUP(propagation FILES ${propagation_sources} ${propagation_headers})
 SOURCE_GROUP(propagation\\cpu FILES ${propagation_cpu_sources} ${propagation_cpu_headers})
 SOURCE_GROUP(propagation\\cuda FILES ${propagation_cuda_sources} ${propagation_cuda_headers})
@@ -659,12 +821,14 @@ SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers}
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
 SOURCE_GROUP(sampling\\interface FILES ${sampling_interface_sources} ${sampling_interface_headers})
 SOURCE_GROUP(sampling\\shared FILES ${sampling_shared_headers})
+SOURCE_GROUP(segmentation FILES ${segmentation_sources} ${segmentation_headers})
 SOURCE_GROUP(selectiontransformers FILES ${selectiontransformers_sources} ${selectiontransformers_headers})
 SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
 SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_sources} ${selectiontransformers_interface_headers})
 SOURCE_GROUP(selectiontransformers\\shared FILES ${selectiontransformers_shared_headers})
 SOURCE_GROUP(selectors FILES ${selectors_sources} ${selectors_headers})
+SOURCE_GROUP(slamstate FILES ${slamstate_sources} ${slamstate_headers})
 SOURCE_GROUP(smoothing FILES ${smoothing_sources} ${smoothing_headers})
 SOURCE_GROUP(smoothing\\cpu FILES ${smoothing_cpu_sources} ${smoothing_cpu_headers})
 SOURCE_GROUP(smoothing\\cuda FILES ${smoothing_cuda_sources} ${smoothing_cuda_headers})
@@ -673,16 +837,19 @@ SOURCE_GROUP(smoothing\\shared FILES ${smoothing_shared_headers})
 SOURCE_GROUP(touch FILES ${touch_sources} ${touch_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
-SOURCE_GROUP(visualisers\\cpu FILES ${visualisers_cpu_sources} ${visualisers_cpu_headers})
-SOURCE_GROUP(visualisers\\cuda FILES ${visualisers_cuda_sources} ${visualisers_cuda_headers})
-SOURCE_GROUP(visualisers\\interface FILES ${visualisers_interface_sources} ${visualisers_interface_headers})
-SOURCE_GROUP(visualisers\\shared FILES ${visualisers_shared_headers})
+SOURCE_GROUP(visualisation FILES ${visualisation_sources} ${visualisation_headers})
+SOURCE_GROUP(visualisation\\cpu FILES ${visualisation_cpu_sources} ${visualisation_cpu_headers})
+SOURCE_GROUP(visualisation\\cuda FILES ${visualisation_cuda_sources} ${visualisation_cuda_headers})
+SOURCE_GROUP(visualisation\\interface FILES ${visualisation_interface_sources} ${visualisation_interface_headers})
+SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
 INCLUDE_DIRECTORIES(include/spaint)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvginput/include)

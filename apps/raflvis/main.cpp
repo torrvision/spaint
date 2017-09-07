@@ -7,12 +7,10 @@
 #include <boost/format.hpp>
 using boost::assign::list_of;
 
-#include <tvgutil/SerializationUtil.h>
-using namespace tvgutil;
-
+#include <evaluation/core/ParamSetUtil.h>
+#include <evaluation/core/PerformanceMeasure.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
-#include <evaluation/core/PerformanceMeasure.h>
 using namespace evaluation;
 
 #include <rafl/choppers/HeightLimitingTreeChopper.h>
@@ -22,8 +20,13 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
-#include "PaletteGenerator.h"
-#include "PlotWindow.h"
+#include <tvgplot/PaletteGenerator.h>
+#include <tvgplot/PlotWindow.h>
+using namespace tvgplot;
+
+#include <tvgutil/persistence/SerializationUtil.h>
+using namespace tvgutil;
+
 #include "TestDecisionFunctionGenerator.h"
 
 //#################### TYPEDEFS ####################
@@ -37,8 +40,6 @@ typedef RandomForest<Label> RF;
 typedef boost::shared_ptr<RF> RF_Ptr;
 
 typedef boost::shared_ptr<const TreeChopper<Label> > TreeChopper_CPtr;
-
-typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### TYPES ####################
 

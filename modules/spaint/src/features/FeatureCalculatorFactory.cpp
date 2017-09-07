@@ -4,6 +4,7 @@
  */
 
 #include "features/FeatureCalculatorFactory.h"
+using namespace ITMLib;
 
 #include "features/cpu/VOPFeatureCalculator_CPU.h"
 

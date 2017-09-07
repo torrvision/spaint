@@ -56,7 +56,7 @@ int main()
 #include <infermous/engines/MeanFieldInferenceEngine.h>
 using namespace infermous;
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 using namespace tvgutil;
 
 enum Label
@@ -115,7 +115,7 @@ int main()
 #include <infermous/engines/MeanFieldInferenceEngine.h>
 using namespace infermous;
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 using namespace tvgutil;
 
 enum Label

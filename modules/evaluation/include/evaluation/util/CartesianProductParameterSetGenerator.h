@@ -13,6 +13,8 @@
 
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 
+#include "../core/ParamSetUtil.h"
+
 namespace evaluation {
 
 /**
@@ -24,10 +26,6 @@ namespace evaluation {
  */
 class CartesianProductParameterSetGenerator
 {
-  //#################### PUBLIC TYPEDEFS ####################
-public:
-  typedef std::map<std::string,std::string> ParamSet;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** A list of the possible values for each parameter (e.g. [("A", [1,2]), ("B", [3,4])]). */

@@ -1,11 +1,11 @@
 /**
- * spaint: VOPFeatureCalculator_CUDA.cpp
+ * spaint: VOPFeatureCalculator_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "features/cuda/VOPFeatureCalculator_CUDA.h"
 
-#include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
+#include <ITMLib/Objects/Scene/ITMRepresentationAccess.h>
 
 #include "features/shared/VOPFeatureCalculator_Shared.h"
 

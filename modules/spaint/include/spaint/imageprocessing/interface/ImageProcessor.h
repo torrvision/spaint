@@ -8,9 +8,9 @@
 
 #include <arrayfire.h>
 
-#include <boost/shared_ptr.hpp>
+#include <ITMLib/ITMLibDefines.h>
 
-#include <ITMLib/Utils/ITMLibDefines.h>
+#include <itmx/base/ITMImagePtrTypes.h>
 
 namespace spaint {
 
@@ -23,11 +23,6 @@ class ImageProcessor
 protected:
   typedef boost::shared_ptr<af::array> AFArray_Ptr;
   typedef boost::shared_ptr<const af::array> AFArray_CPtr;
-  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
-  typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
-  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
   //#################### ENUMERATIONS ####################
 public: 
@@ -63,6 +58,14 @@ public:
   virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
+   * \brief Copies a floating-point ArrayFire image to an InfiniTAM image.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   */
+  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const = 0;
+
+  /**
    * \brief Copies a greyscale ArrayFire image to an InfiniTAM image.
    *
    * \param inputImage  The input image.
@@ -77,6 +80,22 @@ public:
    * \param outputImage The output image.
    */
   virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const = 0;
+
+  /**
+   * \brief Copies a floating-point InfiniTAM image to an ArrayFire image.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   */
+  virtual void copy_itm_to_af(const ITMFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
+
+  /**
+   * \brief Copies a greyscale InfiniTAM image to an ArrayFire image.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   */
+  virtual void copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies an RGBA InfiniTAM image to an ArrayFire image.
@@ -98,6 +117,29 @@ public:
    * \param outputImage The output image.
    */
   virtual void set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Converts an ArrayFire image to an InfiniTAM image.
+   *
+   * \note  If the InfiniTAM image is not already allocated, this function will allocate it.
+   * \note  The resulting InfiniTAM image will be accessible on the CPU.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   * \return            The output image.
+   */
+  template <typename ITMElementType>
+  boost::shared_ptr<ORUtils::Image<ITMElementType> > convert_af_to_itm(const AFArray_CPtr& inputImage,
+                                                                       boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage) const
+  {
+    Vector2i imgSize = image_size(inputImage);
+    if(!outputImage) outputImage.reset(new ORUtils::Image<ITMElementType>(imgSize, true, true));
+    copy_af_to_itm(inputImage, outputImage);
+    outputImage->UpdateHostFromDevice();
+    return outputImage;
+  }
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:

@@ -2,16 +2,31 @@
 # CMakeLists.txt for spaint/apps #
 ##################################
 
-IF(BUILD_AUXILIARY_APPS AND BUILD_EVALUATION_MODULES)
-  ADD_SUBDIRECTORY(raflperf)
+IF(BUILD_AUXILIARY_APPS)
+  IF(BUILD_EVALUATION_MODULES)
+    ADD_SUBDIRECTORY(raflperf)
 
-  IF(WITH_OPENCV)
-    ADD_SUBDIRECTORY(raflvis)
+    IF(WITH_OPENCV)
+      ADD_SUBDIRECTORY(raflvis)
 
-    IF(WITH_ARRAYFIRE)
-      ADD_SUBDIRECTORY(touchtrain)
+      IF(BUILD_SPAINT AND WITH_ARRAYFIRE)
+        ADD_SUBDIRECTORY(touchtrain)
+      ENDIF()
+    ENDIF()
+  ENDIF()
+
+  IF(BUILD_GROVE)
+    IF(BUILD_EVALUATION_MODULES)
+      ADD_SUBDIRECTORY(prepare_7scenes)
+      ADD_SUBDIRECTORY(relocperf)
     ENDIF()
   ENDIF()
 ENDIF()
 
-ADD_SUBDIRECTORY(spaintgui)
+IF(BUILD_GROVE)
+  ADD_SUBDIRECTORY(relocgui)
+ENDIF()
+
+IF(BUILD_SPAINT)
+  ADD_SUBDIRECTORY(spaintgui)
+ENDIF()

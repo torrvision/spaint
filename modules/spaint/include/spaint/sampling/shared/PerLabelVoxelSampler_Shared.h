@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_PERLABELVOXELSAMPLER_SHARED
 #define H_SPAINT_PERLABELVOXELSAMPLER_SHARED
 
-#include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
+#include <ITMLib/Objects/Scene/ITMRepresentationAccess.h>
 
 namespace spaint {
 

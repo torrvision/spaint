@@ -6,14 +6,13 @@
 #ifndef H_SPAINT_ROBUSTVICONTRACKER
 #define H_SPAINT_ROBUSTVICONTRACKER
 
-#include <ITMLib/Engine/ITMLowLevelEngine.h>
-#include <ITMLib/Objects/ITMScene.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
+
+#include <itmx/base/ITMObjectPtrTypes.h>
 
 #include <rigging/SimpleCamera.h>
 
 #include "ViconTracker.h"
-#include "../util/SpaintVoxel.h"
 
 namespace spaint {
 
@@ -29,14 +28,12 @@ class RobustViconTracker : public FallibleTracker
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<const ITMLib::Engine::ITMLowLevelEngine> LowLevelEngine_CPtr;
-  typedef boost::shared_ptr<ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> > Scene_Ptr;
-  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLowLevelEngine> LowLevelEngine_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The ICP tracker. */
-  boost::shared_ptr<ITMLib::Engine::ITMTracker> m_icpTracker;
+  boost::shared_ptr<ITMLib::ITMTracker> m_icpTracker;
 
   /** The Vicon tracker. */
   boost::shared_ptr<ViconTracker> m_viconTracker;
@@ -48,18 +45,27 @@ public:
    *
    * \param host              The host on which the Vicon software is running (e.g. "<IP address>:<port>").
    * \param subjectName       The name given to the camera subject in the Vicon software.
-   * \param trackedImageSize  The tracked image size.
+   * \param rgbImageSize      The RGB image size.
+   * \param depthImageSize    The depth image size.
    * \param settings          The settings to use for InfiniTAM.
    * \param lowLevelEngine    The engine used to perform low-level image processing operations.
-   * \param scene             The scene.
    */
-  RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& trackedImageSize, const Settings_CPtr& settings,
-                     const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene);
+  RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                     const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void TrackCamera(ITMTrackingState *trackingState, const ITMView *view);
+  virtual bool requiresColourRendering() const;
+
+  /** Override */
+  virtual bool requiresDepthReliability() const;
+
+  /** Override */
+  virtual bool requiresPointCloudRendering() const;
+
+  /** Override */
+  virtual void TrackCamera(ITMLib::ITMTrackingState *trackingState, const ITMLib::ITMView *view);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:

@@ -4,6 +4,7 @@
  */
 
 #include "selectiontransformers/interface/VoxelToCubeSelectionTransformer.h"
+using namespace ITMLib;
 using namespace tvginput;
 
 namespace spaint {

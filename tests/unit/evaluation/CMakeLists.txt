@@ -15,8 +15,9 @@ SET(suitename evaluation)
 SET(testnames
 CartesianProductParameterSetGenerator
 ConfusionMatrixUtil
+CoordinateDescentParameterOptimiser
 CrossValidationSplitGenerator
-PerformanceMeasure
+PerformanceMeasureUtil
 RandomPermutationAndDivisionSplitGenerator
 )
 

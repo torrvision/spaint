@@ -8,7 +8,7 @@
 
 #include <cassert>
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "FeatureBasedDecisionFunctionGenerator.h"
 #include "PairwiseOpAndThresholdDecisionFunction.h"

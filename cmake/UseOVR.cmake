@@ -12,8 +12,10 @@ IF(WITH_OVR)
     FIND_PATH(OVR_INCLUDE_DIR OVR.h HINTS ~/Downloads/OculusSDK/LibOVR/Include)
     FIND_LIBRARY(OVR_LIBRARY LibOVR HINTS ~/Downloads/OculusSDK/LibOVR/Lib/Mac/Release)
   ELSEIF("${CMAKE_SYSTEM}" MATCHES "Linux")
-    FIND_PATH(OVR_INCLUDE_DIR OVR.h HINTS ~/Software/ovr_sdk_linux_0.5.0.1/LibOVR/Include)
-    FIND_LIBRARY(OVR_LIBRARY OVR HINTS ~/Software/ovr_sdk_linux_0.5.0.1/LibOVR/Lib/Linux/x86_64/Debug)
+    FIND_PATH(OVR_INCLUDE_DIR OVR.h HINTS ~/software/ovr_sdk_linux_0.5.0.1/LibOVR/Include
+                                          ~/Software/ovr_sdk_linux_0.5.0.1/LibOVR/Include)
+    FIND_LIBRARY(OVR_LIBRARY OVR HINTS ~/software/ovr_sdk_linux_0.5.0.1/LibOVR/Lib/Linux/x86_64/Debug
+                                       ~/Software/ovr_sdk_linux_0.5.0.1/LibOVR/Lib/Linux/x86_64/Debug)
   ELSE()
     FIND_PATH(OVR_INCLUDE_DIR OVR.h)
     FIND_LIBRARY(OVR_LIBRARY OVR)

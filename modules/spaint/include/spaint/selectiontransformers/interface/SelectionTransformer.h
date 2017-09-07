@@ -6,7 +6,9 @@
 #ifndef H_SPAINT_SELECTIONTRANSFORMER
 #define H_SPAINT_SELECTIONTRANSFORMER
 
-#include <ITMLib/Objects/ITMScene.h>
+#include <boost/shared_ptr.hpp>
+
+#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <tvginput/InputState.h>
@@ -27,7 +29,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The device on which the transformer is operating. */
-  const ITMLibSettings::DeviceType m_deviceType;
+  const ITMLib::ITMLibSettings::DeviceType m_deviceType;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -36,7 +38,7 @@ protected:
    *
    * \param deviceType  The device on which the transformer is operating.
    */
-  explicit SelectionTransformer(ITMLibSettings::DeviceType deviceType);
+  explicit SelectionTransformer(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -92,6 +94,11 @@ public:
    */
   Selection *transform_selection(const Selection& inputSelectionMB) const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SelectionTransformer> SelectionTransformer_Ptr;
+typedef boost::shared_ptr<const SelectionTransformer> SelectionTransformer_CPtr;
 
 }
 

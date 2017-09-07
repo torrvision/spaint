@@ -5,7 +5,8 @@
 
 #include "propagation/interface/LabelPropagator.h"
 
-#include "util/MemoryBlockFactory.h"
+#include <itmx/base/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
 
 namespace spaint {
 
@@ -18,10 +19,13 @@ LabelPropagator::LabelPropagator(size_t raycastResultSize, float maxAngleBetween
   m_surfaceNormalsMB(MemoryBlockFactory::instance().make_block<Vector3f>(raycastResultSize))
 {}
 
+//#################### DESTRUCTOR ####################
+
+LabelPropagator::~LabelPropagator() {}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                                      ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const
 {
   // Calculate the normals of the voxels in the raycast result.
   calculate_normals(raycastResult, scene);

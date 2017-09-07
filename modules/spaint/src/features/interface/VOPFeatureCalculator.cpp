@@ -5,7 +5,8 @@
 
 #include "features/interface/VOPFeatureCalculator.h"
 
-#include "util/MemoryBlockFactory.h"
+#include <itmx/base/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
@@ -34,9 +35,7 @@ VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t 
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                              const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                              ORUtils::MemoryBlock<float>& featuresMB) const
+void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxelScene *scene, ORUtils::MemoryBlock<float>& featuresMB) const
 {
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
   process_debug_window();

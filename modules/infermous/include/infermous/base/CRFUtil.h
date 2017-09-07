@@ -6,7 +6,7 @@
 #ifndef H_INFERMOUS_CRFUTIL
 #define H_INFERMOUS_CRFUTIL
 
-#include <tvgutil/ArgUtil.h>
+#include <tvgutil/misc/ArgUtil.h>
 
 #include "Grids.h"
 

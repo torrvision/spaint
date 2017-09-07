@@ -17,11 +17,6 @@ namespace spaint {
  */
 class MedianFilterer
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The image processor. */
@@ -38,7 +33,7 @@ public:
    * \param kernelWidth The kernel width to use for median filtering.
    * \param deviceType  The device on which the filterer should operate.
    */
-  MedianFilterer(unsigned int kernelWidth, ITMLibSettings::DeviceType deviceType);
+  MedianFilterer(unsigned int kernelWidth, ITMLib::ITMLibSettings::DeviceType deviceType);
 
   //#################### PUBLIC OPERATORS ####################
 public:

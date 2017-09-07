@@ -4,10 +4,10 @@
 
 #include "touch/TouchSettings.h"
 
-#include <tvgutil/DirectoryUtil.h>
-#include <tvgutil/MapUtil.h>
-#include <tvgutil/PropertyUtil.h>
-#include <tvgutil/SerializationUtil.h>
+#include <tvgutil/containers/MapUtil.h>
+#include <tvgutil/filesystem/FilesystemUtil.h>
+#include <tvgutil/persistence/PropertyUtil.h>
+#include <tvgutil/persistence/SerializationUtil.h>
 using namespace tvgutil;
 
 namespace spaint {
@@ -17,7 +17,7 @@ namespace spaint {
 TouchSettings::TouchSettings(const boost::filesystem::path& touchSettingsFile)
 {
   // Load in the settings.
-  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(touchSettingsFile.string());
+  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml_file(touchSettingsFile.string());
   std::map<std::string,std::string> properties = PropertyUtil::make_property_map(tree);
 
   std::string forestPath;
@@ -48,7 +48,7 @@ TouchSettings::TouchSettings(const boost::filesystem::path& touchSettingsFile)
       throw std::runtime_error("Save candidate components path not found: " + saveCandidateComponentsPath + ". Please add a valid path to the touch settings.");
     }
 
-    static size_t fileCount = tvgutil::DirectoryUtil::get_file_count(saveCandidateComponentsPath);
+    static size_t fileCount = tvgutil::FilesystemUtil::get_file_count(saveCandidateComponentsPath);
     if(fileCount > 0)
     {
       throw std::runtime_error("Error: " + saveCandidateComponentsPath + " already contains " + boost::lexical_cast<std::string>(fileCount) + " files");

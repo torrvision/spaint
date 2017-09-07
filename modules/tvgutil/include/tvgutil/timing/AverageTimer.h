@@ -58,13 +58,11 @@ public:
   /**
    * \brief Computes the average time taken by the event on each run.
    *
-   * \return                    The average time taken by the event on each run.
-   * \throws std::runtime_error If the event has not previously been executed at least once.
+   * \return  The average time taken by the event on each run, or zero if the event has never run.
    */
   Scale average_duration() const
   {
-    if(m_count == 0) throw std::runtime_error("Error: Cannot calculate the average duration of an event until it has been executed at least once");
-    return m_totalDuration / m_count;
+    return m_count != 0 ? Scale(m_totalDuration / m_count) : Scale(0);
   }
 
   /**

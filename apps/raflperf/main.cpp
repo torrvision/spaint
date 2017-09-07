@@ -8,6 +8,7 @@
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 
+#include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomPermutationAndDivisionSplitGenerator.h>
@@ -29,7 +30,6 @@ using namespace tvgutil;
 
 typedef int Label;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### FUNCTIONS ####################
 
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
   for(size_t n = 0, size = params.size(); n < size; ++n)
   {
     evaluator.reset(new RandomForestEvaluator<Label>(splitGenerator, params[n]));
-    std::map<std::string,PerformanceMeasure> result = evaluator->evaluate(examples);
+    PerformanceResult result = evaluator->evaluate(examples);
     results.record_performance(params[n], result);
   }
 

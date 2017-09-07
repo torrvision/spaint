@@ -23,9 +23,8 @@ class InputState
 private:
   std::map<Keycode,bool> m_keyDown;
   std::map<MouseButton,bool> m_mouseButtonDown;
-  int m_mouseMotionX, m_mouseMotionY;
-  int m_mousePositionX, m_mousePositionY;
-  std::vector<int> m_mousePressedX, m_mousePressedY;
+  float m_mousePositionX, m_mousePositionY;
+  std::vector<float> m_mousePressedX, m_mousePressedY;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -40,20 +39,17 @@ private:
 public:
   bool key_down(Keycode key) const;
   bool mouse_button_down(MouseButton button) const;
-  int mouse_motion_x() const;
-  int mouse_motion_y() const;
   bool mouse_position_known() const;
-  int mouse_position_x() const;
-  int mouse_position_y() const;
-  int mouse_pressed_x(MouseButton button) const;
-  int mouse_pressed_y(MouseButton button) const;
+  float mouse_position_x() const;
+  float mouse_position_y() const;
+  float mouse_pressed_x(MouseButton button) const;
+  float mouse_pressed_y(MouseButton button) const;
   void press_key(Keycode key);
-  void press_mouse_button(MouseButton button, int x, int y);
+  void press_mouse_button(MouseButton button, float x, float y);
   void release_key(Keycode key);
   void release_mouse_button(MouseButton button);
   void reset();
-  void set_mouse_motion(int x, int y);
-  void set_mouse_position(int x, int y);
+  void set_mouse_position(float x, float y);
 };
 
 }

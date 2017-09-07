@@ -8,13 +8,13 @@ This is an open-source, real-time implementation of the interactive *SemanticPai
 
 This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg).
 
-It is built on top of [InfiniTAM v2](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact either [Victor Adrian Prisacariu](mailto:victor@viprad.net) or [Olaf Kaehler](mailto:olaf@robots.ox.ac.uk).
+It is built on top of [InfiniTAM v3](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
 
 The original concept for *SemanticPaint* was developed by a large number of people both at the University of Oxford and at Microsoft Research: Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi and Philip H S Torr.
 
 ## Acknowledgements
 
-We gratefully acknowledge the help of Julien Valentin, for his help in getting us up to speed with the project, of Victor Adrian Prisacariu, Olaf Kaehler and Carl Yuheng Ren, for implementing the 3D reconstruction engine on which our work is based, without which our work would not be possible, of Anurag Arnab, for his help with the saving and loading of scenes, and of Stephen Hicks and Joram van Rheede, for helping us to exhibit our work at SIGGRAPH 2015.
+We gratefully acknowledge the help of Julien Valentin, for his help in getting us up to speed with the project, of Victor Adrian Prisacariu and Olaf Kaehler, for implementing the 3D reconstruction engine on which our work is based, without which our work would not be possible, of Anurag Arnab, for his help with the saving and loading of scenes, and of Stephen Hicks and Joram van Rheede, for helping us to exhibit our work at SIGGRAPH 2015.
 
 ## Context
 
@@ -46,13 +46,24 @@ If you build on this framework for your research, please consider citing both ou
 }
 ```
 
+If you rely on the ```grove``` relocalisation module, please cite the relevant paper:
+```
+@inproceedings{Cavallari2017,
+  author = {Tommaso Cavallari and Stuart Golodetz* and Nicholas A Lord* and Julien Valentin and Luigi Di Stefano and Philip H S Torr},
+  title = {{On-The-Fly Adaptation of Regression Forests for Online Camera Relocalisation}},
+  booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  month = {July},
+  year = {2017}
+}
+```
+
 # Installation Guide
 
 ## 1. Building the System
 
 ### 1.1 Overview
 
-SemanticPaint builds with CMake 2.8 and above on Windows, Ubuntu and Mac OS X.
+SemanticPaint builds with CMake 3.8 and above on Windows, Ubuntu and Mac OS X.
 It has been tested on recent versions of all three operating systems, but may
 require additional work to build on older versions.
 
@@ -68,6 +79,11 @@ build "out of the box". However, most users will probably want to install
 the remaining optional libraries in order to enable full functionality.
 
 ```
+  - ALGLIB
+    Status: Optional (needed to build Grove)
+    Default: Enabled
+    Flag: WITH_ALGLIB
+
   - ArrayFire
     Status: Optional (needed for touch interaction and median filtering)
     Default: Disabled
@@ -87,7 +103,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 2)
+  - InfiniTAM (version 3)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -100,9 +116,9 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_OVR
 
-  - OpenCV (version 2.4.9)
-    Status: Optional (needed for feature inspection mode)
-    Default: Disabled
+  - OpenCV (version 3.1.0)
+    Status: Optional (needed for feature inspection mode and relocalisation apps)
+    Default: Enabled
     Flag: WITH_OPENCV
 
   - OpenGL
@@ -136,7 +152,7 @@ Common steps on all platforms:
 
   2. Clone the InfiniTAM repository into <root>/InfiniTAM.
 
-  3. Build the spaint_v2 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
+  3. Build the spaint_v3 branch of InfiniTAM using the script located at <root>/InfiniTAM/build-{nix,win}.sh.
 
   4. Clone SemanticPaint into <root>/spaint, e.g.
 
@@ -217,7 +233,35 @@ $ ./spaintgui Teddy/calib.txt Teddy/Frames/%04i.ppm Teddy/Frames/%04i.pgm
 The arguments specify a text file containing calibration parameters,
 and masks for the RGB and depth images in the input sequence.
 
-## 3. Troubleshooting Tips
+## 3. Grove support
+
+In this version of SemanticPaint we also provide an implementation of the camera relocalisation system published in [Cavallari17], as part of the ```grove``` module.
+Using this relocaliser, currently enabled by default in ```spaintgui```, it is possible to reliably recover from camera tracking failures, thanks to the adaptation on-the-fly of a Scene Coordinate Regression Forest.
+It is possible to test the behaviour of the relocaliser by briefly reconstructing an environment and subsequently covering the camera lens e.g. with an hand. After moving the covered camera, the system should be able to correctly estimate the camera pose and restart the SemanticPaint reconstruction engine.
+
+It is also possible to evaluate the performances of the relocaliser against a standard relocalisation dataset such as 7-Scenes, presented in [Shotton13].
+To do so, follow these steps:
+
+  1. Download the dataset from [here](https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/) and unzip all files. Make sure to also unzip the nested files in the respective folders.
+  2. Prepare the train/test splits folder structure running the following command:
+     ```
+     <root>/build/bin/apps/prepare_7scenes/prepare_7scenes <7-Scenes root folder>
+     ```
+  3. Run the evaluation script on all sequences:
+     ```
+     <root>/build/bin/apps/relocperf/resources/7scenes_batch.sh <7-Scenes root folder>
+     ```
+  4. Run the ```relocperf``` application to print statistics:
+     ```
+     <root>/build/bin/apps/relocperf/relocperf -d <7-Scenes root folder> -r <root>/build/bin/apps/spaintgui/reloc_poses -t Default
+     ```
+
+If you just want to run the relocaliser without running the full ```spaintgui``` pipeline, you can run:
+```
+<root>/build/bin/apps/relocgui/relocgui -c <7-Scenes root folder>/calib.txt --train <7-Scenes root folder>/<sequence name>/train --test <7-Scenes root folder>/<sequence name>/test
+```
+
+## 4. Troubleshooting Tips
 
 If you have any trouble with the build, here are some of the likely causes:
 
@@ -239,10 +283,10 @@ No part of the Software may be reproduced, modified, transmitted or transferred 
 
 You are not permitted under this Licence to use this Software commercially. Use for which any financial return is received shall be defined as commercial use, and includes:
 
-1. integration of all or part of the source code or the Software into a product for sale or license by or on behalf of Licensee to third parties or 
-2. use of the Software or any derivative of it for research with the final aim of developing software products for sale or license to a third party or 
-3. use of the Software or any derivative of it for research with the final aim of developing non-software products for sale or license to a third party, or 
-4. use of the Software to provide any service to an external organisation for which payment is received. 
+1. integration of all or part of the source code or the Software into a product for sale or license by or on behalf of Licensee to third parties or
+2. use of the Software or any derivative of it for research with the final aim of developing software products for sale or license to a third party or
+3. use of the Software or any derivative of it for research with the final aim of developing non-software products for sale or license to a third party, or
+4. use of the Software to provide any service to an external organisation for which payment is received.
 
 If you are interested in using the Software commercially, please contact Torr Vision Group directly to negotiate a licence.
 
@@ -250,12 +294,16 @@ Contact details are: [philip.torr@eng.ox.ac.uk](mailto:philip.torr@eng.ox.ac.uk)
 
 # History
 
+* 2017-AUG-08: second public release
+* 2017-JUL-17: release with Grove support
 * 2015-SEP-26: first public release
 * 2015-JUL-23: initial draft
 
 # References
 
+* [Cavallari17] Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin, Luigi Di Stefano, Philip H. S. Torr. On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation. IEEE Conference on Computer Vision and Pattern Recognition, 2017.
 * [Kaehler15] Olaf Kaehler, Victor Adrian Prisacariu, Carl Yuheng Ren, Xin Sun, Philip Torr and David Murray. Very High Frame Rate Volumetric Integration of Depth Images on Mobile Devices. IEEE Transactions on Visualization and Computer Graphics, 21(11), November 2015.
 * [Newcombe11] Richard Newcombe, Shahram Izadi, Otmar Hilliges, David Molyneaux, David Kim, Andrew Davison, Pushmeet Kohli, Jamie Shotton, Steve Hodges and Andrew Fitzgibbon. KinectFusion: Real-Time Dense Surface Mapping and Tracking. ISMAR, 2011.
 * [Niessner13] Matthias Niessner, Michael Zollhoefer, Shahram Izadi, and Marc Stamminger. Real-time 3D Reconstruction at Scale using Voxel Hashing. ACM Transactions on Graphics, 32(6):169, 2013.
+* [Shotton13] Jamie Shotton, Ben Glocker, Christopher Zach, Shahram Izadi, Antonio Criminisi, Andrew Fitzgibbon. Scene Coordinate Regression Forests for Camera Relocalization in RGB-D Images. IEEE Conference on Computer Vision and Pattern Recognition, 2013.
 * [Valentin15] Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi, and Philip H S Torr. SemanticPaint: Interactive 3D Labeling and Learning at your Fingertips. ACM Transactions on Graphics, 34(5), August 2015.

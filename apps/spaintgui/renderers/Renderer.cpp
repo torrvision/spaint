@@ -4,11 +4,17 @@
  */
 
 #include "Renderer.h"
+using namespace ITMLib;
+using namespace ORUtils;
+using namespace rigging;
 
+#include <spaint/ogl/CameraRenderer.h>
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
 #include <spaint/selectors/PickingSelector.h>
+#include <spaint/util/CameraFactory.h>
 #include <spaint/util/CameraPoseConverter.h>
+using namespace spaint;
 
 #ifdef WITH_ARRAYFIRE
 #include <spaint/imageprocessing/MedianFilterer.h>
@@ -18,8 +24,6 @@
 #ifdef WITH_LEAP
 #include <spaint/selectors/LeapSelector.h>
 #endif
-
-using namespace spaint;
 
 //#################### LOCAL TYPES ####################
 
@@ -50,9 +54,14 @@ public:
   /** Override */
   virtual void visit(const LeapSelector& selector) const
   {
+    // Render the camera representing the Leap Motion controller's coordinate frame.
+    CameraRenderer::render_camera(selector.get_camera(), CameraRenderer::AXES_XYZ, 0.1f);
+
+    // Get the most recent frame of data from the Leap Motion. If it's invalid or does not contain precisely one hand, early out.
     const Leap::Frame& frame = selector.get_frame();
     if(!frame.isValid() || frame.hands().count() != 1) return;
 
+    // Render the virtual hand.
     const Leap::Hand& hand = frame.hands()[0];
     for(int fingerIndex = 0, fingerCount = hand.fingers().count(); fingerIndex < fingerCount; ++fingerIndex)
     {
@@ -65,16 +74,31 @@ public:
 
         glColor3f(0.8f, 0.8f, 0.8f);
         QuadricRenderer::render_cylinder(
-          LeapSelector::from_leap_vector(bone.prevJoint()),
-          LeapSelector::from_leap_vector(bone.nextJoint()),
+          selector.from_leap_position(bone.prevJoint()),
+          selector.from_leap_position(bone.nextJoint()),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           10
         );
 
         glColor3f(1.0f, 0.0f, 0.0f);
-        QuadricRenderer::render_sphere(LeapSelector::from_leap_vector(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
+        QuadricRenderer::render_sphere(selector.from_leap_position(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
       }
+    }
+
+    // If the selector is in point mode and the user is pointing at a valid voxel in the world,
+    // draw a line between the tip of the virtual index finger and the voxel in question.
+    if(selector.get_mode() == LeapSelector::MODE_POINT && selector.get_position())
+    {
+      const Leap::Finger& indexFinger = hand.fingers()[1];
+      Eigen::Vector3f start = selector.from_leap_position(indexFinger.tipPosition());
+      Eigen::Vector3f end = *selector.get_position();
+
+      glColor3f(0.0f, 1.0f, 1.0f);
+      glBegin(GL_LINES);
+        glVertex3f(start.x(), start.y(), start.z());
+        glVertex3f(end.x(), end.y(), end.z());
+      glEnd();
     }
   }
 #endif
@@ -92,8 +116,8 @@ public:
   /** Override */
   virtual void visit(const TouchSelector& selector) const
   {
-    // Render a colour image containing the current touch interaction.
-    render_touch_image(selector.generate_touch_image(m_base->m_model->get_view()));
+    // Render the current touch interaction as an overlay.
+    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_slam_state(Model::get_world_scene_id())->get_view()));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -105,7 +129,7 @@ public:
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
-    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size();
+    const Vector2i& depthImageSize = m_base->m_model->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
     const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
 
     const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);
@@ -150,45 +174,22 @@ private:
     QuadricRenderer::render_sphere(centre, radius, 10, 10);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
-  
-  /**
-   * \brief Renders a colour image containing the current touch interaction.
-   *
-   * The rendering works by drawing a semi-transparent quad textured with the touch image over the existing scene.
-   *
-   * \param touchImage  A colour image containing the current touch interaction.
-   */
-  void render_touch_image(const ITMUChar4Image_CPtr& touchImage) const
-  {
-    // Copy the touch image to a texture.
-    glBindTexture(GL_TEXTURE_2D, m_base->m_textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, touchImage->noDims.x, touchImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, touchImage->GetData(MEMORYDEVICE_CPU));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    // Enable blending.
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Render a semi-transparent quad textured with the touch image over the top of the existing scene.
-    m_base->begin_2d();
-      m_base->render_textured_quad(m_base->m_textureID);
-    m_base->end_2d();
-
-    // Disable blending again.
-    glDisable(GL_BLEND);
-  }
 };
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster)
-: m_cameraMode(CM_FOLLOW),
-  m_medianFilteringEnabled(true),
+Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
+: m_medianFilteringEnabled(true),
   m_model(model),
-  m_raycaster(raycaster),
-  m_raycastType(Raycaster::RT_SEMANTICLAMBERTIAN)
-{}
+  m_subwindowConfiguration(subwindowConfiguration),
+  m_windowViewportSize(windowViewportSize)
+{
+  // Reset the camera for each sub-window.
+  for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    m_subwindowConfiguration->subwindow(i).reset_camera();
+  }
+}
 
 //#################### DESTRUCTOR ####################
 
@@ -196,9 +197,31 @@ Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-Renderer::CameraMode Renderer::get_camera_mode() const
+ITMUChar4Image_CPtr Renderer::capture_screenshot() const
 {
-  return m_cameraMode;
+  // Read the pixel data from video memory into an image.
+  const int width = m_windowViewportSize.width, height = m_windowViewportSize.height;
+  ITMUChar4Image_Ptr screenshotImage(new ITMUChar4Image(Vector2i(width, height), true, false));
+  Vector4u *pixelData = screenshotImage->GetData(MEMORYDEVICE_CPU);
+  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
+
+  // Since the image we read from OpenGL will be upside-down, flip it before returning.
+  for(int y = 0, halfHeight = height / 2; y < halfHeight; ++y)
+  {
+    int rowOffset1 = y * width, rowOffset2 = (height - 1 - y) * width;
+    for(int x = 0; x < width; ++x)
+    {
+      std::swap(pixelData[rowOffset1 + x], pixelData[rowOffset2 + x]);
+    }
+  }
+
+  return screenshotImage;
+}
+
+Vector2f Renderer::compute_fractional_window_position(int x, int y) const
+{
+  const Vector2f windowViewportSize = get_window_viewport_size().toFloat();
+  return Vector2f(x / (windowViewportSize.x - 1), y / (windowViewportSize.y - 1));
 }
 
 bool Renderer::get_median_filtering_enabled() const
@@ -206,19 +229,19 @@ bool Renderer::get_median_filtering_enabled() const
   return m_medianFilteringEnabled;
 }
 
-void Renderer::set_camera_mode(CameraMode cameraMode)
+const SubwindowConfiguration_Ptr& Renderer::get_subwindow_configuration()
 {
-  m_cameraMode = cameraMode;
+  return m_subwindowConfiguration;
+}
+
+SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
+{
+  return m_subwindowConfiguration;
 }
 
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
-}
-
-void Renderer::set_raycast_type(Raycaster::RaycastType raycastType)
-{
-  m_raycastType = raycastType;
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -241,7 +264,6 @@ void Renderer::begin_2d()
 
 void Renderer::destroy_common()
 {
-  m_image.reset();
   glDeleteTextures(1, &m_textureID);
 }
 
@@ -249,7 +271,7 @@ void Renderer::end_2d()
 {
   glDepthMask(true);
 
-  // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
+  glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
   glMatrixMode(GL_PROJECTION);
@@ -266,28 +288,63 @@ SDL_Window *Renderer::get_window() const
   return m_window.get();
 }
 
+const Vector2i& Renderer::get_window_viewport_size() const
+{
+  return m_windowViewportSize;
+}
+
 void Renderer::initialise_common()
 {
-  // Create an image into which to temporarily store visualisations of the scene.
-  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
-
-  // Set up a texture in which to temporarily store the scene raycast and touch image when rendering.
+  // Set up a texture in which to temporarily store scene visualisations and the touch image when rendering.
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials, int viewIndex, const std::string& secondaryCameraName) const
 {
-  // Set the viewport.
-  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
-  glViewport(0, 0, depthImageSize.width, depthImageSize.height);
+  // Set the viewport for the window.
+  const Vector2i& windowViewportSize = get_window_viewport_size();
+  glViewport(0, 0, windowViewportSize.width, windowViewportSize.height);
 
   // Clear the frame buffer.
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // Render the reconstructed scene, then render a synthetic scene over the top of it.
-  render_reconstructed_scene(pose, renderState);
-  render_synthetic_scene(pose, interactor);
+  // Render all the sub-windows.
+  for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
+  {
+    Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
+
+    // If we have not yet started reconstruction for this sub-window's scene, skip rendering it.
+    const std::string& sceneID = subwindow.get_scene_id();
+    if(!m_model->get_slam_state(sceneID)->get_view()) continue;
+
+    // Set the viewport for the sub-window.
+    int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
+    int top = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
+    int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
+    int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
+    glViewport(left, top, width, height);
+
+    // If the sub-window is in follow mode, update its camera.
+    if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
+    {
+      ORUtils::SE3Pose livePose = m_model->get_slam_state(subwindow.get_scene_id())->get_pose();
+      subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
+    }
+
+    // Determine the pose from which to render.
+    Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
+    ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
+
+    // Render the reconstructed scene, then render a synthetic scene over the top of it.
+    render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
+
+#if WITH_GLUT && USE_PIXEL_DEBUGGING
+    // Render the value of the pixel to which the user is pointing (for debugging purposes).
+    render_pixel_value(fracWindowPos, subwindow);
+#endif
+  }
 }
 
 void Renderer::set_window(const SDL_Window_Ptr& window)
@@ -309,11 +366,74 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::render_reconstructed_scene(const ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
+                                      VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
+                                      const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
-  // Set up any post-processing that needs to be applied to the raycast result.
+  VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
+
+  switch(visualisationType)
+  {
+    case VisualisationGenerator::VT_INPUT_COLOUR:
+      visualisationGenerator->get_rgb_input(output, view);
+      break;
+    case VisualisationGenerator::VT_INPUT_DEPTH:
+      visualisationGenerator->get_depth_input(output, view);
+      break;
+    default:
+      if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
+      else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
+      break;
+  }
+}
+
+void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+{
+  // Copy the overlay to a texture.
+  glBindTexture(GL_TEXTURE_2D, m_textureID);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, overlay->noDims.x, overlay->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, overlay->GetData(MEMORYDEVICE_CPU));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  // Enable blending.
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  // Render a semi-transparent quad textured with the overlay over the top of the existing scene.
+  begin_2d();
+    render_textured_quad(m_textureID);
+  end_2d();
+
+  // Disable blending again.
+  glDisable(GL_BLEND);
+}
+
+#if WITH_GLUT && USE_PIXEL_DEBUGGING
+void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow& subwindow) const
+{
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracWindowPos);
+  if(!fracSubwindowPos) return;
+
+  ITMUChar4Image_CPtr image = subwindow.get_image();
+  int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
+  int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
+  Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
+
+  std::ostringstream oss;
+  oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
+
+  begin_2d();
+    render_text(oss.str(), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(0.025f, 0.95f));
+  end_2d();
+}
+#endif
+
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
+{
+  // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
-  static boost::optional<Raycaster::Postprocessor> postprocessor = boost::none;
+  static boost::optional<VisualisationGenerator::Postprocessor> postprocessor = boost::none;
   if(!m_medianFilteringEnabled && postprocessor)
   {
     postprocessor.reset();
@@ -326,22 +446,28 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, Raycaster::Render
 #endif
   }
 
-  // Raycast the scene.
-  m_raycaster->generate_free_raycast(m_image, renderState, pose, m_raycastType, postprocessor);
+  // Generate the subwindow image.
+  const ITMUChar4Image_Ptr& image = subwindow.get_image();
+  SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+  generate_visualisation(
+    image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
+    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+  );
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-  // Render a quad textured with the raycasted scene.
+  // Render a quad textured with the subwindow image.
   begin_2d();
     render_textured_quad(m_textureID);
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr& interactor) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -349,8 +475,9 @@ void Renderer::render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
-    set_projection_matrix(m_model->get_intrinsics(), depthImageSize.width, depthImageSize.height);
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+    ORUtils::Vector2<int> depthImageSize = slamState->get_depth_image_size();
+    set_projection_matrix(slamState->get_intrinsics(), depthImageSize.width, depthImageSize.height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -358,21 +485,41 @@ void Renderer::render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr
       // Note: Conveniently, data() returns the elements in column-major order (the order required by OpenGL).
       glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data());
 
-      // Render the axes.
-      glBegin(GL_LINES);
-        glColor3f(1.0f, 0.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
-        glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
-        glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
-      glEnd();
+      // Render the default camera.
+      static SimpleCamera defaultCam = *CameraFactory::make_default_camera();
+      CameraRenderer::render_camera(defaultCam);
 
       // Render the current selector to show how we're interacting with the scene.
-      Vector3u labelColour = m_model->get_label_manager()->get_label_colour(interactor->get_semantic_label());
+      Vector3u labelColour = m_model->get_label_manager()->get_label_colour(m_model->get_semantic_label());
       Vector3f selectorColour(labelColour.r / 255.0f, labelColour.g / 255.0f, labelColour.b / 255.0f);
       SelectorRenderer selectorRenderer(this, selectorColour);
-      Interactor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
+      SelectionTransformer_CPtr transformer = m_model->get_selection_transformer();
       if(transformer) transformer->accept(selectorRenderer);
-      interactor->get_selector()->accept(selectorRenderer);
+      m_model->get_selector()->accept(selectorRenderer);
+
+      // If we're rendering fiducials, render any that have been detected.
+      if(renderFiducials)
+      {
+        const std::map<std::string,Fiducial_Ptr>& fiducials = slamState->get_fiducials();
+        for(std::map<std::string,Fiducial_Ptr>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
+        {
+          float confidence = it->second->confidence();
+          if(confidence < Fiducial::stable_confidence()) continue;
+
+          SimpleCamera cam = CameraPoseConverter::pose_to_camera(it->second->pose());
+          float c = CLAMP(confidence / Fiducial::stable_confidence(), 0.0f, 1.0f);
+          CameraRenderer::render_camera(cam, CameraRenderer::AXES_XYZ, 0.1f, Vector3f(c, c, 0.0f));
+        }
+      }
+
+      // If the camera for the subwindow is in follow mode, render any overlay image generated during object segmentation.
+      if(cameraMode == Subwindow::CM_FOLLOW)
+      {
+        const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image(sceneID);
+        if(segmentationImage) render_overlay(segmentationImage);
+      }
     }
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
   }
   glMatrixMode(GL_PROJECTION);
@@ -380,6 +527,18 @@ void Renderer::render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr
 
   glDisable(GL_DEPTH_TEST);
 }
+
+#ifdef WITH_GLUT
+void Renderer::render_text(const std::string& text, const Vector3f& colour, const Vector2f& pos, void *font)
+{
+  glColor3f(colour.r, colour.g, colour.b);
+  glRasterPos2f(pos.x, pos.y);
+  for(size_t i = 0, len = text.length(); i < len; ++i)
+  {
+    glutBitmapCharacter(font, text[i]);
+  }
+}
+#endif
 
 void Renderer::render_textured_quad(GLuint textureID)
 {

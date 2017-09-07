@@ -1,7 +1,7 @@
-#include "ITMLib/ITMLib.h"
+#include <ITMLib/Objects/Camera/ITMIntrinsics.h>
 
 int main()
 {
-  ITMLib::Objects::ITMPose pose;
+  ITMLib::ITMIntrinsics intrinsics;
   return 0;
 }

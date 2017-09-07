@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_PICKER_SHARED
 #define H_SPAINT_PICKER_SHARED
 
-#include <ITMLib/Utils/ITMLibDefines.h>
+#include <ITMLib/Utils/ITMMath.h>
 
 namespace spaint {
 

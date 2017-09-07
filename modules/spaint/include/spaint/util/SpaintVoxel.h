@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_SPAINTVOXEL
 #define H_SPAINT_SPAINTVOXEL
 
-#include <ITMLib/Utils/ITMLibDefines.h>
+#include <ITMLib/ITMLibDefines.h>
 
 namespace spaint {
 
@@ -24,6 +24,8 @@ struct SpaintVoxel
 #else
   static const bool hasColorInformation = false;
 #endif
+
+  static const bool hasConfidenceInformation = false;
 
   //#################### TYPEDEFS ####################
 
@@ -111,7 +113,7 @@ struct SpaintVoxel
     sdf = SDF_initialValue();
     w_depth = 0;
 #ifndef USE_LOW_POWER_MODE
-    clr = (uchar)0;
+    clr = Vector3u((uchar)0);
     w_color = 0;
 #endif
     packedLabel = PackedLabel(0, LG_USER);
@@ -120,8 +122,8 @@ struct SpaintVoxel
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   _CPU_AND_GPU_CODE_ static short SDF_initialValue() { return 32767; }
-  _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
-  _CPU_AND_GPU_CODE_ static short SDF_floatToValue(float x) { return (short)((x) * 32767.0f); }
+  _CPU_AND_GPU_CODE_ static float valueToFloat(float x) { return (float)(x) / 32767.0f; }
+  _CPU_AND_GPU_CODE_ static short floatToValue(float x) { return (short)((x) * 32767.0f); }
 };
 
 //#################### COLOUR READING ####################

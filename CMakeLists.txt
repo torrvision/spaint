@@ -2,9 +2,15 @@
 # Top-level CMakeLists.txt for spaint #
 #######################################
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 
 PROJECT(spaint)
+
+#############################
+# Enable C++11 if requested #
+#############################
+
+INCLUDE(cmake/OfferC++11Support.cmake)
 
 #################################
 # Add additional compiler flags #
@@ -24,7 +30,7 @@ ENDIF()
 #########################################
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  SET(CMAKE_INSTALL_PREFIX ../install CACHE PATH "" FORCE)
+  SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install CACHE PATH "" FORCE)
 ENDIF()
 
 ##########################
@@ -36,8 +42,10 @@ ADD_SUBDIRECTORY(modules)
 OPTION(BUILD_APPS "Build the applications?" ON)
 OPTION(BUILD_AUXILIARY_APPS "Build the auxiliary applications?" ON)
 OPTION(BUILD_EVALUATION_MODULES "Build the evaluation modules?" ON)
+OPTION(BUILD_GROVE "Build grove?" ON)
 OPTION(BUILD_INFERMOUS "Build infermous?" OFF)
-OPTION(BUILD_TESTS "Build the tests?" ON)
+OPTION(BUILD_SPAINT "Build spaint?" ON)
+OPTION(BUILD_TESTS "Build the tests?" OFF)
 
 IF(BUILD_APPS)
   ADD_SUBDIRECTORY(apps)

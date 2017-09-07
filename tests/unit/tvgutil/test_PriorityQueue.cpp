@@ -1,7 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
-#include <tvgutil/PriorityQueue.h>
+#include <tvgutil/containers/PriorityQueue.h>
 using namespace tvgutil;
 
 typedef PriorityQueue<std::string, double, int, std::greater<double> > PQ;

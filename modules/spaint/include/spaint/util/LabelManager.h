@@ -12,7 +12,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <tvgutil/IDAllocator.h>
+#include <tvgutil/misc/IDAllocator.h>
 
 #include "SpaintVoxel.h"
 

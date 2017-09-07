@@ -10,6 +10,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <ITMLib/Utils/ITMMath.h>
+
 namespace spaint {
 
 /**
@@ -126,6 +128,23 @@ public:
 
   /**
    * \brief Makes a greyscale OpenCV image from some pixel data in the specified format,
+   *        applying the specified scaling factor to each pixel value as it goes.
+   *
+   * \param inputData   The pixel data for the image.
+   * \param width       The width of the image.
+   * \param height      The height of the image.
+   * \param order       Whether the pixel data is in row-major or column-major order.
+   * \param scaleFactor The scaling factor.
+   * \return            The OpenCV image.
+   */
+  template <typename T>
+  static cv::Mat1b make_greyscale_image(const T *inputData, int width, int height, Order order, float scaleFactor)
+  {
+    return make_greyscale_image(inputData, width, height, order, ScaleByFactor(scaleFactor));
+  }
+
+  /**
+   * \brief Makes a greyscale OpenCV image from some pixel data in the specified format,
    *        applying the specified scaling function to each pixel value as it goes.
    *
    * \param inputData The pixel data for the image.
@@ -172,6 +191,18 @@ public:
    * \return        The image.
    */
   static cv::Mat3b make_rgb_image(const float *rgbData, int width, int height);
+
+  /**
+   * \brief Makes an RGB image of the specified size from some RGBA pixel data.
+   *
+   * Note: The alpha channel is discarded during this process.
+   *
+   * \param rgbaData  The pixel data for the image, in the format [(R1,G1,B1,A1),(R2,G2,B2,A2),...].
+   * \param width     The width of the image.
+   * \param height    The height of the image.
+   * \return          The image.
+   */
+  static cv::Mat3b make_rgb_image(const Vector4u *rgbaData, int width, int height);
 
   /**
    * \brief Makes a copy of an RGB image that has been padded with a black border.

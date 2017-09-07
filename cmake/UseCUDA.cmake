@@ -2,11 +2,11 @@
 # UseCUDA.cmake #
 #################
 
-OPTION(WITH_CUDA "Build with CUDA support?" ON)
+FIND_PACKAGE(CUDA QUIET)
+
+OPTION(WITH_CUDA "Build with CUDA support?" ${CUDA_FOUND})
 
 IF(WITH_CUDA)
-  FIND_PACKAGE(CUDA)
-
   SET(CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" FORCE)
 
   # Auto-detect the CUDA compute capability.
@@ -29,13 +29,22 @@ IF(WITH_CUDA)
     SET(CUDA_NVCC_FLAGS -Xcompiler -stdlib=libstdc++; -Xlinker -stdlib=libstdc++; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
-  # If on Linux, make sure that C++11 support is enabled when compiling with nvcc.
+  # If on Linux:
   IF(${CMAKE_SYSTEM} MATCHES "Linux")
-    SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
+    # Make sure that C++11 support is enabled when compiling with nvcc. From CMake 3.5 onwards,
+    # the host flag -std=c++11 is automatically propagated to nvcc. Manually setting it prevents
+    # the project from building.
+    IF(${CMAKE_VERSION} VERSION_LESS 3.5)
+      SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
+    ENDIF()
+
+    SET(CUDA_NVCC_FLAGS -Xcompiler -std=c++11; -Xlinker -std=c++11; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
-  # If not on Windows, disable some annoying nvcc warnings.
-  IF(NOT MSVC_IDE)
+  # Disable some annoying nvcc warnings.
+  IF(MSVC_IDE)
+    SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=bad_friend_decl" ; -Xcudafe "--diag_suppress=overloaded_function_linkage" ; ${CUDA_NVCC_FLAGS})
+  ELSE()
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()
 

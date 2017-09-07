@@ -32,7 +32,7 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
 }
 
 /**
- * \brief Copies a greyscale pixel value from an ArrayFire image to an InfiniTAM image.
+ * \brief Copies a single-channel pixel value from an ArrayFire image to an InfiniTAM image.
  *
  * \param columnMajorIndex  The column-major index of the pixel to be copied.
  * \param inputData         The data for the input image (in column-major format).
@@ -40,8 +40,9 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
  * \param height            The height of each image.
  * \param outputData        The data for the output image (in row-major format).
  */
+template <typename ElementType>
 _CPU_AND_GPU_CODE_
-inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inputData, int width, int height, unsigned char *outputData)
+inline void copy_af_pixel_to_itm(int columnMajorIndex, const ElementType *inputData, int width, int height, ElementType *outputData)
 {
   int row = columnMajorIndex % height, col = columnMajorIndex / height;
   int rowMajorIndex = row * width + col;
@@ -49,52 +50,68 @@ inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inpu
 }
 
 /**
- * \brief Copies an RGBA pixel value from an ArrayFire image to an InfiniTAM image.
+ * \brief Copies a four-channel pixel value from an ArrayFire image to an InfiniTAM image.
  *
  * \param columnMajorIndex  The column-major index of the pixel to be copied.
- * \param inputRedData      The data for the red channel of the input image (in column-major format).
- * \param inputGreenData    The data for the green channel of the input image (in column-major format).
- * \param inputBlueData     The data for the blue channel of the input image (in column-major format).
- * \param inputAlphaData    The data for the alpha channel of the input image (in column-major format).
+ * \param inputData         The data for the input image (in column-major format).
  * \param width             The width of each image.
  * \param height            The height of each image.
  * \param outputData        The data for the output image (in row-major format).
  */
+template <typename ElementType>
 _CPU_AND_GPU_CODE_
-inline void copy_af_pixel_to_itm(int columnMajorIndex,
-                                 const unsigned char *inputRedData, const unsigned char *inputGreenData,
-                                 const unsigned char *inputBlueData, const unsigned char *inputAlphaData,
-                                 int width, int height, Vector4u *outputData)
+inline void copy_af_pixel_to_itm(int columnMajorIndex, const ElementType *inputData, int width, int height, ORUtils::Vector4<ElementType> *outputData)
 {
+  int size = width * height;
   int row = columnMajorIndex % height, col = columnMajorIndex / height;
   int rowMajorIndex = row * width + col;
-  outputData[rowMajorIndex] = Vector4u(inputRedData[columnMajorIndex], inputGreenData[columnMajorIndex], inputBlueData[columnMajorIndex], inputAlphaData[columnMajorIndex]);
+  outputData[rowMajorIndex] = ORUtils::Vector4<ElementType>(
+    inputData[columnMajorIndex],
+    inputData[columnMajorIndex + size],
+    inputData[columnMajorIndex + 2 * size],
+    inputData[columnMajorIndex + 3 * size]
+  );
 }
 
 /**
- * \brief Copies an RGBA pixel from an InfiniTAM image to an ArrayFire image.
+ * \brief Copies a single-channel pixel value from an InfiniTAM image to an ArrayFire image.
  *
  * \param rowMajorIndex   The row-major index of the pixel to be copied.
  * \param inputData       The data for the input image (in row-major format).
  * \param width           The width of each image.
  * \param height          The height of each image.
- * \param outputRedData   The data for the red channel of the output image (in column-major format).
- * \param outputGreenData The data for the green channel of the output image (in column-major format).
- * \param outputBlueData  The data for the blue channel of the output image (in column-major format).
- * \param outputAlphaData The data for the alpha channel of the output image (in column-major format).
+ * \param outputData      The data for the output image (in column-major format).
  */
+template <typename ElementType>
 _CPU_AND_GPU_CODE_
-inline void copy_itm_pixel_to_af(int rowMajorIndex, const Vector4u *inputData, int width, int height,
-                                 unsigned char *outputRedData, unsigned char *outputGreenData,
-                                 unsigned char *outputBlueData, unsigned char *outputAlphaData)
+inline void copy_itm_pixel_to_af(int rowMajorIndex, const ElementType *inputData, int width, int height, ElementType *outputData)
 {
   int row = rowMajorIndex / width, col = rowMajorIndex % width;
   int columnMajorIndex = col * height + row;
-  Vector4u inputPixel = inputData[rowMajorIndex];
-  outputRedData[columnMajorIndex] = inputPixel.r;
-  outputGreenData[columnMajorIndex] = inputPixel.g;
-  outputBlueData[columnMajorIndex] = inputPixel.b;
-  outputAlphaData[columnMajorIndex] = inputPixel.a;
+  outputData[columnMajorIndex] = inputData[rowMajorIndex];
+}
+
+/**
+ * \brief Copies a four-channel pixel value from an InfiniTAM image to an ArrayFire image.
+ *
+ * \param rowMajorIndex   The row-major index of the pixel to be copied.
+ * \param inputData       The data for the input image (in row-major format).
+ * \param width           The width of each image.
+ * \param height          The height of each image.
+ * \param outputData      The data for the output image (in column-major format).
+ */
+template <typename ElementType>
+_CPU_AND_GPU_CODE_
+inline void copy_itm_pixel_to_af(int rowMajorIndex, const ORUtils::Vector4<ElementType> *inputData, int width, int height, ElementType *outputData)
+{
+  int size = width * height;
+  int row = rowMajorIndex / width, col = rowMajorIndex % width;
+  int columnMajorIndex = col * height + row;
+  ORUtils::Vector4<ElementType> inputPixel = inputData[rowMajorIndex];
+  outputData[columnMajorIndex] = inputPixel.r;
+  outputData[columnMajorIndex + size] = inputPixel.g;
+  outputData[columnMajorIndex + 2 * size] = inputPixel.b;
+  outputData[columnMajorIndex + 3 * size] = inputPixel.a;
 }
 
 /**

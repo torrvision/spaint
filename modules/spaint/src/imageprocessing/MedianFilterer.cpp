@@ -4,6 +4,7 @@
  */
 
 #include "imageprocessing/MedianFilterer.h"
+using namespace ITMLib;
 
 #include "imageprocessing/ImageProcessorFactory.h"
 

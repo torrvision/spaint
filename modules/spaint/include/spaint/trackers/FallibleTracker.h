@@ -8,14 +8,14 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Engine/ITMTracker.h>
+#include <ITMLib/Trackers/Interface/ITMTracker.h>
 
 namespace spaint {
 
 /**
  * \brief An instance of a class deriving from this one can be used to track the camera pose in a way that allows it to detect tracking failures.
  */
-class FallibleTracker : public ITMLib::Engine::ITMTracker
+class FallibleTracker : public ITMLib::ITMTracker
 {
   //#################### PROTECTED VARIABLES ####################
 protected:

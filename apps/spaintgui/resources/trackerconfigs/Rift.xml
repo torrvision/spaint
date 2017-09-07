@@ -1,0 +1,4 @@
+<tracker type='composite'>
+  <tracker type='rift'/>
+  <tracker type='infinitam'/>
+</tracker>

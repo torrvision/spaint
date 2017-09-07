@@ -1,0 +1,6 @@
+<tracker type='composite'>
+  <tracker type='vicon'>
+    <params>192.168.10.1:801</params>
+  </tracker>
+  <tracker type='infinitam'/>
+</tracker>

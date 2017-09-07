@@ -4,21 +4,19 @@
  */
 
 #include "touch/TouchDetector.h"
+using namespace ITMLib;
+using namespace rafl;
 
 #include <boost/format.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
-#include <tvgutil/ArgUtil.h>
+#include <tvgutil/misc/ArgUtil.h>
 using namespace tvgutil;
 
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "touch/TouchDescriptorCalculator.h"
 #include "util/RGBDUtil.h"
-#include "visualisers/cpu/DepthVisualiser_CPU.h"
-using namespace rafl;
-
-#ifdef WITH_CUDA
-#include "visualisers/cuda/DepthVisualiser_CUDA.h"
-#endif
+#include "visualisation/VisualiserFactory.h"
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
@@ -40,16 +38,17 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
+TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
 :
   // Debugging variables.
   m_debugDelayMs(30),
   m_touchDebuggingOutputWindowName("TouchDebuggingOutputWindow"),
 
   // Normal variables.
-  m_changeMask(imgSize.y, imgSize.x),
+  m_changeMask(new af::array(imgSize.y, imgSize.x)),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
+  m_depthVisualiser(VisualiserFactory::make_depth_visualiser(itmSettings->deviceType)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageProcessor(ImageProcessorFactory::make_image_processor(itmSettings->deviceType)),
@@ -59,21 +58,6 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_touchMask(new af::array(imgSize.y, imgSize.x, u8)),
   m_touchSettings(touchSettings)
 {
-  // Set up the depth visualiser.
-  if(itmSettings->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    m_depthVisualiser.reset(new DepthVisualiser_CUDA);
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    m_depthVisualiser.reset(new DepthVisualiser_CPU);
-  }
-
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
@@ -91,7 +75,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 try
 {
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
@@ -105,7 +89,7 @@ try
   detect_changes();
 
   // Make a connected-component image from the change mask.
-  m_connectedComponentImage = af::regions(m_changeMask);
+  m_connectedComponentImage = af::regions(*m_changeMask);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_CONNECTED_COMPONENTS)
   // Display the connected components.
@@ -164,7 +148,7 @@ catch(af::exception&)
   return std::vector<Eigen::Vector2i>();
 }
 
-TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
+ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
 {
   static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
   static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));
@@ -183,7 +167,7 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
   touchMask->UpdateHostFromDevice();
 
   // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
-  Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*view->calib);
+  Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(view->calib);
 
   // Get the relevant data pointers.
   const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
@@ -230,6 +214,33 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
   return touchImage;
 }
 
+ITMFloatImage_CPtr TouchDetector::get_depth_raycast() const
+{
+  return m_depthRaycast;
+}
+
+ITMFloatImage_CPtr TouchDetector::get_diff_raw_raycast() const
+{
+  static ITMFloatImage_Ptr diffRawRaycast;
+  return m_imageProcessor->convert_af_to_itm(m_diffRawRaycast, diffRawRaycast);
+}
+
+ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
+{
+  static ITMUCharImage_Ptr touchMask;
+  return m_imageProcessor->convert_af_to_itm(m_touchMask, touchMask);
+}
+
+ITMFloatImage_CPtr TouchDetector::get_thresholded_raw_depth() const
+{
+  return m_thresholdedRawDepth;
+}
+
+float TouchDetector::invalid_depth_value() const
+{
+  return 100.0f;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void TouchDetector::detect_changes()
@@ -253,7 +264,7 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
+  *m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the change mask.
@@ -265,8 +276,8 @@ void TouchDetector::detect_changes()
   if(morphKernelSize < 3) morphKernelSize = 3;
   if(morphKernelSize % 2 == 0) ++morphKernelSize;
   af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
-  m_changeMask = af::erode(m_changeMask, morphKernel);
-  m_changeMask = af::dilate(m_changeMask, morphKernel);
+  *m_changeMask = af::erode(*m_changeMask, morphKernel);
+  *m_changeMask = af::dilate(*m_changeMask, morphKernel);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_DENOISED_CHANGE_MASK)
   // Display the change mask after applying morphological operations.
@@ -312,7 +323,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   const int resizedDiffHeight = static_cast<int>(m_imageHeight * scaleFactor);
   const int *touchIndices = touchIndicesImage.as(s32).host<int>();
   std::vector<Eigen::Vector2i> touchPoints;
-  for(int i = 0, touchPointCount = touchIndicesImage.elements(); i < touchPointCount; ++i)
+  for(int i = 0, touchPointCount = static_cast<int>(touchIndicesImage.elements()); i < touchPointCount; ++i)
   {
     Eigen::Vector2f point(touchIndices[i] / resizedDiffHeight, touchIndices[i] % resizedDiffHeight);
     touchPoints.push_back((point / scaleFactor).cast<int>());
@@ -324,7 +335,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
 int TouchDetector::pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
   const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
+  const int candidateCount = static_cast<int>(candidateComponents.dims(0));
 
   int bestCandidateID = -1;
   af::array mask;
@@ -360,7 +371,7 @@ int TouchDetector::pick_best_candidate_component_based_on_distance(const af::arr
 int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
   const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
+  const int candidateCount = static_cast<int>(candidateComponents.dims(0));
   const Label isTouchLabel = 1;
 
   std::vector<float> touchProb(candidateCount);
@@ -394,7 +405,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
   return bestCandidateID;
 }
 
-void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 {
   // Make a copy of the raw depth image in which any parts of the scene that are at a distance of > 2m are set to -1.
   // We deliberately ignore parts of the scene that are > 2m away, since although they are picked up by the camera,
@@ -408,14 +419,13 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   // As with the raw depth image, the pixel values of this raycast denote depth values in metres.
   // We assume that parts of the scene for which we have no information are far away (at an
   // arbitrarily large depth of 100m).
-  const float invalidDepthValue = 100.0f;
   m_depthVisualiser->render_depth(
     DepthVisualiser::DT_ORTHOGRAPHIC,
     to_itm(camera->p()),
     to_itm(camera->n()),
     renderState.get(),
     m_itmSettings->sceneParams.voxelSize,
-    invalidDepthValue,
+    invalid_depth_value(),
     m_depthRaycast
   );
 }
@@ -448,7 +458,7 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
   static size_t imageCounter = 0;
 
   const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
+  const int candidateCount = static_cast<int>(candidateComponents.dims(0));
   af::array candidateDiffAF(m_imageHeight, m_imageWidth, u8);
 
   for(int i = 0; i < candidateCount; ++i)
@@ -471,7 +481,7 @@ af::array TouchDetector::select_candidate_components()
   m_connectedComponentImage += 1;
 
   // Set all regions in the connected component image which are in the static scene to zero.
-  m_connectedComponentImage *= m_changeMask;
+  m_connectedComponentImage *= *m_changeMask;
 
   // Calculate the areas of the connected components.
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;

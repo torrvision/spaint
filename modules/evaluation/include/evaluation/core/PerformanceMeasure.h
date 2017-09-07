@@ -14,7 +14,7 @@ namespace evaluation {
 
 /**
  * \brief An instance of this class represents a measure quantifying the performance of an algorithm.
-  */
+ */
 class PerformanceMeasure
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
@@ -37,7 +37,6 @@ public:
    */
   PerformanceMeasure(float value);
 
-private:
   /**
    * \brief Constructs an arbitrary performance measure.
    *
@@ -76,16 +75,6 @@ public:
    * \return  The variance of the measure.
    */
   float get_variance() const;
-
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
-  /** 
-   * \brief Calculates the average of a set of measures.
-   *
-   * \param measures  A set of measures (must be non-empty).
-   * \return          The average of the measures.
-   */
-  static PerformanceMeasure average(const std::vector<PerformanceMeasure>& measures);
 };
 
 //#################### STREAM OPERATORS ####################

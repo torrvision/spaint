@@ -4,18 +4,20 @@
  */
 
 #include "MarkVoxelsCommand.h"
-
-#include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
+
+#include <itmx/base/MemoryBlockFactory.h>
+using namespace itmx;
 
 //#################### CONSTRUCTORS ####################
 
-MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, SpaintVoxel::PackedLabel label,
-                                     const Interactor_Ptr& interactor)
+MarkVoxelsCommand::MarkVoxelsCommand(const std::string& sceneID, const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB,
+                                     SpaintVoxel::PackedLabel label, const Model_Ptr& model)
 : Command(get_static_description()),
-  m_interactor(interactor),
   m_label(label),
+  m_model(model),
   m_oldVoxelLabelsMB(MemoryBlockFactory::instance().make_block<SpaintVoxel::PackedLabel>(voxelLocationsMB->dataSize)),
+  m_sceneID(sceneID),
   m_voxelLocationsMB(voxelLocationsMB)
 {}
 
@@ -23,12 +25,12 @@ MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::Memo
 
 void MarkVoxelsCommand::execute() const
 {
-  m_interactor->mark_voxels(m_voxelLocationsMB, m_label, m_oldVoxelLabelsMB);
+  m_model->mark_voxels(m_sceneID, m_voxelLocationsMB, m_label, NORMAL_MARKING, m_oldVoxelLabelsMB);
 }
 
 void MarkVoxelsCommand::undo() const
 {
-  m_interactor->mark_voxels(m_voxelLocationsMB, m_oldVoxelLabelsMB, FORCED_MARKING);
+  m_model->mark_voxels(m_sceneID, m_voxelLocationsMB, m_oldVoxelLabelsMB, FORCED_MARKING);
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

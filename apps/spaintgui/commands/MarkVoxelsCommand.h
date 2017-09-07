@@ -8,23 +8,26 @@
 
 #include <tvgutil/commands/Command.h>
 
-#include "../core/Interactor.h"
+#include "../core/Model.h"
 
 /**
- * \brief An instance of this class represents a command that can be used to mark voxels in the scene.
+ * \brief An instance of this class represents a command that can be used to mark voxels in a scene.
  */
 class MarkVoxelsCommand : public tvgutil::Command
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The interactor that is used to interact with the scene. */
-  Interactor_Ptr m_interactor;
-
   /** The semantic label with which to mark the voxels. */
   spaint::SpaintVoxel::PackedLabel m_label;
 
+  /** The spaint model. */
+  Model_Ptr m_model;
+
   /** A memory block into which to store the old labels of the voxels being marked. */
   boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > m_oldVoxelLabelsMB;
+
+  /** The ID of the scene in which to mark voxels. */
+  std::string m_sceneID;
 
   /** The locations of the voxels in the scene to mark. */
   boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> > m_voxelLocationsMB;
@@ -34,11 +37,13 @@ public:
   /**
    * \brief Constructs a mark voxels command.
    *
+   * \param sceneID           The ID of the scene in which to mark voxels.
    * \param voxelLocationsMB  The locations of the voxels in the scene to mark.
    * \param label             The semantic label with which to mark the voxels.
-   * \param interactor        The interactor that is used to interact with the scene.
+   * \param model             The spaint model.
    */
-  MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, spaint::SpaintVoxel::PackedLabel label, const Interactor_Ptr& interactor);
+  MarkVoxelsCommand(const std::string& sceneID, const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB,
+                    spaint::SpaintVoxel::PackedLabel label, const Model_Ptr& model);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
