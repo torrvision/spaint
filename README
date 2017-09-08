@@ -39,7 +39,7 @@ dependencies have been included in the repository, so SemanticPaint should
 build "out of the box". However, most users will probably want to install
 the remaining optional libraries in order to enable full functionality.
 
-  - ArrayFire
+  - ArrayFire (version 3.3.2)
     Status: Optional (needed for touch interaction and median filtering)
     Default: Disabled
     Flag: WITH_ARRAYFIRE
@@ -47,7 +47,7 @@ the remaining optional libraries in order to enable full functionality.
   - Boost (version 1.56.0)
     Status: Required
 
-  - CUDA (version 6.5)
+  - CUDA (version 7.5)
     Status: Optional (needed for GPU acceleration)
     Default: Enabled
     Flag: WITH_CUDA
@@ -71,7 +71,7 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_OVR
 
-  - OpenCV (version 2.4.9)
+  - OpenCV (version 3.1.0)
     Status: Optional (needed for feature inspection mode)
     Default: Disabled
     Flag: WITH_OPENCV
