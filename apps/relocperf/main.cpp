@@ -86,6 +86,12 @@ Eigen::Matrix4f read_pose_from_file(const fs::path &fileName)
   in >> res(2, 0) >> res(2, 1) >> res(2, 2) >> res(2, 3);
   in >> res(3, 0) >> res(3, 1) >> res(3, 2) >> res(3, 3);
 
+  // If parsing the file failed for any reason, set the pose to NaNs.
+  if(!in)
+  {
+    res.setConstant(std::numeric_limits<float>::quiet_NaN());
+  }
+
   return res;
 }
 
@@ -113,12 +119,17 @@ float angular_separation(const Eigen::Matrix3f &r1, const Eigen::Matrix3f &r2)
  *        The check is performed according to the 7-scenes metric: succeeds if the translation between the
  *        transformations is <= 5cm and the angle is <= 5 deg.
  *
- * \param gtPose   The ground truth pose.
- * \param testPose The pose to be tested.
+ * \param gtPose           The ground truth pose.
+ * \param testPose         The pose to be tested.
+ * \param translationError Returns the translational error.
+ * \param angleError       Returns the angular error.
  *
  * \return Whether the two poses are similar enough.
  */
-bool pose_matches(const Eigen::Matrix4f &gtPose, const Eigen::Matrix4f &testPose)
+bool pose_matches(const Eigen::Matrix4f &gtPose,
+                  const Eigen::Matrix4f &testPose,
+                  float &translationError,
+                  float &angleError)
 {
   // 7-scenes thresholds.
   static const float translationMaxError = 0.05f;
@@ -130,10 +141,28 @@ bool pose_matches(const Eigen::Matrix4f &gtPose, const Eigen::Matrix4f &testPose
   const Eigen::Vector3f testT = testPose.block<3, 1>(0, 3);
 
   // Compute the difference between the transformations.
-  const float translationError = (gtT - testT).norm();
-  const float angleError = angular_separation(gtR, testR);
+  translationError = (gtT - testT).norm();
+  angleError = angular_separation(gtR, testR);
 
   return translationError <= translationMaxError && angleError <= angleMaxError;
+}
+
+/**
+ * \brief Check whether the two poses are similar enough.
+ *
+ *        The check is performed according to the 7-scenes metric: succeeds if the translation between the
+ *        transformations is <= 5cm and the angle is <= 5 deg.
+ *
+ * \param gtPose   The ground truth pose.
+ * \param testPose The pose to be tested.
+ *
+ * \return Whether the two poses are similar enough.
+ */
+bool pose_matches(const Eigen::Matrix4f &gtPose, const Eigen::Matrix4f &testPose)
+{
+  float angleError, translationError;
+
+  return pose_matches(gtPose, testPose, translationError, angleError);
 }
 
 /**
@@ -153,6 +182,30 @@ bool pose_file_matches(const Eigen::Matrix4f &gtPose, const fs::path &poseFile)
 }
 
 /**
+ * \brief Check whether a pose stored in a text file matches with a ground truth pose, according to the 7-scenes metric.
+ *
+ * \param gtPose   The ground truth camera pose.
+ * \param poseFile The path to a file storing a transformation matrix.
+ * \param translationError Returns the translational error (Infinity if the file does not exist).
+ * \param angleError       Returns the angular error (Infinity if the file does not exist).
+ *
+ * \return Whether the pose stored in the file matches the ground truth pose. False if the file is missing.
+ */
+bool pose_file_matches(const Eigen::Matrix4f &gtPose,
+                       const fs::path &poseFile,
+                       float &translationError,
+                       float &angleError)
+{
+  translationError = std::numeric_limits<float>::infinity();
+  angleError = std::numeric_limits<float>::infinity();
+
+  if(!fs::is_regular(poseFile)) return false;
+
+  const Eigen::Matrix4f otherPose = read_pose_from_file(poseFile);
+  return pose_matches(gtPose, otherPose, translationError, angleError);
+}
+
+/**
  * \brief Struct used to accumulate stats on a dataset sequence.
  */
 struct SequenceResults
@@ -169,6 +222,24 @@ struct SequenceResults
   /** The number of frames successfully relocalised after a round of ICP+SVM. */
   int validFinalPoses{0};
 
+  /** The sum of translational errors in the sequence, used to compute the average. */
+  float sumRelocalisationTranslationalError{0};
+
+  /** The sum of angular errors in the sequence, used to compute the average. */
+  float sumRelocalisationAngleError{0};
+
+  /** The sum of translational errors in the sequence, for successful relocalisations. Used to compute the average. */
+  float sumRelocalisationSuccessfulTranslationalError{0};
+
+  /** The sum of angular errors in the sequence, for successful relocalisations. Used to compute the average. */
+  float sumRelocalisationSuccessfulAngleError{0};
+
+  /** The sum of translational errors in the sequence, for failed relocalisations. Used to compute the average. */
+  float sumRelocalisationFailedTranslationalError{0};
+
+  /** The sum of angular errors in the sequence, for failed relocalisations. Used to compute the average. */
+  float sumRelocalisationFailedAngleError{0};
+
   /** The sequence of relocalisation results. Same element count as poseCount. */
   std::vector<bool> relocalizationResults;
 
@@ -177,6 +248,12 @@ struct SequenceResults
 
   /** The sequence of relocalisation results, after ICP+SVM. Same element count as poseCount. */
   std::vector<bool> finalResults;
+
+  /** The sequence of angular errors after relocalisation. */
+  std::vector<float> relocalisationAngularErrors;
+
+  /** The sequence of translational errors after relocalisation. */
+  std::vector<float> relocalisationTranslationalErrors;
 };
 
 /**
@@ -209,8 +286,10 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
     // Read the GT camera pose.
     const Eigen::Matrix4f gtPose = read_pose_from_file(gtPath);
 
+    float relocalisationTranslationError, relocalisationAngleError;
+
     // Check whether different kinds of relocalisations succeeded.
-    bool validReloc = pose_file_matches(gtPose, relocPath);
+    bool validReloc = pose_file_matches(gtPose, relocPath, relocalisationTranslationError, relocalisationAngleError);
     bool validICP = pose_file_matches(gtPose, icpPath);
     bool validFinal = pose_file_matches(gtPose, finalPath);
 
@@ -222,6 +301,23 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
     res.relocalizationResults.push_back(validReloc);
     res.icpResults.push_back(validICP);
     res.finalResults.push_back(validFinal);
+
+    res.sumRelocalisationTranslationalError += relocalisationTranslationError;
+    res.sumRelocalisationAngleError += relocalisationAngleError;
+
+    if(validReloc)
+    {
+      res.sumRelocalisationSuccessfulTranslationalError += relocalisationTranslationError;
+      res.sumRelocalisationSuccessfulAngleError += relocalisationAngleError;
+    }
+    else
+    {
+      res.sumRelocalisationFailedTranslationalError += relocalisationTranslationError;
+      res.sumRelocalisationFailedAngleError += relocalisationAngleError;
+    }
+
+    res.relocalisationTranslationalErrors.push_back(relocalisationTranslationError);
+    res.relocalisationAngularErrors.push_back(relocalisationAngleError);
 
     // Increment counters.
     ++res.poseCount;
@@ -311,6 +407,12 @@ int main(int argc, char *argv[])
   printWidth("Reloc", 8);
   printWidth("ICP", 8);
   printWidth("Final", 8);
+  printWidth("Avg T.", 20);
+  printWidth("Avg A.", 8);
+  printWidth("Avg Succ T.", 14);
+  printWidth("Avg Succ A.", 14);
+  printWidth("Avg Fail T.", 14);
+  printWidth("Avg Fail A.", 14);
   std::cerr << '\n';
 
   // Compute percentages for each sequence and print everything.
@@ -323,11 +425,26 @@ int main(int argc, char *argv[])
     float icpPct = static_cast<float>(seqResult.validPosesAfterICP) / static_cast<float>(seqResult.poseCount) * 100.f;
     float finalPct = static_cast<float>(seqResult.validFinalPoses) / static_cast<float>(seqResult.poseCount) * 100.f;
 
+    float avgTranslation = seqResult.sumRelocalisationTranslationalError / static_cast<float>(seqResult.poseCount);
+    float avgAngle = seqResult.sumRelocalisationAngleError / static_cast<float>(seqResult.poseCount);
+
+    float avgSuccTranslation = seqResult.sumRelocalisationSuccessfulTranslationalError / static_cast<float>(seqResult.validPosesAfterReloc);
+    float avgSuccAngle = seqResult.sumRelocalisationSuccessfulAngleError / static_cast<float>(seqResult.validPosesAfterReloc);
+
+    float avgFailTranslation = seqResult.sumRelocalisationFailedTranslationalError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc);
+    float avgFailAngle = seqResult.sumRelocalisationFailedAngleError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc);
+
     printWidth(sequence, 15, true);
     printWidth(seqResult.poseCount, 8);
     printWidth(relocPct, 8);
     printWidth(icpPct, 8);
     printWidth(finalPct, 8);
+    printWidth(avgTranslation, 20);
+    printWidth(avgAngle, 8);
+    printWidth(avgSuccTranslation, 14);
+    printWidth(avgSuccAngle, 14);
+    printWidth(avgFailTranslation, 14);
+    printWidth(avgFailAngle, 14);
     std::cerr << '\n';
   }
 
@@ -403,7 +520,8 @@ int main(int argc, char *argv[])
       std::ofstream out(outFilename);
 
       // Print header
-      out << "FrameIdx; FramePct; Reloc Success; Reloc Sum; Reloc Pct; ICP Success; ICP Sum; ICP Pct\n";
+      out << "FrameIdx; FramePct; Reloc Success; Reloc Translation; Reloc Angle; Reloc Sum; Reloc Pct; ICP Success; "
+             "ICP Sum; ICP Pct\n";
 
       int relocSum = 0;
       int icpSum = 0;
@@ -413,6 +531,9 @@ int main(int argc, char *argv[])
         bool relocSuccess = seqResult.relocalizationResults[poseIdx];
         bool icpSuccess = seqResult.icpResults[poseIdx];
 
+        float relocTranslation = seqResult.relocalisationTranslationalErrors[poseIdx];
+        float relocAngle = seqResult.relocalisationAngularErrors[poseIdx];
+
         relocSum += relocSuccess;
         icpSum += icpSuccess;
 
@@ -420,8 +541,8 @@ int main(int argc, char *argv[])
         float relocPct = static_cast<float>(relocSum) / poseIdx;
         float icpPct = static_cast<float>(icpSum) / poseIdx;
 
-        out << poseIdx << "; " << framePct << "; " << relocSuccess << "; " << relocSum << "; " << relocPct << "; "
-            << icpSuccess << "; " << icpSum << "; " << icpPct << '\n';
+        out << poseIdx << "; " << framePct << "; " << relocSuccess << "; " << relocTranslation << "; " << relocAngle
+            << "; " << relocSum << "; " << relocPct << "; " << icpSuccess << "; " << icpSum << "; " << icpPct << '\n';
       }
     }
   }
