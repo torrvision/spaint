@@ -224,6 +224,7 @@ If you have any trouble with the build, here are some of the likely causes:
 * The CMake executable is not on your path.
 * The MSBuild executable is not on your path. (Windows)
 * The Visual C++ compiler (cl.exe) is not on your path. (Windows)
+* The latest Visual Studio updates have not been installed. (Windows)
 
 # Licence
 
