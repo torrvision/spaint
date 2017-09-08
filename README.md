@@ -52,7 +52,7 @@ If you build on this framework for your research, please consider citing both ou
 
 ### 1.1 Overview
 
-SemanticPaint builds with CMake 2.8 and above on Windows, Ubuntu and Mac OS X.
+SemanticPaint builds with CMake 3.8.2 and above on Windows, Ubuntu and Mac OS X.
 It has been tested on recent versions of all three operating systems, but may
 require additional work to build on older versions.
 
