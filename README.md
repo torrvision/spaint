@@ -227,7 +227,7 @@ If you have any trouble with the build, here are some of the likely causes:
 
 # Licence
 
-SemanticPaint © 2015, Torr Vision Group, The University of Oxford (the "Software")
+SemanticPaint © 2015-2017, Torr Vision Group, The University of Oxford (the "Software")
 
 The Software remains the property of the University of Oxford ("the University").
 
