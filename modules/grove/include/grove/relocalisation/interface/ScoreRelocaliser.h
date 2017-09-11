@@ -110,6 +110,14 @@ public:
    */
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
+  /**
+   * \brief Updates the contents of each cluster.
+   *
+   * \note This function is meant to be called once to update every leaf cluster.
+   *       It's computationally intensive and requires a few hundred milliseconds to terminate.
+   */
+  void updateAllClusters();
+
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
   /**

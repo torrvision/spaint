@@ -76,6 +76,15 @@ Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const { retur
 
 ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const { return m_predictionsImage; }
 
+void ScoreRelocaliser::updateAllClusters()
+{
+  // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
+  while (m_reservoirUpdateStartIdx != m_lastFeaturesAddedStartIdx)
+  {
+    update();
+  }
+}
+
 boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
                                                                   const ITMFloatImage *depthImage,
                                                                   const Vector4f &depthIntrinsics) const
