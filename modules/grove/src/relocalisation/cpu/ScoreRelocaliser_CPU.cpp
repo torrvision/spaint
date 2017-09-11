@@ -40,10 +40,10 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
 
   // These variables have to be set here, since they depend on the forest.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
-  m_predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+  m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
 
   // Reservoirs.
-  m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CPU, m_rngSeed);
+  m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CPU, m_rngSeed);
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
@@ -65,7 +65,7 @@ ScorePrediction ScoreRelocaliser_CPU::get_raw_prediction(uint32_t treeIdx, uint3
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
 
-  return m_predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, MEMORYDEVICE_CPU);
+  return m_relocaliserState->predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, MEMORYDEVICE_CPU);
 }
 
 std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
@@ -76,13 +76,13 @@ std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint3
   }
 
   const uint32_t linearReservoirIdx = leafIdx * m_scoreForest->get_nb_trees() + treeIdx;
-  const uint32_t currentReservoirSize = m_exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, MEMORYDEVICE_CPU);
-  const uint32_t reservoirCapacity = m_exampleReservoirs->get_reservoir_capacity();
+  const uint32_t currentReservoirSize = m_relocaliserState->exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, MEMORYDEVICE_CPU);
+  const uint32_t reservoirCapacity = m_relocaliserState->exampleReservoirs->get_reservoir_capacity();
 
   std::vector<Keypoint3DColour> reservoirContents;
   reservoirContents.reserve(currentReservoirSize);
 
-  const Keypoint3DColour *reservoirData = m_exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *reservoirData = m_relocaliserState->exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
 
   for(uint32_t i = 0; i < currentReservoirSize; ++i)
   {

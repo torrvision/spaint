@@ -20,6 +20,8 @@
 
 #include <tvgutil/misc/SettingsContainer.h>
 
+#include "../base/ScoreRelocaliserState.h"
+
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 #include "../../forests/interface/DecisionForest.h"
@@ -111,6 +113,29 @@ public:
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
   /**
+   * \brief Returns a pointer to the relocaliser state.
+   *
+   * \return A pointer to the relocaliser state.
+   */
+  ScoreRelocaliserState_CPtr get_relocaliser_state() const;
+
+  /**
+   * \brief Returns a pointer to the relocaliser state (non-const variant).
+   *
+   * \return A pointer to the relocaliser state.
+   */
+  ScoreRelocaliserState_Ptr get_relocaliser_state();
+
+  /**
+   * \brief Sets the relocaliser state.
+   *
+   * \note Has to be initialised beforehand, with the right variable sizes.
+   *
+   * \param relocaliserState The relocaliser state.
+   */
+  void set_relocaliser_state(const ScoreRelocaliserState_Ptr &relocaliserState);
+
+  /**
    * \brief Updates the contents of each cluster.
    *
    * \note This function is meant to be called once to update every leaf cluster.
@@ -176,9 +201,6 @@ protected:
   /** The clusterer, used to compute 3D modal clusters from the examples stored in the reservoirs. */
   Clusterer_Ptr m_exampleClusterer;
 
-  /** The example reservoirs associated to every leaf in the forest. */
-  Reservoirs_Ptr m_exampleReservoirs;
-
   /** The feature calculator, used to extract keypoints and describe image patches. */
   DA_RGBDPatchFeatureCalculator_Ptr m_featureCalculator;
 
@@ -194,14 +216,14 @@ protected:
   /** The minimum size of cluster to be considered valid. */
   uint32_t m_minClusterSize;
 
-  /** A block of memory storing the 3D modal clusters associated to each leaf in the forest. */
-  ScorePredictionsBlock_Ptr m_predictionsBlock;
-
   /**
    * The class implementing the Preemptive-RANSAC algorithm, used to estimate a pose given a set of keypoints and
    * associated modal clusters.
    */
   PreemptiveRansac_Ptr m_preemptiveRansac;
+
+  /** The state of the relocaliser. Can be swapped at runtime with another to relocalise (and train) in a different environment. */
+  ScoreRelocaliserState_Ptr m_relocaliserState;
 
   /** The maximum capacity of the reservoir associated to each leaf in the forest. */
   uint32_t m_reservoirCapacity;
@@ -216,17 +238,11 @@ protected:
   tvgutil::SettingsContainer_CPtr m_settings;
 
   // Update-related data
-  /** The index of the reservoir that had been updated when the integration function has been called. */
-  uint32_t m_lastFeaturesAddedStartIdx;
-
   /** The maximum number of reservoirs to subject to clustering for each integration/update call. */
   uint32_t m_maxReservoirsToUpdate;
 
-  /** The total number of example reservoirs in the  relocaliser. */
+  /** The total number of example reservoirs in the relocaliser. */
   uint32_t m_reservoirsCount;
-
-  /** The index of the reservoir to cluster when the idle_update will be called. */
-  uint32_t m_reservoirUpdateStartIdx;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:

@@ -51,6 +51,13 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
     throw std::invalid_argument(settingsNamespace + "maxClusterCount > ScorePrediction::Capacity");
   }
 
+  //
+  // Relocaliser state.
+  // (sets up an empty relocaliser state, with the assumption that the concrete subclasses will fill it with the right-sized variables).
+  //
+  m_relocaliserState.reset(new ScoreRelocaliserState);
+
+
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
   // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
@@ -76,10 +83,25 @@ Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const { retur
 
 ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const { return m_predictionsImage; }
 
+ScoreRelocaliserState_CPtr ScoreRelocaliser::get_relocaliser_state() const
+{
+  return m_relocaliserState;
+}
+
+ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
+{
+  return m_relocaliserState;
+}
+
+void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr &relocaliserState)
+{
+  m_relocaliserState = relocaliserState;
+}
+
 void ScoreRelocaliser::updateAllClusters()
 {
   // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
-  while (m_reservoirUpdateStartIdx != m_lastFeaturesAddedStartIdx)
+  while (m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
   {
     update();
   }
@@ -100,7 +122,7 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
     m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
 
     // Third: merge the predictions associated to those leaves.
-    get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
+    get_predictions_for_leaves(m_leafIndicesImage, m_relocaliserState->predictionsBlock, m_predictionsImage);
 
     // Finally: perform RANSAC.
     boost::optional<PoseCandidate> poseCandidate =
@@ -122,11 +144,11 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
 
 void ScoreRelocaliser::reset()
 {
-  m_exampleReservoirs->reset();
-  m_predictionsBlock->Clear();
+  m_relocaliserState->exampleReservoirs->reset();
+  m_relocaliserState->predictionsBlock->Clear();
 
-  m_lastFeaturesAddedStartIdx = 0;
-  m_reservoirUpdateStartIdx = 0;
+  m_relocaliserState->lastFeaturesAddedStartIdx = 0;
+  m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
 void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
@@ -145,19 +167,19 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
   m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
 
   // Third: add keypoints to the correct reservoirs.
-  m_exampleReservoirs->add_examples(m_rgbdPatchKeypointsImage, m_leafIndicesImage);
+  m_relocaliserState->exampleReservoirs->add_examples(m_rgbdPatchKeypointsImage, m_leafIndicesImage);
 
   // Fourth: cluster some of the reservoirs.
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
-  m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
-                                 m_exampleReservoirs->get_reservoir_sizes(),
-                                 m_reservoirUpdateStartIdx,
+  m_exampleClusterer->find_modes(m_relocaliserState->exampleReservoirs->get_reservoirs(),
+                                 m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
+                                 m_relocaliserState->reservoirUpdateStartIdx,
                                  updateCount,
-                                 m_predictionsBlock);
+                                 m_relocaliserState->predictionsBlock);
 
   // Fifth: save the current index to indicate that reservoirs up to such index have to be clustered to represent the
   // examples that have just been added.
-  m_lastFeaturesAddedStartIdx = m_reservoirUpdateStartIdx;
+  m_relocaliserState->lastFeaturesAddedStartIdx = m_relocaliserState->reservoirUpdateStartIdx;
 
   // Finally: update starting index for the next invocation of either this function or idle_update().
   update_reservoir_start_idx();
@@ -170,14 +192,14 @@ void ScoreRelocaliser::update()
   // No need to perform further updates, we would get the same modes.
   // This check works only if the m_maxReservoirsToUpdate quantity
   // remains constant throughout the whole program.
-  if (m_reservoirUpdateStartIdx == m_lastFeaturesAddedStartIdx) return;
+  if (m_relocaliserState->reservoirUpdateStartIdx == m_relocaliserState->lastFeaturesAddedStartIdx) return;
 
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
-  m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
-                                 m_exampleReservoirs->get_reservoir_sizes(),
-                                 m_reservoirUpdateStartIdx,
+  m_exampleClusterer->find_modes(m_relocaliserState->exampleReservoirs->get_reservoirs(),
+                                 m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
+                                 m_relocaliserState->reservoirUpdateStartIdx,
                                  updateCount,
-                                 m_predictionsBlock);
+                                 m_relocaliserState->predictionsBlock);
 
   update_reservoir_start_idx();
 }
@@ -187,15 +209,15 @@ void ScoreRelocaliser::update()
 uint32_t ScoreRelocaliser::compute_nb_reservoirs_to_update() const
 {
   // Either the standard number of reservoirs to update or the remaining group until the end of the memory block.
-  return std::min(m_maxReservoirsToUpdate, m_reservoirsCount - m_reservoirUpdateStartIdx);
+  return std::min(m_maxReservoirsToUpdate, m_reservoirsCount - m_relocaliserState->reservoirUpdateStartIdx);
 }
 
 void ScoreRelocaliser::update_reservoir_start_idx()
 {
-  m_reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
+  m_relocaliserState->reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
 
   // Restart from the first reservoir.
-  if (m_reservoirUpdateStartIdx >= m_reservoirsCount) m_reservoirUpdateStartIdx = 0;
+  if (m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirsCount) m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
 } // namespace grove
