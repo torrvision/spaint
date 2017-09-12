@@ -6,8 +6,7 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER_SHARED
 #define H_GROVE_EXAMPLECLUSTERER_SHARED
 
-#include <helper_math.h>
-
+#include <ORUtils/MathUtils.h>
 #include <ORUtils/PlatformIndependence.h>
 
 #include "../../util/Array.h"
@@ -360,7 +359,7 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
   while(minSelectedClusterSize > minClusterSize && nbSelectedClusters < maxSelectedClusters)
   {
     --minSelectedClusterSize;
-    nbSmallestClustersToKeep = min(clusterSizeHistograms[exampleSetOffset + minSelectedClusterSize], maxSelectedClusters - nbSelectedClusters);
+    nbSmallestClustersToKeep = MIN(clusterSizeHistograms[exampleSetOffset + minSelectedClusterSize], maxSelectedClusters - nbSelectedClusters);
     nbSelectedClusters += nbSmallestClustersToKeep;
   }
 

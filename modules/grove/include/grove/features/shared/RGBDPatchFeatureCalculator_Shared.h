@@ -6,7 +6,7 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 
-#include <helper_math.h>
+#include <ORUtils/MathUtils.h>
 
 #include <ITMLib/Utils/ITMProjectionUtils.h>
 
@@ -60,13 +60,13 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
   }
 
   // Constrain the secondary point(s) to be within the image.
-  x1 = min(max(x1, 0), imgSize.width - 1);
-  y1 = min(max(y1, 0), imgSize.height - 1);
+  x1 = MIN(MAX(x1, 0), imgSize.width - 1);
+  y1 = MIN(MAX(y1, 0), imgSize.height - 1);
 
   if(DifferenceType == PAIRWISE_DIFFERENCE)
   {
-    x2 = min(max(x2, 0), imgSize.width - 1);
-    y2 = min(max(y2, 0), imgSize.height - 1);
+    x2 = MIN(MAX(x2, 0), imgSize.width - 1);
+    y2 = MIN(MAX(y2, 0), imgSize.height - 1);
   }
 
   // Calculate the raster position(s) of the secondary point(s).
@@ -304,8 +304,8 @@ _CPU_AND_GPU_CODE_
 inline Vector2i map_pixel_coordinates(const Vector2i& pos, const Vector2i& inSize, const Vector2i& outSize)
 {
   return Vector2i(
-    (int)clamp(roundf(pos.x * (outSize.width - 1) / (float)(inSize.width - 1)), 0.0f, outSize.width - 1.0f),
-    (int)clamp(roundf(pos.y * (outSize.height - 1) / (float)(inSize.height - 1)), 0.0f, outSize.height - 1.0f)
+    (int)CLAMP(roundf(pos.x * (outSize.width - 1) / (float)(inSize.width - 1)), 0.0f, outSize.width - 1.0f),
+    (int)CLAMP(roundf(pos.y * (outSize.height - 1) / (float)(inSize.height - 1)), 0.0f, outSize.height - 1.0f)
   );
 }
 
