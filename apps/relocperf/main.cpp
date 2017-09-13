@@ -426,13 +426,13 @@ int main(int argc, char *argv[])
     float finalPct = static_cast<float>(seqResult.validFinalPoses) / static_cast<float>(seqResult.poseCount) * 100.f;
 
     float avgTranslation = seqResult.sumRelocalisationTranslationalError / static_cast<float>(seqResult.poseCount);
-    float avgAngle = seqResult.sumRelocalisationAngleError / static_cast<float>(seqResult.poseCount);
+    float avgAngle = (seqResult.sumRelocalisationAngleError / static_cast<float>(seqResult.poseCount)) * 180 / M_PI;
 
     float avgSuccTranslation = seqResult.sumRelocalisationSuccessfulTranslationalError / static_cast<float>(seqResult.validPosesAfterReloc);
-    float avgSuccAngle = seqResult.sumRelocalisationSuccessfulAngleError / static_cast<float>(seqResult.validPosesAfterReloc);
+    float avgSuccAngle = (seqResult.sumRelocalisationSuccessfulAngleError / static_cast<float>(seqResult.validPosesAfterReloc)) * 180 / M_PI;
 
     float avgFailTranslation = seqResult.sumRelocalisationFailedTranslationalError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc);
-    float avgFailAngle = seqResult.sumRelocalisationFailedAngleError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc);
+    float avgFailAngle = (seqResult.sumRelocalisationFailedAngleError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc)) * 180 / M_PI;
 
     printWidth(sequence, 15, true);
     printWidth(seqResult.poseCount, 8);
@@ -532,7 +532,7 @@ int main(int argc, char *argv[])
         bool icpSuccess = seqResult.icpResults[poseIdx];
 
         float relocTranslation = seqResult.relocalisationTranslationalErrors[poseIdx];
-        float relocAngle = seqResult.relocalisationAngularErrors[poseIdx];
+        float relocAngle = seqResult.relocalisationAngularErrors[poseIdx] * 180 / M_PI;
 
         relocSum += relocSuccess;
         icpSum += icpSuccess;
