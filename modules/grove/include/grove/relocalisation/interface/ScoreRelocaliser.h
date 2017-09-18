@@ -141,7 +141,7 @@ public:
    * \note This function is meant to be called once to update every leaf cluster.
    *       It's computationally intensive and requires a few hundred milliseconds to terminate.
    */
-  void updateAllClusters();
+  void update_all_clusters();
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:

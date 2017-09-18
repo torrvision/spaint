@@ -98,7 +98,7 @@ void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr &re
   m_relocaliserState = relocaliserState;
 }
 
-void ScoreRelocaliser::updateAllClusters()
+void ScoreRelocaliser::update_all_clusters()
 {
   // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
   while (m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
