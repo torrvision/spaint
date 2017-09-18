@@ -92,8 +92,10 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
         boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
         size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
         float sizeDiff = static_cast<float>(largestClusterSize) - maxRelocalisationsNeeded / 2.0f;
-        float primaryBoost = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
-        float score = sizeDiff * sizeDiff + primaryBoost - failurePenalties[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
+        //float sizeTerm = sizeDiff * sizeDiff;
+        float sizeTerm = maxRelocalisationsNeeded - largestClusterSize;
+        float primaryTerm = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
+        float score = sizeTerm + primaryTerm - failurePenalties[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
         it->second = score;
       }
 
