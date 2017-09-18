@@ -21,10 +21,10 @@ struct SubmapRelocalisation
   //#################### PUBLIC VARIABLES ####################
 
   /** TODO */
-  ITMFloatImage_Ptr m_depthJ;
+  Vector4f m_depthIntrinsicsJ;
 
   /** TODO */
-  Vector4f m_depthIntrinsicsJ;
+  ITMFloatImage_Ptr m_depthJ;
 
   /** TODO */
   int m_frameIndex;
@@ -46,22 +46,15 @@ struct SubmapRelocalisation
 
   //#################### CONSTRUCTORS ####################
 
-  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndex, const View_CPtr& viewJ, const ORUtils::SE3Pose& localPoseJ)
-  : m_depthIntrinsicsJ(viewJ->calib.intrinsics_d.projectionParamsSimple.all),
+  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndex, const ITMFloatImage_Ptr& depthJ, const ITMUChar4Image_Ptr& rgbJ, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
+  : m_depthJ(depthJ),
+    m_depthIntrinsicsJ(depthIntrinsicsJ),
     m_frameIndex(frameIndex),
     m_localPoseJ(localPoseJ),
+    m_rgbJ(rgbJ),
     m_sceneI(sceneI),
     m_sceneJ(sceneJ)
-  {
-    viewJ->depth->UpdateHostFromDevice();
-    viewJ->rgb->UpdateHostFromDevice();
-
-    m_depthJ.reset(new ITMFloatImage(viewJ->depth->noDims, true, false));
-    m_rgbJ.reset(new ITMUChar4Image(viewJ->rgb->noDims, true, false));
-
-    m_depthJ->SetFrom(viewJ->depth, ITMFloatImage::CPU_TO_CPU);
-    m_rgbJ->SetFrom(viewJ->rgb, ITMUChar4Image::CPU_TO_CPU);
-  }
+  {}
 };
 
 }

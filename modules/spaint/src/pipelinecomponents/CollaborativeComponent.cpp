@@ -62,6 +62,23 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
     if(frameIndex % 50 == 0)
     {
+      std::vector<std::pair<ITMFloatImage_Ptr,ITMUChar4Image_Ptr> > rgbdImages;
+      for(size_t j = 0; j < sceneCount; ++j)
+      {
+        const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneIDs[j]);
+        const View_CPtr viewJ = slamStateJ->get_view();
+
+        viewJ->depth->UpdateHostFromDevice();
+        viewJ->rgb->UpdateHostFromDevice();
+
+        ITMFloatImage_Ptr depthJ(new ITMFloatImage(viewJ->depth->noDims, true, false));
+        ITMUChar4Image_Ptr rgbJ(new ITMUChar4Image(viewJ->rgb->noDims, true, false));
+        depthJ->SetFrom(viewJ->depth, ITMFloatImage::CPU_TO_CPU);
+        rgbJ->SetFrom(viewJ->rgb, ITMUChar4Image::CPU_TO_CPU);
+
+        rgbdImages.push_back(std::make_pair(depthJ, rgbJ));
+      }
+
       for(size_t i = 0; i < sceneCount; ++i)
       {
         for(size_t j = 0; j < sceneCount; ++j)
@@ -77,7 +94,9 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
           if(!redundant)
           {
             const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
-            SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, slamStateJ->get_view(), slamStateJ->get_pose()));
+            SubmapRelocalisation_Ptr candidate(
+              new SubmapRelocalisation(sceneI, sceneJ, frameIndex, rgbdImages[j].first, rgbdImages[j].second, slamStateJ->get_intrinsics().projectionParamsSimple.all, slamStateJ->get_pose())
+            );
             (redundant ? redundantCandidates : candidates).push_back(std::make_pair(candidate, 0.0f));
           }
         }
@@ -93,7 +112,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
         size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
         float sizeDiff = static_cast<float>(largestClusterSize) - maxRelocalisationsNeeded / 2.0f;
         //float sizeTerm = sizeDiff * sizeDiff;
-        float sizeTerm = maxRelocalisationsNeeded - largestClusterSize;
+        float sizeTerm = maxRelocalisationsNeeded - static_cast<float>(largestClusterSize);
         float primaryTerm = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
         float score = sizeTerm + primaryTerm - failurePenalties[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
         it->second = score;
