@@ -41,6 +41,8 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
   static std::vector<Candidate> candidates;
 
+  const int maxRelocalisationsNeeded = 3;
+
   static int frameIndex = 0;
   if(frameIndex > 0)
   {
@@ -65,7 +67,11 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     {
       for(size_t i = 0, candidateCount = candidates.size(); i < candidateCount; ++i)
       {
-        float score = static_cast<float>(i); // TODO
+        SubmapRelocalisation_Ptr candidate = candidates[i].first;
+        boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
+        size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
+        float sizeDiff = static_cast<float>(largestClusterSize) - maxRelocalisationsNeeded / 2.0f;
+        float score = sizeDiff * sizeDiff;
         candidates[i].second = score;
       }
 
@@ -103,6 +109,9 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
         std::cout << "succeeded!\n";
         //std::cout << bestCandidate->m_relativePose->GetM() << '\n';
         m_context->add_relative_transform_sample(bestCandidate->m_sceneI, bestCandidate->m_sceneJ, *bestCandidate->m_relativePose); // TEMPORARY
+
+        // If we've now got enough relocalisations for this pair of scenes, move all the remaining candidates for them to a separate list.
+        // TODO
       }
       else std::cout << "failed :(\n";
     }
