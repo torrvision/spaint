@@ -39,6 +39,11 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 #############################
 
 ##
+SET(collaboration_headers
+include/spaint/collaboration/SubmapRelocalisation.h
+)
+
+##
 SET(features_sources
 src/features/FeatureCalculatorFactory.cpp
 )
@@ -622,6 +627,7 @@ ${visualisation_interface_sources}
 )
 
 SET(headers
+${collaboration_headers}
 ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
@@ -712,6 +718,7 @@ ENDIF()
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP(collaboration FILES ${collaboration_headers})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
