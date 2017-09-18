@@ -42,11 +42,24 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   static std::list<Candidate> candidates;
   static std::list<Candidate> redundantCandidates;
 
+  const float failurePenaltyIncrease = 1.0f;
+  const float failurePenaltyDecreasePerFrame = 0.001f;
+  const float failurePenaltyMax = 5.0f;
   const int maxRelocalisationsNeeded = 3;
+  static std::map<std::pair<std::string,std::string>,float> failurePenalties;
 
   static int frameIndex = 0;
   if(frameIndex > 0)
   {
+    for(size_t i = 0; i < sceneCount; ++i)
+    {
+      for(size_t j = 0; j < sceneCount; ++j)
+      {
+        float& failurePenalty = failurePenalties[std::make_pair(sceneIDs[i], sceneIDs[j])];
+        failurePenalty = std::max(failurePenalty - failurePenaltyDecreasePerFrame, 0.0f);
+      }
+    }
+
     if(frameIndex % 50 == 0)
     {
       for(size_t i = 0; i < sceneCount; ++i)
@@ -61,9 +74,12 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
           boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(sceneI, sceneJ);
           const bool redundant = largestCluster && largestCluster->size() >= maxRelocalisationsNeeded;
 
-          const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
-          SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, slamStateJ->get_view(), slamStateJ->get_pose()));
-          (redundant ? redundantCandidates : candidates).push_back(std::make_pair(candidate, 0.0f));
+          if(!redundant)
+          {
+            const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
+            SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, slamStateJ->get_view(), slamStateJ->get_pose()));
+            (redundant ? redundantCandidates : candidates).push_back(std::make_pair(candidate, 0.0f));
+          }
         }
       }
     }
@@ -76,7 +92,8 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
         boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
         size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
         float sizeDiff = static_cast<float>(largestClusterSize) - maxRelocalisationsNeeded / 2.0f;
-        float score = sizeDiff * sizeDiff;
+        float primaryBoost = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
+        float score = sizeDiff * sizeDiff + primaryBoost - failurePenalties[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
         it->second = score;
       }
 
@@ -133,7 +150,12 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
             }
           }
         }
-        else std::cout << "failed :(\n";
+        else
+        {
+          std::cout << "failed :(\n";
+          float& failurePenalty = failurePenalties[std::make_pair(bestCandidate->m_sceneI, bestCandidate->m_sceneJ)];
+          failurePenalty = std::min(failurePenalty + failurePenaltyIncrease, failurePenaltyMax);
+        }
       }
     }
   }
