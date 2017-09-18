@@ -39,7 +39,8 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 #if 1
   typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
   typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
-  static std::vector<Candidate> candidates;
+  static std::list<Candidate> candidates;
+  static std::list<Candidate> redundantCandidates;
 
   const int maxRelocalisationsNeeded = 3;
 
@@ -56,64 +57,84 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
           const std::string sceneI = sceneIDs[i];
           const std::string sceneJ = sceneIDs[j];
+
+          boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(sceneI, sceneJ);
+          const bool redundant = largestCluster && largestCluster->size() >= maxRelocalisationsNeeded;
+
           const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
           SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, slamStateJ->get_view(), slamStateJ->get_pose()));
-          candidates.push_back(std::make_pair(candidate, 0.0f));
+          (redundant ? redundantCandidates : candidates).push_back(std::make_pair(candidate, 0.0f));
         }
       }
     }
 
     if(frameIndex % 100 == 0)
     {
-      for(size_t i = 0, candidateCount = candidates.size(); i < candidateCount; ++i)
+      for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
       {
-        SubmapRelocalisation_Ptr candidate = candidates[i].first;
+        SubmapRelocalisation_Ptr candidate = it->first;
         boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
         size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
         float sizeDiff = static_cast<float>(largestClusterSize) - maxRelocalisationsNeeded / 2.0f;
         float score = sizeDiff * sizeDiff;
-        candidates[i].second = score;
+        it->second = score;
       }
 
-      std::sort(candidates.begin(), candidates.end(), bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
+      candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
 
       std::cout << "BEGIN CANDIDATES " << frameIndex << '\n';
-      for(size_t i = 0, candidateCount = candidates.size(); i < candidateCount; ++i)
+      for(std::list<Candidate>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
       {
-        const SubmapRelocalisation_Ptr& candidate = candidates[i].first;
-        const float score = candidates[i].second;
+        const SubmapRelocalisation_Ptr& candidate = it->first;
+        const float score = it->second;
         std::cout << candidate->m_sceneI << ' ' << candidate->m_sceneJ << ' ' << candidate->m_frameIndex << ' ' << score << '\n';
       }
       std::cout << "END CANDIDATES\n";
 
-      // Try to relocalise the best candidate.
-      SubmapRelocalisation_Ptr bestCandidate = candidates.back().first;
-      candidates.pop_back();
-
-      std::cout << "Attempting to relocalise " << bestCandidate->m_sceneJ << " against " << bestCandidate->m_sceneI << "...";
-      Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(bestCandidate->m_sceneI);
-
-      const SLAMState_CPtr slamStateJ = m_context->get_slam_state(bestCandidate->m_sceneJ);
-      ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
-      ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
-      depth->SetFrom(bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
-      rgb->SetFrom(bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
-      depth->UpdateDeviceFromHost();
-      rgb->UpdateDeviceFromHost();
-
-      boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), bestCandidate->m_depthIntrinsicsJ);
-      if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
+      // Try to relocalise the best candidate (if any).
+      if(!candidates.empty())
       {
-        // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
-        bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * bestCandidate->m_localPoseJ.GetM());
-        std::cout << "succeeded!\n";
-        //std::cout << bestCandidate->m_relativePose->GetM() << '\n';
-        m_context->add_relative_transform_sample(bestCandidate->m_sceneI, bestCandidate->m_sceneJ, *bestCandidate->m_relativePose); // TEMPORARY
+        SubmapRelocalisation_Ptr bestCandidate = candidates.back().first;
+        candidates.pop_back();
 
-        // If we've now got enough relocalisations for this pair of scenes, move all the remaining candidates for them to a separate list.
-        // TODO
+        std::cout << "Attempting to relocalise " << bestCandidate->m_sceneJ << " against " << bestCandidate->m_sceneI << "...";
+        Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(bestCandidate->m_sceneI);
+
+        const SLAMState_CPtr slamStateJ = m_context->get_slam_state(bestCandidate->m_sceneJ);
+        ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
+        ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
+        depth->SetFrom(bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
+        rgb->SetFrom(bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
+        depth->UpdateDeviceFromHost();
+        rgb->UpdateDeviceFromHost();
+
+        boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), bestCandidate->m_depthIntrinsicsJ);
+        if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
+        {
+          // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
+          bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * bestCandidate->m_localPoseJ.GetM());
+          std::cout << "succeeded!\n";
+          //std::cout << bestCandidate->m_relativePose->GetM() << '\n';
+          m_context->add_relative_transform_sample(bestCandidate->m_sceneI, bestCandidate->m_sceneJ, *bestCandidate->m_relativePose); // TEMPORARY
+
+          // If we've now got enough relocalisations for this pair of scenes, move all the remaining candidates for them to a separate list.
+          boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(bestCandidate->m_sceneI, bestCandidate->m_sceneJ);
+          if(largestCluster && largestCluster->size() >= maxRelocalisationsNeeded)
+          {
+            for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend;)
+            {
+              if((it->first->m_sceneI == bestCandidate->m_sceneI && it->first->m_sceneJ == bestCandidate->m_sceneJ) ||
+                 (it->first->m_sceneI == bestCandidate->m_sceneJ && it->first->m_sceneI == bestCandidate->m_sceneJ))
+              {
+                redundantCandidates.push_back(*it);
+                it = candidates.erase(it);
+              }
+              else ++it;
+            }
+          }
+        }
+        else std::cout << "failed :(\n";
       }
-      else std::cout << "failed :(\n";
     }
   }
   ++frameIndex;
