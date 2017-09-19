@@ -20,6 +20,12 @@ private:
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
 
+  /** TODO */
+  std::map<std::pair<std::string,std::string>,float> m_failurePenalties;
+
+  /** TODO */
+  int m_frameIndex;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -35,6 +41,13 @@ public:
    * \brief TODO
    */
   void run_collaborative_pose_estimation();
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  void update_failure_penalties();
 };
 
 //#################### TYPEDEFS ####################
