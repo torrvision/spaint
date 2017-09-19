@@ -7,6 +7,7 @@
 #define H_SPAINT_COLLABORATIVECOMPONENT
 
 #include "CollaborativeContext.h"
+#include "../collaboration/SubmapRelocalisation.h"
 
 namespace spaint {
 
@@ -15,8 +16,24 @@ namespace spaint {
  */
 class CollaborativeComponent
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
+  typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
+
+  //#################### CONSTANTS ####################
+private:
+  /** TODO */
+  const float m_failurePenaltyDecreasePerFrame;
+
+  /** TODO */
+  const int m_maxRelocalisationsNeeded;
+
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  std::list<Candidate> m_candidates;
+
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
 
@@ -25,6 +42,9 @@ private:
 
   /** TODO */
   int m_frameIndex;
+
+  /** TODO */
+  std::list<Candidate> m_redundantCandidates;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -44,6 +64,16 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief TODO
+   */
+  void add_relocalisation_candidates();
+
+  /**
+   * \brief TODO
+   */
+  void score_relocalisation_candidates();
+
   /**
    * \brief TODO
    */
