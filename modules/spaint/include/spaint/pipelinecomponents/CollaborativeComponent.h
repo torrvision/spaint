@@ -6,6 +6,9 @@
 #ifndef H_SPAINT_COLLABORATIVECOMPONENT
 #define H_SPAINT_COLLABORATIVECOMPONENT
 
+#include <boost/atomic.hpp>
+#include <boost/thread.hpp>
+
 #include "CollaborativeContext.h"
 #include "../collaboration/SubmapRelocalisation.h"
 
@@ -32,6 +35,9 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
+  SubmapRelocalisation_Ptr m_bestCandidate;
+
+  /** TODO */
   std::list<Candidate> m_candidates;
 
   /** The shared context needed for collaborative SLAM. */
@@ -44,7 +50,19 @@ private:
   int m_frameIndex;
 
   /** TODO */
+  boost::mutex m_mutex;
+
+  /** TODO */
+  boost::condition_variable m_readyToRelocalise;
+
+  /** TODO */
   std::list<Candidate> m_redundantCandidates;
+
+  /** TODO */
+  boost::thread m_relocalisationThread;
+
+  /** TODO */
+  boost::atomic<bool> m_stopRelocalisationThread;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -54,6 +72,13 @@ public:
    * \param context The shared context needed for collaborative SLAM.
    */
   explicit CollaborativeComponent(const CollaborativeContext_Ptr& context);
+
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys the collaborative component.
+   */
+  ~CollaborativeComponent();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -68,6 +93,16 @@ private:
    * \brief TODO
    */
   void add_relocalisation_candidates();
+
+  /**
+   * \brief TODO
+   */
+  void run_relocalisation();
+
+  /**
+   * \brief TODO
+   */
+  void schedule_relocalisation();
 
   /**
    * \brief TODO
