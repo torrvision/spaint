@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_COLLABORATIVECONTEXT
 #define H_SPAINT_COLLABORATIVECONTEXT
 
+#include <boost/thread.hpp>
+
 #include <itmx/relocalisation/RefiningRelocaliser.h>
 
 #include "../slamstate/SLAMState.h"
@@ -24,6 +26,9 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  mutable boost::recursive_mutex m_mutex;
+
   /**
    * Accumulated samples of the relative transformations between the different submaps. Each sample for (scene i, scene j)
    * expresses an estimate of the transformation from the coordinate system of scene j to that of scene i.

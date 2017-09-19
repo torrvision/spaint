@@ -168,7 +168,7 @@ void CollaborativeComponent::run_relocalisation()
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
       std::cout << "succeeded!\n";
       //std::cout << bestCandidate->m_relativePose->GetM() << '\n';
-      //m_context->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose); // TEMPORARY
+      m_context->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose); // TEMPORARY
 
       // If we've now got enough relocalisations for this pair of scenes, move all the remaining candidates for them to a separate list.
       boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ);

@@ -19,6 +19,8 @@ CollaborativeContext::~CollaborativeContext() {}
 
 boost::optional<SE3Pose> CollaborativeContext::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster(sceneI, sceneJ);
   return largestCluster/* && largestCluster->size() >= 2*/ ? boost::optional<SE3Pose>(GeometryUtil::blend_poses(*largestCluster)) : boost::none;
 }
@@ -27,6 +29,8 @@ boost::optional<SE3Pose> CollaborativeContext::try_get_relative_transform(const 
 
 void CollaborativeContext::add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   add_relative_transform_sample_sub(sceneI, sceneJ, sample);
   add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
 
@@ -79,6 +83,8 @@ void CollaborativeContext::add_relative_transform_sample_sub(const std::string& 
 boost::optional<CollaborativeContext::SE3PoseCluster>
 CollaborativeContext::try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   // Try to look up the sample clusters of the relative transformation from the coordinate system of scene j to that of scene i.
   std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
 
