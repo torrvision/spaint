@@ -20,11 +20,12 @@ namespace spaint {
 
 CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context)
 : m_context(context),
-  m_failurePenaltyDecreasePerFrame(0.001f),
   m_frameIndex(0),
   m_maxRelocalisationsNeeded(3),
   m_stopRelocalisationThread(false)
-{}
+{
+  m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
+}
 
 //#################### DESTRUCTOR ####################
 
@@ -39,14 +40,6 @@ CollaborativeComponent::~CollaborativeComponent()
 
 void CollaborativeComponent::run_collaborative_pose_estimation()
 {
-  // Start the relocalisation thread if it isn't already running.
-  static bool threadStarted = false;
-  if(!threadStarted)
-  {
-    m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
-    threadStarted = true;
-  }
-
   if(m_frameIndex > 0)
   {
     // TODO: Comment here.
@@ -56,31 +49,9 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     if(m_frameIndex % 50 == 0) add_relocalisation_candidates();
 
     // TODO: Comment here.
-    if(m_frameIndex % 100 == 0 && !m_candidates.empty())
-    {
-      // TODO: Comment here.
-      score_relocalisation_candidates();
-
-      bool readyToRelocalise = false;
-
-      {
-        boost::unique_lock<boost::mutex> lock(m_mutex);
-        if(!m_bestCandidate)
-        {
-          // Try to relocalise the best candidate.
-          m_bestCandidate = m_candidates.back().first;
-          m_candidates.pop_back();
-          readyToRelocalise = true;
-        }
-      }
-
-      if(readyToRelocalise)
-      {
-        std::cout << "Signalling relocalisation thread" << std::endl;
-        m_readyToRelocalise.notify_one();
-      }
-    }
+    if(m_frameIndex % 100 == 0 && !m_candidates.empty()) try_schedule_relocalisation();
   }
+
   ++m_frameIndex;
 }
 
@@ -200,12 +171,7 @@ void CollaborativeComponent::run_relocalisation()
   }
 }
 
-void CollaborativeComponent::schedule_relocalisation()
-{
-  // TODO
-}
-
-void CollaborativeComponent::score_relocalisation_candidates()
+void CollaborativeComponent::try_schedule_relocalisation()
 {
   for(std::list<Candidate>::iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend; ++it)
   {
@@ -232,17 +198,38 @@ void CollaborativeComponent::score_relocalisation_candidates()
   }
   std::cout << "END CANDIDATES\n";
 #endif
+
+  bool readyToRelocalise = false;
+
+  {
+    boost::unique_lock<boost::mutex> lock(m_mutex);
+    if(!m_bestCandidate)
+    {
+      // Try to relocalise the best candidate.
+      m_bestCandidate = m_candidates.back().first;
+      m_candidates.pop_back();
+      readyToRelocalise = true;
+    }
+  }
+
+  if(readyToRelocalise)
+  {
+    std::cout << "Signalling relocalisation thread" << std::endl;
+    m_readyToRelocalise.notify_one();
+  }
 }
 
 void CollaborativeComponent::update_failure_penalties()
 {
+  const float failurePenaltyDecreasePerFrame = 0.001f;
   const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
+
   for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
   {
     for(size_t j = 0; j < sceneCount; ++j)
     {
       float& failurePenalty = m_failurePenalties[std::make_pair(sceneIDs[i], sceneIDs[j])];
-      failurePenalty = std::max(failurePenalty - m_failurePenaltyDecreasePerFrame, 0.0f);
+      failurePenalty = std::max(failurePenalty - failurePenaltyDecreasePerFrame, 0.0f);
     }
   }
 }

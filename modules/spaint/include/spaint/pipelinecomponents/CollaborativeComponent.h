@@ -27,9 +27,6 @@ private:
   //#################### CONSTANTS ####################
 private:
   /** TODO */
-  const float m_failurePenaltyDecreasePerFrame;
-
-  /** TODO */
   const int m_maxRelocalisationsNeeded;
 
   //#################### PRIVATE VARIABLES ####################
@@ -102,12 +99,7 @@ private:
   /**
    * \brief TODO
    */
-  void schedule_relocalisation();
-
-  /**
-   * \brief TODO
-   */
-  void score_relocalisation_candidates();
+  void try_schedule_relocalisation();
 
   /**
    * \brief TODO
