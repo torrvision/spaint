@@ -8,6 +8,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
@@ -248,6 +249,9 @@ protected:
 private:
   /** An image storing the indices of the forest leaves associated to the keypoint/descriptor pairs. */
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
+
+  /** TODO */
+  mutable boost::mutex m_mutex;
 
   /** An image storing the predictions associated to the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;
