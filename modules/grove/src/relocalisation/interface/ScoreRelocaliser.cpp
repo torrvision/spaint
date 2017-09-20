@@ -115,6 +115,10 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
+  /*int temp;
+  cudaGetDevice(&temp);
+  std::cout << "Relocalise: On device " << temp << '\n';*/
+
   // Try to estimate a pose only if we have enough valid depth values.
   if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
@@ -150,6 +154,10 @@ void ScoreRelocaliser::reset()
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
+  /*int temp;
+  cudaGetDevice(&temp);
+  std::cout << "Reset: On device " << temp << '\n';*/
+
   m_relocaliserState->exampleReservoirs->reset();
   m_relocaliserState->predictionsBlock->Clear();
 
@@ -161,6 +169,10 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
                              const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose)
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
+
+  /*int temp;
+  cudaGetDevice(&temp);
+  std::cout << "Train: On device " << temp << '\n';*/
 
   // First: select keypoints and compute descriptors.
   const Matrix4f invCameraPose = cameraPose.GetInvM();
@@ -196,6 +208,10 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
 void ScoreRelocaliser::update()
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
+
+  /*int temp;
+  cudaGetDevice(&temp);
+  std::cout << "Update: On device " << temp << '\n';*/
 
   // We are back to the first reservoir that was updated when
   // the last batch of features were added to the forest.

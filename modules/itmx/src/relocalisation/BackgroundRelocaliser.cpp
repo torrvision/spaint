@@ -3,6 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
+#include <iostream>
+
 #include "relocalisation/BackgroundRelocaliser.h"
 
 namespace itmx {
@@ -70,13 +72,23 @@ void BackgroundRelocaliser::copy_images(const ITMUChar4Image *colourImage, const
 
 void BackgroundRelocaliser::to_old_gpu() const
 {
-  cudaSetDevice(m_oldDevice);
+  //ORcudaSafeCall(cudaDeviceSynchronize()); // TEMPORARY
+  ORcudaSafeCall(cudaSetDevice(m_oldDevice));
+
+  /*int temp;
+  cudaGetDevice(&temp);
+  std::cout << "Now on device " << temp << '\n';*/
 }
 
 void BackgroundRelocaliser::to_relocalisation_gpu() const
 {
-  cudaGetDevice(&m_oldDevice);
-  cudaSetDevice(m_relocalisationDevice);
+  ORcudaSafeCall(cudaGetDevice(&m_oldDevice));
+  //ORcudaSafeCall(cudaDeviceSynchronize()); // TEMPORARY
+  ORcudaSafeCall(cudaSetDevice(m_relocalisationDevice));
+
+  /*int temp;
+  cudaGetDevice(&temp);
+  std::cout << "Now on device " << temp << '\n';*/
 }
 
 }
