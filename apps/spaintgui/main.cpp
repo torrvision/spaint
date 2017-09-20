@@ -35,8 +35,7 @@
 #endif
 
 #include <itmx/base/MemoryBlockFactory.h>
-
-#include <spaint/imagesources/AsyncImageSourceEngine.h>
+#include <itmx/imagesources/AsyncImageSourceEngine.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 

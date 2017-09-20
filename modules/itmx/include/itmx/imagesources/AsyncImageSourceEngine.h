@@ -1,19 +1,19 @@
 /**
- * spaint: AsyncImageSourceEngine.h
+ * itmx: AsyncImageSourceEngine.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_ASYNCIMAGESOURCEENGINE
-#define H_SPAINT_ASYNCIMAGESOURCEENGINE
+#ifndef H_ITMX_ASYNCIMAGESOURCEENGINE
+#define H_ITMX_ASYNCIMAGESOURCEENGINE
 
 #include <queue>
 
 #include <boost/thread.hpp>
 
-#include <itmx/base/ITMImagePtrTypes.h>
-#include <itmx/base/ITMObjectPtrTypes.h>
+#include "../base/ITMImagePtrTypes.h"
+#include "../base/ITMObjectPtrTypes.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of this class can be used to read RGB-D images asynchronously from an existing image source.

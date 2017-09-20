@@ -1,5 +1,5 @@
 /**
- * spaint: SingleRGBDImagePipe.cpp
+ * itmx: SingleRGBDImagePipe.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -8,7 +8,7 @@ using namespace ITMLib;
 
 #include <stdexcept>
 
-namespace spaint {
+namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 

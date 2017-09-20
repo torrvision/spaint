@@ -4,9 +4,10 @@
  */
 
 #include "ObjectivePipeline.h"
-
-#include <spaint/imagesources/SingleRGBDImagePipe.h>
 using namespace spaint;
+
+#include <itmx/imagesources/SingleRGBDImagePipe.h>
+using namespace itmx;
 
 #include <tvgutil/containers/MapUtil.h>
 #include <tvgutil/filesystem/PathFinder.h>
