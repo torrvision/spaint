@@ -11,10 +11,11 @@ using namespace ViconDataStreamSDK::CPP;
 #include <iomanip>
 #include <iostream>
 
+#include <itmx/util/CameraPoseConverter.h>
+using namespace itmx;
+
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
-
-#include "util/CameraPoseConverter.h"
 
 namespace spaint {
 
