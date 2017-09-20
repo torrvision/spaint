@@ -46,7 +46,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     update_failure_penalties();
 
     // TODO: Comment here.
-    if(m_frameIndex % 50 == 0) add_relocalisation_candidates();
+    add_relocalisation_candidates();
 
     // TODO: Comment here.
     if(m_frameIndex % 100 == 0 && !m_candidates.empty()) try_schedule_relocalisation();
@@ -65,16 +65,21 @@ void CollaborativeComponent::add_relocalisation_candidates()
   std::vector<std::pair<ITMFloatImage_Ptr,ITMUChar4Image_Ptr> > rgbdImages;
   for(size_t j = 0; j < sceneCount; ++j)
   {
-    const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneIDs[j]);
-    const View_CPtr viewJ = slamStateJ->get_view();
+    ITMFloatImage_Ptr depthJ;
+    ITMUChar4Image_Ptr rgbJ;
 
-    viewJ->depth->UpdateHostFromDevice();
-    viewJ->rgb->UpdateHostFromDevice();
+    if(((m_frameIndex - 50) / 10) % sceneCount == j)
+    {
+      const View_CPtr viewJ = m_context->get_slam_state(sceneIDs[j])->get_view();
+      viewJ->depth->UpdateHostFromDevice();
+      viewJ->rgb->UpdateHostFromDevice();
 
-    ITMFloatImage_Ptr depthJ(new ITMFloatImage(viewJ->depth->noDims, true, false));
-    ITMUChar4Image_Ptr rgbJ(new ITMUChar4Image(viewJ->rgb->noDims, true, false));
-    depthJ->SetFrom(viewJ->depth, ITMFloatImage::CPU_TO_CPU);
-    rgbJ->SetFrom(viewJ->rgb, ITMUChar4Image::CPU_TO_CPU);
+      depthJ.reset(new ITMFloatImage(viewJ->depth->noDims, true, false));
+      rgbJ.reset(new ITMUChar4Image(viewJ->rgb->noDims, true, false));
+
+      depthJ->SetFrom(viewJ->depth, ITMFloatImage::CPU_TO_CPU);
+      rgbJ->SetFrom(viewJ->rgb, ITMUChar4Image::CPU_TO_CPU);
+    }
 
     rgbdImages.push_back(std::make_pair(depthJ, rgbJ));
   }
@@ -84,6 +89,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
     for(size_t j = 0; j < sceneCount; ++j)
     {
       if(j == i) continue;
+      if(((m_frameIndex - 50) / 10) % sceneCount != j) continue;
 
       const std::string sceneI = sceneIDs[i];
       const std::string sceneJ = sceneIDs[j];
@@ -164,8 +170,11 @@ void CollaborativeComponent::run_relocalisation()
       failurePenalty = std::min(failurePenalty + failurePenaltyIncrease, failurePenaltyMax);
     }
 
+    // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
+    SubmapRelocalisation_Ptr bestCandidateCopy;
     {
       boost::unique_lock<boost::mutex> lock(m_mutex);
+      bestCandidateCopy = m_bestCandidate;
       m_bestCandidate.reset();
     }
   }
