@@ -4,12 +4,13 @@
  */
 
 #include "trackers/RobustViconTracker.h"
+using namespace rigging;
 
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace ITMLib;
 
-#include "util/CameraPoseConverter.h"
-using namespace rigging;
+#include <itmx/util/CameraPoseConverter.h>
+using namespace itmx;
 
 namespace spaint {
 
