@@ -21,10 +21,6 @@ ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSetti
                                                                      const SettingsContainer_CPtr& settings,
                                                                      const std::string &forestFilename)
 {
-  /*int temp;
-  cudaGetDevice(&temp);
-  std::cout << "ScoreRelocaliserFactory: On device " << temp << '\n';*/
-
   ScoreRelocaliser_Ptr relocaliser;
 
   if (deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)

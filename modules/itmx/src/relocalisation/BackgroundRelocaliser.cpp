@@ -72,23 +72,13 @@ void BackgroundRelocaliser::copy_images(const ITMUChar4Image *colourImage, const
 
 void BackgroundRelocaliser::to_old_gpu() const
 {
-  //ORcudaSafeCall(cudaDeviceSynchronize()); // TEMPORARY
   ORcudaSafeCall(cudaSetDevice(m_oldDevice));
-
-  /*int temp;
-  cudaGetDevice(&temp);
-  std::cout << "Now on device " << temp << '\n';*/
 }
 
 void BackgroundRelocaliser::to_relocalisation_gpu() const
 {
   ORcudaSafeCall(cudaGetDevice(&m_oldDevice));
-  //ORcudaSafeCall(cudaDeviceSynchronize()); // TEMPORARY
   ORcudaSafeCall(cudaSetDevice(m_relocalisationDevice));
-
-  /*int temp;
-  cudaGetDevice(&temp);
-  std::cout << "Now on device " << temp << '\n';*/
 }
 
 }
