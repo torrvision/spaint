@@ -465,6 +465,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   static std::vector<ITMFloatImage_Ptr> depthImages;
   static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
   std::vector<std::string> sceneIDs = m_model->get_scene_ids();
+  std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
   if(sceneID == "World")
   {
     while(images.size() < sceneIDs.size())
@@ -475,22 +476,24 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
     for(size_t i = 0; i < sceneIDs.size(); ++i)
     {
-      ORUtils::SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
+      SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
+      visualisationTypes[i] = subwindow.get_type();
 
       if(sceneIDs[i] != "World")
       {
-        boost::optional<ORUtils::SE3Pose> relativeTransform = m_model->try_get_relative_transform("World", sceneIDs[i]);
-        if(!relativeTransform) relativeTransform = ORUtils::SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        boost::optional<std::pair<SE3Pose,size_t> > result = m_model->try_get_relative_transform("World", sceneIDs[i]);
+        SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        if(!result || result->second < 2) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICFLAT;
 
         // ciTwi * wiTwj = ciTwj
-        tempPose.SetM(tempPose.GetM() * relativeTransform->GetM());
+        tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
       }
 
       SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
         subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-        tempPose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+        tempPose, slamState->get_view(), visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
       SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
@@ -523,7 +526,9 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       float smallestDepth = static_cast<float>(INT_MAX);
       for(size_t i = 0, size = images.size(); i < size; ++i)
       {
-        const float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
+        const float arbitrarilyLargeDepth = 100.0f;
+        float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
+        if(depth != -1.0f && visualisationTypes[i] == VisualisationGenerator::VT_SCENE_SEMANTICFLAT) depth = arbitrarilyLargeDepth;
         if(depth != -1.0f && depth < smallestDepth)
         {
           smallestDepth = depth;

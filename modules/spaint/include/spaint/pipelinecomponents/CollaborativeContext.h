@@ -56,9 +56,9 @@ public:
    * \param sceneI  The ID of scene i.
    * \param sceneJ  The ID of scene j.
    * \return        An estimate of the transformation from the coordinate system of scene j to that of scene i,
-   *                if possible, or boost::none otherwise.
+   *                together with the number of samples it is based on, if possible, or boost::none otherwise.
    */
-  virtual boost::optional<ORUtils::SE3Pose> try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const;
+  virtual boost::optional<std::pair<ORUtils::SE3Pose,size_t> > try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
