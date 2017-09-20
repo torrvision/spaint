@@ -1,5 +1,5 @@
 /**
- * spaint: RiftTracker.cpp
+ * itmx: RiftTracker.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -10,7 +10,7 @@ using namespace ITMLib;
 
 #include <Extras/OVR_Math.h>
 
-namespace spaint {
+namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 

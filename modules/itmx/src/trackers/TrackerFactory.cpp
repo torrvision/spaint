@@ -1,5 +1,5 @@
 /**
- * spaint: TrackerFactory.cpp
+ * itmx: TrackerFactory.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
@@ -25,7 +25,7 @@ using namespace tvgutil;
 #include "trackers/ViconTracker.h"
 #endif
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

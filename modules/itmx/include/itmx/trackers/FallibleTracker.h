@@ -1,16 +1,16 @@
 /**
- * spaint: FallibleTracker.h
+ * itmx: FallibleTracker.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_FALLIBLETRACKER
-#define H_SPAINT_FALLIBLETRACKER
+#ifndef H_ITMX_FALLIBLETRACKER
+#define H_ITMX_FALLIBLETRACKER
 
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Trackers/Interface/ITMTracker.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of a class deriving from this one can be used to track the camera pose in a way that allows it to detect tracking failures.
