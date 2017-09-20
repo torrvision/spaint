@@ -1,15 +1,15 @@
 /**
- * spaint: SingleRGBDImagePipe.h
+ * itmx: SingleRGBDImagePipe.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_SINGLERGBDIMAGEPIPE
-#define H_SPAINT_SINGLERGBDIMAGEPIPE
+#ifndef H_ITMX_SINGLERGBDIMAGEPIPE
+#define H_ITMX_SINGLERGBDIMAGEPIPE
 
-#include <itmx/base/ITMImagePtrTypes.h>
-#include <itmx/base/ITMObjectPtrTypes.h>
+#include "../base/ITMImagePtrTypes.h"
+#include "../base/ITMObjectPtrTypes.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of this class represents a pipe to which individual RGB-D images can be

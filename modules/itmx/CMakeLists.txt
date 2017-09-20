@@ -48,6 +48,17 @@ include/itmx/geometry/Screw.h
 )
 
 ##
+SET(imagesources_sources
+src/imagesources/AsyncImageSourceEngine.cpp
+src/imagesources/SingleRGBDImagePipe.cpp
+)
+
+SET(imagesources_headers
+include/itmx/imagesources/AsyncImageSourceEngine.h
+include/itmx/imagesources/SingleRGBDImagePipe.h
+)
+
+##
 SET(persistence_sources
 src/persistence/ImagePersister.cpp
 src/persistence/PosePersister.cpp
@@ -85,6 +96,7 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 SET(sources
 ${base_sources}
 ${geometry_sources}
+${imagesources_sources}
 ${persistence_sources}
 ${relocalisation_sources}
 )
@@ -92,6 +104,7 @@ ${relocalisation_sources}
 SET(headers
 ${base_headers}
 ${geometry_headers}
+${imagesources_headers}
 ${persistence_headers}
 ${relocalisation_headers}
 )
@@ -106,6 +119,7 @@ ${relocalisation_templates}
 
 SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
 SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
+SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
 

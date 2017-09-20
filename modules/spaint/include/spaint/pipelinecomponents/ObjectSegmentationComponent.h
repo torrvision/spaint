@@ -6,8 +6,9 @@
 #ifndef H_SPAINT_OBJECTSEGMENTATIONCOMPONENT
 #define H_SPAINT_OBJECTSEGMENTATIONCOMPONENT
 
+#include <itmx/imagesources/SingleRGBDImagePipe.h>
+
 #include "ObjectSegmentationContext.h"
-#include "../imagesources/SingleRGBDImagePipe.h"
 
 namespace spaint {
 
@@ -25,7 +26,7 @@ private:
   bool m_outputEnabled;
 
   /** The pipe to which to write the masked RGB and depth images resulting from the segmentation process. */
-  SingleRGBDImagePipe_Ptr m_outputPipe;
+  itmx::SingleRGBDImagePipe_Ptr m_outputPipe;
 
   /** The ID of the scene on which the component should operate. */
   std::string m_sceneID;
@@ -39,7 +40,7 @@ public:
    * \param sceneID     The ID of the scene on which the component should operate.
    * \param outputPipe  The pipe to which to write the masked RGB and depth images resulting from the segmentation process.
    */
-  ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID, const SingleRGBDImagePipe_Ptr& outputPipe = SingleRGBDImagePipe_Ptr());
+  ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID, const itmx::SingleRGBDImagePipe_Ptr& outputPipe = itmx::SingleRGBDImagePipe_Ptr());
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

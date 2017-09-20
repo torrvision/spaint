@@ -1,5 +1,5 @@
 /**
- * spaint: AsyncImageSourceEngine.cpp
+ * itmx: AsyncImageSourceEngine.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-namespace spaint {
+namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
