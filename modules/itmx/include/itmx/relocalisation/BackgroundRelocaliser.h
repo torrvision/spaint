@@ -6,6 +6,8 @@
 #ifndef H_ITMX_BACKGROUNDRELOCALISER
 #define H_ITMX_BACKGROUNDRELOCALISER
 
+#include <boost/atomic.hpp>
+
 #include "Relocaliser.h"
 #include "../base/ITMImagePtrTypes.h"
 
@@ -33,6 +35,9 @@ private:
 
   /** The relocaliser to decorate. */
   Relocaliser_Ptr m_relocaliser;
+
+  /** TODO */
+  mutable boost::atomic<bool> m_relocaliserRunning;
 
   //#################### CONSTRUCTORS ####################
 public:

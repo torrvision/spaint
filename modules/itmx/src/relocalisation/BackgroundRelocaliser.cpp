@@ -12,19 +12,24 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 BackgroundRelocaliser::BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser, int relocalisationDevice)
-: m_relocalisationDevice(relocalisationDevice), m_relocaliser(relocaliser)
+: m_relocalisationDevice(relocalisationDevice), m_relocaliser(relocaliser), m_relocaliserRunning(false)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 boost::optional<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
+  m_relocaliserRunning = true;
+
   colourImage->UpdateHostFromDevice();
   depthImage->UpdateHostFromDevice();
   to_relocalisation_gpu();
   copy_images(colourImage, depthImage);
   boost::optional<Relocaliser::Result> result = m_relocaliser->relocalise(m_colourImage.get(), m_depthImage.get(), depthIntrinsics);
   to_old_gpu();
+
+  m_relocaliserRunning = false;
+
   return result;
 }
 
@@ -38,6 +43,8 @@ void BackgroundRelocaliser::reset()
 void BackgroundRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                   const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
+  if(m_relocaliserRunning) return;
+
   colourImage->UpdateHostFromDevice();
   depthImage->UpdateHostFromDevice();
   to_relocalisation_gpu();
@@ -48,6 +55,8 @@ void BackgroundRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFl
 
 void BackgroundRelocaliser::update()
 {
+  if(m_relocaliserRunning) return;
+
   to_relocalisation_gpu();
   m_relocaliser->update();
   to_old_gpu();
