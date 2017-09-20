@@ -1,16 +1,16 @@
 /**
- * spaint: RiftTracker.h
+ * itmx: RiftTracker.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_RIFTTRACKER
-#define H_SPAINT_RIFTTRACKER
+#ifndef H_ITMX_RIFTTRACKER
+#define H_ITMX_RIFTTRACKER
 
 #include <ITMLib/Trackers/Interface/ITMTracker.h>
 
 #include <OVR_CAPI.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of this class can be used to track the rotation of the camera using an Oculus Rift.

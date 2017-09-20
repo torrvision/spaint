@@ -1,18 +1,17 @@
 /**
- * spaint: TrackerFactory.h
+ * itmx: TrackerFactory.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_TRACKERFACTORY
-#define H_SPAINT_TRACKERFACTORY
+#ifndef H_ITMX_TRACKERFACTORY
+#define H_ITMX_TRACKERFACTORY
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <itmx/base/ITMObjectPtrTypes.h>
-
+#include "../base/ITMObjectPtrTypes.h"
 #include "FallibleTracker.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief This class can be used to construct trackers.

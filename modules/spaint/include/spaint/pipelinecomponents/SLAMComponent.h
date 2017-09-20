@@ -9,9 +9,10 @@
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMDenseSurfelMapper.h>
 
+#include <itmx/trackers/FallibleTracker.h>
+
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
-#include "../trackers/FallibleTracker.h"
 
 namespace spaint {
 
@@ -67,7 +68,7 @@ private:
   bool m_detectFiducials;
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
-  FallibleTracker *m_fallibleTracker;
+  itmx::FallibleTracker *m_fallibleTracker;
 
   /** The fiducial detector to use (if any). */
   FiducialDetector_CPtr m_fiducialDetector;

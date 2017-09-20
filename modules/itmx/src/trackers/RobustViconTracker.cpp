@@ -1,5 +1,5 @@
 /**
- * spaint: RobustViconTracker.cpp
+ * itmx: RobustViconTracker.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -9,10 +9,9 @@ using namespace rigging;
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace ITMLib;
 
-#include <itmx/util/CameraPoseConverter.h>
-using namespace itmx;
+#include "util/CameraPoseConverter.h"
 
-namespace spaint {
+namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 

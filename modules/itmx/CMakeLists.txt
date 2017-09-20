@@ -18,6 +18,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 
 #############################
 # Specify the project files #
@@ -89,6 +91,33 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
 
 ##
+SET(trackers_sources
+src/trackers/TrackerFactory.cpp
+)
+
+SET(trackers_headers
+include/itmx/trackers/FallibleTracker.h
+include/itmx/trackers/TrackerFactory.h
+)
+
+IF(WITH_OVR)
+  SET(trackers_sources ${trackers_sources} src/trackers/RiftTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/itmx/trackers/RiftTracker.h)
+ENDIF()
+
+IF(WITH_VICON)
+  SET(trackers_sources ${trackers_sources}
+    src/trackers/RobustViconTracker.cpp
+    src/trackers/ViconTracker.cpp
+  )
+
+  SET(trackers_headers ${trackers_headers}
+    include/itmx/trackers/RobustViconTracker.h
+    include/itmx/trackers/ViconTracker.h
+  )
+ENDIF()
+
+##
 SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/RGBDUtil.cpp
@@ -110,6 +139,7 @@ ${geometry_sources}
 ${imagesources_sources}
 ${persistence_sources}
 ${relocalisation_sources}
+${trackers_sources}
 ${util_sources}
 )
 
@@ -119,6 +149,7 @@ ${geometry_headers}
 ${imagesources_headers}
 ${persistence_headers}
 ${relocalisation_headers}
+${trackers_headers}
 ${util_headers}
 )
 
@@ -135,6 +166,7 @@ SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
+SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 
 ##########################################

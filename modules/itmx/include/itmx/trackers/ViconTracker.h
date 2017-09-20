@@ -1,10 +1,10 @@
 /**
- * spaint: ViconTracker.h
+ * itmx: ViconTracker.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_VICONTRACKER
-#define H_SPAINT_VICONTRACKER
+#ifndef H_ITMX_VICONTRACKER
+#define H_ITMX_VICONTRACKER
 
 #include <map>
 #include <string>
@@ -17,7 +17,7 @@
 
 #include "FallibleTracker.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of this class can be used to track the camera pose using a Vicon system.

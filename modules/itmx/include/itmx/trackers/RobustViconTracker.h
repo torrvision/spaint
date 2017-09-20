@@ -1,20 +1,19 @@
 /**
- * spaint: RobustViconTracker.h
+ * itmx: RobustViconTracker.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_ROBUSTVICONTRACKER
-#define H_SPAINT_ROBUSTVICONTRACKER
+#ifndef H_ITMX_ROBUSTVICONTRACKER
+#define H_ITMX_ROBUSTVICONTRACKER
 
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 
-#include <itmx/base/ITMObjectPtrTypes.h>
-
 #include <rigging/SimpleCamera.h>
 
+#include "../base/ITMObjectPtrTypes.h"
 #include "ViconTracker.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of this class can be used to track the camera pose more robustly using a Vicon system.

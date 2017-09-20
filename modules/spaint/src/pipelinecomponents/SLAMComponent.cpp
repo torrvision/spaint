@@ -20,13 +20,13 @@ using namespace ORUtils;
 
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
+#include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
 #include "segmentation/SegmentationUtil.h"
-#include "trackers/TrackerFactory.h"
 
 namespace spaint {
 

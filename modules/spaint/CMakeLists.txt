@@ -30,10 +30,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTBB.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 
 #############################
 # Specify the project files #
@@ -526,33 +524,6 @@ include/spaint/touch/TouchSettings.h
 )
 
 ##
-SET(trackers_sources
-src/trackers/TrackerFactory.cpp
-)
-
-SET(trackers_headers
-include/spaint/trackers/FallibleTracker.h
-include/spaint/trackers/TrackerFactory.h
-)
-
-IF(WITH_OVR)
-  SET(trackers_sources ${trackers_sources} src/trackers/RiftTracker.cpp)
-  SET(trackers_headers ${trackers_headers} include/spaint/trackers/RiftTracker.h)
-ENDIF()
-
-IF(WITH_VICON)
-  SET(trackers_sources ${trackers_sources}
-    src/trackers/RobustViconTracker.cpp
-    src/trackers/ViconTracker.cpp
-  )
-
-  SET(trackers_headers ${trackers_headers}
-    include/spaint/trackers/RobustViconTracker.h
-    include/spaint/trackers/ViconTracker.h
-  )
-ENDIF()
-
-##
 SET(util_sources
 src/util/LabelManager.cpp
 )
@@ -648,7 +619,6 @@ ${slamstate_sources}
 ${smoothing_sources}
 ${smoothing_cpu_sources}
 ${smoothing_interface_sources}
-${trackers_sources}
 ${util_sources}
 ${visualisation_sources}
 ${visualisation_cpu_sources}
@@ -692,7 +662,6 @@ ${smoothing_headers}
 ${smoothing_cpu_headers}
 ${smoothing_interface_headers}
 ${smoothing_shared_headers}
-${trackers_headers}
 ${util_headers}
 ${visualisation_headers}
 ${visualisation_cpu_headers}
@@ -801,7 +770,6 @@ SOURCE_GROUP(smoothing\\cuda FILES ${smoothing_cuda_sources} ${smoothing_cuda_he
 SOURCE_GROUP(smoothing\\interface FILES ${smoothing_interface_sources} ${smoothing_interface_headers})
 SOURCE_GROUP(smoothing\\shared FILES ${smoothing_shared_headers})
 SOURCE_GROUP(touch FILES ${touch_sources} ${touch_headers})
-SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisation FILES ${visualisation_sources} ${visualisation_headers})
 SOURCE_GROUP(visualisation\\cpu FILES ${visualisation_cpu_sources} ${visualisation_cpu_headers})

@@ -1,5 +1,5 @@
 /**
- * spaint: ViconTracker.cpp
+ * itmx: ViconTracker.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -11,13 +11,12 @@ using namespace ViconDataStreamSDK::CPP;
 #include <iomanip>
 #include <iostream>
 
-#include <itmx/util/CameraPoseConverter.h>
-using namespace itmx;
-
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
 
-namespace spaint {
+#include "util/CameraPoseConverter.h"
+
+namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
