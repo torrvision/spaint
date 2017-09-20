@@ -1,14 +1,14 @@
 /**
- * spaint: ColourConversion_Shared.h
+ * itmx: ColourConversion_Shared.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_COLOURCONVERSION_SHARED
-#define H_SPAINT_COLOURCONVERSION_SHARED
+#ifndef H_ITMX_COLOURCONVERSION_SHARED
+#define H_ITMX_COLOURCONVERSION_SHARED
 
 #include <ITMLib/Utils/ITMMath.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief Converts an RGB colour to greyscale.

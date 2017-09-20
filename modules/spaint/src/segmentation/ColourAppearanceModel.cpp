@@ -5,10 +5,11 @@
 
 #include "segmentation/ColourAppearanceModel.h"
 
+#include <itmx/util/ColourConversion_Shared.h>
+using namespace itmx;
+
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
-
-#include "util/ColourConversion_Shared.h"
 
 namespace spaint {
 

@@ -1,5 +1,5 @@
 /**
- * spaint: CameraPoseConverter.cpp
+ * itmx: CameraPoseConverter.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -9,7 +9,7 @@ using namespace rigging;
 
 #include <ITMLib/Utils/ITMMath.h>
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

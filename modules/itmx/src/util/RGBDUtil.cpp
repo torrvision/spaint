@@ -1,11 +1,11 @@
 /**
- * spaint: RGBDUtil.cpp
+ * itmx: RGBDUtil.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "util/RGBDUtil.h"
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

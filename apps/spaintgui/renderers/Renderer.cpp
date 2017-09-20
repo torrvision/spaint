@@ -8,12 +8,14 @@ using namespace ITMLib;
 using namespace ORUtils;
 using namespace rigging;
 
+#include <itmx/util/CameraPoseConverter.h>
+using namespace itmx;
+
 #include <spaint/ogl/CameraRenderer.h>
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
 #include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraFactory.h>
-#include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
 
 #ifdef WITH_ARRAYFIRE

@@ -554,17 +554,12 @@ ENDIF()
 
 ##
 SET(util_sources
-src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
-src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
 include/spaint/util/CameraFactory.h
-include/spaint/util/CameraPoseConverter.h
-include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/LabelManager.h
-include/spaint/util/RGBDUtil.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h

@@ -1,14 +1,14 @@
 /**
- * spaint: RGBDUtil.h
+ * itmx: RGBDUtil.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_RGBDUTIL
-#define H_SPAINT_RGBDUTIL
+#ifndef H_ITMX_RGBDUTIL
+#define H_ITMX_RGBDUTIL
 
 #include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief This class contains functions that help us to map between the coordinate frames associated with the depth and RGB cameras.

@@ -1,16 +1,16 @@
 /**
- * spaint: CameraPoseConverter.h
+ * itmx: CameraPoseConverter.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_CAMERAPOSECONVERTER
-#define H_SPAINT_CAMERAPOSECONVERTER
+#ifndef H_ITMX_CAMERAPOSECONVERTER
+#define H_ITMX_CAMERAPOSECONVERTER
 
 #include <ORUtils/SE3Pose.h>
 
 #include <rigging/SimpleCamera.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief This class contains helper functions to allow us to convert between cameras, InfiniTAM poses and model-view matrices.

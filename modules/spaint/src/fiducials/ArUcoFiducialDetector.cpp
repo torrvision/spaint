@@ -18,12 +18,12 @@
 using namespace ITMLib;
 
 #include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
+#include <itmx/util/CameraPoseConverter.h>
+using namespace itmx;
+using namespace rigging;
 
 #include "ocv/OpenCVUtil.h"
 #include "picking/PickerFactory.h"
-#include "util/CameraPoseConverter.h"
-using namespace rigging;
 
 namespace spaint {
 

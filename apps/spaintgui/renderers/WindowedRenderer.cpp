@@ -4,16 +4,9 @@
  */
 
 #include "WindowedRenderer.h"
-using namespace ITMLib;
 using namespace ORUtils;
 
 #include <stdexcept>
-
-#include <rigging/SimpleCamera.h>
-using namespace rigging;
-
-#include <spaint/util/CameraPoseConverter.h>
-using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
