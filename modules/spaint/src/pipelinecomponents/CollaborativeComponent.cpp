@@ -208,7 +208,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
   std::cout << "END CANDIDATES\n";
 #endif
 
-  bool readyToRelocalise = false;
+  bool canRelocalise = false;
 
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
@@ -217,15 +217,11 @@ void CollaborativeComponent::try_schedule_relocalisation()
       // Try to relocalise the best candidate.
       m_bestCandidate = m_candidates.back().first;
       m_candidates.pop_back();
-      readyToRelocalise = true;
+      canRelocalise = true;
     }
   }
 
-  if(readyToRelocalise)
-  {
-    std::cout << "Signalling relocalisation thread" << std::endl;
-    m_readyToRelocalise.notify_one();
-  }
+  if(canRelocalise) m_readyToRelocalise.notify_one();
 }
 
 void CollaborativeComponent::update_failure_penalties()
