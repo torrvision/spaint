@@ -25,6 +25,7 @@ src/InputState.cpp
 
 SET(toplevel_headers
 include/tvginput/InputState.h
+include/tvginput/JoystickAxis.h
 include/tvginput/Keycode.h
 include/tvginput/MouseButton.h
 )

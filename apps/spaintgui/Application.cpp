@@ -407,21 +407,54 @@ void Application::process_camera_input()
   {
     const float SPEED = 0.1f;
     const float ANGULAR_SPEED = 0.05f;
-    static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
+    static Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
     MoveableCamera_Ptr camera = activeSubwindow.get_camera();
 
+    // Set the UP vector according to the current state of the camera.
+    if(m_inputState.key_down(KEYCODE_g) || m_inputState.joystick_button_down(JOYSTICK_BUTTON_TRIANGLE)) UP = camera->v();
+
+    // Handle keyboard.
     if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
     if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);
     if(m_inputState.key_down(KEYCODE_d)) camera->move_u(-SPEED);
     if(m_inputState.key_down(KEYCODE_a)) camera->move_u(SPEED);
-    if(m_inputState.key_down(KEYCODE_q)) camera->move(UP, SPEED);
-    if(m_inputState.key_down(KEYCODE_e)) camera->move(UP, -SPEED);
+    if(m_inputState.key_down(KEYCODE_q) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(UP, SPEED);
+    if(m_inputState.key_down(KEYCODE_e) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(UP, -SPEED);
 
     if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(UP, -ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_q) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_e) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), ANGULAR_SPEED);
+
+    // Handle joystick.
+    const float JOYSTICK_THRESHOLD = 0.1f; // To avoid analog jitter.
+
+    const float translationX = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_ANALOG_LEFT_X));
+    if(std::abs(translationX) > JOYSTICK_THRESHOLD) camera->move_u(-translationX * SPEED);
+
+    const float translationY = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_ANALOG_LEFT_Y));
+    if(std::abs(translationY) > JOYSTICK_THRESHOLD) camera->move_n(-translationY * SPEED);
+
+    const float rotationX = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_ANALOG_RIGHT_X));
+    if(std::abs(rotationX) > JOYSTICK_THRESHOLD) camera->rotate(UP, -rotationX * ANGULAR_SPEED);
+
+    const float rotationY = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_ANALOG_RIGHT_Y));
+    if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * ANGULAR_SPEED);
+
+    const float rotationZ_Left = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_L2));
+    if(std::abs(rotationZ_Left) > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
+
+    const float rotationZ_Right = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_R2));
+    if(std::abs(rotationZ_Right) > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * ANGULAR_SPEED);
+
+    const float moveUp = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_L1));
+    if(std::abs(moveUp) > JOYSTICK_THRESHOLD) camera->move(UP, moveUp * SPEED);
+
+    const float moveDown = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_R1));
+    if(std::abs(moveDown) > JOYSTICK_THRESHOLD) camera->move(UP, -moveDown * SPEED);
 
     // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
     // and are in free camera mode to have the same pose as this one.
@@ -496,6 +529,16 @@ bool Application::process_events()
         }
         break;
       }
+      case SDL_JOYAXISMOTION:
+        // We don't care from which joystick the event came from.
+        m_inputState.set_joystick_axis_state(static_cast<JoystickAxis>(event.jaxis.axis), event.jaxis.value);
+        break;
+      case SDL_JOYBUTTONDOWN:
+        m_inputState.press_joystick_button(static_cast<JoystickButton>(event.jbutton.button));
+        break;
+      case SDL_JOYBUTTONUP:
+        m_inputState.release_joystick_button(static_cast<JoystickButton>(event.jbutton.button));
+        break;
       case SDL_QUIT:
         return false;
       default:
