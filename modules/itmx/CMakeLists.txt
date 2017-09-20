@@ -14,6 +14,7 @@ SET(targetname itmx)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
@@ -89,6 +90,18 @@ SET(relocalisation_templates
 include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
 
+##
+SET(util_sources
+src/util/CameraPoseConverter.cpp
+src/util/RGBDUtil.cpp
+)
+
+SET(util_headers
+include/itmx/util/CameraPoseConverter.h
+include/itmx/util/ColourConversion_Shared.h
+include/itmx/util/RGBDUtil.h
+)
+
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
@@ -99,6 +112,7 @@ ${geometry_sources}
 ${imagesources_sources}
 ${persistence_sources}
 ${relocalisation_sources}
+${util_sources}
 )
 
 SET(headers
@@ -107,6 +121,7 @@ ${geometry_headers}
 ${imagesources_headers}
 ${persistence_headers}
 ${relocalisation_headers}
+${util_headers}
 )
 
 SET(templates
@@ -122,12 +137,14 @@ SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
+SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
 INCLUDE_DIRECTORIES(include/itmx)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################

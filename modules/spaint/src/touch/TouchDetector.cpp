@@ -10,12 +10,14 @@ using namespace rafl;
 #include <boost/format.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+#include <itmx/util/RGBDUtil.h>
+using namespace itmx;
+
 #include <tvgutil/misc/ArgUtil.h>
 using namespace tvgutil;
 
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "touch/TouchDescriptorCalculator.h"
-#include "util/RGBDUtil.h"
 #include "visualisation/VisualiserFactory.h"
 
 #ifdef WITH_OPENCV
