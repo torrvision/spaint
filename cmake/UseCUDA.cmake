@@ -49,10 +49,5 @@ IF(WITH_CUDA)
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
-  # Set the compute capability flags.
-  FOREACH(compute_capability ${CUDA_COMPUTE_CAPABILITY})
-    LIST(APPEND CUDA_NVCC_FLAGS --generate-code arch=compute_${compute_capability},code=sm_${compute_capability})
-  ENDFOREACH()
-
   ADD_DEFINITIONS(-DWITH_CUDA)
 ENDIF()
