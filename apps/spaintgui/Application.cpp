@@ -445,16 +445,16 @@ void Application::process_camera_input()
     if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * ANGULAR_SPEED);
 
     const float rotationZ_Left = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_L2));
-    if(std::abs(rotationZ_Left) > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
+    if(rotationZ_Left > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
 
     const float rotationZ_Right = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_R2));
-    if(std::abs(rotationZ_Right) > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * ANGULAR_SPEED);
+    if(rotationZ_Right > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * ANGULAR_SPEED);
 
     const float moveUp = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_L1));
-    if(std::abs(moveUp) > JOYSTICK_THRESHOLD) camera->move(UP, moveUp * SPEED);
+    if(moveUp > JOYSTICK_THRESHOLD) camera->move(UP, moveUp * SPEED);
 
     const float moveDown = joystick_normalise_axis_state(m_inputState.joystick_axis_state(JOYSTICK_AXIS_TRIGGER_R1));
-    if(std::abs(moveDown) > JOYSTICK_THRESHOLD) camera->move(UP, -moveDown * SPEED);
+    if(moveDown > JOYSTICK_THRESHOLD) camera->move(UP, -moveDown * SPEED);
 
     // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
     // and are in free camera mode to have the same pose as this one.
