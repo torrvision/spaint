@@ -13,8 +13,8 @@
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
 
-#ifdef WITH_ARRAYFIRE
-  #include <arrayfire.h>
+#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
+#include <af/cuda.h>
 #endif
 
 #include <InputSource/OpenNIEngine.h>
@@ -517,9 +517,9 @@ try
     quit("Error: Failed to initialise SDL.");
   }
 
-#ifdef WITH_ARRAYFIRE
-  // Tell ArrayFire which GPU it should run on.
-  af::setDevice(0);
+#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
+  // Tell ArrayFire to run on the primary GPU.
+  afcu::setNativeId(0);
 #endif
 
 #ifdef WITH_GLUT
