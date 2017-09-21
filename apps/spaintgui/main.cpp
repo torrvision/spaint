@@ -517,6 +517,11 @@ try
     quit("Error: Failed to initialise SDL.");
   }
 
+#ifdef WITH_ARRAYFIRE
+  // Tell ArrayFire which GPU it should run on.
+  af::setDevice(0);
+#endif
+
 #ifdef WITH_GLUT
   // Initialise GLUT (used for text rendering only).
   glutInit(&argc, argv);
