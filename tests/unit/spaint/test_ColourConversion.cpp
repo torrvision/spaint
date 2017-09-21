@@ -1,8 +1,8 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
-#include <spaint/util/ColourConversion_Shared.h>
-using namespace spaint;
+#include <itmx/util/ColourConversion_Shared.h>
+using namespace itmx;
 
 //#################### HELPER FUNCTIONS ####################
 

@@ -8,8 +8,8 @@
 #include <ORUtils/SE3Pose.h>
 using namespace ORUtils;
 
-#include <spaint/geometry/DualQuaternion.h>
-using namespace spaint;
+#include <itmx/geometry/DualQuaternion.h>
+using namespace itmx;
 
 //#################### TESTS ####################
 

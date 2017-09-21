@@ -3,8 +3,8 @@
 
 #include <boost/mpl/list.hpp>
 
-#include <spaint/geometry/DualNumber.h>
-using namespace spaint;
+#include <itmx/geometry/DualNumber.h>
+using namespace itmx;
 
 //#################### TESTS ####################
 
