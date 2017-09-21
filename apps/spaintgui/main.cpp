@@ -455,20 +455,19 @@ try
   }
 
   // Open all available joysticks.
-  std::vector<SDL_Joystick*> openJoysticks;
+  typedef boost::shared_ptr<SDL_Joystick> SDL_Joystick_Ptr;
+  std::vector<SDL_Joystick_Ptr> joysticks;
 
+  const int availableJoysticks = SDL_NumJoysticks();
+  std::cout << "[spaint] Found " << availableJoysticks << " joysticks.\n";
+
+  for(int i = 0; i < availableJoysticks; ++i)
   {
-    const int availableJoysticks = SDL_NumJoysticks();
-    std::cout << "[spaint] Found " << availableJoysticks << " joysticks.\n";
+    SDL_Joystick *joy = SDL_JoystickOpen(i);
+    if(!joy) throw std::runtime_error("Couldn't open joystick " + boost::lexical_cast<std::string>(i));
 
-    for(int i = 0; i < availableJoysticks; ++i)
-    {
-      SDL_Joystick *joy = SDL_JoystickOpen(i);
-      if(!joy) throw std::runtime_error("Couldn't open joystick " + boost::lexical_cast<std::string>(i));
-
-      std::cout << "[spaint] Opened joystick " << i << ": " << SDL_JoystickName(joy) << '\n';
-      openJoysticks.push_back(joy);
-    }
+    std::cout << "[spaint] Opened joystick " << i << ": " << SDL_JoystickName(joy) << '\n';
+    joysticks.push_back(SDL_Joystick_Ptr(joy, &SDL_JoystickClose));
   }
 
 #ifdef WITH_GLUT
@@ -585,10 +584,7 @@ try
 #endif
 
   // Close all open joysticks.
-  for(size_t i = 0; i < openJoysticks.size(); ++i)
-  {
-    SDL_JoystickClose(openJoysticks[i]);
-  }
+  joysticks.clear();
 
   // Shut down SDL.
   SDL_Quit();

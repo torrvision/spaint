@@ -1,6 +1,6 @@
 /**
  * tvginput: Joystick.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #ifndef H_TVGINPUT_JOYSTICK
