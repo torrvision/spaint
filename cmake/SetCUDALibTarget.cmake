@@ -9,7 +9,7 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/lib)
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/lib)
 
 IF(WITH_CUDA)
-  CUDA_ADD_LIBRARY(${targetname} STATIC ${sources} ${headers} ${templates} OPTIONS --generate-code arch=compute_${CUDA_COMPUTE_CAPABILITY},code=sm_${CUDA_COMPUTE_CAPABILITY})
+  CUDA_ADD_LIBRARY(${targetname} STATIC ${sources} ${headers} ${templates})
 ELSE()
   ADD_LIBRARY(${targetname} STATIC ${sources} ${headers} ${templates})
 ENDIF()
