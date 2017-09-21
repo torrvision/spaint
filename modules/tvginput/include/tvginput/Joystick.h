@@ -1,16 +1,19 @@
 /**
- * tvginput: JoystickAxis.h
+ * tvginput: Joystick.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_TVGINPUT_JOYSTICKAXIS
-#define H_TVGINPUT_JOYSTICKAXIS
+#ifndef H_TVGINPUT_JOYSTICK
+#define H_TVGINPUT_JOYSTICK
 
 #include <stdint.h>
 #include <limits>
 
 namespace tvginput {
 
+/**
+ * \brief An enum mapping SDL's Joystick axes to mnemonic names.
+ */
 enum JoystickAxis
 {
   JOYSTICK_AXIS_ANALOG_LEFT_X = 0,
@@ -23,6 +26,9 @@ enum JoystickAxis
   JOYSTICK_AXIS_TRIGGER_R1 = 15
 };
 
+/**
+ * \brief An enum mapping SDL's Joystick buttons to mnemonic names.
+ */
 enum JoystickButton
 {
   JOYSTICK_BUTTON_SELECT = 0,

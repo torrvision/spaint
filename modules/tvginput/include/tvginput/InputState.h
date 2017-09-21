@@ -9,7 +9,7 @@
 #include <map>
 #include <vector>
 
-#include "JoystickAxis.h"
+#include "Joystick.h"
 #include "Keycode.h"
 #include "MouseButton.h"
 
