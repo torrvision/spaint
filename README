@@ -47,7 +47,7 @@ the remaining optional libraries in order to enable full functionality.
   - Boost (version 1.56.0)
     Status: Required
 
-  - CUDA (version 7.5)
+  - CUDA (version 8.0)
     Status: Optional (needed for GPU acceleration)
     Default: Enabled
     Flag: WITH_CUDA
