@@ -15,6 +15,11 @@ IF(WITH_CUDA)
     INCLUDE("${CMAKE_MODULE_PATH}/CUDACheckCompute.cmake")
   ENDIF()
 
+  # Set the compute capability flags.
+  FOREACH(compute_capability ${CUDA_COMPUTE_CAPABILITY})
+    LIST(APPEND CUDA_NVCC_FLAGS --generate-code arch=compute_${compute_capability},code=sm_${compute_capability})
+  ENDFOREACH()
+
   # If on Windows, make it possible to enable GPU debug information.
   IF(MSVC_IDE)
     OPTION(ENABLE_CUDA_DEBUGGING "Enable CUDA debugging?" OFF)
@@ -43,11 +48,6 @@ IF(WITH_CUDA)
   IF(NOT MSVC_IDE)
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()
-
-  # Set the compute capability flags.
-  FOREACH(compute_capability ${CUDA_COMPUTE_CAPABILITY})
-    LIST(APPEND CUDA_NVCC_FLAGS --generate-code arch=compute_${compute_capability},code=sm_${compute_capability})
-  ENDFOREACH()
 
   ADD_DEFINITIONS(-DWITH_CUDA)
 ENDIF()
