@@ -518,8 +518,10 @@ try
   }
 
 #if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
-  // Tell ArrayFire to run on the primary GPU.
-  afcu::setNativeId(0);
+  // Tell ArrayFire to run on the default GPU.
+  int device;
+  cudaGetDevice(&device);
+  afcu::setNativeId(device);
 #endif
 
 #ifdef WITH_GLUT
