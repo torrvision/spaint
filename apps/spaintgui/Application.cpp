@@ -418,12 +418,14 @@ void Application::process_camera_input()
   {
     const float SPEED = 0.1f;
     const float ANGULAR_SPEED = 0.05f;
-    static Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
     MoveableCamera_Ptr camera = activeSubwindow.get_camera();
 
     // Set the UP vector according to the current state of the camera.
-    if(m_inputState.key_down(KEYCODE_g) || m_inputState.joystick_button_down(JOYSTICK_BUTTON_TRIANGLE)) UP = camera->v();
+    if(m_inputState.key_down(KEYCODE_g) || m_inputState.joystick_button_down(JOYSTICK_BUTTON_TRIANGLE)) activeSubwindow.set_camera_up_vector(camera->v());
+
+    // Get the subwindow's specific UP vector.
+    const Eigen::Vector3f UP = activeSubwindow.get_camera_up_vector();
 
     // Handle keyboard.
     if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
