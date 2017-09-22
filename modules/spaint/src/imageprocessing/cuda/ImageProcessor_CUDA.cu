@@ -81,6 +81,7 @@ static void copy_af_to_itm_cuda(const boost::shared_ptr<const af::array>& inputI
     height,
     outputImage->GetData(MEMORYDEVICE_CUDA)
   );
+  ORcudaKernelCheck;
 
   inputImage->unlock();
 }
@@ -107,6 +108,7 @@ static void copy_itm_to_af_cuda(const boost::shared_ptr<const ORUtils::Image<ITM
     height,
     outputImage->device<AFElementType>()
   );
+  ORcudaKernelCheck;
 
   outputImage->unlock();
 }
@@ -130,6 +132,7 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
     imgSize.y,
     outputImage->device<float>()
   );
+  ORcudaKernelCheck;
 }
 
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const
@@ -185,6 +188,7 @@ void ImageProcessor_CUDA::set_on_threshold(const ITMFloatImage_CPtr& inputImage,
     value,
     outputImage->GetData(MEMORYDEVICE_CUDA)
   );
+  ORcudaKernelCheck;
 }
 
 }

@@ -7,8 +7,8 @@
 #include <ITMLib/Utils/ITMMath.h>
 using namespace ORUtils;
 
-#include <spaint/geometry/GeometryUtil.h>
-using namespace spaint;
+#include <itmx/geometry/GeometryUtil.h>
+using namespace itmx;
 
 //#################### TESTS ####################
 

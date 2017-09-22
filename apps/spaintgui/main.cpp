@@ -13,8 +13,8 @@
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
 
-#ifdef WITH_ARRAYFIRE
-  #include <arrayfire.h>
+#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
+#include <af/cuda.h>
 #endif
 
 #include <InputSource/OpenNIEngine.h>
@@ -453,6 +453,13 @@ try
   {
     quit("Error: Failed to initialise SDL.");
   }
+
+#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
+  // Tell ArrayFire to run on the default GPU.
+  int device;
+  cudaGetDevice(&device);
+  afcu::setNativeId(device);
+#endif
 
   // Open all available joysticks.
   typedef boost::shared_ptr<SDL_Joystick> SDL_Joystick_Ptr;
