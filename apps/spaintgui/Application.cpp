@@ -280,16 +280,19 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     }
   }
 
-  // If the H key is pressed, print out a list of keyboard controls.
+  // If the H key is pressed, print out a list of controls.
   if(keysym.sym == KEYCODE_h)
   {
-    std::cout << "\nControls:\n\n"
+    std::cout << "\nKeyboard Controls:\n\n"
               << "W = Forwards\n"
               << "S = Backwards\n"
               << "A = Strafe Left\n"
               << "D = Strafe Right\n"
               << "Q = Move Up\n"
               << "E = Move Down\n"
+              << "Shift + Q = Rotate Camera Left\n"
+              << "Shift + E = Rotate Camera Right\n"
+              << "G = Sets Camera UP Vector to the Current Rotation\n"
               << "F = Toggle Fusion\n"
               << "O = Toggle Segmentation Output\n"
               << "P = Toggle Pose Mirroring\n"
@@ -342,7 +345,15 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "; = Toggle Median Filtering\n"
               << "/ = Save Screenshot\n"
               << "LShift + / = Toggle Sequence Recording\n"
-              << "RShift + / = Toggle Video Recording\n";
+              << "RShift + / = Toggle Video Recording\n"
+              << "\nJoystick Controls:\n\n"
+              << "Left Analog Stick = Move Camera\n"
+              << "Right Analog Stick = Look Up/Down/Left/Right\n"
+              << "L1 = Move Up\n"
+              << "R1 = Move Down\n"
+              << "L2 = Rotate Camera Left\n"
+              << "R2 = Rotate Camera Right\n"
+              << "Triangle = Sets Camera UP Vector to the Current Rotation\n";
   }
 }
 
