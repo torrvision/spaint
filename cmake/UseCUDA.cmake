@@ -42,10 +42,14 @@ IF(WITH_CUDA)
     IF(${CMAKE_VERSION} VERSION_LESS 3.5)
       SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
     ENDIF()
+
+    SET(CUDA_NVCC_FLAGS -Xcompiler -std=c++11; -Xlinker -std=c++11; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
-  # If not on Windows, disable some annoying nvcc warnings.
-  IF(NOT MSVC_IDE)
+  # Disable some annoying nvcc warnings.
+  IF(MSVC_IDE)
+    SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=bad_friend_decl" ; -Xcudafe "--diag_suppress=overloaded_function_linkage" ; ${CUDA_NVCC_FLAGS})
+  ELSE()
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()
 

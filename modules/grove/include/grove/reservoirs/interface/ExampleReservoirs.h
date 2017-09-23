@@ -39,7 +39,9 @@ protected:
   struct Visitor
   {
     virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const = 0;
+#ifdef WITH_CUDA
     virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const = 0;
+#endif
   };
 
 private:
@@ -57,7 +59,9 @@ private:
     {}
 
     virtual void visit(ExampleReservoirs_CPU<ExampleType>& target) const  { target.add_examples_sub(examples, reservoirIndices); }
+#ifdef WITH_CUDA
     virtual void visit(ExampleReservoirs_CUDA<ExampleType>& target) const { target.add_examples_sub(examples, reservoirIndices); }
+#endif
   };
 
   //#################### PROTECTED MEMBER VARIABLES ####################
