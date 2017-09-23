@@ -112,6 +112,6 @@ inline void createClusterFromExamples(
   positionCovariance.inv(outputCluster.positionInvCovariance);
 }
 
-} // namespace grove
+}
 
 #endif

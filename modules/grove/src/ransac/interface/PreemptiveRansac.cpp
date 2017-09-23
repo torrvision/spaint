@@ -738,4 +738,4 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   return false;
 }
 
-} // namespace grove
+}

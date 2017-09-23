@@ -280,6 +280,6 @@ private:
 typedef boost::shared_ptr<PreemptiveRansac> PreemptiveRansac_Ptr;
 typedef boost::shared_ptr<const PreemptiveRansac> PreemptiveRansac_CPtr;
 
-} // namespace grove
+}
 
-#endif // H_GROVE_PREEMPTIVERANSAC
+#endif

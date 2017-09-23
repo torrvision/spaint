@@ -388,6 +388,6 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Key
   return inlierLinearIdx;
 }
 
-} // namespace grove
+}
 
-#endif // H_GROVE_PREEMPTIVERANSACSHARED
+#endif

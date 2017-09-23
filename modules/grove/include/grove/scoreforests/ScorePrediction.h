@@ -92,6 +92,6 @@ inline int score_prediction_get_best_mode(const ScorePrediction &prediction, con
   return score_prediction_get_best_mode_and_energy(prediction, v, energy);
 }
 
-} // namespace grove
+}
 
-#endif // H_GROVE_SCOREPREDICTION
+#endif

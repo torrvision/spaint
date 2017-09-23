@@ -84,6 +84,6 @@ private:
   void init_random();
 };
 
-} // namespace grove
+}
 
-#endif // H_GROVE_PREEMPTIVERANSACCPU
+#endif

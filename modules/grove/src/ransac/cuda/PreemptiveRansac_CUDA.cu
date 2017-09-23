@@ -395,4 +395,4 @@ void PreemptiveRansac_CUDA::init_random()
   ck_reinit_rngs<<<gridSize, blockSize>>>(randomGenerators, m_maxPoseCandidates, m_rngSeed);
 }
 
-} // namespace grove
+}

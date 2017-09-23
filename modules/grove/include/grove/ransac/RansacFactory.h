@@ -30,6 +30,7 @@ public:
    */
   static PreemptiveRansac_Ptr make_preemptive_ransac(ITMLib::ITMLibSettings::DeviceType deviceType, const tvgutil::SettingsContainer_CPtr& settings);
 };
+
 }
 
 #endif

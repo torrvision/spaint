@@ -216,4 +216,4 @@ void PreemptiveRansac_CPU::init_random()
   }
 }
 
-} // namespace grove
+}

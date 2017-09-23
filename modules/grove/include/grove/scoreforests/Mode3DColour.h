@@ -46,6 +46,6 @@ typedef ORUtils::MemoryBlock<Mode3DColour> Mode3DColourMemoryBlock;
 typedef boost::shared_ptr<Mode3DColourMemoryBlock> Mode3DColourMemoryBlock_Ptr;
 typedef boost::shared_ptr<const Mode3DColourMemoryBlock> Mode3DColourMemoryBlock_CPtr;
 
-} // namespace grove
+}
 
 #endif
