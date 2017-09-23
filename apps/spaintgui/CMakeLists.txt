@@ -73,8 +73,8 @@ core/SLAMPipeline.h
 )
 
 ##
-SET(debugging_sources )
-SET(debugging_headers )
+SET(debugging_sources)
+SET(debugging_headers)
 
 IF(BUILD_GROVE)
   SET(debugging_sources ${debugging_sources} debugging/RelocaliserFiguresGenerator.cpp)
