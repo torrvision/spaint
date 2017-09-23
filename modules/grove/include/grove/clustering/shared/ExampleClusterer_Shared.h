@@ -55,8 +55,8 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
     {
       const ExampleType otherExample = exampleSets[exampleSetOffset + i];
 
-      // Note: ExampleType must have a distanceSquared function defined for it.
-      const float normSq = distanceSquared(centreExample, otherExample);
+      // Note: ExampleType must have a distance_squared function defined for it.
+      const float normSq = distance_squared(centreExample, otherExample);
       if(normSq < threeSigmaSq)
       {
         density += expf(normSq * minusOneOverTwoSigmaSq);
@@ -71,7 +71,7 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
  * \brief Compute the cluster parameters associated to a set of examples grouped by the other functions in this file.
  *
  * \note  The actual cluster parameters depend on the ClusterType and for this reason are left to the
- *        createClusterFromExamples function that MUST be defined for the current ExampleType.
+ *        create_cluster_from_examples function that MUST be defined for the current ExampleType.
  *
  * \param exampleSets         A pointer to the examples to cluster. One row per example set, one column per example.
  * \param exampleSetSizes     A pointer to the sizes of each example set.
@@ -122,9 +122,9 @@ inline void compute_modes(const ExampleType *exampleSets, const int *exampleSetS
     const ExampleType *exampleSetExamples = exampleSets + exampleSetOffset;
     const int *exampleSetClusterIndices = clusterIndices + exampleSetOffset;
 
-    // Build the actual cluster by calling the createClusterFromExamples function that MUST be defined
+    // Build the actual cluster by calling the create_cluster_from_examples function that MUST be defined
     // for the current ExampleType.
-    createClusterFromExamples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, selectedClusterId, currentClusterContainer.elts[outputClusterIdx]);
+    create_cluster_from_examples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, selectedClusterId, currentClusterContainer.elts[outputClusterIdx]);
   }
 }
 
@@ -244,8 +244,8 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
       const float otherDensity = densities[exampleSetOffset + i];
 
       // Compute the squared distance between the specified example and the other example.
-      // Note: ExampleType must have a distanceSquared function defined for it.
-      const float otherDistSq = distanceSquared(centreExample, otherExample);
+      // Note: ExampleType must have a distance_squared function defined for it.
+      const float otherDistSq = distance_squared(centreExample, otherExample);
 
       // We are looking for the closest example with a higher density (doesn't matter by how much) than that of the specified example.
       if(otherDensity > centreDensity && otherDistSq < minDistanceSq)

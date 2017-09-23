@@ -22,7 +22,7 @@ namespace grove {
  * \return  The squared distance between a and b.
  */
 _CPU_AND_GPU_CODE_
-inline float distanceSquared(const Keypoint3DColour& a, const Keypoint3DColour& b)
+inline float distance_squared(const Keypoint3DColour& a, const Keypoint3DColour& b)
 {
   const Vector3f diff = b.position - a.position;
   return dot(diff, diff);
@@ -41,7 +41,7 @@ inline float distanceSquared(const Keypoint3DColour& a, const Keypoint3DColour& 
  * \param outputCluster The constructed cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void createClusterFromExamples(
+inline void create_cluster_from_examples(
     const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, int key, Mode3DColour &outputCluster)
 {
   // Compute position and colour mean.
@@ -68,10 +68,10 @@ inline void createClusterFromExamples(
   {
 // Should never reach this point since we should have checked minClusterSize earlier.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-    printf("createClusterFromExamples: got a cluster with less than 2 elements.\n");
+    printf("create_cluster_from_examples: got a cluster with less than 2 elements.\n");
     asm("trap;");
 #else
-    throw std::runtime_error("createClusterFromExamples: got a cluster with less than 2 elements.");
+    throw std::runtime_error("create_cluster_from_examples: got a cluster with less than 2 elements.");
 #endif
   }
 

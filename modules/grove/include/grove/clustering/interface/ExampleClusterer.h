@@ -30,13 +30,13 @@ namespace grove {
  *
  * \note  The following functions must be defined for each example type:
  *
- *        1) _CPU_AND_GPU_CODE_ inline float distanceSquared(const ExampleType& a, const ExampleType& b);
+ *        1) _CPU_AND_GPU_CODE_ inline float distance_squared(const ExampleType& a, const ExampleType& b);
  *
  *           Returns the squared distance between two examples.
  *
- *        2) _CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples,
- *                                                                    const int *exampleKeys, int examplesCount,
- *                                                                    int key, ClusterType& outputCluster);
+ *        2) _CPU_AND_GPU_CODE_ inline void create_cluster_from_examples(const ExampleType *examples,
+ *                                                                       const int *exampleKeys, int examplesCount,
+ *                                                                       int key, ClusterType& outputCluster);
  *
  *           Aggregates all the examples in the examples array that have a certain key into a single cluster mode.
  *

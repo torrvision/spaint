@@ -24,11 +24,11 @@ namespace grove {
  *        Different rows are then clustered independently.
  *
  * \note  The following functions are required to be defined:
- *        - _CPU_AND_GPU_CODE_ inline float distanceSquared(const ExampleType &a, const ExampleType &b)
+ *        - _CPU_AND_GPU_CODE_ inline float distance_squared(const ExampleType &a, const ExampleType &b)
  *          Returns the squared distancebetween two examples.
- *        - _CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples,
- *                                                                   const int *exampleKeys, int examplesCount,
- *                                                                   int key, ClusterType &outputCluster)
+ *        - _CPU_AND_GPU_CODE_ inline void create_cluster_from_examples(const ExampleType *examples,
+ *                                                                      const int *exampleKeys, int examplesCount,
+ *                                                                      int key, ClusterType &outputCluster)
  *          Aggregates all the examples in the examples array having a certain key into a single cluster mode.
  *
  * \param ExampleType  The type of examples to cluster.
