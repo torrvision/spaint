@@ -28,8 +28,8 @@ ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
   m_clusterIdx = mbf.make_image<int>();
-  m_clusterSizes = mbf.make_image<int>();
   m_clusterSizeHistograms = mbf.make_image<int>();
+  m_clusterSizes = mbf.make_image<int>();
   m_densities = mbf.make_image<float>();
   m_nbClustersPerExampleSet = mbf.make_block<int>();
   m_parents = mbf.make_image<int>();
