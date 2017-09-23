@@ -1,24 +1,23 @@
-###################################
-# CMakeLists.txt for unit/spaint #
-###################################
+################################
+# CMakeLists.txt for unit/itmx #
+################################
 
 ###############################
 # Specify the test suite name #
 ###############################
 
-SET(suitename spaint)
+SET(suitename itmx)
 
 ##########################
 # Specify the test names #
 ##########################
 
-SET(testnames)
-
-IF(WITH_ARRAYFIRE)
-  SET(testnames ${testnames}
-    ImageProcessor
-  )
-ENDIF()
+SET(testnames
+ColourConversion
+DualNumber
+DualQuaternion
+GeometryUtil
+)
 
 FOREACH(testname ${testnames})
 
@@ -28,7 +27,6 @@ SET(targetname "unittest_${suitename}_${testname}")
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
@@ -53,7 +51,6 @@ SOURCE_GROUP(sources FILES ${sources})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
@@ -67,9 +64,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAUnitTestTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} spaint itmx rafl rigging tvginput tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} itmx rigging tvgutil)
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 
