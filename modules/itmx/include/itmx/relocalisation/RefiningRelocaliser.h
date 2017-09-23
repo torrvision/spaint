@@ -53,14 +53,14 @@ public:
    *
    * \return  The relocaliser whose results are being refined.
    */
-  Relocaliser_CPtr get_inner_relocaliser() const;
+  const Relocaliser_Ptr& get_inner_relocaliser();
 
   /**
-   * \brief Gets the relocaliser whose results are being refined (non-const variant).
+   * \brief Gets the relocaliser whose results are being refined.
    *
    * \return  The relocaliser whose results are being refined.
    */
-  Relocaliser_Ptr get_inner_relocaliser();
+  Relocaliser_CPtr get_inner_relocaliser() const;
 };
 
 //#################### TYPEDEFS ####################

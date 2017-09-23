@@ -15,12 +15,12 @@ RefiningRelocaliser::RefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-Relocaliser_CPtr RefiningRelocaliser::get_inner_relocaliser() const
+const Relocaliser_Ptr& RefiningRelocaliser::get_inner_relocaliser()
 {
   return m_innerRelocaliser;
 }
 
-Relocaliser_Ptr RefiningRelocaliser::get_inner_relocaliser()
+Relocaliser_CPtr RefiningRelocaliser::get_inner_relocaliser() const
 {
   return m_innerRelocaliser;
 }
