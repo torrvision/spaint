@@ -60,13 +60,13 @@ protected:
   /** The maximum number of clusters to return for each set of examples. */
   uint32_t m_maxClusterCount;
 
-  /** The minimum number of examples in a valid cluster. */
+  /** The minimum size of cluster to keep. */
   uint32_t m_minClusterSize;
 
-  /** The sigma used to estimate example densities. */
+  /** The sigma of the Gaussian used when computing the example densities. */
   float m_sigma;
 
-  /** The maximum distance between examples in the same set. */
+  /** The maximum distance there can be between two examples that are part of the same cluster. */
   float m_tau;
 
   //######################## FIND MODES TEMPORARY VARIABLES ########################
@@ -78,11 +78,11 @@ protected:
   //                                                                              //
   //################################################################################
 protected:
-  /** Cluster index to which each example is associated. Has count rows and exampleSets->width columns. */
+  /** Cluster index to which each example is associated. Has exampleSetCount rows and exampleSets->width columns. */
   ITMIntImage_Ptr m_clusterIdx;
 
   /**
-   * The size of each cluster (for each example set under consideration). Has count rows and exampleSets->width columns.
+   * The size of each cluster (for each considered example set). Has exampleSetCount rows and exampleSets->width columns.
    * The number of clusters for each example set can range between 1 (i.e. a single cluster of size exampleSets->width)
    * and exampleSets->width (i.e. a cluster for each individual example). Within the row of the image corresponding to
    * example set i, the first m_nbClustersPerExampleSet[i] pixels store the sizes of the clusters for that example set.
@@ -96,16 +96,16 @@ protected:
    */
   ITMIntImage_Ptr m_clusterSizeHistograms;
 
-  /** An image storing the density of examples around each example in the input sets. Has count rows and exampleSets->width columns. */
+  /** An image storing the density of examples around each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
   ITMFloatImage_Ptr m_densities;
 
-  /** Stores the number of valid clusters in each example set. Has count elements. */
+  /** Stores the number of valid clusters in each example set. Has exampleSetCount elements. */
   ITMIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
 
-  /** Defines the cluster tree structure. Holds the index of the parent for each example in the input sets. Has count rows and exampleSets->width columns. */
+  /** Defines the cluster tree structure. Holds the index of the parent for each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
   ITMIntImage_Ptr m_parents;
 
-  /** Stores the index of selected clusters in each example set. Has count rows and m_maxClusterCount columns. */
+  /** Stores the index of selected clusters in each example set. Has exampleSetCount rows and m_maxClusterCount columns. */
   ITMIntImage_Ptr m_selectedClusters;
 
   //#################### CONSTRUCTORS ####################
@@ -156,7 +156,7 @@ private:
    * \param exampleSets        An image containing the sets of examples to be clustered (one set per row). The width of
    *                           the image specifies the maximum number of examples that can be contained in each set.
    * \param exampleSetSizes    The number of valid examples in each example set.
-   * \param predictionsData    A pointer to the output containers wherein to store the clusters
+   * \param clustersData       A pointer to the output containers wherein to store the clusters
    *                           extracted from each set of examples.
    * \param maxClusterCount    The maximum number of clusters to select for each example set.
    * \param exampleSetCapacity The maximum size of each example set.
