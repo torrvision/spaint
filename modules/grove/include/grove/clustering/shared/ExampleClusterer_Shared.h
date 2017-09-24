@@ -212,11 +212,11 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-  // Look up the size of the specified example set.
-  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-
   // Compute the raster offset of the specified example in the example sets image.
   const int exampleOffset = exampleSetOffset + exampleIdx;
+
+  // Look up the size of the specified example set.
+  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
 
   // Unless it becomes part of a subtree, each example starts as its own parent.
   int parentIdx = exampleIdx;
