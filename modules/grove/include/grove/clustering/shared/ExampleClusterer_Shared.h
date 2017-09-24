@@ -250,35 +250,33 @@ inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, c
   // If the specified selected cluster is valid:
   if(realClusterIdx >= 0)
   {
-    // Grab a reference to the cluster container for the current example set.
-    Array<ClusterType,MAX_CLUSTERS>& currentClusterContainer = clusterContainers[exampleSetIdx];
+    // Compute the linear offset to the beginning of the data associated with the specified example set
+    // in the example sets and cluster indices images.
+    const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-    // Atomically get the output index associated to the cluster.
+    // Get a reference to the output clusters array for the specified example set.
+    Array<ClusterType,MAX_CLUSTERS>& outputClusters = clusterContainers[exampleSetIdx];
+
+    // Compute the index in the output clusters array at which to store the selected cluster once it has been created.
     int outputClusterIdx = -1;
 
 #ifdef __CUDACC__
-    outputClusterIdx = atomicAdd(&currentClusterContainer.size, 1);
+    outputClusterIdx = atomicAdd(&outputClusters.size, 1);
 #else
   #ifdef WITH_OPENMP
     #pragma omp atomic capture
   #endif
-    outputClusterIdx = currentClusterContainer.size++;
+    outputClusterIdx = outputClusters.size++;
 #endif
 
-    // Grab the size of the current example set.
-    const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-
-    // Offset in the examples and clusterIndices array where we can find the first element associated to the current
-    // example set.
-    const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-
-    // Pointers to the actual examples and clustersIndices associated to the current example set.
-    const ExampleType *exampleSetExamples = exampleSets + exampleSetOffset;
-    const int *exampleSetClusterIndices = clusterIndices + exampleSetOffset;
-
-    // Build the actual cluster by calling the create_cluster_from_examples function that MUST be defined
-    // for the current ExampleType.
-    create_cluster_from_examples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, realClusterIdx, currentClusterContainer.elts[outputClusterIdx]);
+    // Create the cluster and write it into the output clusters array at the specified location.
+    create_cluster_from_examples(
+      exampleSets + exampleSetOffset,
+      clusterIndices + exampleSetOffset,
+      exampleSetSizes[exampleSetIdx],
+      realClusterIdx,
+      outputClusters.elts[outputClusterIdx]
+    );
   }
 }
 

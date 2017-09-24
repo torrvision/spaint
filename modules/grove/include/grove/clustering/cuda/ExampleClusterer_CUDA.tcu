@@ -69,13 +69,13 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 __global__ void ck_create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes, const int *clusterIndices, const int *selectedClusters,
                                             Array<ClusterType,MAX_CLUSTERS> *clusterContainers, uint32_t exampleSetCapacity, uint32_t maxSelectedClusters)
 {
-  const uint32_t clusterIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  const uint32_t selectedClusterIdx = blockIdx.x * blockDim.x + threadIdx.x;
   const uint32_t exampleSetIdx = blockIdx.y;
 
-  if(clusterIdx < maxSelectedClusters)
+  if(selectedClusterIdx < maxSelectedClusters)
   {
     create_selected_cluster(
-      exampleSetIdx, clusterIdx, examples, exampleSetSizes, exampleSetCapacity,
+      exampleSetIdx, selectedClusterIdx, examples, exampleSetSizes, exampleSetCapacity,
       clusterIndices, selectedClusters, clusterContainers, maxSelectedClusters
     );
   }

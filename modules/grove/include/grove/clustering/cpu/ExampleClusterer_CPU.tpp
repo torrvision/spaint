@@ -111,10 +111,10 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    for(uint32_t clusterIdx = 0; clusterIdx < maxClusterCount; ++clusterIdx)
+    for(uint32_t selectedClusterIdx = 0; selectedClusterIdx < maxClusterCount; ++selectedClusterIdx)
     {
       create_selected_cluster(
-        exampleSetIdx, clusterIdx, examples, exampleSetSizes, exampleSetCapacity,
+        exampleSetIdx, selectedClusterIdx, examples, exampleSetSizes, exampleSetCapacity,
         clusterIndices, selectedClusters, clustersData, maxClusterCount
       );
     }
