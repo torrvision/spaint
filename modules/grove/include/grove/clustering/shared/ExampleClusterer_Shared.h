@@ -122,69 +122,6 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
 }
 
 /**
- * \brief Compute the cluster parameters associated to a set of examples grouped by the other functions in this file.
- *
- * \note  The actual cluster parameters depend on the ClusterType and for this reason are left to the
- *        create_cluster_from_examples function that MUST be defined for the current ExampleType.
- *
- * \param exampleSetIdx       The index of the current example set.
- * \param clusterIdx          The index of the current cluster.
- * \param exampleSets         An image containing the sets of examples that have been clustered (one set per row). The width
- *                            of the image specifies the maximum number of examples that can be contained in each set.
- * \param exampleSetSizes     The number of valid examples in each example set.
- * \param exampleSetCapacity  The maximum size of each example set.
- * \param clusterIndices      A pointer to the indices of the clusters associated to each example.
- * \param selectedClusters    A pointer to the cluster indices selected for each example set.
- * \param clusterContainers   A pointer to the output variables wherein to store the cluster parameters.
- * \param maxSelectedClusters The maximum number of clusters to extract from each example set.
- */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-_CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_modes(int exampleSetIdx, int clusterIdx, const ExampleType *exampleSets, const int *exampleSetSizes, int exampleSetCapacity,
-                          const int *clusterIndices, const int *selectedClusters, Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int maxSelectedClusters)
-{
-  // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
-  const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
-
-  // Look up the unique identifier for the specified cluster.
-  const int selectedClusterId = selectedClusters[selectedClustersOffset + clusterIdx];
-
-  // If the specified cluster is valid:
-  if(selectedClusterId >= 0)
-  {
-    // Grab a reference to the cluster container for the current example set.
-    Array<ClusterType,MAX_CLUSTERS>& currentClusterContainer = clusterContainers[exampleSetIdx];
-
-    // Atomically get the output index associated to the cluster.
-    int outputClusterIdx = -1;
-
-#ifdef __CUDACC__
-    outputClusterIdx = atomicAdd(&currentClusterContainer.size, 1);
-#else
-  #ifdef WITH_OPENMP
-    #pragma omp atomic capture
-  #endif
-    outputClusterIdx = currentClusterContainer.size++;
-#endif
-
-    // Grab the size of the current example set.
-    const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-
-    // Offset in the examples and clusterIndices array where we can find the first element associated to the current
-    // example set.
-    const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-
-    // Pointers to the actual examples and clustersIndices associated to the current example set.
-    const ExampleType *exampleSetExamples = exampleSets + exampleSetOffset;
-    const int *exampleSetClusterIndices = clusterIndices + exampleSetOffset;
-
-    // Build the actual cluster by calling the create_cluster_from_examples function that MUST be defined
-    // for the current ExampleType.
-    create_cluster_from_examples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, selectedClusterId, currentClusterContainer.elts[outputClusterIdx]);
-  }
-}
-
-/**
  * \brief Computes the parent and initial cluster indices to assign to the specified example as part of the neighbour-linking step
  *        of the really quick shift (RQS) algorithm.
  *
@@ -277,6 +214,69 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
 
   // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root).
   clusterIndices[exampleOffset] = clusterIdx;
+}
+
+/**
+ * \brief Compute the cluster parameters associated to a set of examples grouped by the other functions in this file.
+ *
+ * \note  The actual cluster parameters depend on the ClusterType and for this reason are left to the
+ *        create_cluster_from_examples function that MUST be defined for the current ExampleType.
+ *
+ * \param exampleSetIdx       The index of the current example set.
+ * \param clusterIdx          The index of the current cluster.
+ * \param exampleSets         An image containing the sets of examples that have been clustered (one set per row). The width
+ *                            of the image specifies the maximum number of examples that can be contained in each set.
+ * \param exampleSetSizes     The number of valid examples in each example set.
+ * \param exampleSetCapacity  The maximum size of each example set.
+ * \param clusterIndices      A pointer to the indices of the clusters associated to each example.
+ * \param selectedClusters    A pointer to the cluster indices selected for each example set.
+ * \param clusterContainers   A pointer to the output variables wherein to store the cluster parameters.
+ * \param maxSelectedClusters The maximum number of clusters to extract from each example set.
+ */
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void create_selected_cluster(int exampleSetIdx, int clusterIdx, const ExampleType *exampleSets, const int *exampleSetSizes, int exampleSetCapacity,
+                                    const int *clusterIndices, const int *selectedClusters, Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int maxSelectedClusters)
+{
+  // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
+  const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
+
+  // Look up the unique identifier for the specified cluster.
+  const int selectedClusterId = selectedClusters[selectedClustersOffset + clusterIdx];
+
+  // If the specified cluster is valid:
+  if(selectedClusterId >= 0)
+  {
+    // Grab a reference to the cluster container for the current example set.
+    Array<ClusterType,MAX_CLUSTERS>& currentClusterContainer = clusterContainers[exampleSetIdx];
+
+    // Atomically get the output index associated to the cluster.
+    int outputClusterIdx = -1;
+
+#ifdef __CUDACC__
+    outputClusterIdx = atomicAdd(&currentClusterContainer.size, 1);
+#else
+  #ifdef WITH_OPENMP
+    #pragma omp atomic capture
+  #endif
+    outputClusterIdx = currentClusterContainer.size++;
+#endif
+
+    // Grab the size of the current example set.
+    const int exampleSetSize = exampleSetSizes[exampleSetIdx];
+
+    // Offset in the examples and clusterIndices array where we can find the first element associated to the current
+    // example set.
+    const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+
+    // Pointers to the actual examples and clustersIndices associated to the current example set.
+    const ExampleType *exampleSetExamples = exampleSets + exampleSetOffset;
+    const int *exampleSetClusterIndices = clusterIndices + exampleSetOffset;
+
+    // Build the actual cluster by calling the create_cluster_from_examples function that MUST be defined
+    // for the current ExampleType.
+    create_cluster_from_examples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, selectedClusterId, currentClusterContainer.elts[outputClusterIdx]);
+  }
 }
 
 /**

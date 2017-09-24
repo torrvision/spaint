@@ -51,10 +51,6 @@ private:
   virtual void compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
-  virtual void compute_cluster_parameters(const ExampleType *exampleSets, const int *exampleSetSizes, Clusters *clustersData,
-                                          uint32_t maxClusterCount, uint32_t exampleSetCapacity, uint32_t exampleSetCount);
-
-  /** Override */
   virtual void compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
@@ -64,6 +60,10 @@ private:
   /** Override */
   virtual void compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
                                uint32_t exampleSetCount, float tauSq);
+
+  /** Override */
+  virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, Clusters *clustersData,
+                                        uint32_t maxClusterCount, uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
   virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const;

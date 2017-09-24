@@ -87,8 +87,8 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   // Select the largest clusters for each example set (up to a maximum limit).
   select_clusters(m_maxClusterCount, m_minClusterSize, exampleSetCapacity, exampleSetCount);
 
-  // Finally, compute the parameters for each selected cluster and store the predictions.
-  compute_cluster_parameters(exampleSetsData, exampleSetSizesData, clustersData, m_maxClusterCount, exampleSetCapacity, exampleSetCount);
+  // Finally, compute the parameters for and store each selected cluster.
+  create_selected_clusters(exampleSetsData, exampleSetSizesData, clustersData, m_maxClusterCount, exampleSetCapacity, exampleSetCount);
 
 // Debug.
 #if 0
