@@ -171,11 +171,11 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
 
   // Fourth: cluster some of the reservoirs.
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
-  m_exampleClusterer->find_modes(m_relocaliserState->exampleReservoirs->get_reservoirs(),
-                                 m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
-                                 m_relocaliserState->reservoirUpdateStartIdx,
-                                 updateCount,
-                                 m_relocaliserState->predictionsBlock);
+  m_exampleClusterer->cluster_examples(m_relocaliserState->exampleReservoirs->get_reservoirs(),
+                                       m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
+                                       m_relocaliserState->reservoirUpdateStartIdx,
+                                       updateCount,
+                                       m_relocaliserState->predictionsBlock);
 
   // Fifth: save the current index to indicate that reservoirs up to such index have to be clustered to represent the
   // examples that have just been added.
@@ -195,11 +195,11 @@ void ScoreRelocaliser::update()
   if (m_relocaliserState->reservoirUpdateStartIdx == m_relocaliserState->lastFeaturesAddedStartIdx) return;
 
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
-  m_exampleClusterer->find_modes(m_relocaliserState->exampleReservoirs->get_reservoirs(),
-                                 m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
-                                 m_relocaliserState->reservoirUpdateStartIdx,
-                                 updateCount,
-                                 m_relocaliserState->predictionsBlock);
+  m_exampleClusterer->cluster_examples(m_relocaliserState->exampleReservoirs->get_reservoirs(),
+                                       m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
+                                       m_relocaliserState->reservoirUpdateStartIdx,
+                                       updateCount,
+                                       m_relocaliserState->predictionsBlock);
 
   update_reservoir_start_idx();
 }

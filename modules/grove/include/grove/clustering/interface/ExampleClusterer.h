@@ -144,8 +144,8 @@ public:
    *
    * \throws std::invalid_argument If exampleSetStart + exampleSetCount would result in out-of-bounds access in exampleSets.
    */
-  void find_modes(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
-                  uint32_t exampleSetStart, uint32_t exampleSetCount, ClustersBlock_Ptr& clusterContainers);
+  void cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
+                        uint32_t exampleSetStart, uint32_t exampleSetCount, ClustersBlock_Ptr& clusterContainers);
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
