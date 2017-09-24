@@ -57,8 +57,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densities(const ExampleType *examples, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                                                                   uint32_t exampleSetCount, float sigma)
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densities(const ExampleType *examples, const int *exampleSetSizes,
+                                                                                   uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
 
@@ -69,7 +69,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densiti
   {
     for(uint32_t exampleIdx = 0; exampleIdx < exampleSetCapacity; ++exampleIdx)
     {
-      compute_density(exampleSetIdx, exampleIdx, examples, exampleSetSizes, exampleSetCapacity, sigma, densities);
+      compute_density(exampleSetIdx, exampleIdx, examples, exampleSetSizes, exampleSetCapacity, Base::m_sigma, densities);
     }
   }
 }

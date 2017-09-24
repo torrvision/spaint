@@ -175,10 +175,8 @@ private:
    * \param exampleSetSizes     The number of valid examples in each example set.
    * \param exampleSetCapacity  The maximum size of each example set.
    * \param exampleSetCount     The number of example sets being clustered.
-   * \param sigma               The sigma of the Gaussian used when computing the example densities.
    */
-  virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                 uint32_t exampleSetCount, float sigma) = 0;
+  virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
    * \brief Computes parents and initial cluster indices for the examples as part of the neighbour-linking step of the

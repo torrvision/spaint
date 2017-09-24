@@ -71,7 +71,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   // Compute the density of examples around each example in the example sets of interest.
   const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, exampleSetStart);
   const int *exampleSetSizesData = get_pointer_to_example_set_size(exampleSetSizes, exampleSetStart);
-  compute_densities(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_sigma);
+  compute_densities(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount);
 
   // Compute the parent and initial cluster indices to assign to each example as part of the neighbour-linking
   // step of the really quick shift (RQS) algorithm. The algorithm links neighbouring examples in a tree structure,
