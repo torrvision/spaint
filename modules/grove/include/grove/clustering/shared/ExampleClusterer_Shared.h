@@ -217,13 +217,15 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
 }
 
 /**
- * \brief Compute the cluster parameters associated to a set of examples grouped by the other functions in this file.
+ * \brief Computes the parameters for and stores the specified selected cluster for the specified example set.
  *
- * \note  The actual cluster parameters depend on the ClusterType and for this reason are left to the
- *        create_cluster_from_examples function that MUST be defined for the current ExampleType.
+ * \note  The examples in the set must already have been grouped into clusters by the other functions in this file,
+ *        and suitable clusters must have been selected for creation.
+ * \note  The actual cluster parameters depend on the ClusterType; for this reason, cluster creation is delegated to a function
+ *        called create_cluster_from_examples, which must be defined (elsewhere) for the relevant ExampleType and ClusterType pair.
  *
- * \param exampleSetIdx       The index of the current example set.
- * \param clusterIdx          The index of the current cluster.
+ * \param exampleSetIdx       The index of the example set for which the selected cluster is being created.
+ * \param selectedClusterIdx  The index of the selected cluster to create (this is an index into the selected clusters array).
  * \param exampleSets         An image containing the sets of examples that have been clustered (one set per row). The width
  *                            of the image specifies the maximum number of examples that can be contained in each set.
  * \param exampleSetSizes     The number of valid examples in each example set.
@@ -235,17 +237,18 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
  */
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void create_selected_cluster(int exampleSetIdx, int clusterIdx, const ExampleType *exampleSets, const int *exampleSetSizes, int exampleSetCapacity,
+inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, const ExampleType *exampleSets, const int *exampleSetSizes, int exampleSetCapacity,
                                     const int *clusterIndices, const int *selectedClusters, Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int maxSelectedClusters)
 {
   // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
   const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
 
-  // Look up the unique identifier for the specified cluster.
-  const int selectedClusterId = selectedClusters[selectedClustersOffset + clusterIdx];
+  // Look up the real cluster index of the specified selected cluster (e.g. if this is the second selected
+  // cluster for the example set, and selectedClusters[1] = 23, then the real cluster index is 23).
+  const int realClusterIdx = selectedClusters[selectedClustersOffset + selectedClusterIdx];
 
-  // If the specified cluster is valid:
-  if(selectedClusterId >= 0)
+  // If the specified selected cluster is valid:
+  if(realClusterIdx >= 0)
   {
     // Grab a reference to the cluster container for the current example set.
     Array<ClusterType,MAX_CLUSTERS>& currentClusterContainer = clusterContainers[exampleSetIdx];
@@ -275,7 +278,7 @@ inline void create_selected_cluster(int exampleSetIdx, int clusterIdx, const Exa
 
     // Build the actual cluster by calling the create_cluster_from_examples function that MUST be defined
     // for the current ExampleType.
-    create_cluster_from_examples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, selectedClusterId, currentClusterContainer.elts[outputClusterIdx]);
+    create_cluster_from_examples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, realClusterIdx, currentClusterContainer.elts[outputClusterIdx]);
   }
 }
 
