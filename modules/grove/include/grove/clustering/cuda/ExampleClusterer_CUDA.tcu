@@ -13,6 +13,17 @@ namespace grove {
 
 //#################### CUDA KERNELS ####################
 
+__global__ void ck_compute_cluster_indices(const int *parents, int *clusterIndices, int *clusterSizes, uint32_t exampleSetCapacity)
+{
+  const uint32_t exampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  const uint32_t exampleSetIdx = blockIdx.y;
+
+  if(exampleIdx < exampleSetCapacity)
+  {
+    compute_cluster_index(exampleSetIdx, exampleIdx, exampleSetCapacity, parents, clusterIndices, clusterSizes);
+  }
+}
+
 __global__ void ck_compute_cluster_size_histograms(const int *clusterSizes, const int *nbClustersPerExampleSet, int *clusterSizeHistograms, uint32_t exampleSetCapacity)
 {
   // The potential cluster index is determined by the threadIdx and x coordinate of the block.
@@ -22,17 +33,6 @@ __global__ void ck_compute_cluster_size_histograms(const int *clusterSizes, cons
   if(clusterIdx < nbClustersPerExampleSet[exampleSetIdx])
   {
     update_cluster_size_histogram(exampleSetIdx, clusterIdx, clusterSizes, clusterSizeHistograms, exampleSetCapacity);
-  }
-}
-
-__global__ void ck_compute_clusters(const int *parents, int *clusterIndices, int *clusterSizes, uint32_t exampleSetCapacity)
-{
-  const uint32_t exampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  const uint32_t exampleSetIdx = blockIdx.y;
-
-  if(exampleIdx < exampleSetCapacity)
-  {
-    compute_cluster(exampleSetIdx, exampleIdx, exampleSetCapacity, parents, clusterIndices, clusterSizes);
   }
 }
 
@@ -123,6 +123,26 @@ ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleClusterer_CU
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+{
+  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
+
+  // Conceptually, we would like to have exampleSetCount thread blocks, each containing
+  // exampleSetCapacity threads. However, since there are hardware limits on the number
+  // of threads we can have per block, we adopt the alternative approach of using a 2D
+  // grid of thread blocks, each containing a fixed number of threads. Using this approach,
+  // the example set is denoted by the grid's y coordinate, and the index of the example
+  // can be derived from the grid's x coordinate (see the kernel for details).
+  dim3 blockSize(256);
+  dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
+
+  ck_compute_cluster_indices<<<gridSize,blockSize>>>(parents, clusterIndices, clusterSizes, exampleSetCapacity);
+  ORcudaKernelCheck;
+}
+
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_parameters(const ExampleType *examples, const int *exampleSetSizes,
                                                                                              Clusters *clustersData, uint32_t maxClusterCount,
                                                                                              uint32_t exampleSetCapacity, uint32_t exampleSetCount)
@@ -160,26 +180,6 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluste
   dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
   ck_compute_cluster_size_histograms<<<gridSize,blockSize>>>(clusterSizes, nbClustersPerExampleSet, clusterSizeHistograms, exampleSetCapacity);
-  ORcudaKernelCheck;
-}
-
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
-{
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
-  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
-  int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
-
-  // Conceptually, we would like to have exampleSetCount thread blocks, each containing
-  // exampleSetCapacity threads. However, since there are hardware limits on the number
-  // of threads we can have per block, we adopt the alternative approach of using a 2D
-  // grid of thread blocks, each containing a fixed number of threads. Using this approach,
-  // the example set is denoted by the grid's y coordinate, and the index of the example
-  // can be derived from the grid's x coordinate (see the kernel for details).
-  dim3 blockSize(256);
-  dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
-
-  ck_compute_clusters<<<gridSize,blockSize>>>(parents, clusterIndices, clusterSizes, exampleSetCapacity);
   ORcudaKernelCheck;
 }
 

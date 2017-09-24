@@ -29,7 +29,7 @@ namespace grove {
  *                           at the point at which the function is called.
  */
 _CPU_AND_GPU_CODE_
-inline void compute_cluster(int exampleSetIdx, int exampleIdx, int exampleSetCapacity, const int *parents, int *clusterIndices, int *clusterSizes)
+inline void compute_cluster_index(int exampleSetIdx, int exampleIdx, int exampleSetCapacity, const int *parents, int *clusterIndices, int *clusterSizes)
 {
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;

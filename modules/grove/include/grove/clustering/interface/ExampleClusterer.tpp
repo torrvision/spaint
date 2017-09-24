@@ -79,7 +79,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   compute_parents(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, m_tau * m_tau);
 
   // Compute the final cluster indices to assign to each example by following the parent links just computed.
-  compute_clusters(exampleSetCapacity, exampleSetCount);
+  compute_cluster_indices(exampleSetCapacity, exampleSetCount);
 
   // Compute a histogram of the cluster sizes for each example set (these are used to select the largest clusters).
   compute_cluster_size_histograms(exampleSetCapacity, exampleSetCount);

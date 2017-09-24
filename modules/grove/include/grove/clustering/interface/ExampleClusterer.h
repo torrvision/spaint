@@ -150,6 +150,14 @@ public:
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Computes final cluster indices for the examples by following the parent links previously computed.
+   *
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
+   */
+  virtual void compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
+
+  /**
    * \brief Having selected the examples part of each cluster, compute the cluster parameters
    *        (e.g. centroid, covariances etc...).
    *
@@ -174,14 +182,6 @@ private:
    * \param exampleSetCount    The number of example sets being clustered.
    */
   virtual void compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
-
-  /**
-   * \brief Computes final cluster indices for the examples by following the parent links previously computed.
-   *
-   * \param exampleSetCapacity The maximum size of each example set.
-   * \param exampleSetCount    The number of example sets being clustered.
-   */
-  virtual void compute_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
    * \brief Compute the density of examples around each example in the input sets.
