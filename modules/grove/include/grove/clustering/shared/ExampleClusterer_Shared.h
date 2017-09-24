@@ -14,6 +14,60 @@
 namespace grove {
 
 /**
+ * \brief Computes the final cluster index for the specified example by following the parent links computed in compute_parent.
+ *
+ * \note  The compute_parent function split all the examples into subtrees and allocated a cluster index to the root
+ *        of each subtree. With this function, we navigate each example's subtree until we find the root and then copy
+ *        the cluster index across to the example. We also compute the size of each cluster.
+ *
+ * \param exampleSetIdx      The index of the example set containing the example.
+ * \param exampleIdx         The index of the example within its example set.
+ * \param exampleSetCapacity The maximum size of each example set.
+ * \param parents            An image containing the parent indices for the examples.
+ * \param clusterIndices     An image containing the cluster indices for the example.
+ * \param clusterSizes       An array in which to keep track of the size of each cluster. Must contain zeros
+ *                           at the point at which the function is called.
+ */
+_CPU_AND_GPU_CODE_
+inline void compute_cluster(int exampleSetIdx, int exampleIdx, int exampleSetCapacity, const int *parents, int *clusterIndices, int *clusterSizes)
+{
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
+  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+
+  // Compute the raster offset of the specified example in the example sets image.
+  const int exampleOffset = exampleSetOffset + exampleIdx;
+
+  // Follow the parent links from the specified example up to the root of its subtree.
+  // Note that there is no need to check if the example is valid, since compute_parent
+  // set the parents of invalid examples to themselves.
+  int currentIdx = exampleIdx;
+  int parentIdx = parents[exampleOffset];
+  while(parentIdx != currentIdx)
+  {
+    currentIdx = parentIdx;
+    parentIdx = parents[exampleSetOffset + parentIdx];
+  }
+
+  // Get the cluster index of the subtree root and assign it to this example.
+  const int clusterIdx = clusterIndices[exampleSetOffset + parentIdx];
+  clusterIndices[exampleOffset] = clusterIdx;
+
+  // If the cluster is valid then atomically increase its size (it might be invalid if we started from an invalid example).
+  if(clusterIdx >= 0)
+  {
+    // Note: The __CUDA_ARCH__ check is needed because this function is not a template.
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
+    atomicAdd(&clusterSizes[exampleSetOffset + clusterIdx], 1);
+#else
+  #ifdef WITH_OPENMP
+    #pragma omp atomic
+  #endif
+    clusterSizes[exampleSetOffset + clusterIdx]++;
+#endif
+  }
+}
+
+/**
  * \brief Compute the density of examples around an individual example in one of the example sets.
  *
  * \param exampleSetIdx      The index of the example set containing the example.
@@ -34,11 +88,11 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-  // Look up the size of the specified example set.
-  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-
   // Compute the raster offset of the specified example in the example sets image.
   const int exampleOffset = exampleSetOffset + exampleIdx;
+
+  // Look up the size of the specified example set.
+  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
 
   float density = 0.0f;
 
@@ -125,60 +179,6 @@ inline void compute_modes(const ExampleType *exampleSets, const int *exampleSetS
     // Build the actual cluster by calling the create_cluster_from_examples function that MUST be defined
     // for the current ExampleType.
     create_cluster_from_examples(exampleSetExamples, exampleSetClusterIndices, exampleSetSize, selectedClusterId, currentClusterContainer.elts[outputClusterIdx]);
-  }
-}
-
-/**
- * \brief Computes the final cluster index for the specified example by following the parent links computed in compute_parent.
- *
- * \note  The compute_parent function split all the examples into subtrees and allocated a cluster index to the root
- *        of each subtree. With this function, we navigate each example's subtree until we find the root and then copy
- *        the cluster index across to the example. We also compute the size of each cluster.
- *
- * \param exampleSetIdx      The index of the example set containing the example.
- * \param exampleIdx         The index of the example within its example set.
- * \param exampleSetCapacity The maximum size of each example set.
- * \param parents            An image containing the parent indices for the examples.
- * \param clusterIndices     An image containing the cluster indices for the example.
- * \param clusterSizes       An array in which to keep track of the size of each cluster. Must contain zeros
- *                           at the point at which the function is called.
- */
-_CPU_AND_GPU_CODE_
-inline void compute_cluster(int exampleSetIdx, int exampleIdx, int exampleSetCapacity, const int *parents, int *clusterIndices, int *clusterSizes)
-{
-  // Compute the linear offset to the beginning of the data associated with the specified example set.
-  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-
-  // Compute the raster offset of the specified example in the example sets image.
-  const int exampleOffset = exampleSetOffset + exampleIdx;
-
-  // Follow the parent links from the specified example up to the root of its subtree.
-  // Note that there is no need to check if the example is valid, since compute_parent
-  // set the parents of invalid examples to themselves.
-  int currentIdx = exampleIdx;
-  int parentIdx = parents[exampleOffset];
-  while(parentIdx != currentIdx)
-  {
-    currentIdx = parentIdx;
-    parentIdx = parents[exampleSetOffset + parentIdx];
-  }
-
-  // Get the cluster index of the subtree root and assign it to this example.
-  const int clusterIdx = clusterIndices[exampleSetOffset + parentIdx];
-  clusterIndices[exampleOffset] = clusterIdx;
-
-  // If the cluster is valid then atomically increase its size (it might be invalid if we started from an invalid example).
-  if(clusterIdx >= 0)
-  {
-    // Note: The __CUDA_ARCH__ check is needed because this function is not a template.
-#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-    atomicAdd(&clusterSizes[exampleSetOffset + clusterIdx], 1);
-#else
-  #ifdef WITH_OPENMP
-    #pragma omp atomic
-  #endif
-    clusterSizes[exampleSetOffset + clusterIdx]++;
-#endif
   }
 }
 

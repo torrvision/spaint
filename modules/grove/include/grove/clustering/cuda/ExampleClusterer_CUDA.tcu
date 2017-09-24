@@ -127,11 +127,16 @@ ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleClusterer_CU
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_parameters(const ExampleType *examples, const int *exampleSetSizes, Clusters *clustersData,
-                                                                                             uint32_t maxClusterCount, uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_parameters(const ExampleType *examples, const int *exampleSetSizes,
+                                                                                             Clusters *clustersData, uint32_t maxClusterCount,
+                                                                                             uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  // Launch one thread per cluster, also using the X coordinate in the grid for indexing (not really needed but safer in
-  // case we ever want to compute more than 1024 clusters).
+  // Conceptually, we would like to have exampleSetCount thread blocks, each containing
+  // maxClusterCount threads. However, since there are hardware limits on the number
+  // of threads we can have per block, we adopt the alternative approach of using a 2D
+  // grid of thread blocks, each containing a fixed number of threads. Using this approach,
+  // the example set is denoted by the grid's y coordinate, and the index of the cluster
+  // can be derived from the grid's x coordinate (see the kernel for details).
   dim3 blockSize(32);
   dim3 gridSize((maxClusterCount + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
@@ -145,8 +150,12 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluste
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
-  // the grid. The grid's Y coordinate selects the exampleSet.
+  // Conceptually, we would like to have exampleSetCount thread blocks, each containing
+  // exampleSetCapacity threads. However, since there are hardware limits on the number
+  // of threads we can have per block, we adopt the alternative approach of using a 2D
+  // grid of thread blocks, each containing a fixed number of threads. Using this approach,
+  // the example set is denoted by the grid's y coordinate, and the index of the example
+  // can be derived from the grid's x coordinate (see the kernel for details).
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
@@ -161,8 +170,12 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluste
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
-  // the grid. The grid's Y coordinate selects the exampleSet.
+  // Conceptually, we would like to have exampleSetCount thread blocks, each containing
+  // exampleSetCapacity threads. However, since there are hardware limits on the number
+  // of threads we can have per block, we adopt the alternative approach of using a 2D
+  // grid of thread blocks, each containing a fixed number of threads. Using this approach,
+  // the example set is denoted by the grid's y coordinate, and the index of the example
+  // can be derived from the grid's x coordinate (see the kernel for details).
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
@@ -175,13 +188,17 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluste
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType, MAX_CLUSTERS>::compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes,
-                                                                                     uint32_t exampleSetCapacity, uint32_t exampleSetCount, float sigma)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes,
+                                                                                    uint32_t exampleSetCapacity, uint32_t exampleSetCount, float sigma)
 {
   float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
 
-  // Ideally we would launch a thread per item in each example set, since example sets may be larger than 1024 we also
-  // use the x coordinate of the gridSize to achieve this.
+  // Conceptually, we would like to have exampleSetCount thread blocks, each containing
+  // exampleSetCapacity threads. However, since there are hardware limits on the number
+  // of threads we can have per block, we adopt the alternative approach of using a 2D
+  // grid of thread blocks, each containing a fixed number of threads. Using this approach,
+  // the example set is denoted by the grid's y coordinate, and the index of the example
+  // can be derived from the grid's x coordinate (see the kernel for details).
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
@@ -193,8 +210,12 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes,
                                                                                   uint32_t exampleSetCapacity, uint32_t exampleSetCount, float tauSq)
 {
-  // Since the exampleSetCapacity might exceed the maximum number of threads per block, we also use the X coordinate in
-  // the grid. The grid's Y coordinate selects the exampleSet.
+  // Conceptually, we would like to have exampleSetCount thread blocks, each containing
+  // exampleSetCapacity threads. However, since there are hardware limits on the number
+  // of threads we can have per block, we adopt the alternative approach of using a 2D
+  // grid of thread blocks, each containing a fixed number of threads. Using this approach,
+  // the example set is denoted by the grid's y coordinate, and the index of the example
+  // can be derived from the grid's x coordinate (see the kernel for details).
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCapacity + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
