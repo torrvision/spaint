@@ -84,10 +84,10 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::find_modes(const Ex
   // Compute a histogram of the cluster sizes for each example set (these are used to select the largest clusters).
   compute_cluster_size_histograms(exampleSetCapacity, exampleSetCount);
 
-  // Select largest clusters.
+  // Select the largest clusters for each example set (up to a maximum limit).
   select_clusters(m_maxClusterCount, m_minClusterSize, exampleSetCapacity, exampleSetCount);
 
-  // Finally, compute parameters for each cluster and store the predictions.
+  // Finally, compute the parameters for each selected cluster and store the predictions.
   compute_cluster_parameters(exampleSetsData, exampleSetSizesData, clustersData, m_maxClusterCount, exampleSetCapacity, exampleSetCount);
 
 // Debug.

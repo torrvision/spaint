@@ -44,7 +44,7 @@ __global__ void ck_compute_densities(const ExampleType *examples, const int *exa
 
   if(exampleIdx < exampleSetCapacity)
   {
-    // TODO: The speed of this could probably be improved by writing a proper reduction tree using the shuffle operations.
+    // TODO: The speed of this could probably be improved by writing a proper reduction tree using shuffle operations.
     compute_density(exampleSetIdx, exampleIdx, examples, exampleSetSizes, exampleSetCapacity, sigma, densities);
   }
 }

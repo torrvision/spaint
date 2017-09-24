@@ -44,8 +44,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -101,9 +101,8 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
                                                                                  uint32_t exampleSetCount, float tauSq)
 {
-  const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
-
   int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
+  const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
 
@@ -157,8 +156,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -174,8 +173,8 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize,
                                                                                  uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  const int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   const int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
+  const int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   const int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
 
