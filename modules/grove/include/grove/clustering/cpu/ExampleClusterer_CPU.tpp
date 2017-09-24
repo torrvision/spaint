@@ -170,8 +170,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporari
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize,
-                                                                                 uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   const int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
   const int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
@@ -185,7 +184,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters
   {
     select_clusters_for_set(
       exampleSetIdx, clusterSizes, clusterSizeHistograms, nbClustersPerExampleSet,
-      exampleSetCapacity, maxClusterCount, minClusterSize, selectedClusters
+      exampleSetCapacity, Base::m_maxClusterCount, Base::m_minClusterSize, selectedClusters
     );
   }
 }

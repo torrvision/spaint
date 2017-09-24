@@ -22,13 +22,14 @@ namespace grove {
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 class ExampleClusterer_CPU : public ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>
 {
-  //#################### USINGS ####################
+  //#################### TYPEDEFS AND USINGS ####################
 public:
-  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::Clusters;
-  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ClustersBlock;
-  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ClustersBlock_Ptr;
-  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleImage;
-  using typename ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleImage_CPtr;
+  typedef ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS> Base;
+  using typename Base::Clusters;
+  using typename Base::ClustersBlock;
+  using typename Base::ClustersBlock_Ptr;
+  using typename Base::ExampleImage;
+  using typename Base::ExampleImage_CPtr;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -81,7 +82,7 @@ private:
   virtual void reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 
   /** Override */
-  virtual void select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize, uint32_t exampleSetCapacity, uint32_t exampleSetCount);
+  virtual void select_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 };
 
 }

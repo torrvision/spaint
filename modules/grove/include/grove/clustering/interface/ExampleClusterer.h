@@ -258,15 +258,12 @@ private:
   virtual void reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
-   * \brief Selects up to maxClusterCount clusters of at least minClusterSize size for each example set.
-   *        Prefers larger clusters.
+   * \brief Selects the largest clusters for each example set (up to a maximum limit).
    *
-   * \param maxClusterCount    The maximum number of clusters to select for each example set.
-   * \param minClusterSize     The minimum size of cluster to keep.
    * \param exampleSetCapacity The maximum size of each example set.
    * \param exampleSetCount    The number of example sets being clustered.
    */
-  virtual void select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize, uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
+  virtual void select_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

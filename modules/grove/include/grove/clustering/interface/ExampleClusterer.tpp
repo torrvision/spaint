@@ -85,7 +85,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   compute_cluster_size_histograms(exampleSetCapacity, exampleSetCount);
 
   // Select the largest clusters for each example set (up to a maximum limit).
-  select_clusters(m_maxClusterCount, m_minClusterSize, exampleSetCapacity, exampleSetCount);
+  select_clusters(exampleSetCapacity, exampleSetCount);
 
   // Finally, compute the parameters for and store each selected cluster for each example set.
   create_selected_clusters(exampleSetsData, exampleSetSizesData, m_maxClusterCount, exampleSetCapacity, exampleSetCount, clustersData);

@@ -274,8 +274,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporar
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize,
-                                                                                  uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CUDA);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
@@ -288,7 +287,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::select_cluster
 
   ck_select_clusters<<<gridSize,blockSize>>>(
     clusterSizes, clusterSizeHistograms, nbClustersPerExampleSet, selectedClusters,
-    exampleSetCapacity, exampleSetCount, maxClusterCount, minClusterSize
+    exampleSetCapacity, exampleSetCount, Base::m_maxClusterCount, Base::m_minClusterSize
   );
   ORcudaKernelCheck;
 }
