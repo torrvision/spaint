@@ -76,7 +76,7 @@ __global__ void ck_create_selected_clusters(const ExampleType *examples, const i
   {
     create_selected_cluster(
       exampleSetIdx, selectedClusterIdx, examples, exampleSetSizes, exampleSetCapacity,
-      clusterIndices, selectedClusters, clusterContainers, maxSelectedClusters
+      clusterIndices, selectedClusters, maxSelectedClusters, clusterContainers
     );
   }
 }

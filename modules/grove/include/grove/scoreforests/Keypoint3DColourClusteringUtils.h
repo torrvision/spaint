@@ -34,14 +34,14 @@ inline float distance_squared(const Keypoint3DColour& a, const Keypoint3DColour&
  * \note  Each example has an associated key, only examples with key equal to "key"
  *        are used to construct the cluster.
  *
+ * \param key           Only examples having key equal to this parameter are used to compute the cluster parameters.
  * \param examples      The example keypoints that potentially may be part of the cluster.
  * \param exampleKeys   Keys associated to each example.
  * \param examplesCount The number of examples.
- * \param key           Only examples having key equal to this parameters are used to compute the cluster parameters.
  * \param outputCluster The constructed cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void create_cluster_from_examples(const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, int key, Mode3DColour &outputCluster)
+inline void create_cluster_from_examples(int key, const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, Mode3DColour& outputCluster)
 {
   // Compute position and colour mean.
   int sampleCount = 0;

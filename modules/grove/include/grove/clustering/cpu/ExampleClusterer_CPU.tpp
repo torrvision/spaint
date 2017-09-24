@@ -115,7 +115,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
     {
       create_selected_cluster(
         exampleSetIdx, selectedClusterIdx, examples, exampleSetSizes, exampleSetCapacity,
-        clusterIndices, selectedClusters, clustersData, maxClusterCount
+        clusterIndices, selectedClusters, maxClusterCount, clustersData
       );
     }
   }
