@@ -202,13 +202,12 @@ private:
    * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
    *                            the image specifies the maximum number of examples that can be contained in each set.
    * \param exampleSetSizes     The number of valid examples in each example set.
-   * \param maxSelectedClusters The maximum number of clusters that could have been selected for each example set.
    * \param exampleSetCapacity  The maximum size of each example set.
    * \param exampleSetCount     The number of example sets being clustered.
    * \param clustersData        A pointer to the start of the cluster container for the first example set being clustered.
    */
-  virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t maxSelectedClusters,
-                                        uint32_t exampleSetCapacity, uint32_t exampleSetCount, Clusters *clustersData) = 0;
+  virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                        uint32_t exampleSetCount, Clusters *clustersData) = 0;
 
   /**
    * \brief Virtual function returning a pointer to the output cluster container for set setIdx.

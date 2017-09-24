@@ -88,7 +88,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   select_clusters(exampleSetCapacity, exampleSetCount);
 
   // Finally, compute the parameters for and store each selected cluster for each example set.
-  create_selected_clusters(exampleSetsData, exampleSetSizesData, m_maxClusterCount, exampleSetCapacity, exampleSetCount, clustersData);
+  create_selected_clusters(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, clustersData);
 
 // Debug.
 #if 0
