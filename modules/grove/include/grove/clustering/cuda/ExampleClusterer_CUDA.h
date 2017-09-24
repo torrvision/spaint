@@ -62,8 +62,8 @@ private:
                                uint32_t exampleSetCount, float tauSq);
 
   /** Override */
-  virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, Clusters *clustersData,
-                                        uint32_t maxClusterCount, uint32_t exampleSetCapacity, uint32_t exampleSetCount);
+  virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t maxSelectedClusters,
+                                        uint32_t exampleSetCapacity, uint32_t exampleSetCount, Clusters *clustersData);
 
   /** Override */
   virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const;
