@@ -127,31 +127,33 @@ inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType
  * \note  The actual cluster parameters depend on the ClusterType and for this reason are left to the
  *        create_cluster_from_examples function that MUST be defined for the current ExampleType.
  *
- * \param exampleSets         A pointer to the examples to cluster. One row per example set, one column per example.
- * \param exampleSetSizes     A pointer to the sizes of each example set.
+ * \param exampleSetIdx       The index of the current example set.
+ * \param clusterIdx          The index of the current cluster.
+ * \param exampleSets         An image containing the sets of examples that have been clustered (one set per row). The width
+ *                            of the image specifies the maximum number of examples that can be contained in each set.
+ * \param exampleSetSizes     The number of valid examples in each example set.
+ * \param exampleSetCapacity  The maximum size of each example set.
  * \param clusterIndices      A pointer to the indices of the clusters associated to each example.
  * \param selectedClusters    A pointer to the cluster indices selected for each example set.
  * \param clusterContainers   A pointer to the output variables wherein to store the cluster parameters.
- * \param exampleSetCapacity  The maximum number of examples in each example set.
- * \param exampleSetIdx       The index of the current example set.
  * \param maxSelectedClusters The maximum number of clusters to extract from each example set.
- * \param clusterIdx          The index of the current cluster.
  */
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_modes(const ExampleType *exampleSets, const int *exampleSetSizes, const int *clusterIndices, const int *selectedClusters,
-                          Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int exampleSetCapacity, int exampleSetIdx, int maxSelectedClusters, int clusterIdx)
+inline void compute_modes(int exampleSetIdx, int clusterIdx, const ExampleType *exampleSets, const int *exampleSetSizes, int exampleSetCapacity,
+                          const int *clusterIndices, const int *selectedClusters, Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int maxSelectedClusters)
 {
-  // Linear offset to the first selected cluster of the current example set.
+  // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
   const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
-  // Unique identifier to the current cluster.
+
+  // Look up the unique identifier for the specified cluster.
   const int selectedClusterId = selectedClusters[selectedClustersOffset + clusterIdx];
 
-  // If this is a valid cluster.
-  if (selectedClusterId >= 0)
+  // If the specified cluster is valid:
+  if(selectedClusterId >= 0)
   {
     // Grab a reference to the cluster container for the current example set.
-    Array<ClusterType, MAX_CLUSTERS> &currentClusterContainer = clusterContainers[exampleSetIdx];
+    Array<ClusterType,MAX_CLUSTERS>& currentClusterContainer = clusterContainers[exampleSetIdx];
 
     // Atomically get the output index associated to the cluster.
     int outputClusterIdx = -1;
@@ -159,9 +161,9 @@ inline void compute_modes(const ExampleType *exampleSets, const int *exampleSetS
 #ifdef __CUDACC__
     outputClusterIdx = atomicAdd(&currentClusterContainer.size, 1);
 #else
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
+  #ifdef WITH_OPENMP
+    #pragma omp atomic capture
+  #endif
     outputClusterIdx = currentClusterContainer.size++;
 #endif
 

@@ -59,8 +59,8 @@ __global__ void ck_compute_modes(const ExampleType *examples, const int *example
   if(clusterIdx < maxSelectedClusters)
   {
     compute_modes(
-      examples, exampleSetSizes, clusterIndices, selectedClusters, clusterContainers,
-      exampleSetCapacity, exampleSetIdx, maxSelectedClusters, clusterIdx
+      exampleSetIdx, clusterIdx, examples, exampleSetSizes, exampleSetCapacity,
+      clusterIndices, selectedClusters, clusterContainers, maxSelectedClusters
     );
   }
 }

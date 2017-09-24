@@ -34,8 +34,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
     for(uint32_t clusterIdx = 0; clusterIdx < maxClusterCount; ++clusterIdx)
     {
       compute_modes(
-        examples, exampleSetSizes, clusterIndices, selectedClusters, clustersData,
-        exampleSetCapacity, exampleSetIdx, maxClusterCount, clusterIdx
+        exampleSetIdx, clusterIdx, examples, exampleSetSizes, exampleSetCapacity,
+        clusterIndices, selectedClusters, clustersData, maxClusterCount
       );
     }
   }

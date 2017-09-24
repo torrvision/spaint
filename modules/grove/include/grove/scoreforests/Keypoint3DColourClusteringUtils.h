@@ -14,7 +14,7 @@
 namespace grove {
 
 /**
- * \brief computes the squared distance between two Keypoint3DColour instances.
+ * \brief Computes the squared distance between two Keypoint3DColour instances.
  *
  * \param a A Keypoint3DColour.
  * \param b Another Keypoint3DColour.
@@ -41,8 +41,7 @@ inline float distance_squared(const Keypoint3DColour& a, const Keypoint3DColour&
  * \param outputCluster The constructed cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void create_cluster_from_examples(
-    const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, int key, Mode3DColour &outputCluster)
+inline void create_cluster_from_examples(const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, int key, Mode3DColour &outputCluster)
 {
   // Compute position and colour mean.
   int sampleCount = 0;
