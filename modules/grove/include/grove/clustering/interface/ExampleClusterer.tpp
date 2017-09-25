@@ -64,9 +64,9 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   // Reset the temporary variables needed for the call.
   reset_temporaries(exampleSetCapacity, exampleSetCount);
 
-  // Reset the output clusters for each example set of interest.
+  // Reset the cluster containers for each example set of interest.
   Clusters *clustersData = get_pointer_to_cluster(clusterContainers, exampleSetStart);
-  reset_clusters(clustersData, exampleSetCount);
+  reset_cluster_containers(clustersData, exampleSetCount);
 
   // Compute the density of examples around each example in the example sets of interest.
   const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, exampleSetStart);

@@ -250,7 +250,7 @@ const int *ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::get_poin
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(Clusters *clustersData, uint32_t exampleSetCount) const
 {
   // Launch one thread per example set.
   dim3 blockSize(256);

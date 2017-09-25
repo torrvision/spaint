@@ -75,7 +75,7 @@ private:
   virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const;
 
   /** Override */
-  virtual void reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const;
+  virtual void reset_cluster_containers(Clusters *clustersData, uint32_t exampleSetCount) const;
 
   /** Override */
   virtual void reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);

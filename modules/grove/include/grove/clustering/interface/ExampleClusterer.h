@@ -105,7 +105,7 @@ protected:
   /** Defines the cluster tree structure. Holds the index of the parent for each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
   ITMIntImage_Ptr m_parents;
 
-  /** Stores the indices of the selected clusters in each example set. Has exampleSetCount rows and m_maxClusterCount columns. */
+  /** An image storing the indices of the selected clusters in each example set. Has exampleSetCount rows and m_maxClusterCount columns. */
   ITMIntImage_Ptr m_selectedClusters;
 
   //#################### CONSTRUCTORS ####################
@@ -158,9 +158,7 @@ private:
   virtual void compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
-   * \brief Builds a histogram of cluster sizes.
-   *        One histogram per example set, each element of the histogram represents the number of clusters having a
-   * certain size.
+   * \brief Builds a histogram of cluster sizes for each example set.
    *
    * \param exampleSetCapacity The maximum size of each example set.
    * \param exampleSetCount    The number of example sets being clustered.
@@ -241,10 +239,10 @@ private:
   /**
    * \brief Resets the output cluster containers.
    *
-   * \param clustersData    A pointer to the start of the cluster container for the first example set being clustered.
+   * \param clustersData    A pointer to the cluster container for the first example set being clustered.
    * \param exampleSetCount The number of example sets being clustered.
    */
-  virtual void reset_clusters(Clusters *clustersData, uint32_t exampleSetCount) const = 0;
+  virtual void reset_cluster_containers(Clusters *clustersData, uint32_t exampleSetCount) const = 0;
 
   /**
    * \brief Resets the temporary variables needed during a find_modes call.
