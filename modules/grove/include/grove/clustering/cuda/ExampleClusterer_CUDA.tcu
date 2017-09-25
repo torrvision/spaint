@@ -66,8 +66,9 @@ __global__ void ck_compute_parents(const ExampleType *exampleSets, const int *ex
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-__global__ void ck_create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes, const int *clusterIndices, const int *selectedClusters,
-                                            Array<ClusterType,MAX_CLUSTERS> *clusterContainers, uint32_t exampleSetCapacity, uint32_t maxSelectedClusters)
+__global__ void ck_create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                            const int *clusterIndices, const int *selectedClusters, uint32_t maxSelectedClusters,
+                                            Array<ClusterType,MAX_CLUSTERS> *clusterContainers)
 {
   const uint32_t selectedClusterIdx = blockIdx.x * blockDim.x + threadIdx.x;
   const uint32_t exampleSetIdx = blockIdx.y;
@@ -224,7 +225,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::create_selecte
   dim3 gridSize((this->m_maxClusterCount + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
   ck_create_selected_clusters<<<gridSize,blockSize>>>(
-    examples, exampleSetSizes, clusterIndices, selectedClusters, clusterContainers, exampleSetCapacity, this->m_maxClusterCount
+    examples, exampleSetSizes, exampleSetCapacity, clusterIndices, selectedClusters, this->m_maxClusterCount, clusterContainers
   );
   ORcudaKernelCheck;
 }
