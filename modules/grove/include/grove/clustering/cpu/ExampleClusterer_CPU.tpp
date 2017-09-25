@@ -101,7 +101,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes,
                                                                                           uint32_t exampleSetCapacity, uint32_t exampleSetCount,
-                                                                                          Clusters *clustersData)
+                                                                                          ClusterContainer *clustersData)
 {
   int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
@@ -122,8 +122,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-typename ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::Clusters *
-ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster(const ClustersBlock_Ptr &clusters, uint32_t clusterIdx) const
+typename ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::ClusterContainer *
+ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster(const ClusterContainers_Ptr& clusters, uint32_t clusterIdx) const
 {
   return clusters->GetData(MEMORYDEVICE_CPU) + clusterIdx;
 }
@@ -142,7 +142,7 @@ const int *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_point
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(Clusters *clustersData, uint32_t exampleSetCount) const
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(ClusterContainer *clustersData, uint32_t exampleSetCount) const
 {
 #ifdef WITH_OPENMP
 #pragma omp parallel for

@@ -209,7 +209,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parent
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes,
                                                                                            uint32_t exampleSetCapacity, uint32_t exampleSetCount,
-                                                                                           Clusters *clustersData)
+                                                                                           ClusterContainer *clustersData)
 {
   const int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CUDA);
   const int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
@@ -230,8 +230,8 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::create_selecte
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-typename ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::Clusters *
-ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const
+typename ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>::ClusterContainer *
+ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster(const ClusterContainers_Ptr& clusters, uint32_t clusterIdx) const
 {
   return clusters->GetData(MEMORYDEVICE_CUDA) + clusterIdx;
 }
@@ -250,7 +250,7 @@ const int *ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::get_poin
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(Clusters *clustersData, uint32_t exampleSetCount) const
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(ClusterContainer *clustersData, uint32_t exampleSetCount) const
 {
   // Launch one thread per example set.
   dim3 blockSize(256);

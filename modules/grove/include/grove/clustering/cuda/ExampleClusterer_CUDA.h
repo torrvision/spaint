@@ -25,9 +25,9 @@ class ExampleClusterer_CUDA : public ExampleClusterer<ExampleType,ClusterType,MA
   //#################### TYPEDEFS AND USINGS ####################
 public:
   typedef ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS> Base;
-  using typename Base::Clusters;
-  using typename Base::ClustersBlock;
-  using typename Base::ClustersBlock_Ptr;
+  using typename Base::ClusterContainer;
+  using typename Base::ClusterContainers;
+  using typename Base::ClusterContainers_Ptr;
   using typename Base::ExampleImage;
   using typename Base::ExampleImage_CPtr;
 
@@ -63,10 +63,10 @@ private:
 
   /** Override */
   virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                        uint32_t exampleSetCount, Clusters *clustersData);
+                                        uint32_t exampleSetCount, ClusterContainer *clustersData);
 
   /** Override */
-  virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const;
+  virtual ClusterContainer *get_pointer_to_cluster(const ClusterContainers_Ptr& clusters, uint32_t clusterIdx) const;
 
   /** Override */
   virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const;
@@ -75,7 +75,7 @@ private:
   virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const;
 
   /** Override */
-  virtual void reset_cluster_containers(Clusters *clustersData, uint32_t exampleSetCount) const;
+  virtual void reset_cluster_containers(ClusterContainer *clustersData, uint32_t exampleSetCount) const;
 
   /** Override */
   virtual void reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);

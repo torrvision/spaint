@@ -46,7 +46,7 @@ ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::~ExampleClusterer()
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
-                                                                              uint32_t exampleSetStart, uint32_t exampleSetCount, ClustersBlock_Ptr& clusterContainers)
+                                                                              uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers)
 {
   const uint32_t nbExampleSets = exampleSets->noDims.height;
   const uint32_t exampleSetCapacity = exampleSets->noDims.width;
@@ -65,7 +65,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   reset_temporaries(exampleSetCapacity, exampleSetCount);
 
   // Reset the cluster containers for each example set of interest.
-  Clusters *clustersData = get_pointer_to_cluster(clusterContainers, exampleSetStart);
+  ClusterContainer *clustersData = get_pointer_to_cluster(clusterContainers, exampleSetStart);
   reset_cluster_containers(clustersData, exampleSetCount);
 
   // Compute the density of examples around each example in the example sets of interest.

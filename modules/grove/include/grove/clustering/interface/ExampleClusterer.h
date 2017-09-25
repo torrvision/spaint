@@ -49,9 +49,9 @@ class ExampleClusterer
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef Array<ClusterType,MAX_CLUSTERS> Clusters;
-  typedef ORUtils::MemoryBlock<Clusters> ClustersBlock;
-  typedef boost::shared_ptr<ClustersBlock> ClustersBlock_Ptr;
+  typedef Array<ClusterType,MAX_CLUSTERS> ClusterContainer;
+  typedef ORUtils::MemoryBlock<ClusterContainer> ClusterContainers;
+  typedef boost::shared_ptr<ClusterContainers> ClusterContainers_Ptr;
   typedef ORUtils::Image<ExampleType> ExampleImage;
   typedef boost::shared_ptr<const ExampleImage> ExampleImage_CPtr;
 
@@ -145,7 +145,7 @@ public:
    * \throws std::invalid_argument If exampleSetStart + exampleSetCount would result in out-of-bounds access in exampleSets.
    */
   void cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
-                        uint32_t exampleSetStart, uint32_t exampleSetCount, ClustersBlock_Ptr& clusterContainers);
+                        uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers);
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
@@ -203,7 +203,7 @@ private:
    * \param clustersData        A pointer to the start of the cluster container for the first example set being clustered.
    */
   virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                        uint32_t exampleSetCount, Clusters *clustersData) = 0;
+                                        uint32_t exampleSetCount, ClusterContainer *clustersData) = 0;
 
   /**
    * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
@@ -213,7 +213,7 @@ private:
    * \param setIdx   The index to the first set of interest.
    * \return         A raw pointer to the output cluster container for set setIdx.
    */
-  virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr& clusters, uint32_t clusterIdx) const = 0;
+  virtual ClusterContainer *get_pointer_to_cluster(const ClusterContainers_Ptr& clusters, uint32_t clusterIdx) const = 0;
 
   /**
    * \brief Virtual function returning a pointer to the first example of the example set setIdx.
@@ -242,7 +242,7 @@ private:
    * \param clustersData    A pointer to the cluster container for the first example set being clustered.
    * \param exampleSetCount The number of example sets being clustered.
    */
-  virtual void reset_cluster_containers(Clusters *clustersData, uint32_t exampleSetCount) const = 0;
+  virtual void reset_cluster_containers(ClusterContainer *clustersData, uint32_t exampleSetCount) const = 0;
 
   /**
    * \brief Resets the temporary variables needed during a find_modes call.
