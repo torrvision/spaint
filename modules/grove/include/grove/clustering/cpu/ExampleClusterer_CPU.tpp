@@ -101,7 +101,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes,
                                                                                           uint32_t exampleSetCapacity, uint32_t exampleSetCount,
-                                                                                          ClusterContainer *clustersData)
+                                                                                          ClusterContainer *clusterContainers)
 {
   int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
@@ -115,7 +115,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
     {
       create_selected_cluster(
         exampleSetIdx, selectedClusterIdx, examples, exampleSetSizes, exampleSetCapacity,
-        clusterIndices, selectedClusters, this->m_maxClusterCount, clustersData
+        clusterIndices, selectedClusters, this->m_maxClusterCount, clusterContainers
       );
     }
   }

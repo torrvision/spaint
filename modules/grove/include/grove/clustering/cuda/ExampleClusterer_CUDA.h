@@ -63,7 +63,7 @@ private:
 
   /** Override */
   virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                        uint32_t exampleSetCount, ClusterContainer *clustersData);
+                                        uint32_t exampleSetCount, ClusterContainer *clusterContainers);
 
   /** Override */
   virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const;

@@ -209,7 +209,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parent
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes,
                                                                                            uint32_t exampleSetCapacity, uint32_t exampleSetCount,
-                                                                                           ClusterContainer *clustersData)
+                                                                                           ClusterContainer *clusterContainers)
 {
   const int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CUDA);
   const int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
@@ -224,7 +224,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::create_selecte
   dim3 gridSize((this->m_maxClusterCount + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
   ck_create_selected_clusters<<<gridSize,blockSize>>>(
-    examples, exampleSetSizes, clusterIndices, selectedClusters, clustersData, exampleSetCapacity, this->m_maxClusterCount
+    examples, exampleSetSizes, clusterIndices, selectedClusters, clusterContainers, exampleSetCapacity, this->m_maxClusterCount
   );
   ORcudaKernelCheck;
 }

@@ -200,10 +200,10 @@ private:
    * \param exampleSetSizes     The number of valid examples in each example set.
    * \param exampleSetCapacity  The maximum size of each example set.
    * \param exampleSetCount     The number of example sets being clustered.
-   * \param clustersData        A pointer to the start of the cluster container for the first example set being clustered.
+   * \param clusterContainers   A pointer to the cluster containers for the example sets being clustered.
    */
   virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                        uint32_t exampleSetCount, ClusterContainer *clustersData) = 0;
+                                        uint32_t exampleSetCount, ClusterContainer *clusterContainers) = 0;
 
   /**
    * \brief Gets a raw pointer to the cluster container for the specified example set.
