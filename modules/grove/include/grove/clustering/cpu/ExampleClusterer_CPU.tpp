@@ -123,9 +123,9 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 typename ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::ClusterContainer *
-ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster(const ClusterContainers_Ptr& clusters, uint32_t clusterIdx) const
+ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const
 {
-  return clusters->GetData(MEMORYDEVICE_CPU) + clusterIdx;
+  return clusterContainers->GetData(MEMORYDEVICE_CPU) + exampleSetIdx;
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>

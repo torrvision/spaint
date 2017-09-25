@@ -206,14 +206,13 @@ private:
                                         uint32_t exampleSetCount, ClusterContainer *clustersData) = 0;
 
   /**
-   * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
+   * \brief Gets a raw pointer to the cluster container for the specified example set.
    *
-   * \param clusters The output cluster containers.
-   * \param setIdx   The index to the first set of interest.
-   * \return         A raw pointer to the output cluster container for set setIdx.
+   * \param clusterContainers The cluster containers for the example sets.
+   * \param exampleSetIdx     The index of the example set to whose cluster container we want to get a pointer.
+   * \return                  A raw pointer to the cluster container for the specified example set.
    */
-  virtual ClusterContainer *get_pointer_to_cluster(const ClusterContainers_Ptr& clusters, uint32_t clusterIdx) const = 0;
+  virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const = 0;
 
   /**
    * \brief Virtual function returning a pointer to the first example of the example set setIdx.

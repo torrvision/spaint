@@ -66,7 +66,7 @@ private:
                                         uint32_t exampleSetCount, ClusterContainer *clustersData);
 
   /** Override */
-  virtual ClusterContainer *get_pointer_to_cluster(const ClusterContainers_Ptr& clusters, uint32_t clusterIdx) const;
+  virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const;
 
   /** Override */
   virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const;

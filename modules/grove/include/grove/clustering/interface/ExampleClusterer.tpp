@@ -65,8 +65,8 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   reset_temporaries(exampleSetCapacity, exampleSetCount);
 
   // Reset the cluster containers for each example set of interest.
-  ClusterContainer *clustersData = get_pointer_to_cluster(clusterContainers, exampleSetStart);
-  reset_cluster_containers(clustersData, exampleSetCount);
+  ClusterContainer *clusterContainersPtr = get_pointer_to_cluster_container(clusterContainers, exampleSetStart);
+  reset_cluster_containers(clusterContainersPtr, exampleSetCount);
 
   // Compute the density of examples around each example in the example sets of interest.
   const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, exampleSetStart);
@@ -88,7 +88,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   select_clusters(exampleSetCapacity, exampleSetCount);
 
   // Finally, compute the parameters for and store each selected cluster for each example set.
-  create_selected_clusters(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, clustersData);
+  create_selected_clusters(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, clusterContainersPtr);
 
 // Debug.
 #if 0
