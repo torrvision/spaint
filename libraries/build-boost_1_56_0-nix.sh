@@ -45,9 +45,12 @@ else
 fi
 
 echo "[spaint] ...Running build..."
-if [ $PLATFORM == "mac" ] && [ "$OSXVERSION" -ge 13 ]
+if [ $PLATFORM == "mac" ]
 then
-  STDLIBFLAGS='cxxflags="-stdlib=libstdc++" linkflags="-stdlib=libstdc++"'
+  if [ "$OSXVERSION" -ge 13 ]
+  then
+    STDLIBFLAGS='cxxflags="-stdlib=libstdc++" linkflags="-stdlib=libstdc++"'
+  fi
 else
   STDLIBFLAGS='cxxflags="-std=c++11"'
 fi
