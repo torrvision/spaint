@@ -236,12 +236,12 @@ private:
   virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const = 0;
 
   /**
-   * \brief Resets the output cluster containers.
+   * \brief Resets the cluster containers for the example sets that are being clustered.
    *
-   * \param clustersData    A pointer to the cluster container for the first example set being clustered.
-   * \param exampleSetCount The number of example sets being clustered.
+   * \param clusterContainers A pointer to the cluster containers to be reset.
+   * \param exampleSetCount   The number of example sets being clustered.
    */
-  virtual void reset_cluster_containers(ClusterContainer *clustersData, uint32_t exampleSetCount) const = 0;
+  virtual void reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const = 0;
 
   /**
    * \brief Resets the temporary variables needed during a find_modes call.

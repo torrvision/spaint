@@ -250,13 +250,13 @@ const int *ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::get_poin
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(ClusterContainer *clustersData, uint32_t exampleSetCount) const
+void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const
 {
   // Launch one thread per example set.
   dim3 blockSize(256);
   dim3 gridSize((exampleSetCount + blockSize.x - 1) / blockSize.x);
 
-  ck_reset_cluster_containers<<<gridSize,blockSize>>>(clustersData, exampleSetCount);
+  ck_reset_cluster_containers<<<gridSize,blockSize>>>(clusterContainers, exampleSetCount);
   ORcudaKernelCheck;
 }
 

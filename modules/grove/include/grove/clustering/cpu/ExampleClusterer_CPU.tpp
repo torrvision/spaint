@@ -142,14 +142,14 @@ const int *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_point
 }
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(ClusterContainer *clustersData, uint32_t exampleSetCount) const
+void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const
 {
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    reset_cluster_container(clustersData, exampleSetIdx);
+    reset_cluster_container(clusterContainers, exampleSetIdx);
   }
 }
 
