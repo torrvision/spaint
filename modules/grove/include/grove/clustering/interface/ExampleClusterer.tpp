@@ -27,7 +27,7 @@ ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float
   // Initially, all are empty. We resize them later, once we know the right sizes.
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
-  m_clusterIdx = mbf.make_image<int>();
+  m_clusterIndices = mbf.make_image<int>();
   m_clusterSizeHistograms = mbf.make_image<int>();
   m_clusterSizes = mbf.make_image<int>();
   m_densities = mbf.make_image<float>();
@@ -129,7 +129,7 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::reallocate_temporar
   if(newImgSize.width > oldImgSize.width || newImgSize.height > oldImgSize.height)
   {
     // The following images have a row for each example set to cluster and a column for each element of the example sets.
-    m_clusterIdx->ChangeDims(newImgSize);
+    m_clusterIndices->ChangeDims(newImgSize);
     m_clusterSizes->ChangeDims(newImgSize);
     m_clusterSizeHistograms->ChangeDims(newImgSize);
     m_densities->ChangeDims(newImgSize);

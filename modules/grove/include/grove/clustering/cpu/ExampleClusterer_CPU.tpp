@@ -21,7 +21,7 @@ ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleClusterer_CPU
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
+  int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
 
@@ -78,7 +78,7 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
                                                                                  uint32_t exampleSetCount, float tauSq)
 {
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
+  int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
@@ -103,7 +103,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
                                                                                           uint32_t exampleSetCapacity, uint32_t exampleSetCount,
                                                                                           Clusters *clustersData)
 {
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
+  int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -111,11 +111,11 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    for(uint32_t selectedClusterIdx = 0; selectedClusterIdx < Base::m_maxClusterCount; ++selectedClusterIdx)
+    for(uint32_t selectedClusterIdx = 0; selectedClusterIdx < this->m_maxClusterCount; ++selectedClusterIdx)
     {
       create_selected_cluster(
         exampleSetIdx, selectedClusterIdx, examples, exampleSetSizes, exampleSetCapacity,
-        clusterIndices, selectedClusters, Base::m_maxClusterCount, clustersData
+        clusterIndices, selectedClusters, this->m_maxClusterCount, clustersData
       );
     }
   }
@@ -184,7 +184,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters
   {
     select_clusters_for_set(
       exampleSetIdx, clusterSizes, clusterSizeHistograms, nbClustersPerExampleSet,
-      exampleSetCapacity, Base::m_maxClusterCount, Base::m_minClusterSize, selectedClusters
+      exampleSetCapacity, this->m_maxClusterCount, this->m_minClusterSize, selectedClusters
     );
   }
 }

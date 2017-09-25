@@ -125,7 +125,7 @@ ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleClusterer_CU
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+  int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CUDA);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
 
@@ -185,7 +185,7 @@ template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes,
                                                                                   uint32_t exampleSetCapacity, uint32_t exampleSetCount, float tauSq)
 {
-  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+  int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CUDA);
   const float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
   int *nbClustersPerReservoir = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CUDA);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
@@ -211,7 +211,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::create_selecte
                                                                                            uint32_t exampleSetCapacity, uint32_t exampleSetCount,
                                                                                            Clusters *clustersData)
 {
-  const int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+  const int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CUDA);
   const int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
 
   // Conceptually, we would like to have exampleSetCount thread blocks, each containing
@@ -221,10 +221,10 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::create_selecte
   // the example set is denoted by the grid's y coordinate, and the index of the cluster
   // can be derived from the grid's x coordinate (see the kernel for details).
   dim3 blockSize(32);
-  dim3 gridSize((Base::m_maxClusterCount + blockSize.x - 1) / blockSize.x, exampleSetCount);
+  dim3 gridSize((this->m_maxClusterCount + blockSize.x - 1) / blockSize.x, exampleSetCount);
 
   ck_create_selected_clusters<<<gridSize,blockSize>>>(
-    examples, exampleSetSizes, clusterIndices, selectedClusters, clustersData, exampleSetCapacity, Base::m_maxClusterCount
+    examples, exampleSetSizes, clusterIndices, selectedClusters, clustersData, exampleSetCapacity, this->m_maxClusterCount
   );
   ORcudaKernelCheck;
 }
@@ -289,7 +289,7 @@ void ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>::select_cluster
 
   ck_select_clusters<<<gridSize,blockSize>>>(
     clusterSizes, clusterSizeHistograms, nbClustersPerExampleSet, selectedClusters,
-    exampleSetCapacity, exampleSetCount, Base::m_maxClusterCount, Base::m_minClusterSize
+    exampleSetCapacity, exampleSetCount, this->m_maxClusterCount, this->m_minClusterSize
   );
   ORcudaKernelCheck;
 }

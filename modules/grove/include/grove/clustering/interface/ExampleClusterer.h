@@ -34,9 +34,9 @@ namespace grove {
  *
  *           Returns the squared distance between two examples.
  *
- *        2) _CPU_AND_GPU_CODE_ inline void create_cluster_from_examples(const ExampleType *examples,
+ *        2) _CPU_AND_GPU_CODE_ inline void create_cluster_from_examples(int key, const ExampleType *examples,
  *                                                                       const int *exampleKeys, int examplesCount,
- *                                                                       int key, ClusterType& outputCluster);
+ *                                                                       ClusterType& outputCluster);
  *
  *           Aggregates all the examples in the examples array that have a certain key into a single cluster mode.
  *
@@ -57,7 +57,7 @@ protected:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** The maximum number of clusters to return for each set of examples. */
+  /** The maximum number of clusters to retain for each set of examples. */
   uint32_t m_maxClusterCount;
 
   /** The minimum size of cluster to keep. */
@@ -69,17 +69,17 @@ protected:
   /** The maximum distance there can be between two examples that are part of the same cluster. */
   float m_tau;
 
-  //######################## FIND MODES TEMPORARY VARIABLES ########################
+  //##################### CLUSTER EXAMPLES TEMPORARY VARIABLES #####################
   //                                                                              //
   // These temporary variables are used to store the state needed when invoking:  //
   //                                                                              //
-  // find_modes(exampleSets, exampleSetSizes, exampleSetStart,                    //
+  // cluster_examples(exampleSets, exampleSetSizes, exampleSetStart,              //
   //            exampleSetCount, clusterContainers);                              //
   //                                                                              //
   //################################################################################
 protected:
-  /** Cluster index to which each example is associated. Has exampleSetCount rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_clusterIdx;
+  /** An image storing the cluster index associated with each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
+  ITMIntImage_Ptr m_clusterIndices;
 
   /**
    * An image storing a cluster size histogram for each example set under consideration (one histogram per row).
@@ -105,7 +105,7 @@ protected:
   /** Defines the cluster tree structure. Holds the index of the parent for each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
   ITMIntImage_Ptr m_parents;
 
-  /** Stores the index of selected clusters in each example set. Has exampleSetCount rows and m_maxClusterCount columns. */
+  /** Stores the indices of the selected clusters in each example set. Has exampleSetCount rows and m_maxClusterCount columns. */
   ITMIntImage_Ptr m_selectedClusters;
 
   //#################### CONSTRUCTORS ####################
