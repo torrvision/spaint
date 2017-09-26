@@ -74,7 +74,7 @@ protected:
   // These temporary variables are used to store the state needed when invoking:  //
   //                                                                              //
   // cluster_examples(exampleSets, exampleSetSizes, exampleSetStart,              //
-  //            exampleSetCount, clusterContainers);                              //
+  //                  exampleSetCount, clusterContainers);                        //
   //                                                                              //
   //################################################################################
 protected:
