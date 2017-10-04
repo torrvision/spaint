@@ -1,10 +1,10 @@
 /**
- * spaint: OpenCVUtil.h
+ * itmx: OpenCVUtil.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_OPENCVUTIL
-#define H_SPAINT_OPENCVUTIL
+#ifndef H_ITMX_OPENCVUTIL
+#define H_ITMX_OPENCVUTIL
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -12,7 +12,7 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief This class provides helper functions to visualise image data using OpenCV.

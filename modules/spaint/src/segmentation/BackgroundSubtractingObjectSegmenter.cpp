@@ -9,10 +9,9 @@
 
 #include <boost/serialization/shared_ptr.hpp>
 
+#include <itmx/ocv/OpenCVUtil.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
-
-#include "ocv/OpenCVUtil.h"
 
 #define DEBUGGING 1
 

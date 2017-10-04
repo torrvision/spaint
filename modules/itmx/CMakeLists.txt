@@ -17,6 +17,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
@@ -59,6 +60,15 @@ src/imagesources/SingleRGBDImagePipe.cpp
 SET(imagesources_headers
 include/itmx/imagesources/AsyncImageSourceEngine.h
 include/itmx/imagesources/SingleRGBDImagePipe.h
+)
+
+##
+SET(ocv_sources
+src/ocv/OpenCVUtil.cpp
+)
+
+SET(ocv_headers
+include/itmx/ocv/OpenCVUtil.h
 )
 
 ##
@@ -159,6 +169,11 @@ SET(templates
 ${relocalisation_templates}
 )
 
+IF(WITH_OPENCV)
+  SET(sources ${sources} ${ocv_sources})
+  SET(headers ${headers} ${ocv_headers})
+ENDIF()
+
 #############################
 # Specify the source groups #
 #############################
@@ -166,6 +181,7 @@ ${relocalisation_templates}
 SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
 SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
+SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
