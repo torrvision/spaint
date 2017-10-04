@@ -18,6 +18,9 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 
+#ifdef WITH_OPENCV
+#include <itmx/ocv/OpenCVUtil.h>
+#endif
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/trackers/TrackerFactory.h>
