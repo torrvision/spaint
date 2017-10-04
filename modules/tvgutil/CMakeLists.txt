@@ -20,6 +20,11 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 #############################
 
 ##
+SET(boost_headers
+include/tvgutil/boost/WrappedAsio.h
+)
+
+##
 SET(commands_sources
 src/commands/Command.cpp
 src/commands/CommandManager.cpp
@@ -118,6 +123,7 @@ ${persistence_sources}
 )
 
 SET(headers
+${boost_headers}
 ${commands_headers}
 ${containers_headers}
 ${filesystem_headers}
@@ -132,6 +138,7 @@ ${timing_headers}
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP(boost FILES ${boost_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(containers FILES ${containers_headers})
 SOURCE_GROUP(filesystem FILES ${filesystem_sources} ${filesystem_headers})

@@ -8,20 +8,10 @@
 
 #include <string>
 
-#ifdef _MSC_VER
-  // Suppress some VC++ warnings that are produced by boost/asio.hpp.
-  #pragma warning(disable:4267 4996)
-#endif
-
-#include <boost/asio.hpp>
-
-#ifdef _MSC_VER
-  // Re-enable the VC++ warnings for the rest of the code.
-  #pragma warning(default:4267 4996)
-#endif
-
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
+
+#include "../boost/WrappedAsio.h"
 
 namespace tvgutil {
 
