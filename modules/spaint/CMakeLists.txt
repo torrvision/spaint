@@ -190,15 +190,6 @@ include/spaint/markers/shared/VoxelMarker_Shared.h
 )
 
 ##
-SET(ocv_sources
-src/ocv/OpenCVUtil.cpp
-)
-
-SET(ocv_headers
-include/spaint/ocv/OpenCVUtil.h
-)
-
-##
 SET(ogl_sources
 src/ogl/CameraRenderer.cpp
 src/ogl/FrameBuffer.cpp
@@ -713,11 +704,6 @@ IF(WITH_CUDA)
   ENDIF()
 ENDIF()
 
-IF(WITH_OPENCV)
-  SET(sources ${sources} ${ocv_sources})
-  SET(headers ${headers} ${ocv_headers})
-ENDIF()
-
 #############################
 # Specify the source groups #
 #############################
@@ -738,7 +724,6 @@ SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
-SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
 SOURCE_GROUP(picking FILES ${picking_sources} ${picking_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})

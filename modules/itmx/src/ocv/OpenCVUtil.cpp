@@ -1,5 +1,5 @@
 /**
- * spaint: OpenCVUtil.cpp
+ * itmx: OpenCVUtil.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

@@ -10,6 +10,9 @@ using namespace rafl;
 #include <boost/format.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+#ifdef WITH_OPENCV
+#include <itmx/ocv/OpenCVUtil.h>
+#endif
 #include <itmx/util/RGBDUtil.h>
 using namespace itmx;
 
@@ -19,10 +22,6 @@ using namespace tvgutil;
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "touch/TouchDescriptorCalculator.h"
 #include "visualisation/VisualiserFactory.h"
-
-#ifdef WITH_OPENCV
-#include "ocv/OpenCVUtil.h"
-#endif
 
 //#define DEBUG_TOUCH_DISPLAY
 //#define DEBUG_TOUCH_OUTPUT_FOREST_STATISTICS 

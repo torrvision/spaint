@@ -6,11 +6,10 @@
 #include "features/interface/VOPFeatureCalculator.h"
 
 #include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
-
 #ifdef WITH_OPENCV
-#include "ocv/OpenCVUtil.h"
+#include <itmx/ocv/OpenCVUtil.h>
 #endif
+using namespace itmx;
 
 #define DEBUG_FEATURE_DISPLAY 0
 

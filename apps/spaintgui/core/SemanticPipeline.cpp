@@ -7,7 +7,8 @@
 using namespace spaint;
 
 #ifdef WITH_OPENCV
-#include <spaint/ocv/OpenCVUtil.h>
+#include <itmx/ocv/OpenCVUtil.h>
+using namespace itmx;
 #endif
 
 //#################### CONSTRUCTORS ####################

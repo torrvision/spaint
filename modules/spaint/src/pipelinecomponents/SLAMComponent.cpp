@@ -23,6 +23,9 @@ using namespace ORUtils;
 using namespace grove;
 #endif
 
+#ifdef WITH_OPENCV
+#include <itmx/ocv/OpenCVUtil.h>
+#endif
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/relocalisation/NullRelocaliser.h>
