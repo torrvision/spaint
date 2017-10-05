@@ -103,6 +103,15 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
 
 ##
+SET(remotemapping_sources
+src/remotemapping/MappingMessage.cpp
+)
+
+SET(remotemapping_headers
+include/itmx/remotemapping/MappingMessage.h
+)
+
+##
 SET(trackers_sources
 src/trackers/TrackerFactory.cpp
 )
@@ -151,6 +160,7 @@ ${geometry_sources}
 ${imagesources_sources}
 ${persistence_sources}
 ${relocalisation_sources}
+${remotemapping_sources}
 ${trackers_sources}
 ${util_sources}
 )
@@ -161,6 +171,7 @@ ${geometry_headers}
 ${imagesources_headers}
 ${persistence_headers}
 ${relocalisation_headers}
+${remotemapping_headers}
 ${trackers_headers}
 ${util_headers}
 )
@@ -184,6 +195,7 @@ SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
+SOURCE_GROUP(remotemapping FILES ${remotemapping_sources} ${remotemapping_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 
