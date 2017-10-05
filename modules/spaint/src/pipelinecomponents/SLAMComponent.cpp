@@ -214,6 +214,17 @@ bool SLAMComponent::process_frame()
     }
 
     ++m_fusedFramesCount;
+
+    // If a mapping client is active, use it to send the current frame to the remote mapping server.
+    if(m_mappingClient)
+    {
+      if(!m_mappingMessage) m_mappingMessage.reset(new MappingMessage(view->rgb->noDims, view->depth->noDims));
+      m_mappingMessage->set_frame_index(static_cast<int>(m_fusedFramesCount));
+      m_mappingMessage->set_pose(*trackingState->pose_d);
+      m_mappingMessage->set_rgb_image(inputRGBImage);
+      m_mappingMessage->set_depth_image(inputRawDepthImage);
+      m_mappingClient->send_message(*m_mappingMessage);
+    }
   }
   else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
@@ -278,6 +289,11 @@ void SLAMComponent::set_detect_fiducials(bool detectFiducials)
 void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 {
   m_fusionEnabled = fusionEnabled;
+}
+
+void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
+{
+  m_mappingClient = mappingClient;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

@@ -104,10 +104,12 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 
 ##
 SET(remotemapping_sources
+src/remotemapping/MappingClient.cpp
 src/remotemapping/MappingMessage.cpp
 )
 
 SET(remotemapping_headers
+include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingMessage.h
 )
 

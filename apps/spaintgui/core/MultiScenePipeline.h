@@ -197,6 +197,14 @@ public:
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
 
   /**
+   * \brief Sets the mapping client (if any) for the specified scene.
+   *
+   * \param sceneID       The scene ID.
+   * \param mappingClient The mapping client (if any) for the specified scene.
+   */
+  void set_mapping_client(const std::string& sceneID, const itmx::MappingClient_Ptr& mappingClient);
+
+  /**
    * \brief Toggles whether or not the world scene's object segmentation component (if any) should write to its output pipe.
    */
   void toggle_segmentation_output();

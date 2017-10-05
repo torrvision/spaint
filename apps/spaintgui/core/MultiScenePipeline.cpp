@@ -135,6 +135,11 @@ void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fus
   MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
 }
 
+void MultiScenePipeline::set_mapping_client(const std::string& sceneID, const itmx::MappingClient_Ptr& mappingClient)
+{
+  MapUtil::call_if_found(m_slamComponents, sceneID, boost::bind(&SLAMComponent::set_mapping_client, _1, mappingClient));
+}
+
 void MultiScenePipeline::toggle_segmentation_output()
 {
   MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::toggle_output, _1));

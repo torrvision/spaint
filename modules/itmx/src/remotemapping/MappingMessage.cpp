@@ -38,7 +38,7 @@ size_t MappingMessage::get_size() const
 
 void MappingMessage::extract_depth_image(ITMShortImage *depthImage) const
 {
-  if(depthImage->dataSize != m_depthImageSegment.second)
+  if(depthImage->dataSize * sizeof(short) != m_depthImageSegment.second)
   {
     throw std::runtime_error("Error: The target image has a different size to that of the depth image in the message");
   }
@@ -60,7 +60,7 @@ ORUtils::SE3Pose MappingMessage::extract_pose() const
 
 void MappingMessage::extract_rgb_image(ITMUChar4Image *rgbImage) const
 {
-  if(rgbImage->dataSize != m_rgbImageSegment.second)
+  if(rgbImage->dataSize * sizeof(Vector4u) != m_rgbImageSegment.second)
   {
     throw std::runtime_error("Error: The target image has a different size to that of the RGB image in the message");
   }
