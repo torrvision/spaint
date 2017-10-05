@@ -43,6 +43,7 @@ include/tvgutil/commands/SeqCommand.h
 SET(containers_headers
 include/tvgutil/containers/LimitedContainer.h
 include/tvgutil/containers/MapUtil.h
+include/tvgutil/containers/PooledQueue.h
 include/tvgutil/containers/PriorityQueue.h
 )
 
