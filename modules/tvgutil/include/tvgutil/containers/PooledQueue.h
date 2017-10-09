@@ -178,7 +178,7 @@ public:
         case PES_REPLACE_RANDOM:
         {
           const int offset = m_rng->generate_int_from_uniform(0, static_cast<int>(m_queue.size()) - 1);
-          std::list<T>::iterator it = m_queue.begin();
+          typename std::list<T>::iterator it = m_queue.begin();
           std::advance(it, offset);
           m_pool.push_back(*it);
           m_queue.erase(it);
