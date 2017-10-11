@@ -12,6 +12,7 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
 #include <itmx/relocalisation/RefiningRelocaliser.h>
+#include <itmx/remotemapping/MappingServer.h>
 
 #include "../slamstate/SLAMState.h"
 
@@ -44,6 +45,7 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  virtual const itmx::MappingServer_Ptr& get_mapping_server() = 0;
   virtual const std::string& get_resources_dir() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;

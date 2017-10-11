@@ -9,6 +9,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "../base/ITMObjectPtrTypes.h"
+#include "../remotemapping/MappingServer.h"
 #include "FallibleTracker.h"
 
 namespace itmx {
@@ -46,6 +47,7 @@ public:
    * \param imuCalibrator         The IMU calibrator.
    * \param settings              The InfiniTAM settings.
    * \param fallibleTracker       A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param mappingServer         The remote mapping server (if any).
    * \param nestingFlag           A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                      The tracker.
    */
@@ -53,6 +55,7 @@ public:
                                             const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                             const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                             const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                            const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
                                             NestingFlag nestingFlag = UNNESTED);
 
   /**
@@ -66,6 +69,7 @@ public:
    * \param imuCalibrator   The IMU calibrator.
    * \param settings        The InfiniTAM settings.
    * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param mappingServer   The remote mapping server (if any).
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
@@ -73,6 +77,7 @@ public:
                                               const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                               const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                               const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                              const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
                                               NestingFlag nestingFlag = UNNESTED);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
@@ -90,6 +95,7 @@ private:
    * \param imuCalibrator   The IMU calibrator.
    * \param settings        The InfiniTAM settings.
    * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param mappingServer   The remote mapping server (if any).
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
@@ -97,7 +103,7 @@ private:
                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                          const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                          const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                         NestingFlag nestingFlag);
+                                         const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag);
 
   /**
    * \brief Makes a tracker based on the configuration specified in a property tree.
@@ -110,6 +116,7 @@ private:
    * \param imuCalibrator   The IMU calibrator.
    * \param settings        The InfiniTAM settings.
    * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param mappingServer   The remote mapping server (if any).
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
@@ -117,6 +124,7 @@ private:
                                   const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                   const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                   const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                  const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
                                   NestingFlag nestingFlag = UNNESTED);
 };
 
