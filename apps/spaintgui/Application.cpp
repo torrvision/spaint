@@ -82,9 +82,9 @@ bool Application::run()
     if(!m_paused)
     {
       // Run the main section of the pipeline.
-      bool frameWasProcessed = m_pipeline->run_main_section();
+      const size_t scenesFused = m_pipeline->run_main_section();
 
-      if(frameWasProcessed)
+      if(scenesFused > 0)
       {
         // If a frame debug hook is active, call it.
         if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());

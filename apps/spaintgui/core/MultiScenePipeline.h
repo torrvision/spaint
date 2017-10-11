@@ -166,9 +166,9 @@ public:
    *
    * This involves processing the next frame (if any) for each individual scene.
    *
-   * \return  true, if a new frame was available for the world scene, or false otherwise.
+   * \return  The number of scenes for a which a new frame was available.
    */
-  virtual bool run_main_section();
+  virtual size_t run_main_section();
 
   /**
    * \brief Runs the mode-specific section of the pipeline for the specified scene.

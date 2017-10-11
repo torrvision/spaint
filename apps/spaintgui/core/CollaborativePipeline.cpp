@@ -30,12 +30,12 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-bool CollaborativePipeline::run_main_section()
+size_t CollaborativePipeline::run_main_section()
 {
-  bool worldFusionRan = MultiScenePipeline::run_main_section();
-  m_worldFusionStarted = m_worldFusionStarted || worldFusionRan;
+  size_t scenesFused = MultiScenePipeline::run_main_section();
+  m_worldFusionStarted = m_worldFusionStarted || scenesFused == m_slamComponents.size();
   if(m_worldFusionStarted) m_collaborativeComponent->run_collaborative_pose_estimation();
-  return worldFusionRan;
+  return scenesFused;
 }
 
 void CollaborativePipeline::set_mode(Mode mode)

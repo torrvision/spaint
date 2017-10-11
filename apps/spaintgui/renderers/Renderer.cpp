@@ -490,6 +490,10 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       }
 
       SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
+
+      // If we have not yet started reconstruction for this scene, avoid rendering it.
+      if(!slamState->get_view()) continue;
+
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
         subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
