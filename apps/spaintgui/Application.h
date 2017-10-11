@@ -139,6 +139,13 @@ public:
    */
   void set_save_mesh_on_exit(bool saveMeshOnExit);
 
+  /**
+   * \brief Sets whether or not server mode is enabled.
+   *
+   * \param serverModeEnabled Whether or not server mode is enabled.
+   */
+  void set_server_mode_enabled(bool serverModeEnabled);
+
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**

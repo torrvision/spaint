@@ -6,11 +6,11 @@
 #ifndef H_ITMX_MAPPINGCLIENT
 #define H_ITMX_MAPPINGCLIENT
 
-#include <boost/shared_ptr.hpp>
-
 #include <tvgutil/boost/WrappedAsio.h>
+#include <tvgutil/containers/PooledQueue.h>
 
-#include "MappingMessage.h"
+#include "RGBDCalibrationMessage.h"
+#include "RGBDFrameMessage.h"
 
 namespace itmx {
 
@@ -19,8 +19,15 @@ namespace itmx {
  */
 class MappingClient
 {
+  //#################### TYPEDEFS ####################
+public:
+  typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
+
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** A queue containing the RGB-D frame messages to be sent to the server. */
+  RGBDFrameMessageQueue m_frameMessageQueue;
+
   /** The TCP stream used as a wrapper around the connection to the server. */
   boost::asio::ip::tcp::iostream m_stream;
 
@@ -37,11 +44,23 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Sends a mapping message to the server.
+   * \brief Starts the push of a frame message so that it can be sent to the server.
+   */
+  RGBDFrameMessageQueue::PushHandler_Ptr begin_push_frame_message();
+
+  /**
+   * \brief Sends a calibration message to the server.
    *
    * \param msg The message to send.
    */
-  void send_message(const MappingMessage& msg);
+  void send_calibration_message(const RGBDCalibrationMessage& msg);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Sends frame messages from the message queue across to the server.
+   */
+  void run_message_sender();
 };
 
 //#################### TYPEDEFS ####################

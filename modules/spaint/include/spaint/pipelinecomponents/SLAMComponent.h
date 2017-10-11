@@ -102,9 +102,6 @@ private:
   /** The mapping client (if any) to use to communicate with the remote mapping server. */
   itmx::MappingClient_Ptr m_mappingClient;
 
-  /** The mapping message to use when sending frame data to the remote mapping server (only initialised if needed). */
-  itmx::MappingMessage_Ptr m_mappingMessage;
-
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
 

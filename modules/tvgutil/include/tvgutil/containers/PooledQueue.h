@@ -83,6 +83,12 @@ public:
       if(m_elt) m_base->end_push(*m_elt);
     }
 
+    //~~~~~~~~~~~~~~~~~~~~ COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ~~~~~~~~~~~~~~~~~~~~
+  private:
+    // Deliberately private and unimplemented.
+    PushHandler(const PushHandler&);
+    PushHandler& operator=(const PushHandler&);
+
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
   public:
     /**
@@ -95,6 +101,10 @@ public:
       return m_elt ? boost::optional<T&>(*m_elt) : boost::none;
     }
   };
+
+  //#################### TYPEDEFS ####################
+public:
+  typedef boost::shared_ptr<PushHandler> PushHandler_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -150,7 +160,7 @@ public:
    *
    * \return  A push handler that will handle the process of pushing an element onto the queue.
    */
-  PushHandler begin_push()
+  PushHandler_Ptr begin_push()
   {
     using namespace pooled_queue;
 
@@ -168,7 +178,7 @@ public:
       {
         case PES_DISCARD:
         {
-          return PushHandler(this, boost::none);
+          return PushHandler_Ptr(new PushHandler(this, boost::none));
         }
         case PES_GROW:
         {
@@ -196,7 +206,7 @@ public:
     // remove the first element in the pool and return it to the caller for writing.
     T elt = m_pool.front();
     m_pool.pop_front();
-    return PushHandler(this, elt);
+    return PushHandler_Ptr(new PushHandler(this, elt));
   }
 
   /**

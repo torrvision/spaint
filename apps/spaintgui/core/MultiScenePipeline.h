@@ -89,8 +89,9 @@ public:
    * \param settings      The settings to use for InfiniTAM.
    * \param resourcesDir  The path to the resources directory.
    * \param maxLabelCount The maximum number of labels that can be in use.
+   * \param mappingServer The remote mapping server (if any).
    */
-  MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
+  MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr());
 
   //#################### DESTRUCTOR ####################
 public:

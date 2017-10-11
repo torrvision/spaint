@@ -6,6 +6,7 @@
 #include "MultiScenePipeline.h"
 using namespace InputSource;
 using namespace ITMLib;
+using namespace itmx;
 using namespace spaint;
 
 #include <boost/bind.hpp>
@@ -15,7 +16,8 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir,
+                                       size_t maxLabelCount, const MappingServer_Ptr& mappingServer)
 : m_mode(MODE_NORMAL), m_type(type)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
@@ -28,7 +30,7 @@ MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_P
 #endif
 
   // Set up the spaint model.
-  m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
+  m_model.reset(new Model(settings, resourcesDir, maxLabelCount, mappingServer));
 }
 
 //#################### DESTRUCTOR ####################

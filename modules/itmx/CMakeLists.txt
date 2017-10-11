@@ -54,11 +54,13 @@ include/itmx/geometry/Screw.h
 ##
 SET(imagesources_sources
 src/imagesources/AsyncImageSourceEngine.cpp
+src/imagesources/RemoteImageSourceEngine.cpp
 src/imagesources/SingleRGBDImagePipe.cpp
 )
 
 SET(imagesources_headers
 include/itmx/imagesources/AsyncImageSourceEngine.h
+include/itmx/imagesources/RemoteImageSourceEngine.h
 include/itmx/imagesources/SingleRGBDImagePipe.h
 )
 
@@ -106,20 +108,28 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 SET(remotemapping_sources
 src/remotemapping/MappingClient.cpp
 src/remotemapping/MappingMessage.cpp
+src/remotemapping/MappingServer.cpp
+src/remotemapping/RGBDCalibrationMessage.cpp
+src/remotemapping/RGBDFrameMessage.cpp
 )
 
 SET(remotemapping_headers
 include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingMessage.h
+include/itmx/remotemapping/MappingServer.h
+include/itmx/remotemapping/RGBDCalibrationMessage.h
+include/itmx/remotemapping/RGBDFrameMessage.h
 )
 
 ##
 SET(trackers_sources
+src/trackers/RemoteTracker.cpp
 src/trackers/TrackerFactory.cpp
 )
 
 SET(trackers_headers
 include/itmx/trackers/FallibleTracker.h
+include/itmx/trackers/RemoteTracker.h
 include/itmx/trackers/TrackerFactory.h
 )
 
