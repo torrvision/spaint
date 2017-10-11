@@ -36,6 +36,7 @@
 
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
+#include <itmx/imagesources/RemoteImageSourceEngine.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 
@@ -69,6 +70,7 @@ struct CommandLineArguments
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
+  std::string host;
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
@@ -80,6 +82,7 @@ struct CommandLineArguments
   std::string relocaliserType;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
+  bool runServer;
   bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
@@ -107,6 +110,7 @@ struct CommandLineArguments
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
+      ADD_SETTING(host);
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
@@ -118,6 +122,7 @@ struct CommandLineArguments
       ADD_SETTING(relocaliserType);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
+      ADD_SETTING(runServer);
       ADD_SETTING(saveMeshOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
@@ -408,12 +413,14 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
+    ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
+    ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
@@ -542,6 +549,15 @@ try
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
+  // Run a remote mapping server if requested.
+  MappingServer_Ptr mappingServer;
+  if(args.runServer)
+  {
+    const MappingServer::Mode mode = args.pipelineType == "collaborative" ? MappingServer::MSM_MULTI_CLIENT : MappingServer::MSM_SINGLE_CLIENT;
+    mappingServer.reset(new MappingServer(mode));
+    mappingServer->start();
+  }
+
   // Construct the pipeline.
   MultiScenePipeline_Ptr pipeline;
   if(args.pipelineType != "collaborative")
@@ -629,24 +645,53 @@ try
   }
   else
   {
-    // Construct the image source engines.
+    // Set up the image source engines, mapping modes, tracking modes and tracker configurations.
     std::vector<CompositeImageSourceEngine_Ptr> imageSourceEngines;
+    std::vector<SLAMComponent::MappingMode> mappingModes;
+    std::vector<SLAMComponent::TrackingMode> trackingModes;
+    std::vector<std::string> trackerConfigs;
 
-    // Add an image source engine for each disk sequence specified.
-    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    if(args.runServer)
     {
-      const std::string& depthImageMask = args.depthImageMasks[i];
-      const std::string& rgbImageMask = args.rgbImageMasks[i];
+      const int clientCount = 2;
+      for(int clientID = 0; clientID < clientCount; ++clientID)
+      {
+        CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
+        imageSourceEngine->addSubengine(new RemoteImageSourceEngine(mappingServer, clientID));
+        imageSourceEngines.push_back(imageSourceEngine);
 
-      std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
-      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-      CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
-      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-        args.prefetchBufferCapacity
-      ));
+        mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
+        trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
+        trackerConfigs.push_back("<tracker type='remote'><params>" + boost::lexical_cast<std::string>(clientID) + "</params></tracker>");
+      }
+    }
+    else
+    {
+      // Add an image source engine for each disk sequence specified.
+      for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+      {
+        const std::string& depthImageMask = args.depthImageMasks[i];
+        const std::string& rgbImageMask = args.rgbImageMasks[i];
 
-      imageSourceEngines.push_back(imageSourceEngine);
+        std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
+        ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+        CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
+        imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+          new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+          args.prefetchBufferCapacity
+        ));
+
+        imageSourceEngines.push_back(imageSourceEngine);
+      }
+
+      // Set up the mapping modes, tracking modes and tracker configurations.
+      const std::string trackerConfig = make_tracker_config(args);
+      for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
+      {
+        mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
+        trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
+        trackerConfigs.push_back(trackerConfig);
+      }
     }
 
     // Construct the fiducial detector (if any).
@@ -656,18 +701,6 @@ try
   #endif
 
     // Construct the pipeline itself.
-    std::vector<SLAMComponent::MappingMode> mappingModes;
-    std::vector<SLAMComponent::TrackingMode> trackingModes;
-    std::vector<std::string> trackerConfigs;
-    const std::string trackerConfig = make_tracker_config(args);
-
-    for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
-    {
-      mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
-      trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
-      trackerConfigs.push_back(trackerConfig);
-    }
-
     pipeline.reset(new CollaborativePipeline(
       settings,
       Application::resources_dir().string(),
@@ -676,8 +709,15 @@ try
       mappingModes,
       trackingModes,
       fiducialDetector,
-      args.detectFiducials
+      args.detectFiducials,
+      mappingServer
     ));
+  }
+
+  // If a remote host was specified, set up a mapping client for the world scene.
+  if(args.host != "")
+  {
+    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host)));
   }
 
 #ifdef WITH_LEAP
@@ -688,6 +728,7 @@ try
   // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
   app.set_batch_mode_enabled(args.batch);
+  app.set_server_mode_enabled(pipeline->get_model()->get_mapping_server().get() != NULL);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
 

@@ -21,6 +21,9 @@ private:
   /** The collaborative SLAM component used to determine the relative poses between the different agents. */
   spaint::CollaborativeComponent_Ptr m_collaborativeComponent;
 
+  /** A flag indicating whether or not fusion has started in the world scene. */
+  bool m_worldFusionStarted;
+
   //#################### CONSTRUCTORS ####################
 public:
   CollaborativePipeline(const Settings_Ptr& settings, const std::string& resourcesDir,
@@ -29,7 +32,7 @@ public:
                         const std::vector<spaint::SLAMComponent::MappingMode>& mappingModes,
                         const std::vector<spaint::SLAMComponent::TrackingMode>& trackingModes,
                         const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),
-                        bool detectFiducials = false);
+                        bool detectFiducials = false, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr());
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

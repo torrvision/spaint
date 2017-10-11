@@ -65,12 +65,14 @@ void CollaborativeComponent::add_relocalisation_candidates()
   std::vector<std::pair<ITMFloatImage_Ptr,ITMUChar4Image_Ptr> > rgbdImages;
   for(size_t j = 0; j < sceneCount; ++j)
   {
+    const View_CPtr viewJ = m_context->get_slam_state(sceneIDs[j])->get_view();
+    if(!viewJ) continue;
+
     ITMFloatImage_Ptr depthJ;
     ITMUChar4Image_Ptr rgbJ;
 
     if(((m_frameIndex - 50) / 10) % sceneCount == j)
     {
-      const View_CPtr viewJ = m_context->get_slam_state(sceneIDs[j])->get_view();
       viewJ->depth->UpdateHostFromDevice();
       viewJ->rgb->UpdateHostFromDevice();
 

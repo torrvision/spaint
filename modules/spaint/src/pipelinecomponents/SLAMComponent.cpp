@@ -127,8 +127,7 @@ void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
 
 bool SLAMComponent::process_frame()
 {
-  if(!m_imageSourceEngine->hasMoreImages()) return false;
-  if(!m_imageSourceEngine->hasImagesNow()) return true;
+  if(!m_imageSourceEngine->hasImagesNow()) return false;
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();

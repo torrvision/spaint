@@ -4,11 +4,11 @@
  */
 
 #include "SemanticPipeline.h"
+using namespace itmx;
 using namespace spaint;
 
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
-using namespace itmx;
 #endif
 
 //#################### CONSTRUCTORS ####################
@@ -16,7 +16,7 @@ using namespace itmx;
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
                                    SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
-                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, const itmx::MappingServer_Ptr& mappingServer)
+                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, const MappingServer_Ptr& mappingServer)
 : MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount, mappingServer)
 {
   const std::string sceneID = Model::get_world_scene_id();

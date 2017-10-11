@@ -4,6 +4,7 @@
  */
 
 #include "CollaborativePipeline.h"
+using namespace itmx;
 using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
@@ -13,9 +14,10 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
                                              const std::vector<std::string>& trackerConfigs,
                                              const std::vector<SLAMComponent::MappingMode>& mappingModes,
                                              const std::vector<SLAMComponent::TrackingMode>& trackingModes,
-                                             const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
+                                             const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials,
+                                             const MappingServer_Ptr& mappingServer)
   // Note: A minimum of 2 labels is required (background and foreground).
-: MultiScenePipeline("collaborative", settings, resourcesDir, 2)
+: MultiScenePipeline("collaborative", settings, resourcesDir, 2, mappingServer), m_worldFusionStarted(false)
 {
   for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
   {
@@ -30,9 +32,10 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 
 bool CollaborativePipeline::run_main_section()
 {
-  bool result = MultiScenePipeline::run_main_section();
-  m_collaborativeComponent->run_collaborative_pose_estimation();
-  return result;
+  bool worldFusionRan = MultiScenePipeline::run_main_section();
+  m_worldFusionStarted = m_worldFusionStarted || worldFusionRan;
+  if(m_worldFusionStarted) m_collaborativeComponent->run_collaborative_pose_estimation();
+  return worldFusionRan;
 }
 
 void CollaborativePipeline::set_mode(Mode mode)
