@@ -62,17 +62,24 @@ void CollaborativeComponent::add_relocalisation_candidates()
   const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
   const int sceneCount = static_cast<int>(sceneIDs.size());
 
+  // Determine which scenes have started.
+  std::deque<bool> scenesStarted;
+  for(size_t i = 0; i < sceneCount; ++i)
+  {
+    scenesStarted.push_back(m_context->get_slam_state(sceneIDs[i])->get_view().get() != NULL);
+  }
+
   std::vector<std::pair<ITMFloatImage_Ptr,ITMUChar4Image_Ptr> > rgbdImages;
   for(size_t j = 0; j < sceneCount; ++j)
   {
-    const View_CPtr viewJ = m_context->get_slam_state(sceneIDs[j])->get_view();
-    if(!viewJ) continue;
+    if(!scenesStarted[j]) continue;
 
     ITMFloatImage_Ptr depthJ;
     ITMUChar4Image_Ptr rgbJ;
 
     if(((m_frameIndex - 50) / 10) % sceneCount == j)
     {
+      const View_CPtr viewJ = m_context->get_slam_state(sceneIDs[j])->get_view();
       viewJ->depth->UpdateHostFromDevice();
       viewJ->rgb->UpdateHostFromDevice();
 
@@ -88,9 +95,12 @@ void CollaborativeComponent::add_relocalisation_candidates()
 
   for(size_t i = 0; i < sceneCount; ++i)
   {
+    if(!scenesStarted[i]) continue;
+
     for(size_t j = 0; j < sceneCount; ++j)
     {
       if(j == i) continue;
+      if(!scenesStarted[j]) continue;
       if(((m_frameIndex - 50) / 10) % sceneCount != j) continue;
 
       const std::string sceneI = sceneIDs[i];

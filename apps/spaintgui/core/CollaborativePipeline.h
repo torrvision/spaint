@@ -18,11 +18,11 @@ class CollaborativePipeline : public MultiScenePipeline
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** A flag indicating whether or not we should start running collaborative pose estimation. */
+  bool m_collaborationStarted;
+
   /** The collaborative SLAM component used to determine the relative poses between the different agents. */
   spaint::CollaborativeComponent_Ptr m_collaborativeComponent;
-
-  /** A flag indicating whether or not fusion has started in the world scene. */
-  bool m_worldFusionStarted;
 
   //#################### CONSTRUCTORS ####################
 public:

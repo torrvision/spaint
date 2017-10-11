@@ -17,7 +17,7 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
                                              const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials,
                                              const MappingServer_Ptr& mappingServer)
   // Note: A minimum of 2 labels is required (background and foreground).
-: MultiScenePipeline("collaborative", settings, resourcesDir, 2, mappingServer), m_worldFusionStarted(false)
+: MultiScenePipeline("collaborative", settings, resourcesDir, 2, mappingServer), m_collaborationStarted(false)
 {
   for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
   {
@@ -33,8 +33,8 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 size_t CollaborativePipeline::run_main_section()
 {
   size_t scenesFused = MultiScenePipeline::run_main_section();
-  m_worldFusionStarted = m_worldFusionStarted || scenesFused == m_slamComponents.size();
-  if(m_worldFusionStarted) m_collaborativeComponent->run_collaborative_pose_estimation();
+  m_collaborationStarted = m_collaborationStarted || scenesFused > 0;
+  if(m_collaborationStarted) m_collaborativeComponent->run_collaborative_pose_estimation();
   return scenesFused;
 }
 
