@@ -293,7 +293,6 @@ void MappingServer::run_cleaner()
   boost::unique_lock<boost::mutex> lock(m_mutex);
 
   bool canTerminate = m_shouldTerminate && m_clients.empty();
-
   while(!canTerminate)
   {
     // Wait for clients to finish.
