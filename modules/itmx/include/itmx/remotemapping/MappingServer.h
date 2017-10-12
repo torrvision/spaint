@@ -131,6 +131,9 @@ private:
   /** The set of clients that have finished but have not yet been removed from the clients map. */
   std::set<int> m_uncleanClients;
 
+  /** A worker variable used to keep the I/O service running until we want it to stop. */
+  boost::shared_ptr<boost::asio::io_service::work> m_worker;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
