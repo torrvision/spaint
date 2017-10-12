@@ -16,7 +16,7 @@ using namespace tvgutil;
 
 #include "remotemapping/RGBDCalibrationMessage.h"
 
-#define DEBUGGING 0
+#define DEBUGGING 1
 
 namespace itmx {
 
