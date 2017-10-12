@@ -717,6 +717,7 @@ try
   // If a remote host was specified, set up a mapping client for the world scene.
   if(args.host != "")
   {
+    std::cout << "Setting mapping client for host '" << args.host << "'\n";
     pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host)));
   }
 
