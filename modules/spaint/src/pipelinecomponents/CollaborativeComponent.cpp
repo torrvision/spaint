@@ -11,6 +11,9 @@ using namespace ORUtils;
 #include <boost/bind.hpp>
 using boost::bind;
 
+#ifdef WITH_OPENCV
+#include <itmx/ocv/OpenCVUtil.h>
+#endif
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
@@ -53,6 +56,10 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   }
 
   ++m_frameIndex;
+
+#ifdef WITH_OPENCV
+  cv::waitKey(1);
+#endif
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -146,9 +153,19 @@ void CollaborativeComponent::run_relocalisation()
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
     depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
-    rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
+    //rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
+    VoxelRenderState_Ptr renderState;
+    m_context->get_visualisation_generator()->generate_voxel_visualisation(
+      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, VisualisationGenerator::VT_SCENE_COLOUR
+    );
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
+
+#ifdef WITH_OPENCV
+    cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
+    cv::imshow("Relocalisation RGB", cvRGB);
+    cv::waitKey(1);
+#endif
 
     boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
