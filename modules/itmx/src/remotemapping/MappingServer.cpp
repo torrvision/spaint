@@ -23,7 +23,7 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 MappingServer::MappingServer(Mode mode, int port)
-: m_mode(mode), m_nextClientID(0), m_port(port), m_shouldTerminate(false)
+: m_mode(mode), m_nextClientID(0), m_port(port), m_shouldTerminate(false), m_worker(new boost::asio::io_service::work(m_ioService))
 {}
 
 //#################### DESTRUCTOR ####################
@@ -142,14 +142,11 @@ void MappingServer::start()
 void MappingServer::terminate()
 {
   m_shouldTerminate = true;
-
   if(m_serverThread) m_serverThread->join();
+  if(m_cleanerThread) m_cleanerThread->join();
 
-  if(m_cleanerThread)
-  {
-    m_clientsHaveFinished.notify_one();
-    m_cleanerThread->join();
-  }
+  // Note: It's essential that we destroy the acceptor before the I/O service, or there will be a crash.
+  m_acceptor.reset();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -207,7 +204,7 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
   Client_Ptr client;
   {
 #if DEBUGGING
-    std::cout << "Waiting for client thread creation to finish\n";
+    std::cout << "Waiting for thread creation to finish for client: " << clientID << std::endl;
 #endif
     boost::lock_guard<boost::mutex> lock(m_mutex);
     std::cout << "Starting client: " << clientID << '\n';
@@ -217,6 +214,9 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;
   bool connectionOk = read_message(sock, calibMsg);
+#if DEBUGGING
+  std::cout << "Received calibration message from client: " << clientID << std::endl;
+#endif
 
   // Save the image sizes and calibration parameters, and initialise the frame message queue. We also initialise
   // a dummy frame message, which will be used to consume messages that cannot be pushed onto the queue.
@@ -287,7 +287,7 @@ void MappingServer::run_cleaner()
   while(!canTerminate)
   {
     // Wait for clients to finish.
-    while(m_uncleanClients.empty() && !m_shouldTerminate) m_clientsHaveFinished.wait(lock);
+    while(m_uncleanClients.empty()) m_clientsHaveFinished.wait(lock);
 
     // Clean up any clients that have finished.
     for(std::set<int>::const_iterator it = m_uncleanClients.begin(), iend = m_uncleanClients.end(); it != iend; ++it)
