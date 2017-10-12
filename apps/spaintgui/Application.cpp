@@ -869,7 +869,8 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   const Vector2i& depthImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
+  const std::string title = m_pipeline->get_model()->get_mapping_server() ? "SemanticPaint - Server" : "SemanticPaint";
+  m_renderer.reset(new WindowedRenderer(title, m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
 }
 
 void Application::toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator)
