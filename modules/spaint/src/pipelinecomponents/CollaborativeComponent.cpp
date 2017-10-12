@@ -152,9 +152,12 @@ void CollaborativeComponent::run_relocalisation()
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
-    depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
+    //depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
     //rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
     VoxelRenderState_Ptr renderState;
+    m_context->get_visualisation_generator()->generate_depth_from_voxels(
+      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, DepthVisualiser::DT_EUCLIDEAN
+    );
     m_context->get_visualisation_generator()->generate_voxel_visualisation(
       rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, VisualisationGenerator::VT_SCENE_COLOUR
     );
@@ -162,8 +165,13 @@ void CollaborativeComponent::run_relocalisation()
     rgb->UpdateDeviceFromHost();
 
 #ifdef WITH_OPENCV
+    ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
+    ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
+
     cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
     cv::imshow("Relocalisation RGB", cvRGB);
+    cv::Mat3b cvDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+    cv::imshow("Relocalisation Depth", cvDepth);
     cv::waitKey(1);
 #endif
 
