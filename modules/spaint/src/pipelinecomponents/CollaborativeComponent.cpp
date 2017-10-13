@@ -11,6 +11,7 @@ using namespace ORUtils;
 #include <boost/bind.hpp>
 using boost::bind;
 
+#include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
@@ -206,9 +207,12 @@ void CollaborativeComponent::run_relocalisation()
     else
     {
       std::cout << "failed :(\n";
+
       float& failurePenalty = m_failurePenalties[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
       failurePenalty = std::min(failurePenalty + failurePenaltyIncrease, failurePenaltyMax);
     }
+
+    m_triedLocalPoses[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].push_back(m_bestCandidate->m_localPoseJ);
 
     // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
     SubmapRelocalisation_Ptr bestCandidateCopy;
@@ -227,17 +231,29 @@ void CollaborativeComponent::try_schedule_relocalisation()
     SubmapRelocalisation_Ptr candidate = it->first;
     boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
     size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
-    float sizeDiff = static_cast<float>(largestClusterSize) - m_maxRelocalisationsNeeded / 2.0f;
+    //float sizeDiff = static_cast<float>(largestClusterSize) - m_maxRelocalisationsNeeded / 2.0f;
     //float sizeTerm = sizeDiff * sizeDiff;
     float sizeTerm = m_maxRelocalisationsNeeded - static_cast<float>(largestClusterSize);
     float primaryTerm = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
-    float score = sizeTerm + primaryTerm - m_failurePenalties[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
+
+    float homogeneityPenalty = 0.0f;
+    const std::vector<ORUtils::SE3Pose>& triedLocalPoses = m_triedLocalPoses[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
+    for(size_t j = 0, size = triedLocalPoses.size(); j < size; ++j)
+    {
+      if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedLocalPoses[j]))
+      {
+        homogeneityPenalty = 5.0f;
+        break;
+      }
+    }
+
+    float score = sizeTerm + primaryTerm - m_failurePenalties[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)] - homogeneityPenalty;
     it->second = score;
   }
 
   m_candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
 
-#if 1
+#if 0
   std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
   for(std::list<Candidate>::const_iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend; ++it)
   {

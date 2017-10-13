@@ -61,6 +61,9 @@ private:
   /** TODO */
   boost::atomic<bool> m_stopRelocalisationThread;
 
+  /** TODO */
+  std::map<std::pair<std::string,std::string>,std::vector<ORUtils::SE3Pose> > m_triedLocalPoses;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
