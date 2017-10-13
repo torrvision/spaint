@@ -18,7 +18,8 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
-#define SAVE_REAL_IMAGES 0
+#define USE_REAL_IMAGES 0
+#define SAVE_REAL_IMAGES USE_REAL_IMAGES
 
 namespace spaint {
 
@@ -162,7 +163,7 @@ void CollaborativeComponent::run_relocalisation()
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
-#if 0
+#if USE_REAL_IMAGES
     depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
     rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
 #else
@@ -238,11 +239,11 @@ void CollaborativeComponent::try_schedule_relocalisation()
   for(std::list<Candidate>::iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend; ++it)
   {
     SubmapRelocalisation_Ptr candidate = it->first;
+
     boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
     size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
-    //float sizeDiff = static_cast<float>(largestClusterSize) - m_maxRelocalisationsNeeded / 2.0f;
-    //float sizeTerm = sizeDiff * sizeDiff;
     float sizeTerm = m_maxRelocalisationsNeeded - static_cast<float>(largestClusterSize);
+
     float primaryTerm = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
 
     float homogeneityPenalty = 0.0f;
