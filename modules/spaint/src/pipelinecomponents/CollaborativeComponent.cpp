@@ -18,6 +18,8 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
+#define SAVE_REAL_IMAGES 0
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -77,7 +79,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
     scenesStarted.push_back(m_context->get_slam_state(sceneIDs[i])->get_view().get() != NULL);
   }
 
-#if 0
+#if SAVE_REAL_IMAGES
   std::vector<std::pair<ITMFloatImage_Ptr,ITMUChar4Image_Ptr> > rgbdImages;
   for(size_t j = 0; j < sceneCount; ++j)
   {
@@ -123,7 +125,12 @@ void CollaborativeComponent::add_relocalisation_candidates()
       {
         const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
         SubmapRelocalisation_Ptr candidate(
-          new SubmapRelocalisation(sceneI, sceneJ, m_frameIndex, /*rgbdImages[j].first, rgbdImages[j].second, */slamStateJ->get_intrinsics().projectionParamsSimple.all, slamStateJ->get_pose())
+          new SubmapRelocalisation(
+            sceneI, sceneJ, m_frameIndex, slamStateJ->get_intrinsics().projectionParamsSimple.all, slamStateJ->get_pose()
+#if SAVE_REAL_IMAGES
+            , rgbdImages[j].first, rgbdImages[j].second
+#endif
+          )
         );
         (redundant ? m_redundantCandidates : m_candidates).push_back(std::make_pair(candidate, 0.0f));
       }
