@@ -10,6 +10,7 @@ using namespace rafl;
 #include <boost/format.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+#include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
@@ -422,8 +423,8 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   // arbitrarily large depth of 100m).
   m_depthVisualiser->render_depth(
     DepthVisualiser::DT_ORTHOGRAPHIC,
-    to_itm(camera->p()),
-    to_itm(camera->n()),
+    GeometryUtil::to_itm(camera->p()),
+    GeometryUtil::to_itm(camera->n()),
     renderState.get(),
     m_itmSettings->sceneParams.voxelSize,
     invalid_depth_value(),
@@ -519,11 +520,6 @@ af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float
   arrayCopy = arrayCopy - (upperMask * arrayCopy) + (upperMask * upper);
 
   return arrayCopy;
-}
-
-Vector3f TouchDetector::to_itm(const Eigen::Vector3f& v)
-{
-  return Vector3f(v[0], v[1], v[2]);
 }
 
 }

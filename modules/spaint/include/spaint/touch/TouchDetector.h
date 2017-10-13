@@ -234,14 +234,6 @@ private:
    * \return      A copy of the array in which the elements have been clamped to the specified range.
    */
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
-
-  /**
-   * \brief Converts an Eigen Vector to an InfiniTAM vector.
-   *
-   * \param v  The Eigen vector.
-   * \return   The InfiniTAM vector.
-   */
-  static Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
 //#################### TYPEDEFS ####################

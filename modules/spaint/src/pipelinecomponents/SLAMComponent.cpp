@@ -309,6 +309,8 @@ void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
     calibMsg.set_rgb_image_size(slamState->get_rgb_image_size());
     calibMsg.set_depth_image_size(slamState->get_depth_image_size());
     calibMsg.set_calib(m_imageSourceEngine->getCalib());
+
+    std::cout << "Sending calibration message" << std::endl;
     m_mappingClient->send_calibration_message(calibMsg);
   }
 }
