@@ -394,19 +394,22 @@ void SLAMComponent::process_relocalisation()
   // Train the relocaliser if necessary.
   if(performTraining)
   {
+#if 0
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamState->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamState->get_rgb_image_size(), true, true));
     VoxelRenderState_Ptr renderState;
     m_context->get_visualisation_generator()->generate_depth_from_voxels(
-      depth, slamState->get_voxel_scene(), oldPose, slamState->get_view(), renderState, DepthVisualiser::DT_EUCLIDEAN
+      depth, slamState->get_voxel_scene(), oldPose, slamState->get_view(), renderState, DepthVisualiser::DT_ORTHOGRAPHIC
     );
     m_context->get_visualisation_generator()->generate_voxel_visualisation(
       rgb, slamState->get_voxel_scene(), oldPose, slamState->get_view(), renderState, VisualisationGenerator::VT_SCENE_COLOUR
     );
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
-    //relocaliser->train(view->rgb, view->depth, depthIntrinsics, oldPose);
     relocaliser->train(rgb.get(), depth.get(), depthIntrinsics, oldPose);
+#else
+    relocaliser->train(view->rgb, view->depth, depthIntrinsics, oldPose);
+#endif
   }
 
   // If we're relocalising and training every frame for evaluation purposes, restore the original pose. The assumption

@@ -84,7 +84,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
     ITMFloatImage_Ptr depthJ;
     ITMUChar4Image_Ptr rgbJ;
 
-    if(((m_frameIndex - 50) / 10) % sceneCount == j)
+    if(m_frameIndex >= 50 && m_frameIndex % 10 == 0 && ((m_frameIndex - 50) / 10) % sceneCount == j)
     {
       const View_CPtr viewJ = m_context->get_slam_state(sceneIDs[j])->get_view();
       viewJ->depth->UpdateHostFromDevice();
@@ -108,7 +108,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
     {
       if(j == i) continue;
       if(!scenesStarted[j]) continue;
-      if(((m_frameIndex - 50) / 10) % sceneCount != j) continue;
+      if(!(m_frameIndex >= 50 && m_frameIndex % 10 == 0 && ((m_frameIndex - 50) / 10) % sceneCount == j)) continue;
 
       const std::string sceneI = sceneIDs[i];
       const std::string sceneJ = sceneIDs[j];
@@ -152,15 +152,18 @@ void CollaborativeComponent::run_relocalisation()
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
-    //depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
-    //rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
+#if 0
+    depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
+    rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
+#else
     VoxelRenderState_Ptr renderState;
     m_context->get_visualisation_generator()->generate_depth_from_voxels(
-      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, DepthVisualiser::DT_EUCLIDEAN
+      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, DepthVisualiser::DT_ORTHOGRAPHIC
     );
     m_context->get_visualisation_generator()->generate_voxel_visualisation(
       rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, VisualisationGenerator::VT_SCENE_COLOUR
     );
+#endif
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
 
@@ -234,7 +237,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
 
   m_candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
 
-#if 0
+#if 1
   std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
   for(std::list<Candidate>::const_iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend; ++it)
   {
