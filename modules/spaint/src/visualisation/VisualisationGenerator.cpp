@@ -45,6 +45,7 @@ void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr&
   const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
   m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
   m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
 
   const SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
   m_depthVisualiser->render_depth(
