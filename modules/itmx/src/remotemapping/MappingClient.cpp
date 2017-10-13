@@ -35,6 +35,11 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   const int capacity = 1;
   m_frameMessageQueue.initialise(capacity, boost::bind(&RGBDFrameMessage::make, msg.extract_rgb_image_size(), msg.extract_depth_image_size()));
 
+  // Setup compression variables.
+  m_frameCompressor.reset(new RGBDFrameCompressor(msg.extract_rgb_image_size(), msg.extract_depth_image_size()));
+  m_compressedRGBDMessageHeader.reset(new CompressedRGBDFrameHeaderMessage);
+  m_compressedRGBDMessage.reset(new CompressedRGBDFrameMessage(*m_compressedRGBDMessageHeader));
+
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
 
@@ -46,7 +51,16 @@ void MappingClient::run_message_sender()
   while(connectionOk)
   {
     RGBDFrameMessage_Ptr msg = m_frameMessageQueue.peek();
-    connectionOk = connectionOk && m_stream.write(msg->get_data_ptr(), msg->get_size());
+
+    // Compress the frame.
+    m_frameCompressor->compress_rgbd_frame(*msg, *m_compressedRGBDMessageHeader, *m_compressedRGBDMessage);
+
+    // Send first the header, then the compressed frame.
+    connectionOk = connectionOk
+        && m_stream.write(m_compressedRGBDMessageHeader->get_data_ptr(), m_compressedRGBDMessageHeader->get_size())
+        && m_stream.write(m_compressedRGBDMessage->get_data_ptr(), m_compressedRGBDMessage->get_size());
+
+//    connectionOk = connectionOk && m_stream.write(msg->get_data_ptr(), msg->get_size());
     m_frameMessageQueue.pop();
   }
 }

@@ -9,7 +9,10 @@
 #include <tvgutil/boost/WrappedAsio.h>
 #include <tvgutil/containers/PooledQueue.h>
 
+#include "CompressedRGBDFrameMessage.h"
+#include "CompressedRGBDFrameHeaderMessage.h"
 #include "RGBDCalibrationMessage.h"
+#include "RGBDFrameCompressor.h"
 #include "RGBDFrameMessage.h"
 
 namespace itmx {
@@ -25,6 +28,11 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  CompressedRGBDFrameMessage_Ptr m_compressedRGBDMessage;
+  CompressedRGBDFrameHeaderMessage_Ptr m_compressedRGBDMessageHeader;
+
+  RGBDFrameCompressor_Ptr m_frameCompressor;
+
   /** A queue containing the RGB-D frame messages to be sent to the server. */
   RGBDFrameMessageQueue m_frameMessageQueue;
 

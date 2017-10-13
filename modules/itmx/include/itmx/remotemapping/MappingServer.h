@@ -19,7 +19,10 @@
 #include <tvgutil/boost/WrappedAsio.h>
 #include <tvgutil/containers/PooledQueue.h>
 
+#include "CompressedRGBDFrameMessage.h"
+#include "CompressedRGBDFrameHeaderMessage.h"
 #include "RGBDFrameMessage.h"
+#include "RGBDFrameCompressor.h"
 
 namespace itmx {
 
@@ -74,6 +77,11 @@ private:
 
     /** The thread that manages communication with the client. */
     boost::shared_ptr<boost::thread> m_thread;
+
+    CompressedRGBDFrameMessage_Ptr m_compressedRGBDMessage;
+    CompressedRGBDFrameHeaderMessage_Ptr m_compressedRGBDMessageHeader;
+
+    RGBDFrameCompressor_Ptr m_frameCompressor;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 

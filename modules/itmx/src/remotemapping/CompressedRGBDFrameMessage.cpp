@@ -31,6 +31,7 @@ CompressedRGBDFrameMessage_Ptr CompressedRGBDFrameMessage::make(const Compressed
 void CompressedRGBDFrameMessage::extract_depth_image_data(std::vector<uint8_t> &depthImageData) const
 {
   depthImageData.resize(m_depthImageSegment.second);
+  printf("Resized depth to %d\n", depthImageData.size());
   memcpy(reinterpret_cast<char *>(depthImageData.data()), &m_data[m_depthImageSegment.first], m_depthImageSegment.second);
 }
 
@@ -54,7 +55,8 @@ ORUtils::SE3Pose CompressedRGBDFrameMessage::extract_pose() const
 
 void CompressedRGBDFrameMessage::extract_rgb_image_data(std::vector<uint8_t> &rgbImageData) const
 {
-  rgbImageData.resize(m_depthImageSegment.second);
+  rgbImageData.resize(m_rgbImageSegment.second);
+  printf("Resized rgb to %d\n", rgbImageData.size());
   memcpy(reinterpret_cast<char *>(rgbImageData.data()), &m_data[m_rgbImageSegment.first], m_rgbImageSegment.second);
 }
 

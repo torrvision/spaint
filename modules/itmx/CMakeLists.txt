@@ -126,12 +126,14 @@ IF(WITH_OPENCV)
     ${remotemapping_sources}
     src/remotemapping/CompressedRGBDFrameMessage.cpp
     src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
+    src/remotemapping/RGBDFrameCompressor.cpp
   )
 
   SET(remotemapping_headers
     ${remotemapping_headers}
     include/itmx/remotemapping/CompressedRGBDFrameMessage.h
     include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
+    include/itmx/remotemapping/RGBDFrameCompressor.h
   )
 ENDIF()
 

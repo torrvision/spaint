@@ -16,7 +16,7 @@ using namespace tvgutil;
 
 #include "remotemapping/RGBDCalibrationMessage.h"
 
-#define DEBUGGING 0
+#define DEBUGGING 1
 
 namespace itmx {
 
@@ -240,6 +240,10 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     client->m_frameMessageQueue->initialise(capacity, boost::bind(&RGBDFrameMessage::make, client->m_rgbImageSize, client->m_depthImageSize));
 
     dummyFrameMsg.reset(new RGBDFrameMessage(client->m_rgbImageSize, client->m_depthImageSize));
+
+    client->m_frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize));
+    client->m_compressedRGBDMessageHeader.reset(new CompressedRGBDFrameHeaderMessage);
+    client->m_compressedRGBDMessage.reset(new CompressedRGBDFrameMessage(*client->m_compressedRGBDMessageHeader));
   }
 
   // Signal that we're ready to start reading frame messages from the client.
@@ -256,19 +260,37 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
     RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
 
-    if(connectionOk = read_message(sock, msg))
+//    if(connectionOk = read_message(sock, msg))
+    // First, read the message header then the actual message.
+    if(connectionOk = read_message(sock, *client->m_compressedRGBDMessageHeader))
     {
 #if DEBUGGING
-      std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
+      std::cout << "Got header for " << client->m_compressedRGBDMessageHeader->extract_depth_image_size() << " depth bytes and "
+                << client->m_compressedRGBDMessageHeader->extract_rgb_image_size() << " rgb bytes." << std::endl;
+#endif
+      client->m_compressedRGBDMessage->set_compressed_image_sizes(*client->m_compressedRGBDMessageHeader);
+
+      if(connectionOk = read_message(sock, *client->m_compressedRGBDMessage))
+      {
+        std::cout << "Got compressed message: " << client->m_compressedRGBDMessage->extract_frame_index() << std::endl;
+
+        // Uncompress the images.
+        client->m_frameCompressor->uncompress_rgbd_frame(*client->m_compressedRGBDMessage, msg);
+
+        std::cout << "Uncompressed: " << msg.extract_frame_index() << std::endl;
+
+#if DEBUGGING
+        std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
 #if defined(WITH_OPENCV)
-      static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
-      msg.extract_rgb_image(rgbImage.get());
-      cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
-      cv::imshow("RGB", cvRGB);
-      cv::waitKey(1);
+        static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
+        msg.extract_rgb_image(rgbImage.get());
+        cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
+        cv::imshow("RGB", cvRGB);
+        cv::waitKey(1);
 #endif
 #endif
+      }
     }
   }
 
