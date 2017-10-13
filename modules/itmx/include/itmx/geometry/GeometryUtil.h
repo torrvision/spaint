@@ -10,6 +10,10 @@
 #include <map>
 #include <vector>
 
+#include <Eigen/Dense>
+
+#include <ITMLib/Utils/ITMMath.h>
+
 #include <ORUtils/SE3Pose.h>
 
 #include "DualQuaternion.h"
@@ -104,6 +108,14 @@ struct GeometryUtil
    * \return                true, if the poses are sufficiently similar, or false otherwise.
    */
   static bool poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtils::SE3Pose& pose2, double rotThreshold = 20 * M_PI / 180, float transThreshold = 0.05f);
+
+  /**
+   * \brief Converts an Eigen Vector to an InfiniTAM vector.
+   *
+   * \param v  The Eigen vector.
+   * \return   The InfiniTAM vector.
+   */
+  static Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
 }

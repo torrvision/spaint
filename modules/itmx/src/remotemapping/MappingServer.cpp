@@ -142,8 +142,17 @@ void MappingServer::start()
 void MappingServer::terminate()
 {
   m_shouldTerminate = true;
+
   if(m_serverThread) m_serverThread->join();
-  if(m_cleanerThread) m_cleanerThread->join();
+
+  if(m_cleanerThread)
+  {
+    // Make sure that the cleaner thread can terminate when there are no clients remaining to wake it up.
+    m_uncleanClients.insert(-1);
+    m_clientsHaveFinished.notify_one();
+
+    m_cleanerThread->join();
+  }
 
   // Note: It's essential that we destroy the acceptor before the I/O service, or there will be a crash.
   m_acceptor.reset();
@@ -292,8 +301,11 @@ void MappingServer::run_cleaner()
     // Clean up any clients that have finished.
     for(std::set<int>::const_iterator it = m_uncleanClients.begin(), iend = m_uncleanClients.end(); it != iend; ++it)
     {
-      std::cout << "Cleaning up client: " << *it << std::endl;
-      m_clients.erase(*it);
+      if(m_clients.find(*it) != m_clients.end())
+      {
+        std::cout << "Cleaning up client: " << *it << std::endl;
+        m_clients.erase(*it);
+      }
     }
 
     m_uncleanClients.clear();
