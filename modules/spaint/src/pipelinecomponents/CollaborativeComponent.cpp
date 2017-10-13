@@ -217,7 +217,6 @@ void CollaborativeComponent::run_relocalisation()
     else
     {
       std::cout << "failed :(\n";
-
       float& failurePenalty = m_failurePenalties[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
       failurePenalty = std::min(failurePenalty + failurePenaltyIncrease, failurePenaltyMax);
     }
