@@ -121,6 +121,20 @@ include/itmx/remotemapping/RGBDCalibrationMessage.h
 include/itmx/remotemapping/RGBDFrameMessage.h
 )
 
+IF(WITH_OPENCV)
+  SET(remotemapping_sources
+    ${remotemapping_sources}
+    src/remotemapping/CompressedRGBDFrameMessage.cpp
+    src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
+  )
+
+  SET(remotemapping_headers
+    ${remotemapping_headers}
+    include/itmx/remotemapping/CompressedRGBDFrameMessage.h
+    include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
+  )
+ENDIF()
+
 ##
 SET(trackers_sources
 src/trackers/RemoteTracker.cpp
