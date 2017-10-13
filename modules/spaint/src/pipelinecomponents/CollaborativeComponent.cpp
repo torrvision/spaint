@@ -25,7 +25,7 @@ namespace spaint {
 CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context)
 : m_context(context),
   m_frameIndex(0),
-  m_maxRelocalisationsNeeded(3),
+  m_maxRelocalisationsNeeded(5),
   m_stopRelocalisationThread(false)
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
@@ -53,12 +53,12 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     add_relocalisation_candidates();
 
     // TODO: Comment here.
-    if(m_frameIndex % 100 == 0 && !m_candidates.empty()) try_schedule_relocalisation();
+    if(m_frameIndex % 20 == 0 && !m_candidates.empty()) try_schedule_relocalisation();
   }
 
   ++m_frameIndex;
 
-#ifdef WITH_OPENCV
+#if defined(WITH_OPENCV) && 0
   cv::waitKey(1);
 #endif
 }
@@ -77,6 +77,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
     scenesStarted.push_back(m_context->get_slam_state(sceneIDs[i])->get_view().get() != NULL);
   }
 
+#if 0
   std::vector<std::pair<ITMFloatImage_Ptr,ITMUChar4Image_Ptr> > rgbdImages;
   for(size_t j = 0; j < sceneCount; ++j)
   {
@@ -100,6 +101,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
 
     rgbdImages.push_back(std::make_pair(depthJ, rgbJ));
   }
+#endif
 
   for(size_t i = 0; i < sceneCount; ++i)
   {
@@ -121,7 +123,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
       {
         const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
         SubmapRelocalisation_Ptr candidate(
-          new SubmapRelocalisation(sceneI, sceneJ, m_frameIndex, rgbdImages[j].first, rgbdImages[j].second, slamStateJ->get_intrinsics().projectionParamsSimple.all, slamStateJ->get_pose())
+          new SubmapRelocalisation(sceneI, sceneJ, m_frameIndex, /*rgbdImages[j].first, rgbdImages[j].second, */slamStateJ->get_intrinsics().projectionParamsSimple.all, slamStateJ->get_pose())
         );
         (redundant ? m_redundantCandidates : m_candidates).push_back(std::make_pair(candidate, 0.0f));
       }
@@ -168,7 +170,7 @@ void CollaborativeComponent::run_relocalisation()
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
 
-#ifdef WITH_OPENCV
+#if defined(WITH_OPENCV) && 0
     ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
     ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
 

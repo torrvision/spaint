@@ -24,7 +24,7 @@ struct SubmapRelocalisation
   Vector4f m_depthIntrinsicsJ;
 
   /** TODO */
-  ITMFloatImage_Ptr m_depthJ;
+  //ITMFloatImage_Ptr m_depthJ;
 
   /** TODO */
   int m_frameIndex;
@@ -36,7 +36,7 @@ struct SubmapRelocalisation
   boost::optional<ORUtils::SE3Pose> m_relativePose;
 
   /** TODO */
-  ITMUChar4Image_Ptr m_rgbJ;
+  //ITMUChar4Image_Ptr m_rgbJ;
 
   /** TODO */
   std::string m_sceneI;
@@ -46,12 +46,12 @@ struct SubmapRelocalisation
 
   //#################### CONSTRUCTORS ####################
 
-  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndex, const ITMFloatImage_Ptr& depthJ, const ITMUChar4Image_Ptr& rgbJ, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
-  : m_depthJ(depthJ),
+  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndex, /*const ITMFloatImage_Ptr& depthJ, const ITMUChar4Image_Ptr& rgbJ, */const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
+  : //m_depthJ(depthJ),
     m_depthIntrinsicsJ(depthIntrinsicsJ),
     m_frameIndex(frameIndex),
     m_localPoseJ(localPoseJ),
-    m_rgbJ(rgbJ),
+    //m_rgbJ(rgbJ),
     m_sceneI(sceneI),
     m_sceneJ(sceneJ)
   {}

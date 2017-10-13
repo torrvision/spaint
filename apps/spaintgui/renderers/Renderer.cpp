@@ -483,7 +483,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       {
         boost::optional<std::pair<SE3Pose,size_t> > result = m_model->try_get_relative_transform("World", sceneIDs[i]);
         SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-        if(!result || result->second < 2) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICFLAT;
+        if(!result || result->second < 3) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICFLAT;
 
         // ciTwi * wiTwj = ciTwj
         tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
