@@ -28,9 +28,13 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** A compressed RGB-D message, used to compress the image data before sending it over the network. */
   CompressedRGBDFrameMessage_Ptr m_compressedRGBDMessage;
+
+  /** A compressed RGB-D message header, used to specify the size the compressed image data to be sent over the network. */
   CompressedRGBDFrameHeaderMessage_Ptr m_compressedRGBDMessageHeader;
 
+  /** A class allowing the compression of RGB-D frame messages. */
   RGBDFrameCompressor_Ptr m_frameCompressor;
 
   /** A queue containing the RGB-D frame messages to be sent to the server. */
