@@ -8,6 +8,11 @@
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace ITMLib;
 
+#include <itmx/geometry/GeometryUtil.h>
+#include <itmx/util/CameraPoseConverter.h>
+using namespace itmx;
+using namespace rigging;
+
 #include "visualisation/VisualiserFactory.h"
 
 namespace spaint {
@@ -16,7 +21,8 @@ namespace spaint {
 
 VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
                                                const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
-: m_labelManager(labelManager),
+: m_depthVisualiser(VisualiserFactory::make_depth_visualiser(settings->deviceType)),
+  m_labelManager(labelManager),
   m_semanticVisualiser(VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType)),
   m_settings(settings),
   m_surfelVisualisationEngine(surfelVisualisationEngine),
@@ -24,6 +30,31 @@ VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CP
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                                        const View_CPtr& view, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
+{
+  if(!scene || !view)
+  {
+    output->Clear();
+    return;
+  }
+
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+
+  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
+  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+
+  const SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
+  m_depthVisualiser->render_depth(
+    depthType, GeometryUtil::to_itm(camera.p()), GeometryUtil::to_itm(camera.n()),
+    renderState.get(), m_settings->sceneParams.voxelSize, -1.0f, output
+  );
+
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
+}
 
 void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                            const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
