@@ -11,11 +11,11 @@ namespace itmx {
 
 CompressedRGBDFrameMessage::CompressedRGBDFrameMessage(const CompressedRGBDFrameHeaderMessage& messageHeader)
 {
-  // Frame index and pose have fixed size.
+  // Frame index and pose have fixed size and position in the message.
   m_frameIndexSegment = std::make_pair(0, sizeof(int));
   m_poseSegment = std::make_pair(m_frameIndexSegment.second, sizeof(Matrix4f) + 6 * sizeof(float));
 
-  // Depth and RGB segments depend on the message header.
+  // Depth and RGB segments' position and length depend on the message header.
   set_compressed_image_sizes(messageHeader);
 }
 
@@ -31,7 +31,6 @@ CompressedRGBDFrameMessage_Ptr CompressedRGBDFrameMessage::make(const Compressed
 void CompressedRGBDFrameMessage::extract_depth_image_data(std::vector<uint8_t> &depthImageData) const
 {
   depthImageData.resize(m_depthImageSegment.second);
-  printf("Resized depth to %d\n", depthImageData.size());
   memcpy(reinterpret_cast<char *>(depthImageData.data()), &m_data[m_depthImageSegment.first], m_depthImageSegment.second);
 }
 
@@ -56,7 +55,6 @@ ORUtils::SE3Pose CompressedRGBDFrameMessage::extract_pose() const
 void CompressedRGBDFrameMessage::extract_rgb_image_data(std::vector<uint8_t> &rgbImageData) const
 {
   rgbImageData.resize(m_rgbImageSegment.second);
-  printf("Resized rgb to %d\n", rgbImageData.size());
   memcpy(reinterpret_cast<char *>(rgbImageData.data()), &m_data[m_rgbImageSegment.first], m_rgbImageSegment.second);
 }
 

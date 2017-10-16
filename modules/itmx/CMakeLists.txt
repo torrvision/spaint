@@ -106,6 +106,8 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 
 ##
 SET(remotemapping_sources
+src/remotemapping/CompressedRGBDFrameMessage.cpp
+src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
 src/remotemapping/MappingClient.cpp
 src/remotemapping/MappingMessage.cpp
 src/remotemapping/MappingServer.cpp
@@ -114,6 +116,8 @@ src/remotemapping/RGBDFrameMessage.cpp
 )
 
 SET(remotemapping_headers
+include/itmx/remotemapping/CompressedRGBDFrameMessage.h
+include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
 include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingMessage.h
 include/itmx/remotemapping/MappingServer.h
@@ -124,15 +128,11 @@ include/itmx/remotemapping/RGBDFrameMessage.h
 IF(WITH_OPENCV)
   SET(remotemapping_sources
     ${remotemapping_sources}
-    src/remotemapping/CompressedRGBDFrameMessage.cpp
-    src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
     src/remotemapping/RGBDFrameCompressor.cpp
   )
 
   SET(remotemapping_headers
     ${remotemapping_headers}
-    include/itmx/remotemapping/CompressedRGBDFrameMessage.h
-    include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
     include/itmx/remotemapping/RGBDFrameCompressor.h
   )
 ENDIF()

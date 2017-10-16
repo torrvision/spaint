@@ -38,7 +38,7 @@ public:
   /**
    * \brief Constructs a compressed RGB-D frame message.
    *
-   * \param messageHeader The header of the compressed message, specifying the size of the depth and colour segments.
+   * \param messageHeader  The header of the compressed message, specifying the size of the depth and colour segments.
    */
   CompressedRGBDFrameMessage(const CompressedRGBDFrameHeaderMessage& messageHeader);
 
