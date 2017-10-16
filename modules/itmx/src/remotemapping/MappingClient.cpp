@@ -44,10 +44,6 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
                                                   RGBDFrameCompressor::DEPTH_NO_COMPRESSION, RGBDFrameCompressor::RGB_NO_COMPRESSION));
 #endif
 
-  // Allocate compressed messages.
-  m_compressedRGBDMessageHeader.reset(new CompressedRGBDFrameHeaderMessage);
-  m_compressedRGBDMessage.reset(new CompressedRGBDFrameMessage(*m_compressedRGBDMessageHeader));
-
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
 
@@ -55,18 +51,22 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
 
 void MappingClient::run_message_sender()
 {
+  // Allocate compressed messages.
+  CompressedRGBDFrameHeaderMessage_Ptr compressedRGBDMessageHeader(new CompressedRGBDFrameHeaderMessage);
+  CompressedRGBDFrameMessage_Ptr compressedRGBDMessage(new CompressedRGBDFrameMessage(*compressedRGBDMessageHeader));
+
   bool connectionOk = true;
   while(connectionOk)
   {
     RGBDFrameMessage_Ptr msg = m_frameMessageQueue.peek();
 
     // Compress the frame.
-    m_frameCompressor->compress_rgbd_frame(*msg, *m_compressedRGBDMessageHeader, *m_compressedRGBDMessage);
+    m_frameCompressor->compress_rgbd_frame(*msg, *compressedRGBDMessageHeader, *compressedRGBDMessage);
 
     // Send first the header, then the compressed frame. Chained with && to early out in case one of the send fails.
     connectionOk = connectionOk
-        && m_stream.write(m_compressedRGBDMessageHeader->get_data_ptr(), m_compressedRGBDMessageHeader->get_size())
-        && m_stream.write(m_compressedRGBDMessage->get_data_ptr(), m_compressedRGBDMessage->get_size());
+        && m_stream.write(compressedRGBDMessageHeader->get_data_ptr(), compressedRGBDMessageHeader->get_size())
+        && m_stream.write(compressedRGBDMessage->get_data_ptr(), compressedRGBDMessage->get_size());
 
     m_frameMessageQueue.pop();
   }

@@ -14,7 +14,10 @@ using namespace tvgutil;
 #include "ocv/OpenCVUtil.h"
 #endif
 
+#include "remotemapping/CompressedRGBDFrameMessage.h"
+#include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
+#include "remotemapping/RGBDFrameCompressor.h"
 
 #define DEBUGGING 0
 
@@ -227,6 +230,13 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
   std::cout << "Received calibration message from client: " << clientID << std::endl;
 #endif
 
+  // Compression variables.
+  RGBDFrameCompressor_Ptr frameCompressor;
+
+  // Prepare a header and a compressed frame message, that will be filled with data received from the network, ready to unpack them.
+  CompressedRGBDFrameHeaderMessage_Ptr compressedRGBDMessageHeader(new CompressedRGBDFrameHeaderMessage);
+  CompressedRGBDFrameMessage_Ptr compressedRGBDMessage(new CompressedRGBDFrameMessage(*compressedRGBDMessageHeader));
+
   // Save the image sizes and calibration parameters, and initialise the frame message queue. We also initialise
   // a dummy frame message, which will be used to consume messages that cannot be pushed onto the queue.
   RGBDFrameMessage_Ptr dummyFrameMsg;
@@ -243,17 +253,13 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
 
     // Setup RGB-D compression.
   #ifdef WITH_OPENCV
-    client->m_frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
-                                                            RGBDFrameCompressor::DEPTH_PNG_COMPRESSION, RGBDFrameCompressor::RGB_JPG_COMPRESSION));
+    frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
+                                                  RGBDFrameCompressor::DEPTH_PNG_COMPRESSION, RGBDFrameCompressor::RGB_JPG_COMPRESSION));
   #else
-    client->m_frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
-                                                            RGBDFrameCompressor::DEPTH_NO_COMPRESSION, RGBDFrameCompressor::RGB_NO_COMPRESSION));
+    frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
+                                                  RGBDFrameCompressor::DEPTH_NO_COMPRESSION, RGBDFrameCompressor::RGB_NO_COMPRESSION));
   #endif
   }
-
-  // Prepare a header and a compressed frame message, that will be filled with data received from the network, ready to unpack them.
-  CompressedRGBDFrameHeaderMessage_Ptr compressedRGBDMessageHeader(new CompressedRGBDFrameHeaderMessage);
-  CompressedRGBDFrameMessage_Ptr compressedRGBDMessage(new CompressedRGBDFrameMessage(*compressedRGBDMessageHeader));
 
   // Signal that we're ready to start reading frame messages from the client.
   m_clientReady.notify_one();
@@ -279,7 +285,7 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
       if((connectionOk = read_message(sock, *compressedRGBDMessage)))
       {
         // Uncompress the images.
-        client->m_frameCompressor->uncompress_rgbd_frame(*compressedRGBDMessage, msg);
+        frameCompressor->uncompress_rgbd_frame(*compressedRGBDMessage, msg);
 
 #if DEBUGGING
         std::cout << "Got message: " << msg.extract_frame_index() << std::endl;

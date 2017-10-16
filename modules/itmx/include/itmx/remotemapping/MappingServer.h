@@ -19,10 +19,7 @@
 #include <tvgutil/boost/WrappedAsio.h>
 #include <tvgutil/containers/PooledQueue.h>
 
-#include "CompressedRGBDFrameMessage.h"
-#include "CompressedRGBDFrameHeaderMessage.h"
 #include "RGBDFrameMessage.h"
-#include "RGBDFrameCompressor.h"
 
 namespace itmx {
 
@@ -62,9 +59,6 @@ private:
 
     /** The size of depth image produced by the camera associated with the client. */
     Vector2i m_depthImageSize;
-
-    /** A frame compressor, used to send/receive less data over the network. */
-    RGBDFrameCompressor_Ptr m_frameCompressor;
 
     /** A queue containing the RGB-D frame messages received from the client. */
     RGBDFrameMessageQueue_Ptr m_frameMessageQueue;

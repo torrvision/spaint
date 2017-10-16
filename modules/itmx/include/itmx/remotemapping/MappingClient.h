@@ -9,8 +9,6 @@
 #include <tvgutil/boost/WrappedAsio.h>
 #include <tvgutil/containers/PooledQueue.h>
 
-#include "CompressedRGBDFrameMessage.h"
-#include "CompressedRGBDFrameHeaderMessage.h"
 #include "RGBDCalibrationMessage.h"
 #include "RGBDFrameCompressor.h"
 #include "RGBDFrameMessage.h"
@@ -28,12 +26,6 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A compressed RGB-D message, used to compress the image data before sending it over the network. */
-  CompressedRGBDFrameMessage_Ptr m_compressedRGBDMessage;
-
-  /** A compressed RGB-D message header, used to specify the size the compressed image data to be sent over the network. */
-  CompressedRGBDFrameHeaderMessage_Ptr m_compressedRGBDMessageHeader;
-
   /** A frame compressor, used to send/receive less data over the network. */
   RGBDFrameCompressor_Ptr m_frameCompressor;
 
