@@ -66,7 +66,16 @@ PoseGraphOptimiser::try_get_largest_cluster(const std::string& sceneI, const std
 boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
-  return try_get_relative_transform_sub(sceneI, sceneJ);
+
+  std::map<std::string,ORUtils::SE3Pose>::const_iterator it = m_estimatedGlobalPoses.find(sceneI);
+  if(it == m_estimatedGlobalPoses.end()) return boost::none;//return try_get_relative_transform_sub(sceneI, sceneJ);
+
+  std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneJ);
+  if(jt == m_estimatedGlobalPoses.end()) return boost::none;//return try_get_relative_transform_sub(sceneI, sceneJ);
+
+  boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster_sub(sceneI, sceneJ);
+  size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
+  return std::make_pair(SE3Pose(/* TODO */ jt->second.GetM()), largestClusterSize);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -141,6 +150,7 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         for(int j = 0; j < sceneCount; ++j)
         {
           if(j == i) continue;
+          if(sceneIDs[i] != "World" && sceneIDs[j] != "World") continue;
 
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
           if(!relativeTransform) continue;
@@ -168,7 +178,14 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
       boost::lock_guard<boost::mutex> lock(m_mutex);
 
       // Extract and store the optimised poses.
-      // TODO
+      for(int i = 0, sceneCount = static_cast<int>(sceneIDs.size()); i < sceneCount; ++i)
+      {
+        SlamGraph::NodeIndex::const_iterator jt = graph.getNodeIndex().find(i);
+        if(jt == graph.getNodeIndex().end()) continue;
+
+        const GraphNodeSE3 *node = static_cast<const GraphNodeSE3*>(jt->second);
+        m_estimatedGlobalPoses[sceneIDs[i]] = node->getPose();
+      }
     }
   }
 }
