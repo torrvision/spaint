@@ -6,6 +6,7 @@
 #ifndef H_SPAINT_POSEGRAPHOPTIMISER
 #define H_SPAINT_POSEGRAPHOPTIMISER
 
+#include <boost/atomic.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
 
@@ -26,19 +27,28 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** Estimates of the poses of the different scenes in the global coordinate system. */
-  //std::map<std::string,ORUtils::SE3Pose> m_estimatedGlobalPoses;
+  std::map<std::string,ORUtils::SE3Pose> m_estimatedGlobalPoses;
 
   /** The synchronisation mutex. */
-  mutable boost::recursive_mutex m_mutex;
+  mutable boost::mutex m_mutex;
 
   /** The pose graph optimisation thread. */
-  //boost::shared_ptr<boost::thread> m_optimisationThread;
+  boost::shared_ptr<boost::thread> m_optimisationThread;
 
   /**
    * Accumulated samples of the relative transformations between the different scenes. Each sample for (scene i, scene j)
    * expresses an estimate of the transformation from the coordinate system of scene j to that of scene i.
    */
   std::map<SceneIDPair,std::vector<SE3PoseCluster> > m_relativeTransformSamples;
+
+  /** A condition variable used to wait until new samples have been added. */
+  mutable boost::condition_variable m_relativeTransformSamplesAdded;
+
+  /** A flag indicating whether or not samples have been added since the last time a pose graph was constructed. */
+  bool m_relativeTransformSamplesChanged;
+
+  /** Whether or not the pose graph optimiser should terminate. */
+  boost::atomic<bool> m_shouldTerminate;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -67,6 +77,11 @@ public:
    * \param sample  A sample of the transformation from the coordinate system of scene j to that of scene i.
    */
   void add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
+
+  /**
+   * \brief Terminates the pose graph optimiser.
+   */
+  void terminate();
 
   /**
    * \brief Attempts to get the largest cluster of samples of the transformation from the coordinate system of scene j to that of scene i.

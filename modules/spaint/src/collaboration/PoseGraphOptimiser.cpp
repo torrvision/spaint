@@ -6,6 +6,13 @@
 #include "collaboration/PoseGraphOptimiser.h"
 using namespace ORUtils;
 
+#include <MiniSlamGraphLib/GraphEdgeSE3.h>
+#include <MiniSlamGraphLib/GraphNodeSE3.h>
+#include <MiniSlamGraphLib/LevenbergMarquardtMethod.h>
+#include <MiniSlamGraphLib/PoseGraph.h>
+#include <MiniSlamGraphLib/SlamGraphErrorFunction.h>
+using namespace MiniSlamGraph;
+
 #include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;
 
@@ -14,31 +21,42 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 PoseGraphOptimiser::PoseGraphOptimiser()
-{
-  //m_pgoThread.reset(new boost::thread(boost::bind(&CollaborativeContext::run_pose_graph_optimisation, this)));
-}
+: m_optimisationThread(new boost::thread(boost::bind(&PoseGraphOptimiser::run_pose_graph_optimisation, this))),
+  m_relativeTransformSamplesChanged(false),
+  m_shouldTerminate(false)
+{}
 
 //#################### DESTRUCTOR ####################
 
 PoseGraphOptimiser::~PoseGraphOptimiser()
 {
-  //if(m_pgoThread) m_pgoThread->join();
+  m_shouldTerminate = true;
+
+  if(m_optimisationThread)
+  {
+    // Artificially wake up the pose graph optimisation thread and wait for it to terminate.
+    m_relativeTransformSamplesAdded.notify_one();
+    m_optimisationThread->join();
+  }
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
 {
-  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+  boost::lock_guard<boost::mutex> lock(m_mutex);
 
   add_relative_transform_sample_sub(sceneI, sceneJ, sample);
   add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
+
+  m_relativeTransformSamplesChanged = true;
+  m_relativeTransformSamplesAdded.notify_one();
 }
 
 boost::optional<PoseGraphOptimiser::SE3PoseCluster>
 PoseGraphOptimiser::try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const
 {
-  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+  boost::lock_guard<boost::mutex> lock(m_mutex);
 
   // Try to look up the sample clusters of the relative transformation from the coordinate system of scene j to that of scene i.
   std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
@@ -65,8 +83,6 @@ PoseGraphOptimiser::try_get_largest_cluster(const std::string& sceneI, const std
 
 boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
 {
-  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
-
   boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster(sceneI, sceneJ);
   return largestCluster ? boost::optional<std::pair<SE3Pose,size_t> >(std::make_pair(GeometryUtil::blend_poses(*largestCluster), largestCluster->size())) : boost::none;
 }
@@ -100,7 +116,42 @@ void PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
 
 void PoseGraphOptimiser::run_pose_graph_optimisation()
 {
-  // TODO
+  std::cout << "Starting pose graph optimisation thread" << std::endl;
+
+  while(!m_shouldTerminate)
+  {
+    PoseGraph graph;
+
+    {
+      boost::unique_lock<boost::mutex> lock(m_mutex);
+
+      // Wait for samples to be added or the termination flag to be set.
+      while(!m_relativeTransformSamplesChanged && !m_shouldTerminate) m_relativeTransformSamplesAdded.wait(lock);
+
+      // If the termination flag is set, early out.
+      if(m_shouldTerminate) return;
+
+      // Reset the change flag.
+      m_relativeTransformSamplesChanged = false;
+
+      // Construct the pose graph.
+      // TODO
+    }
+
+    // Run the pose graph optimisation.
+    graph.prepareEvaluations();
+    SlamGraphErrorFunction errFunc(graph);
+    SlamGraphErrorFunction::Parameters params(graph);
+    LevenbergMarquardtMethod::minimize(errFunc, params);
+    graph.setNodeIndex(params.getNodes());
+
+    {
+      boost::lock_guard<boost::mutex> lock(m_mutex);
+
+      // Extract and store the optimised poses.
+      // TODO
+    }
+  }
 }
 
 }
