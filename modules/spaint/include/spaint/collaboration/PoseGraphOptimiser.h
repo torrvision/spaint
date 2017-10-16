@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_POSEGRAPHOPTIMISER
 #define H_SPAINT_POSEGRAPHOPTIMISER
 
+#include <set>
+
 #include <boost/atomic.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
@@ -46,6 +48,9 @@ private:
 
   /** A flag indicating whether or not samples have been added since the last time a pose graph was constructed. */
   bool m_relativeTransformSamplesChanged;
+
+  /** The IDs of all of the scenes for which a sample has been added. */
+  std::set<std::string> m_sceneIDs;
 
   /** Whether or not the pose graph optimiser should terminate. */
   boost::atomic<bool> m_shouldTerminate;
@@ -118,6 +123,26 @@ private:
    * \brief Optimises the relative transformations between the different scenes.
    */
   void run_pose_graph_optimisation();
+
+/**
+   * \brief Attempts to get the largest cluster of samples of the transformation from the coordinate system of scene j to that of scene i.
+   *
+   * \param sceneI  The ID of scene i.
+   * \param sceneJ  The ID of scene j.
+   * \return        The largest cluster of samples of the transformation from the coordinate system of
+   *                scene j to that of scene i, if any such samples exist, or boost::none otherwise.
+   */
+  boost::optional<SE3PoseCluster> try_get_largest_cluster_sub(const std::string& sceneI, const std::string& sceneJ) const;
+
+  /**
+   * \brief Attempts to get an estimate of the transformation from the coordinate system of scene j to that of scene i.
+   *
+   * \param sceneI  The ID of scene i.
+   * \param sceneJ  The ID of scene j.
+   * \return        An estimate of the transformation from the coordinate system of scene j to that of scene i,
+   *                together with the number of samples it is based on, if possible, or boost::none otherwise.
+   */
+  boost::optional<std::pair<ORUtils::SE3Pose,size_t> > try_get_relative_transform_sub(const std::string& sceneI, const std::string& sceneJ) const;
 };
 
 //#################### TYPEDEFS ####################

@@ -49,6 +49,9 @@ void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI
   add_relative_transform_sample_sub(sceneI, sceneJ, sample);
   add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
 
+  m_sceneIDs.insert(sceneI);
+  m_sceneIDs.insert(sceneJ);
+
   m_relativeTransformSamplesChanged = true;
   m_relativeTransformSamplesAdded.notify_one();
 }
@@ -57,34 +60,13 @@ boost::optional<PoseGraphOptimiser::SE3PoseCluster>
 PoseGraphOptimiser::try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
-
-  // Try to look up the sample clusters of the relative transformation from the coordinate system of scene j to that of scene i.
-  std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
-
-  // If there aren't any, it's because we haven't found the relative transformation between the two scenes yet, so early out.
-  if(it == m_relativeTransformSamples.end()) return boost::none;
-
-  // Otherwise, find a largest cluster and return it.
-  const std::vector<SE3PoseCluster>& clusters = it->second;
-  const SE3PoseCluster *largestCluster = NULL;
-  size_t largestClusterSize = 0;
-  for(size_t i = 0, clusterCount = clusters.size(); i < clusterCount; ++i)
-  {
-    size_t clusterSize = clusters[i].size();
-    if(clusterSize > largestClusterSize)
-    {
-      largestCluster = &clusters[i];
-      largestClusterSize = clusterSize;
-    }
-  }
-
-  return largestCluster ? boost::optional<SE3PoseCluster>(*largestCluster) : boost::none;
+  return try_get_largest_cluster_sub(sceneI, sceneJ);
 }
 
 boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
 {
-  boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster(sceneI, sceneJ);
-  return largestCluster ? boost::optional<std::pair<SE3Pose,size_t> >(std::make_pair(GeometryUtil::blend_poses(*largestCluster), largestCluster->size())) : boost::none;
+  boost::lock_guard<boost::mutex> lock(m_mutex);
+  return try_get_relative_transform_sub(sceneI, sceneJ);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -121,6 +103,7 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
   while(!m_shouldTerminate)
   {
     PoseGraph graph;
+    std::vector<std::string> sceneIDs;
 
     {
       boost::unique_lock<boost::mutex> lock(m_mutex);
@@ -134,8 +117,44 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
       // Reset the change flag.
       m_relativeTransformSamplesChanged = false;
 
-      // Construct the pose graph.
-      // TODO
+      // Add a node for each scene to the pose graph.
+      sceneIDs = std::vector<std::string>(m_sceneIDs.begin(), m_sceneIDs.end());
+      const int sceneCount = static_cast<int>(sceneIDs.size());
+      for(int i = 0; i < sceneCount; ++i)
+      {
+        GraphNodeSE3 *node = new GraphNodeSE3;
+
+        node->setId(i);
+
+        std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
+        node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
+
+        // FIXME: This shouldn't be hard-coded.
+        node->setFixed(sceneIDs[i] == "World");
+
+        graph.addNode(node);
+      }
+
+      // Add an edge for each pair of scenes to the pose graph.
+      for(int i = 0; i < sceneCount; ++i)
+      {
+        for(int j = 0; j < sceneCount; ++j)
+        {
+          if(j == i) continue;
+
+          boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
+          if(!relativeTransform) continue;
+
+          // TODO: Check that these are the right way round.
+          GraphEdgeSE3 *edge = new GraphEdgeSE3;
+          edge->setFromNodeId(i);
+          edge->setToNodeId(j);
+          edge->setMeasurementSE3(relativeTransform->first);
+          graph.addEdge(edge);
+        }
+      }
+
+      std::cout << "Finished creating pose graph for optimisation" << std::endl;
     }
 
     // Run the pose graph optimisation.
@@ -152,6 +171,38 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
       // TODO
     }
   }
+}
+
+boost::optional<PoseGraphOptimiser::SE3PoseCluster>
+PoseGraphOptimiser::try_get_largest_cluster_sub(const std::string& sceneI, const std::string& sceneJ) const
+{
+  // Try to look up the sample clusters of the relative transformation from the coordinate system of scene j to that of scene i.
+  std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
+
+  // If there aren't any, it's because we haven't found the relative transformation between the two scenes yet, so early out.
+  if(it == m_relativeTransformSamples.end()) return boost::none;
+
+  // Otherwise, find a largest cluster and return it.
+  const std::vector<SE3PoseCluster>& clusters = it->second;
+  const SE3PoseCluster *largestCluster = NULL;
+  size_t largestClusterSize = 0;
+  for(size_t i = 0, clusterCount = clusters.size(); i < clusterCount; ++i)
+  {
+    size_t clusterSize = clusters[i].size();
+    if(clusterSize > largestClusterSize)
+    {
+      largestCluster = &clusters[i];
+      largestClusterSize = clusterSize;
+    }
+  }
+
+  return largestCluster ? boost::optional<SE3PoseCluster>(*largestCluster) : boost::none;
+}
+
+boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative_transform_sub(const std::string& sceneI, const std::string& sceneJ) const
+{
+  boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster_sub(sceneI, sceneJ);
+  return largestCluster ? boost::optional<std::pair<SE3Pose,size_t> >(std::make_pair(GeometryUtil::blend_poses(*largestCluster), largestCluster->size())) : boost::none;
 }
 
 }
