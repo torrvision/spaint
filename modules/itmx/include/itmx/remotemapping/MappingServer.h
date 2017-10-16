@@ -63,6 +63,9 @@ private:
     /** The size of depth image produced by the camera associated with the client. */
     Vector2i m_depthImageSize;
 
+    /** A frame compressor, used to send/receive less data over the network. */
+    RGBDFrameCompressor_Ptr m_frameCompressor;
+
     /** A queue containing the RGB-D frame messages received from the client. */
     RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
 
@@ -77,11 +80,6 @@ private:
 
     /** The thread that manages communication with the client. */
     boost::shared_ptr<boost::thread> m_thread;
-
-    CompressedRGBDFrameMessage_Ptr m_compressedRGBDMessage;
-    CompressedRGBDFrameHeaderMessage_Ptr m_compressedRGBDMessageHeader;
-
-    RGBDFrameCompressor_Ptr m_frameCompressor;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 

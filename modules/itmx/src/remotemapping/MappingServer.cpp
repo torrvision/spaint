@@ -16,7 +16,7 @@ using namespace tvgutil;
 
 #include "remotemapping/RGBDCalibrationMessage.h"
 
-#define DEBUGGING 1
+#define DEBUGGING 0
 
 namespace itmx {
 
@@ -241,10 +241,19 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
 
     dummyFrameMsg.reset(new RGBDFrameMessage(client->m_rgbImageSize, client->m_depthImageSize));
 
-    client->m_frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize));
-    client->m_compressedRGBDMessageHeader.reset(new CompressedRGBDFrameHeaderMessage);
-    client->m_compressedRGBDMessage.reset(new CompressedRGBDFrameMessage(*client->m_compressedRGBDMessageHeader));
+    // Setup RGB-D compression.
+  #ifdef WITH_OPENCV
+    client->m_frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
+                                                            RGBDFrameCompressor::DEPTH_PNG_COMPRESSION, RGBDFrameCompressor::RGB_JPG_COMPRESSION));
+  #else
+    client->m_frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
+                                                            RGBDFrameCompressor::DEPTH_NO_COMPRESSION, RGBDFrameCompressor::RGB_NO_COMPRESSION));
+  #endif
   }
+
+  // Prepare a header and a compressed frame message, that will be filled with data received from the network, ready to unpack them.
+  CompressedRGBDFrameHeaderMessage_Ptr compressedRGBDMessageHeader(new CompressedRGBDFrameHeaderMessage);
+  CompressedRGBDFrameMessage_Ptr compressedRGBDMessage(new CompressedRGBDFrameMessage(*compressedRGBDMessageHeader));
 
   // Signal that we're ready to start reading frame messages from the client.
   m_clientReady.notify_one();
@@ -260,24 +269,17 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
     RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
 
-//    if(connectionOk = read_message(sock, msg))
-    // First, read the message header then the actual message.
-    if(connectionOk = read_message(sock, *client->m_compressedRGBDMessageHeader))
+    // First, read the message header.
+    if((connectionOk = read_message(sock, *compressedRGBDMessageHeader)))
     {
-#if DEBUGGING
-      std::cout << "Got header for " << client->m_compressedRGBDMessageHeader->extract_depth_image_size() << " depth bytes and "
-                << client->m_compressedRGBDMessageHeader->extract_rgb_image_size() << " rgb bytes." << std::endl;
-#endif
-      client->m_compressedRGBDMessage->set_compressed_image_sizes(*client->m_compressedRGBDMessageHeader);
+      // Setup the message according to the header received.
+      compressedRGBDMessage->set_compressed_image_sizes(*compressedRGBDMessageHeader);
 
-      if(connectionOk = read_message(sock, *client->m_compressedRGBDMessage))
+      // Now read the the actual message.
+      if((connectionOk = read_message(sock, *compressedRGBDMessage)))
       {
-        std::cout << "Got compressed message: " << client->m_compressedRGBDMessage->extract_frame_index() << std::endl;
-
         // Uncompress the images.
-        client->m_frameCompressor->uncompress_rgbd_frame(*client->m_compressedRGBDMessage, msg);
-
-        std::cout << "Uncompressed: " << msg.extract_frame_index() << std::endl;
+        client->m_frameCompressor->uncompress_rgbd_frame(*compressedRGBDMessage, msg);
 
 #if DEBUGGING
         std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
