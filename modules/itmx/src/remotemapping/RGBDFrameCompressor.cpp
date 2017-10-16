@@ -16,28 +16,35 @@
 
 #include "base/MemoryBlockFactory.h"
 
-#include <iostream>
-
 namespace itmx {
 
 //#################### PRIVATE NESTED TYPES ####################
 
-struct RGBDFrameCompressor::Impl {
+struct RGBDFrameCompressor::Impl
+{
+  /** A vector containing the results of depth compression. */
   std::vector<uint8_t> compressedDepthBytes;
 
+  /** A vector containing the results of rgb compression. */
   std::vector<uint8_t> compressedRgbBytes;
 
+  /** The type of compression algorithm to use with the depth images. */
   DepthCompressionType depthCompressionType;
 
+  /** The type of compression algorithm to use with the rgb images. */
   RGBCompressionType rgbCompressionType;
 
+  /** An image storing the temporary uncompressed depth data. */
   ITMShortImage_Ptr uncompressedDepthImage;
 
+  /** An image storing the temporary uncompressed colour data. */
   ITMUChar4Image_Ptr uncompressedRgbImage;
 
 #ifdef WITH_OPENCV
+  /** A Mat storing the temporary uncompressed depth data. */
   cv::Mat uncompressedDepthMat;
 
+  /** A Mat storing the temporary uncompressed colour data. */
   cv::Mat uncompressedRgbMat;
 #endif
 };
@@ -78,7 +85,7 @@ RGBDFrameCompressor::RGBDFrameCompressor(const Vector2i &rgbImageSize,
 #endif
   }
 
-  // Preallocate always used data.
+  // Preallocate data that is always used.
   m_impl->uncompressedDepthImage = mbf.make_image<short>(depthImageSize);
   m_impl->uncompressedRgbImage = mbf.make_image<Vector4u>(rgbImageSize);
 }
@@ -100,8 +107,8 @@ void RGBDFrameCompressor::compress_rgbd_frame(const RGBDFrameMessage &uncompress
   compress_rgb_image();
 
   // Now prepare the compressed header.
-  compressedHeader.set_depth_image_size(m_impl->compressedDepthBytes.size());
-  compressedHeader.set_rgb_image_size(m_impl->compressedRgbBytes.size());
+  compressedHeader.set_depth_image_size(static_cast<uint32_t>(m_impl->compressedDepthBytes.size()));
+  compressedHeader.set_rgb_image_size(static_cast<uint32_t>(m_impl->compressedRgbBytes.size()));
 
   // Finally, prepare the compressed message.
   compressedFrame.set_compressed_image_sizes(compressedHeader);
@@ -111,20 +118,16 @@ void RGBDFrameCompressor::compress_rgbd_frame(const RGBDFrameMessage &uncompress
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void RGBDFrameCompressor::uncompress_rgbd_frame(
-    const CompressedRGBDFrameMessage &compressedFrame,
-    RGBDFrameMessage &uncompressedFrame) {
+void RGBDFrameCompressor::uncompress_rgbd_frame(const CompressedRGBDFrameMessage &compressedFrame,
+                                                RGBDFrameMessage &uncompressedFrame)
+{
   // Copy metadata.
   uncompressedFrame.set_frame_index(compressedFrame.extract_frame_index());
   uncompressedFrame.set_pose(compressedFrame.extract_pose());
 
-  std::cout << "Uncompressed metadata" << std::endl;
-
   // Extract the compressed byte vectors.
   compressedFrame.extract_depth_image_data(m_impl->compressedDepthBytes);
   compressedFrame.extract_rgb_image_data(m_impl->compressedRgbBytes);
-
-  std::cout << "Extracted bytes" << std::endl;
 
   // Uncompress the images.
   uncompress_depth_image();
@@ -142,11 +145,11 @@ void RGBDFrameCompressor::compress_depth_image()
   if(m_impl->depthCompressionType == DepthCompressionType::DEPTH_PNG_COMPRESSION)
   {
 #ifdef WITH_OPENCV
-    // Copy the images onto OpenCV's matrices.
     cv::Mat depthWrapper(m_impl->uncompressedDepthImage->noDims.y,
                          m_impl->uncompressedDepthImage->noDims.x, CV_16SC1,
                          m_impl->uncompressedDepthImage->GetData(MEMORYDEVICE_CPU));
 
+    // Copy the image onto OpenCV's matrix.
     // Note the conversion to CV_16U, necessary to properly encode the image to PNG.
     depthWrapper.convertTo(m_impl->uncompressedDepthMat, CV_16U);
 
@@ -156,7 +159,7 @@ void RGBDFrameCompressor::compress_depth_image()
   }
   else
   {
-    // Just copy the bytes.
+    // No compression, just copy the bytes.
     m_impl->compressedDepthBytes.resize(m_impl->uncompressedDepthImage->dataSize * sizeof(short));
     memcpy(m_impl->compressedDepthBytes.data(), m_impl->uncompressedDepthImage->GetData(MEMORYDEVICE_CPU), m_impl->compressedDepthBytes.size());
   }
@@ -166,7 +169,7 @@ void RGBDFrameCompressor::compress_rgb_image()
 {
   if(m_impl->rgbCompressionType == RGBCompressionType::RGB_NO_COMPRESSION)
   {
-    // Just copy the bytes.
+    // No compression, just copy the bytes.
     m_impl->compressedRgbBytes.resize(m_impl->uncompressedRgbImage->dataSize * sizeof(Vector4u));
     memcpy(m_impl->compressedRgbBytes.data(), m_impl->uncompressedRgbImage->GetData(MEMORYDEVICE_CPU), m_impl->compressedRgbBytes.size());
   }
@@ -195,12 +198,12 @@ void RGBDFrameCompressor::uncompress_depth_image()
     // Decode the image (using the current Mat as a placeholder, to avoid reallocations).
     m_impl->uncompressedDepthMat = cv::imdecode(m_impl->compressedDepthBytes, cv::IMREAD_ANYDEPTH, &m_impl->uncompressedDepthMat);
 
-    // Copy the image to ITM's image.
     cv::Mat depthWrapper(m_impl->uncompressedDepthImage->noDims.y,
                          m_impl->uncompressedDepthImage->noDims.x, CV_16SC1,
                          m_impl->uncompressedDepthImage->GetData(MEMORYDEVICE_CPU));
 
-    // Convert OpenCV's CV_16U to CV_16S.
+    // Copy the image to ITM's image.
+    // Note the conversion of CV_16U (returned by cv::imdecode) to CV_16S.
     m_impl->uncompressedDepthMat.convertTo(depthWrapper, CV_16S);
 #endif
   }
@@ -221,7 +224,7 @@ void RGBDFrameCompressor::uncompress_rgb_image()
 {
   if(m_impl->rgbCompressionType == RGBCompressionType::RGB_NO_COMPRESSION)
   {
-    // Check that the size of the output image matches  the received data.
+    // Check that the size of the output image matches the received data.
     if(m_impl->uncompressedRgbImage->dataSize * sizeof(Vector4u) != m_impl->compressedRgbBytes.size())
     {
       throw std::runtime_error("RGB image size in the compressed message does not match the uncompressed RGB image size.");
@@ -236,12 +239,11 @@ void RGBDFrameCompressor::uncompress_rgb_image()
     // Decode the image (using the current Mat as a placeholder, to avoid reallocations).
     m_impl->uncompressedRgbMat = cv::imdecode(m_impl->compressedRgbBytes, cv::IMREAD_COLOR, &m_impl->uncompressedRgbMat);
 
-    // Copy the image to ITM's image.
     cv::Mat rgbWrapper(m_impl->uncompressedRgbImage->noDims.y,
                        m_impl->uncompressedRgbImage->noDims.x, CV_8UC4,
                        m_impl->uncompressedRgbImage->GetData(MEMORYDEVICE_CPU));
 
-    // Reorder the bytes and readd the alpha channel.
+    // Copy the image to ITM's image, reordering the bytes and readding the alpha channel.
     cv::cvtColor(m_impl->uncompressedRgbMat, rgbWrapper, CV_BGR2RGBA);
 #endif
   }

@@ -6,16 +6,15 @@
 #ifndef H_ITMX_RGBDFRAMECOMPRESSOR
 #define H_ITMX_RGBDFRAMECOMPRESSOR
 
-#include <opencv2/core.hpp>
-
-#include "RGBDFrameMessage.h"
 #include "CompressedRGBDFrameMessage.h"
 #include "CompressedRGBDFrameHeaderMessage.h"
+#include "RGBDFrameMessage.h"
 
 namespace itmx {
 
 /**
- * \brief An instance of this class allows the compression and decompression of RGB-D frame messages. Multiple compression types can be enabled with the RGBDCompressionType enum.
+ * \brief An instance of this class allows the compression and decompression of RGB-D frame messages.
+ *        Multiple compression types can be enabled with the DepthCompressionType and RGBCompressionType enums.
  */
 class RGBDFrameCompressor
 {
@@ -29,7 +28,7 @@ public:
     /** Depth images are not compressed. */
     DEPTH_NO_COMPRESSION,
     /** Depth images are compressed using lossless PNG compression. Requires OpenCV. */
-    DEPTH_PNG_COMPRESSION = 0x1
+    DEPTH_PNG_COMPRESSION
   };
 
   /**
@@ -40,9 +39,9 @@ public:
     /** Colour images are not compressed. */
     RGB_NO_COMPRESSION,
     /** Colour images are compressed using lossless PNG compression. Requires OpenCV. */
-    RGB_PNG_COMPRESSION = 0x2,
+    RGB_PNG_COMPRESSION,
     /** Colour images are compressed using lossy JPG compression. Requires OpenCV. */
-    RGB_JPG_COMPRESSION = 0x4
+    RGB_JPG_COMPRESSION
   };
 
   //#################### PRIVATE NESTED TYPES ####################
@@ -62,7 +61,10 @@ public:
    *
    * \throws std::invalid_argument  If the specified compression types cannot be used (e.g. when building without OpenCV).
    */
-  RGBDFrameCompressor(const Vector2i& rgbImageSize, const Vector2i& depthImageSize, DepthCompressionType depthCompressionType = DEPTH_PNG_COMPRESSION, RGBCompressionType rgbCompressionType = RGB_JPG_COMPRESSION);
+  RGBDFrameCompressor(const Vector2i& rgbImageSize,
+                      const Vector2i& depthImageSize,
+                      DepthCompressionType depthCompressionType = DEPTH_NO_COMPRESSION,
+                      RGBCompressionType rgbCompressionType = RGB_NO_COMPRESSION);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -73,7 +75,9 @@ public:
    * \param compressedHeader   Will contain the header of the compressed frame message.
    * \param compressedFrame    Will contain the compressed RGB-D frame message.
    */
-  void compress_rgbd_frame(const RGBDFrameMessage& uncompressedFrame, CompressedRGBDFrameHeaderMessage& compressedHeader, CompressedRGBDFrameMessage& compressedFrame);
+  void compress_rgbd_frame(const RGBDFrameMessage& uncompressedFrame,
+                           CompressedRGBDFrameHeaderMessage& compressedHeader,
+                           CompressedRGBDFrameMessage& compressedFrame);
 
   /**
    * \brief Uncompress an RGB-D frame message.
@@ -109,15 +113,6 @@ private:
 private:
   /** Pointer to the implementation details. */
   boost::shared_ptr<Impl> m_impl;
-
-  std::vector<uint8_t> m_compressedDepthBytes;
-  std::vector<uint8_t> m_compressedRgbBytes;
-
-  ITMShortImage_Ptr m_uncompressedDepthImage;
-  ITMUChar4Image_Ptr m_uncompressedRgbImage;
-
-  cv::Mat m_uncompressedDepthMat;
-  cv::Mat m_uncompressedRgbMat;
 };
 
 //#################### TYPEDEFS ####################

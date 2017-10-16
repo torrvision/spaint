@@ -112,6 +112,7 @@ src/remotemapping/MappingClient.cpp
 src/remotemapping/MappingMessage.cpp
 src/remotemapping/MappingServer.cpp
 src/remotemapping/RGBDCalibrationMessage.cpp
+src/remotemapping/RGBDFrameCompressor.cpp
 src/remotemapping/RGBDFrameMessage.cpp
 )
 
@@ -122,20 +123,9 @@ include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingMessage.h
 include/itmx/remotemapping/MappingServer.h
 include/itmx/remotemapping/RGBDCalibrationMessage.h
+include/itmx/remotemapping/RGBDFrameCompressor.h
 include/itmx/remotemapping/RGBDFrameMessage.h
 )
-
-IF(WITH_OPENCV)
-  SET(remotemapping_sources
-    ${remotemapping_sources}
-    src/remotemapping/RGBDFrameCompressor.cpp
-  )
-
-  SET(remotemapping_headers
-    ${remotemapping_headers}
-    include/itmx/remotemapping/RGBDFrameCompressor.h
-  )
-ENDIF()
 
 ##
 SET(trackers_sources
