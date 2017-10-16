@@ -39,7 +39,12 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 #############################
 
 ##
+SET(collaboration_sources
+src/collaboration/PoseGraphOptimiser.cpp
+)
+
 SET(collaboration_headers
+include/spaint/collaboration/PoseGraphOptimiser.h
 include/spaint/collaboration/SubmapRelocalisation.h
 )
 
@@ -593,6 +598,7 @@ include/spaint/visualisation/shared/SemanticVisualiser_Shared.h
 #################################################################
 
 SET(sources
+${collaboration_sources}
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
@@ -718,7 +724,7 @@ ENDIF()
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(collaboration FILES ${collaboration_headers})
+SOURCE_GROUP(collaboration FILES ${collaboration_sources} ${collaboration_headers})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})

@@ -119,7 +119,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
       const std::string sceneI = sceneIDs[i];
       const std::string sceneJ = sceneIDs[j];
 
-      boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(sceneI, sceneJ);
+      boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(sceneI, sceneJ);
       const bool redundant = largestCluster && largestCluster->size() >= m_maxRelocalisationsNeeded;
 
       if(!redundant)
@@ -196,10 +196,11 @@ void CollaborativeComponent::run_relocalisation()
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
       std::cout << "succeeded!\n";
       //std::cout << bestCandidate->m_relativePose->GetM() << '\n';
-      m_context->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose); // TEMPORARY
+      const PoseGraphOptimiser_Ptr& poseGraphOptimiser = m_context->get_pose_graph_optimiser();
+      poseGraphOptimiser->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose); // TEMPORARY
 
       // If we've now got enough relocalisations for this pair of scenes, move all the remaining candidates for them to a separate list.
-      boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ);
+      boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ);
       if(largestCluster && largestCluster->size() >= m_maxRelocalisationsNeeded)
       {
         for(std::list<Candidate>::iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend;)
@@ -239,7 +240,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
   {
     SubmapRelocalisation_Ptr candidate = it->first;
 
-    boost::optional<CollaborativeContext::SE3PoseCluster> largestCluster = m_context->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
+    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
     size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
     float sizeTerm = m_maxRelocalisationsNeeded - static_cast<float>(largestClusterSize);
 
