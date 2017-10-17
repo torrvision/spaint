@@ -105,6 +105,19 @@ void PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
   clusters.push_back(newCluster);
 }
 
+std::string to_matlab(const SE3Pose& pose)
+{
+  std::ostringstream oss;
+  Matrix4f m = pose.GetM();
+  oss << '['
+      << m.m[0] << ' ' << m.m[4] << ' ' << m.m[8] << ' ' << m.m[12] << "; "
+      << m.m[1] << ' ' << m.m[5] << ' ' << m.m[9] << ' ' << m.m[13] << "; "
+      << m.m[2] << ' ' << m.m[6] << ' ' << m.m[10] << ' ' << m.m[14] << "; "
+      << m.m[3] << ' ' << m.m[7] << ' ' << m.m[11] << ' ' << m.m[15]
+      << ']';
+  return oss.str();
+}
+
 void PoseGraphOptimiser::run_pose_graph_optimisation()
 {
   std::cout << "Starting pose graph optimisation thread" << std::endl;
@@ -136,7 +149,8 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         node->setId(i);
 
         std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
-        node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
+        //node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
+        node->setPose(ORUtils::SE3Pose());
 
         // FIXME: This shouldn't be hard-coded.
         node->setFixed(sceneIDs[i] == "World");
@@ -150,10 +164,13 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         for(int j = 0; j < sceneCount; ++j)
         {
           if(j == i) continue;
-          if(sceneIDs[i] != "World" && sceneIDs[j] != "World") continue;
+          //if(sceneIDs[i] != "World" && sceneIDs[j] != "World") continue;
 
+#if 1
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
           if(!relativeTransform) continue;
+
+          std::cout << "Relative Transform (" << i << '/' << sceneIDs[i] << " <- " << j << '/' << sceneIDs[j] << "): " << relativeTransform->second << '\n' << to_matlab(relativeTransform->first) << '\n';
 
           // TODO: Check that these are the right way round.
           GraphEdgeSE3 *edge = new GraphEdgeSE3;
@@ -161,6 +178,20 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
           edge->setToNodeId(j);
           edge->setMeasurementSE3(relativeTransform->first);
           graph.addEdge(edge);
+#else
+          const std::vector<SE3PoseCluster>& clusters = m_relativeTransformSamples[std::make_pair(sceneIDs[i], sceneIDs[j])];
+          for(size_t k = 0; k < clusters.size(); ++k)
+          {
+            for(size_t m = 0; m < clusters[k].size(); ++m)
+            {
+              GraphEdgeSE3 *edge = new GraphEdgeSE3;
+              edge->setFromNodeId(i);
+              edge->setToNodeId(j);
+              edge->setMeasurementSE3(clusters[k][m]);
+              graph.addEdge(edge);
+            }
+          }
+#endif
         }
       }
 
@@ -185,6 +216,8 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
 
         const GraphNodeSE3 *node = static_cast<const GraphNodeSE3*>(jt->second);
         m_estimatedGlobalPoses[sceneIDs[i]] = node->getPose();
+
+        std::cout << "Estimated Pose (" << i << '/' << sceneIDs[i] << "): " << to_matlab(node->getPose()) << '\n';
       }
     }
   }
