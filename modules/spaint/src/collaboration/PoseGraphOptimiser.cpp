@@ -71,11 +71,11 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
   if(it == m_estimatedGlobalPoses.end()) return boost::none;//return try_get_relative_transform_sub(sceneI, sceneJ);
 
   std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneJ);
-  if(jt == m_estimatedGlobalPoses.end()) return boost::none;//return try_get_relative_transform_sub(sceneI, sceneJ);
+  if(jt == m_estimatedGlobalPoses.end()) return boost::none;//try_get_relative_transform_sub(sceneI, sceneJ);
 
   boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster_sub(sceneI, sceneJ);
   size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
-  return std::make_pair(SE3Pose(/* TODO */ jt->second.GetM()), largestClusterSize);
+  return std::make_pair(SE3Pose(/* TODO */ jt->second.GetInvM()), largestClusterSize);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -174,8 +174,8 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
 
           // TODO: Check that these are the right way round.
           GraphEdgeSE3 *edge = new GraphEdgeSE3;
-          edge->setFromNodeId(i);
-          edge->setToNodeId(j);
+          edge->setFromNodeId(j);
+          edge->setToNodeId(i);
           edge->setMeasurementSE3(relativeTransform->first);
           graph.addEdge(edge);
 #else
@@ -185,8 +185,8 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
             for(size_t m = 0; m < clusters[k].size(); ++m)
             {
               GraphEdgeSE3 *edge = new GraphEdgeSE3;
-              edge->setFromNodeId(i);
-              edge->setToNodeId(j);
+              edge->setFromNodeId(j);
+              edge->setToNodeId(i);
               edge->setMeasurementSE3(clusters[k][m]);
               graph.addEdge(edge);
             }
