@@ -16,6 +16,8 @@ using namespace MiniSlamGraph;
 #include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;
 
+#define DEBUGGING 0
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -68,10 +70,10 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
   std::map<std::string,ORUtils::SE3Pose>::const_iterator it = m_estimatedGlobalPoses.find(sceneI);
-  if(it == m_estimatedGlobalPoses.end()) return boost::none;//return try_get_relative_transform_sub(sceneI, sceneJ);
+  if(it == m_estimatedGlobalPoses.end()) return try_get_relative_transform_sub(sceneI, sceneJ);
 
   std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneJ);
-  if(jt == m_estimatedGlobalPoses.end()) return boost::none;//try_get_relative_transform_sub(sceneI, sceneJ);
+  if(jt == m_estimatedGlobalPoses.end()) return try_get_relative_transform_sub(sceneI, sceneJ);
 
   boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster_sub(sceneI, sceneJ);
   size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
@@ -82,7 +84,10 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
 
 void PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
 {
-  std::cout << "Adding sample: " << sceneI << "<-" << sceneJ << '\n' << sample.GetM() << '\n';
+#if DEBUGGING
+  std::cout << "Adding sample: " << sceneI << "<-" << sceneJ << '\n'
+            << GeometryUtil::to_matlab(sample.GetM()) << '\n';
+#endif
 
   // Try to find an existing cluster that contains a sample that is sufficiently similar to the new sample.
   // If we find one, add the sample to that cluster and early out.
@@ -103,19 +108,6 @@ void PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
   SE3PoseCluster newCluster;
   newCluster.push_back(sample);
   clusters.push_back(newCluster);
-}
-
-std::string to_matlab(const SE3Pose& pose)
-{
-  std::ostringstream oss;
-  Matrix4f m = pose.GetM();
-  oss << '['
-      << m.m[0] << ' ' << m.m[4] << ' ' << m.m[8] << ' ' << m.m[12] << "; "
-      << m.m[1] << ' ' << m.m[5] << ' ' << m.m[9] << ' ' << m.m[13] << "; "
-      << m.m[2] << ' ' << m.m[6] << ' ' << m.m[10] << ' ' << m.m[14] << "; "
-      << m.m[3] << ' ' << m.m[7] << ' ' << m.m[11] << ' ' << m.m[15]
-      << ']';
-  return oss.str();
 }
 
 void PoseGraphOptimiser::run_pose_graph_optimisation()
@@ -149,8 +141,7 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         node->setId(i);
 
         std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
-        //node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
-        node->setPose(ORUtils::SE3Pose());
+        node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
 
         // FIXME: This shouldn't be hard-coded.
         node->setFixed(sceneIDs[i] == "World");
@@ -164,38 +155,26 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         for(int j = 0; j < sceneCount; ++j)
         {
           if(j == i) continue;
-          //if(sceneIDs[i] != "World" && sceneIDs[j] != "World") continue;
 
-#if 1
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
           if(!relativeTransform) continue;
 
-          std::cout << "Relative Transform (" << i << '/' << sceneIDs[i] << " <- " << j << '/' << sceneIDs[j] << "): " << relativeTransform->second << '\n' << to_matlab(relativeTransform->first) << '\n';
+#if DEBUGGING
+          std::cout << "Relative Transform (" << i << '/' << sceneIDs[i] << " <- " << j << '/' << sceneIDs[j] << "): " << relativeTransform->second << '\n'
+                    << GeometryUtil::to_matlab(relativeTransform->first.GetM()) << '\n';
+#endif
 
-          // TODO: Check that these are the right way round.
           GraphEdgeSE3 *edge = new GraphEdgeSE3;
           edge->setFromNodeId(j);
           edge->setToNodeId(i);
           edge->setMeasurementSE3(relativeTransform->first);
           graph.addEdge(edge);
-#else
-          const std::vector<SE3PoseCluster>& clusters = m_relativeTransformSamples[std::make_pair(sceneIDs[i], sceneIDs[j])];
-          for(size_t k = 0; k < clusters.size(); ++k)
-          {
-            for(size_t m = 0; m < clusters[k].size(); ++m)
-            {
-              GraphEdgeSE3 *edge = new GraphEdgeSE3;
-              edge->setFromNodeId(j);
-              edge->setToNodeId(i);
-              edge->setMeasurementSE3(clusters[k][m]);
-              graph.addEdge(edge);
-            }
-          }
-#endif
         }
       }
 
+#if DEBUGGING
       std::cout << "Finished creating pose graph for optimisation" << std::endl;
+#endif
     }
 
     // Run the pose graph optimisation.
@@ -217,7 +196,9 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         const GraphNodeSE3 *node = static_cast<const GraphNodeSE3*>(jt->second);
         m_estimatedGlobalPoses[sceneIDs[i]] = node->getPose();
 
-        std::cout << "Estimated Pose (" << i << '/' << sceneIDs[i] << "): " << to_matlab(node->getPose()) << '\n';
+#if DEBUGGING
+        std::cout << "Estimated Pose (" << i << '/' << sceneIDs[i] << "): " << GeometryUtil::to_matlab(node->getPose().GetM()) << '\n';
+#endif
       }
     }
   }

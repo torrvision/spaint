@@ -38,8 +38,6 @@
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #include <itmx/imagesources/RemoteImageSourceEngine.h>
 
-#include <spaint/collaboration/PoseGraphOptimiser.h>
-
 #include <tvgutil/filesystem/PathFinder.h>
 
 #include "core/CollaborativePipeline.h"
@@ -508,32 +506,6 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
-#if 1
-  PoseGraphOptimiser pgo;
-  ORUtils::SE3Pose m01(Matrix4f(-0.500091f, -0.391808f, 0.772267f, 0.703227f, 0.228884f, 0.800273f, 0.554233f, 0.287371f, -0.835178f, 0.453927f, -0.310531f, -0.84682f, 0.0f, 0.0f, 0.0f, 1.0f).t());
-  ORUtils::SE3Pose m02(Matrix4f(0.913309f, -0.192831f, 0.358724f, 0.600671f, 0.233355f, 0.969656f, -0.0728846f, 0.0353659f, -0.333785f, 0.150276f, 0.930594f, -0.0148812f, 0.0f, 0.0f, 0.0f, 1.0f).t());
-  ORUtils::SE3Pose m12(Matrix4f(-0.126825f, 0.195359f, -0.972497f, -0.702267f, -0.3221f, 0.919174f, 0.226653f, 0.214638f, 0.938172f, 0.341986f, -0.0536492f, -0.47692f, 0.0f, 0.0f, 0.0f, 1.0f).t());
-#if 1
-  pgo.add_relative_transform_sample("Agent1", "Agent2", m01);
-  pgo.add_relative_transform_sample("Agent2", "Agent1", ORUtils::SE3Pose(m01.GetInvM()));
-  pgo.add_relative_transform_sample("Agent1", "World", m02);
-  pgo.add_relative_transform_sample("World", "Agent1", ORUtils::SE3Pose(m02.GetInvM()));
-  pgo.add_relative_transform_sample("Agent2", "World", m12);
-  pgo.add_relative_transform_sample("World", "Agent2", ORUtils::SE3Pose(m12.GetInvM()));
-#else
-  pgo.add_relative_transform_sample("Agent1", "Agent2", ORUtils::SE3Pose(m01.GetInvM()));
-  pgo.add_relative_transform_sample("Agent2", "Agent1", m01);
-  pgo.add_relative_transform_sample("Agent1", "World", ORUtils::SE3Pose(m02.GetInvM()));
-  pgo.add_relative_transform_sample("World", "Agent1", m02);
-  pgo.add_relative_transform_sample("Agent2", "World", ORUtils::SE3Pose(m12.GetInvM()));
-  pgo.add_relative_transform_sample("World", "Agent2", m12);
-#endif
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-  boost::optional<std::pair<ORUtils::SE3Pose,size_t> >result = pgo.try_get_relative_transform("Agent2", "Agent1");
-  if(result) std::cout << result->first << '\n';
-  return 0;
-#endif
-
   // Construct the settings object for the application. This is used to store both the
   // settings for InfiniTAM and our own extended settings. Note that we do not use the
   // tracker configuration string in the InfiniTAM settings, and so we set it to NULL.
