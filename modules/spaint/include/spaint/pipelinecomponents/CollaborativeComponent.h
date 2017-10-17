@@ -24,6 +24,23 @@ private:
   typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
   typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
 
+  //#################### NESTED TYPES ####################
+private:
+  /**
+   * \brief TODO
+   */
+  struct ScenePairInfo
+  {
+    /** TODO */
+    std::list<Candidate> m_candidates;
+
+    /** TODO */
+    float m_failurePenalty;
+
+    /** TODO */
+    std::vector<ORUtils::SE3Pose> m_triedLocalPoses;
+  };
+
   //#################### CONSTANTS ####################
 private:
   /** TODO */
@@ -34,20 +51,22 @@ private:
   /** TODO */
   SubmapRelocalisation_Ptr m_bestCandidate;
 
+#if 0
   /** TODO */
   std::list<Candidate> m_candidates;
+#endif
 
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
-
-  /** TODO */
-  std::map<std::pair<std::string,std::string>,float> m_failurePenalties;
 
   /** TODO */
   int m_frameIndex;
 
   /** TODO */
   boost::mutex m_mutex;
+
+  /** TODO */
+  size_t m_nextScenePairIndex;
 
   /** TODO */
   boost::condition_variable m_readyToRelocalise;
@@ -59,10 +78,10 @@ private:
   boost::thread m_relocalisationThread;
 
   /** TODO */
-  boost::atomic<bool> m_stopRelocalisationThread;
+  std::map<std::pair<std::string,std::string>,ScenePairInfo> m_scenePairInfos;
 
   /** TODO */
-  std::map<std::pair<std::string,std::string>,std::vector<ORUtils::SE3Pose> > m_triedLocalPoses;
+  boost::atomic<bool> m_stopRelocalisationThread;
 
   //#################### CONSTRUCTORS ####################
 public:

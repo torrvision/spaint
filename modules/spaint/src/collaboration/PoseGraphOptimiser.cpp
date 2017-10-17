@@ -42,6 +42,13 @@ PoseGraphOptimiser::~PoseGraphOptimiser()
   }
 }
 
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+int PoseGraphOptimiser::confidence_threshold()
+{
+  return 3;
+}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
@@ -157,7 +164,7 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
           if(j == i) continue;
 
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
-          if(!relativeTransform) continue;
+          if(!relativeTransform || relativeTransform->second < confidence_threshold()) continue;
 
 #if DEBUGGING
           std::cout << "Relative Transform (" << i << '/' << sceneIDs[i] << " <- " << j << '/' << sceneIDs[j] << "): " << relativeTransform->second << '\n'

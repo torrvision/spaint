@@ -29,6 +29,7 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
 : m_context(context),
   m_frameIndex(0),
   m_maxRelocalisationsNeeded(5),
+  m_nextScenePairIndex(0),
   m_stopRelocalisationThread(false)
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
@@ -56,7 +57,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     add_relocalisation_candidates();
 
     // TODO: Comment here.
-    if(m_frameIndex % 20 == 0 && !m_candidates.empty()) try_schedule_relocalisation();
+    if(m_frameIndex % 20 == 0) try_schedule_relocalisation();
   }
 
   ++m_frameIndex;
@@ -133,7 +134,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
 #endif
           )
         );
-        (redundant ? m_redundantCandidates : m_candidates).push_back(std::make_pair(candidate, 0.0f));
+        (redundant ? m_redundantCandidates : m_scenePairInfos[std::make_pair(sceneI, sceneJ)].m_candidates).push_back(std::make_pair(candidate, 0.0f));
       }
     }
   }
@@ -203,6 +204,7 @@ void CollaborativeComponent::run_relocalisation()
       boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ);
       if(largestCluster && largestCluster->size() >= m_maxRelocalisationsNeeded)
       {
+#if 0
         for(std::list<Candidate>::iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend;)
         {
           if((it->first->m_sceneI == m_bestCandidate->m_sceneI && it->first->m_sceneJ == m_bestCandidate->m_sceneJ) ||
@@ -213,16 +215,19 @@ void CollaborativeComponent::run_relocalisation()
           }
           else ++it;
         }
+#else
+        // TODO
+#endif
       }
     }
     else
     {
       std::cout << "failed :(\n";
-      float& failurePenalty = m_failurePenalties[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+      float& failurePenalty = m_scenePairInfos[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].m_failurePenalty;
       failurePenalty = std::min(failurePenalty + failurePenaltyIncrease, failurePenaltyMax);
     }
 
-    m_triedLocalPoses[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].push_back(m_bestCandidate->m_localPoseJ);
+    m_scenePairInfos[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].m_triedLocalPoses.push_back(m_bestCandidate->m_localPoseJ);
 
     // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
     SubmapRelocalisation_Ptr bestCandidateCopy;
@@ -236,7 +241,16 @@ void CollaborativeComponent::run_relocalisation()
 
 void CollaborativeComponent::try_schedule_relocalisation()
 {
-  for(std::list<Candidate>::iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend; ++it)
+  if(m_scenePairInfos.empty()) return;
+
+  std::map<std::pair<std::string,std::string>,ScenePairInfo>::iterator kt = m_scenePairInfos.begin();
+  std::advance(kt, m_nextScenePairIndex);
+  m_nextScenePairIndex = (m_nextScenePairIndex + 1) % m_scenePairInfos.size();
+
+  std::list<Candidate>& candidates = kt->second.m_candidates;
+  if(candidates.empty()) return;
+
+  for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
     SubmapRelocalisation_Ptr candidate = it->first;
 
@@ -247,7 +261,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
     float primaryTerm = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
 
     float homogeneityPenalty = 0.0f;
-    const std::vector<ORUtils::SE3Pose>& triedLocalPoses = m_triedLocalPoses[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
+    const std::vector<ORUtils::SE3Pose>& triedLocalPoses = m_scenePairInfos[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)].m_triedLocalPoses;
     for(size_t j = 0, size = triedLocalPoses.size(); j < size; ++j)
     {
       if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedLocalPoses[j]))
@@ -257,15 +271,15 @@ void CollaborativeComponent::try_schedule_relocalisation()
       }
     }
 
-    float score = sizeTerm + primaryTerm - m_failurePenalties[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)] - homogeneityPenalty;
+    float score = sizeTerm + primaryTerm - m_scenePairInfos[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)].m_failurePenalty - homogeneityPenalty;
     it->second = score;
   }
 
-  m_candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
+  candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
 
 #if 0
   std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
-  for(std::list<Candidate>::const_iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend; ++it)
+  for(std::list<Candidate>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
     const SubmapRelocalisation_Ptr& candidate = it->first;
     const float score = it->second;
@@ -281,8 +295,8 @@ void CollaborativeComponent::try_schedule_relocalisation()
     if(!m_bestCandidate)
     {
       // Try to relocalise the best candidate.
-      m_bestCandidate = m_candidates.back().first;
-      m_candidates.pop_back();
+      m_bestCandidate = candidates.back().first;
+      candidates.pop_back();
       canRelocalise = true;
     }
   }
@@ -299,7 +313,7 @@ void CollaborativeComponent::update_failure_penalties()
   {
     for(size_t j = 0; j < sceneCount; ++j)
     {
-      float& failurePenalty = m_failurePenalties[std::make_pair(sceneIDs[i], sceneIDs[j])];
+      float& failurePenalty = m_scenePairInfos[std::make_pair(sceneIDs[i], sceneIDs[j])].m_failurePenalty;
       failurePenalty = std::max(failurePenalty - failurePenaltyDecreasePerFrame, 0.0f);
     }
   }

@@ -69,6 +69,15 @@ public:
    */
   ~PoseGraphOptimiser();
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the number of relocalisations needed between a pair of scenes before we can be fairly confident about the relative transformation between them.
+   *
+   * \return  The number of relocalisations needed between a pair of scenes before we can be fairly confident about the relative transformation between them.
+   */
+  static int confidence_threshold();
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
