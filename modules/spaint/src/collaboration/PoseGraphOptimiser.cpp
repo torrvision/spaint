@@ -75,7 +75,7 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
 
   boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster_sub(sceneI, sceneJ);
   size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
-  return std::make_pair(SE3Pose(/* TODO */ jt->second.GetInvM()), largestClusterSize);
+  return std::make_pair(SE3Pose(it->second.GetM() * jt->second.GetInvM()), largestClusterSize);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
