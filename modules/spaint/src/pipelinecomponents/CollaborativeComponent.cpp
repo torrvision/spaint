@@ -18,7 +18,7 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
-#define USE_REAL_IMAGES 1
+#define USE_REAL_IMAGES 0
 #define SAVE_REAL_IMAGES USE_REAL_IMAGES
 
 namespace spaint {
@@ -50,9 +50,6 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   if(m_frameIndex > 0)
   {
     // TODO: Comment here.
-    update_failure_penalties();
-
-    // TODO: Comment here.
     add_relocalisation_candidates();
 
     // TODO: Comment here.
@@ -61,7 +58,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
   ++m_frameIndex;
 
-#if defined(WITH_OPENCV) && 0
+#if defined(WITH_OPENCV) && 1
   cv::waitKey(1);
 #endif
 }
@@ -119,22 +116,17 @@ void CollaborativeComponent::add_relocalisation_candidates()
       const std::string sceneI = sceneIDs[i];
       const std::string sceneJ = sceneIDs[j];
 
-      boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(sceneI, sceneJ);
-      const bool redundant = largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold();
-
-      if(!redundant)
-      {
-        const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
-        SubmapRelocalisation_Ptr candidate(
-          new SubmapRelocalisation(
-            sceneI, sceneJ, m_frameIndex, slamStateJ->get_intrinsics().projectionParamsSimple.all, slamStateJ->get_pose()
+      const SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
+      SubmapRelocalisation_Ptr candidate(
+        new SubmapRelocalisation(
+          sceneI, sceneJ, m_frameIndex, slamStateJ->get_intrinsics().projectionParamsSimple.all, slamStateJ->get_pose()
 #if SAVE_REAL_IMAGES
-            , rgbdImages[j].first, rgbdImages[j].second
+          , rgbdImages[j].first, rgbdImages[j].second
 #endif
-          )
-        );
-        (redundant ? m_redundantCandidates : m_scenePairInfos[std::make_pair(sceneI, sceneJ)].m_candidates).push_back(std::make_pair(candidate, 0.0f));
-      }
+        )
+      );
+
+      m_scenePairInfos[std::make_pair(sceneI, sceneJ)].m_candidates.push_back(std::make_pair(candidate, 0.0f));
     }
   }
 }
@@ -178,7 +170,7 @@ void CollaborativeComponent::run_relocalisation()
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
 
-#if defined(WITH_OPENCV) && 0
+#if defined(WITH_OPENCV) && 1
     ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
     ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
 
@@ -194,36 +186,12 @@ void CollaborativeComponent::run_relocalisation()
     {
       // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
+      m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose);
       std::cout << "succeeded!\n";
-      //std::cout << bestCandidate->m_relativePose->GetM() << '\n';
-      const PoseGraphOptimiser_Ptr& poseGraphOptimiser = m_context->get_pose_graph_optimiser();
-      poseGraphOptimiser->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose); // TEMPORARY
-
-      // If we've now got enough relocalisations for this pair of scenes, move all the remaining candidates for them to a separate list.
-      boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ);
-      if(largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold())
-      {
-#if 0
-        for(std::list<Candidate>::iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend;)
-        {
-          if((it->first->m_sceneI == m_bestCandidate->m_sceneI && it->first->m_sceneJ == m_bestCandidate->m_sceneJ) ||
-              (it->first->m_sceneI == m_bestCandidate->m_sceneJ && it->first->m_sceneI == m_bestCandidate->m_sceneJ))
-          {
-            m_redundantCandidates.push_back(*it);
-            it = m_candidates.erase(it);
-          }
-          else ++it;
-        }
-#else
-        // TODO
-#endif
-      }
     }
     else
     {
       std::cout << "failed :(\n";
-      float& failurePenalty = m_scenePairInfos[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].m_failurePenalty;
-      failurePenalty = std::min(failurePenalty + failurePenaltyIncrease, failurePenaltyMax);
     }
 
     m_scenePairInfos[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].m_triedLocalPoses.push_back(m_bestCandidate->m_localPoseJ);
@@ -251,8 +219,8 @@ void CollaborativeComponent::try_schedule_relocalisation()
     m_nextScenePairIndex = (m_nextScenePairIndex + 1) % m_scenePairInfos.size();
     ++numTries;
 
-    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster;// = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(kt->first.first, kt->first.second);
-    if(kt->second.m_candidates.empty() || (largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold()))
+    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(kt->first.first, kt->first.second);
+    if(kt->second.m_candidates.empty() || (largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold()) || (kt->first.first != "World" && kt->first.second != "World"))
     {
       kt = m_scenePairInfos.end();
     }
@@ -278,7 +246,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
       }
     }
 
-    float score = -m_scenePairInfos[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)].m_failurePenalty - homogeneityPenalty;
+    float score = -homogeneityPenalty;
     it->second = score;
   }
 
@@ -309,21 +277,6 @@ void CollaborativeComponent::try_schedule_relocalisation()
   }
 
   if(canRelocalise) m_readyToRelocalise.notify_one();
-}
-
-void CollaborativeComponent::update_failure_penalties()
-{
-  const float failurePenaltyDecreasePerFrame = 0.001f;
-  const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
-
-  for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
-  {
-    for(size_t j = 0; j < sceneCount; ++j)
-    {
-      float& failurePenalty = m_scenePairInfos[std::make_pair(sceneIDs[i], sceneIDs[j])].m_failurePenalty;
-      failurePenalty = std::max(failurePenalty - failurePenaltyDecreasePerFrame, 0.0f);
-    }
-  }
 }
 
 }

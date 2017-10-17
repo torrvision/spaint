@@ -35,9 +35,6 @@ private:
     std::list<Candidate> m_candidates;
 
     /** TODO */
-    float m_failurePenalty;
-
-    /** TODO */
     std::vector<ORUtils::SE3Pose> m_triedLocalPoses;
   };
 
@@ -60,9 +57,6 @@ private:
 
   /** TODO */
   boost::condition_variable m_readyToRelocalise;
-
-  /** TODO */
-  std::list<Candidate> m_redundantCandidates;
 
   /** TODO */
   boost::thread m_relocalisationThread;
@@ -112,11 +106,6 @@ private:
    * \brief TODO
    */
   void try_schedule_relocalisation();
-
-  /**
-   * \brief TODO
-   */
-  void update_failure_penalties();
 };
 
 //#################### TYPEDEFS ####################

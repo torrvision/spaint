@@ -23,7 +23,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 PoseGraphOptimiser::PoseGraphOptimiser()
-: //m_optimisationThread(new boost::thread(boost::bind(&PoseGraphOptimiser::run_pose_graph_optimisation, this))),
+: m_optimisationThread(new boost::thread(boost::bind(&PoseGraphOptimiser::run_pose_graph_optimisation, this))),
   m_relativeTransformSamplesChanged(false),
   m_shouldTerminate(false)
 {}
