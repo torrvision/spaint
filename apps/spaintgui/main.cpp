@@ -653,7 +653,7 @@ try
 
     if(args.runServer)
     {
-      const int clientCount = 2;
+      const int clientCount = 4;
       for(int clientID = 0; clientID < clientCount; ++clientID)
       {
         CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);

@@ -18,7 +18,7 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
-#define USE_REAL_IMAGES 0
+#define USE_REAL_IMAGES 1
 #define SAVE_REAL_IMAGES USE_REAL_IMAGES
 
 namespace spaint {
@@ -28,7 +28,6 @@ namespace spaint {
 CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context)
 : m_context(context),
   m_frameIndex(0),
-  m_maxRelocalisationsNeeded(5),
   m_nextScenePairIndex(0),
   m_stopRelocalisationThread(false)
 {
@@ -121,7 +120,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
       const std::string sceneJ = sceneIDs[j];
 
       boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(sceneI, sceneJ);
-      const bool redundant = largestCluster && largestCluster->size() >= m_maxRelocalisationsNeeded;
+      const bool redundant = largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold();
 
       if(!redundant)
       {
@@ -202,7 +201,7 @@ void CollaborativeComponent::run_relocalisation()
 
       // If we've now got enough relocalisations for this pair of scenes, move all the remaining candidates for them to a separate list.
       boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ);
-      if(largestCluster && largestCluster->size() >= m_maxRelocalisationsNeeded)
+      if(largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold())
       {
 #if 0
         for(std::list<Candidate>::iterator it = m_candidates.begin(), iend = m_candidates.end(); it != iend;)
@@ -243,9 +242,23 @@ void CollaborativeComponent::try_schedule_relocalisation()
 {
   if(m_scenePairInfos.empty()) return;
 
-  std::map<std::pair<std::string,std::string>,ScenePairInfo>::iterator kt = m_scenePairInfos.begin();
-  std::advance(kt, m_nextScenePairIndex);
-  m_nextScenePairIndex = (m_nextScenePairIndex + 1) % m_scenePairInfos.size();
+  std::map<std::pair<std::string,std::string>,ScenePairInfo>::iterator kt = m_scenePairInfos.end();
+  size_t numTries = 0;
+  while(kt == m_scenePairInfos.end() && numTries < m_scenePairInfos.size())
+  {
+    kt = m_scenePairInfos.begin();
+    std::advance(kt, m_nextScenePairIndex);
+    m_nextScenePairIndex = (m_nextScenePairIndex + 1) % m_scenePairInfos.size();
+    ++numTries;
+
+    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster;// = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(kt->first.first, kt->first.second);
+    if(kt->second.m_candidates.empty() || (largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold()))
+    {
+      kt = m_scenePairInfos.end();
+    }
+  }
+
+  if(kt == m_scenePairInfos.end()) return;
 
   std::list<Candidate>& candidates = kt->second.m_candidates;
   if(candidates.empty()) return;
@@ -253,12 +266,6 @@ void CollaborativeComponent::try_schedule_relocalisation()
   for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
     SubmapRelocalisation_Ptr candidate = it->first;
-
-    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
-    size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
-    float sizeTerm = m_maxRelocalisationsNeeded - static_cast<float>(largestClusterSize);
-
-    float primaryTerm = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
 
     float homogeneityPenalty = 0.0f;
     const std::vector<ORUtils::SE3Pose>& triedLocalPoses = m_scenePairInfos[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)].m_triedLocalPoses;
@@ -271,7 +278,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
       }
     }
 
-    float score = sizeTerm + primaryTerm - m_scenePairInfos[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)].m_failurePenalty - homogeneityPenalty;
+    float score = -m_scenePairInfos[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)].m_failurePenalty - homogeneityPenalty;
     it->second = score;
   }
 

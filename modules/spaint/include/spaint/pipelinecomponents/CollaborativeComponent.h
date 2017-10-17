@@ -41,20 +41,10 @@ private:
     std::vector<ORUtils::SE3Pose> m_triedLocalPoses;
   };
 
-  //#################### CONSTANTS ####################
-private:
-  /** TODO */
-  const int m_maxRelocalisationsNeeded;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
   SubmapRelocalisation_Ptr m_bestCandidate;
-
-#if 0
-  /** TODO */
-  std::list<Candidate> m_candidates;
-#endif
 
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
