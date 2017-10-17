@@ -244,7 +244,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
     size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
     float sizeTerm = m_maxRelocalisationsNeeded - static_cast<float>(largestClusterSize);
 
-    float primaryTerm = 0.0f;//candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
+    float primaryTerm = candidate->m_sceneI == "World" || candidate->m_sceneJ == "World" ? 5.0f : 0.0f;
 
     float homogeneityPenalty = 0.0f;
     const std::vector<ORUtils::SE3Pose>& triedLocalPoses = m_triedLocalPoses[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
