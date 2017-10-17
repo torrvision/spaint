@@ -58,7 +58,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
   ++m_frameIndex;
 
-#if defined(WITH_OPENCV) && 1
+#if defined(WITH_OPENCV) && 0
   cv::waitKey(1);
 #endif
 }
@@ -170,7 +170,7 @@ void CollaborativeComponent::run_relocalisation()
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
 
-#if defined(WITH_OPENCV) && 1
+#if defined(WITH_OPENCV) && 0
     ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
     ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
 
@@ -187,14 +187,13 @@ void CollaborativeComponent::run_relocalisation()
       // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
       m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose);
+      m_scenePairInfos[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].m_triedLocalPoses.push_back(m_bestCandidate->m_localPoseJ);
       std::cout << "succeeded!\n";
     }
     else
     {
       std::cout << "failed :(\n";
     }
-
-    m_scenePairInfos[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].m_triedLocalPoses.push_back(m_bestCandidate->m_localPoseJ);
 
     // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
     SubmapRelocalisation_Ptr bestCandidateCopy;
@@ -220,7 +219,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
     ++numTries;
 
     boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(kt->first.first, kt->first.second);
-    if(kt->second.m_candidates.empty() || (largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold()) || (kt->first.first != "World" && kt->first.second != "World"))
+    if(kt->second.m_candidates.empty() || (largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold())/* || (kt->first.first != "World" && kt->first.second != "World")*/)
     {
       kt = m_scenePairInfos.end();
     }
