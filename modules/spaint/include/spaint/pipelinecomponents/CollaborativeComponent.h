@@ -24,22 +24,6 @@ private:
   typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
   typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
 
-#if 0
-  //#################### NESTED TYPES ####################
-private:
-  /**
-   * \brief TODO
-   */
-  struct ScenePairInfo
-  {
-    /** TODO */
-    std::list<Candidate> m_candidates;
-
-    /** TODO */
-    std::vector<ORUtils::SE3Pose> m_triedLocalPoses;
-  };
-#endif
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
@@ -54,21 +38,11 @@ private:
   /** TODO */
   boost::mutex m_mutex;
 
-#if 0
-  /** TODO */
-  size_t m_nextScenePairIndex;
-#endif
-
   /** TODO */
   boost::condition_variable m_readyToRelocalise;
 
   /** TODO */
   boost::thread m_relocalisationThread;
-
-#if 0
-  /** TODO */
-  std::map<std::pair<std::string,std::string>,ScenePairInfo> m_scenePairInfos;
-#endif
 
   /** TODO */
   boost::atomic<bool> m_stopRelocalisationThread;
@@ -101,13 +75,6 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-#if 0
-  /**
-   * \brief TODO
-   */
-  void add_relocalisation_candidates();
-#endif
-
   /**
    * \brief TODO
    */
