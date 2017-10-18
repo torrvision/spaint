@@ -138,25 +138,10 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
       // Reset the change flag.
       m_relativeTransformSamplesChanged = false;
 
-      // Add a node for each scene to the pose graph.
+      // Add an edge for each pair of scenes to the pose graph.
       sceneIDs = std::vector<std::string>(m_sceneIDs.begin(), m_sceneIDs.end());
       const int sceneCount = static_cast<int>(sceneIDs.size());
-      for(int i = 0; i < sceneCount; ++i)
-      {
-        GraphNodeSE3 *node = new GraphNodeSE3;
-
-        node->setId(i);
-
-        std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
-        node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
-
-        // FIXME: This shouldn't be hard-coded.
-        node->setFixed(sceneIDs[i] == "World");
-
-        graph.addNode(node);
-      }
-
-      // Add an edge for each pair of scenes to the pose graph.
+      std::map<int,bool> sceneIsConnected;
       for(int i = 0; i < sceneCount; ++i)
       {
         for(int j = 0; j < sceneCount; ++j)
@@ -176,7 +161,27 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
           edge->setToNodeId(i);
           edge->setMeasurementSE3(relativeTransform->first);
           graph.addEdge(edge);
+
+          sceneIsConnected[i] = sceneIsConnected[j] = true;
         }
+      }
+
+      // Add a node for each connected scene to the pose graph.
+      for(int i = 0; i < sceneCount; ++i)
+      {
+        if(sceneIsConnected.find(i) == sceneIsConnected.end()) continue;
+
+        GraphNodeSE3 *node = new GraphNodeSE3;
+
+        node->setId(i);
+
+        std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
+        node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
+
+        // FIXME: This shouldn't be hard-coded.
+        node->setFixed(sceneIDs[i] == "World");
+
+        graph.addNode(node);
       }
 
 #if DEBUGGING
