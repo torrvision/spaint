@@ -18,6 +18,9 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
+#include <tvgutil/numbers/RandomNumberGenerator.h>
+using namespace tvgutil;
+
 #define USE_REAL_IMAGES 0
 #define SAVE_REAL_IMAGES USE_REAL_IMAGES
 
@@ -111,7 +114,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
     {
       if(j == i) continue;
       if(!scenesStarted[j]) continue;
-      if(!(m_frameIndex >= 50 && m_frameIndex % 10 == 0 && ((m_frameIndex - 50) / 10) % sceneCount == j)) continue;
+      //if(!(m_frameIndex >= 50 && m_frameIndex % 10 == 0 && ((m_frameIndex - 50) / 10) % sceneCount == j)) continue;
 
       const std::string sceneI = sceneIDs[i];
       const std::string sceneJ = sceneIDs[j];
@@ -149,7 +152,7 @@ void CollaborativeComponent::run_relocalisation()
       }
     }
 
-    std::cout << "Attempting to relocalise " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
+    std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndex << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
     Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
 
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
@@ -219,7 +222,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
     ++numTries;
 
     boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(kt->first.first, kt->first.second);
-    if(kt->second.m_candidates.empty() || (largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold())/* || (kt->first.first != "World" && kt->first.second != "World")*/)
+    if(kt->second.m_candidates.empty()/* || (largestCluster && largestCluster->size() >= PoseGraphOptimiser::confidence_threshold())/* || (kt->first.first != "World" && kt->first.second != "World")*/)
     {
       kt = m_scenePairInfos.end();
     }
@@ -229,6 +232,8 @@ void CollaborativeComponent::try_schedule_relocalisation()
 
   std::list<Candidate>& candidates = kt->second.m_candidates;
   if(candidates.empty()) return;
+
+  static RandomNumberGenerator rng(12345);
 
   for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
@@ -245,7 +250,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
       }
     }
 
-    float score = -homogeneityPenalty;
+    float score = -homogeneityPenalty + rng.generate_real_from_uniform<float>(-1.0f, 1.0f);
     it->second = score;
   }
 
