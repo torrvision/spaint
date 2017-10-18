@@ -27,6 +27,9 @@ private:
   /** The fiducials (if any) that have been detected in the 3D scene. */
   std::map<std::string,Fiducial_Ptr> m_fiducials;
 
+  /** Whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded. */
+  bool m_frameProcessed;
+
   /** The mask to apply to the input images during tracking. */
   ITMUCharImage_Ptr m_inputMask;
 
@@ -54,6 +57,13 @@ private:
   /** The current reconstructed voxel scene. */
   SpaintVoxelScene_Ptr m_voxelScene;
 
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a SLAM state.
+   */
+  SLAMState();
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -69,6 +79,13 @@ public:
    * \return  The fiducials (if any) that have been detected in the 3D scene.
    */
   const std::map<std::string,Fiducial_Ptr>& get_fiducials() const;
+
+  /**
+   * \brief Gets whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded.
+   *
+   * \return  true, if the most recent call to the corresponding SLAM component's process_frame() function succeeded, or false otherwise.
+   */
+  bool get_frame_processed() const;
 
   /**
    * \brief Gets the mask to apply to the input images during tracking.
@@ -195,6 +212,13 @@ public:
    * \return  The voxel scene.
    */
   SpaintVoxelScene_CPtr get_voxel_scene() const;
+
+  /**
+   * \brief Sets whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded.
+   *
+   * \param frameProcessed  Whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded.
+   */
+  void set_frame_processed(bool frameProcessed);
 
   /**
    * \brief Sets the mask to apply to the input images during tracking.

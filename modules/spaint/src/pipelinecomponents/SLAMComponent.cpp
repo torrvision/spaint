@@ -127,9 +127,18 @@ void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
 
 bool SLAMComponent::process_frame()
 {
-  if(!m_imageSourceEngine->hasImagesNow()) return false;
-
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+
+  if(m_imageSourceEngine->hasImagesNow())
+  {
+    slamState->set_frame_processed(true);
+  }
+  else
+  {
+    slamState->set_frame_processed(false);
+    return false;
+  }
+
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const SurfelRenderState_Ptr& liveSurfelRenderState = slamState->get_live_surfel_render_state();

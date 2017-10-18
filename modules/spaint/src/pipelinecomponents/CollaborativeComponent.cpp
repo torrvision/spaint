@@ -4,6 +4,7 @@
  */
 
 #include "pipelinecomponents/CollaborativeComponent.h"
+using namespace ITMLib;
 using namespace ORUtils;
 
 #include <algorithm>
@@ -31,7 +32,9 @@ namespace spaint {
 CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context)
 : m_context(context),
   m_frameIndex(0),
+#if 0
   m_nextScenePairIndex(0),
+#endif
   m_stopRelocalisationThread(false)
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
@@ -50,6 +53,14 @@ CollaborativeComponent::~CollaborativeComponent()
 
 void CollaborativeComponent::run_collaborative_pose_estimation()
 {
+#if 1
+  update_trajectories();
+
+  if(m_frameIndex > 0 && m_frameIndex % 20 == 0)
+  {
+    try_schedule_relocalisation();
+  }
+#else
   if(m_frameIndex > 0)
   {
     // TODO: Comment here.
@@ -58,6 +69,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
     // TODO: Comment here.
     if(m_frameIndex % 20 == 0) try_schedule_relocalisation();
   }
+#endif
 
   ++m_frameIndex;
 
@@ -68,6 +80,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+#if 0
 void CollaborativeComponent::add_relocalisation_candidates()
 {
   const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
@@ -133,6 +146,7 @@ void CollaborativeComponent::add_relocalisation_candidates()
     }
   }
 }
+#endif
 
 void CollaborativeComponent::run_relocalisation()
 {
@@ -190,7 +204,9 @@ void CollaborativeComponent::run_relocalisation()
       // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
       m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose);
+#if 0
       m_scenePairInfos[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)].m_triedLocalPoses.push_back(m_bestCandidate->m_localPoseJ);
+#endif
       std::cout << "succeeded!\n";
     }
     else
@@ -210,6 +226,7 @@ void CollaborativeComponent::run_relocalisation()
 
 void CollaborativeComponent::try_schedule_relocalisation()
 {
+#if 0
   if(m_scenePairInfos.empty()) return;
 
   std::map<std::pair<std::string,std::string>,ScenePairInfo>::iterator kt = m_scenePairInfos.end();
@@ -253,10 +270,53 @@ void CollaborativeComponent::try_schedule_relocalisation()
     float score = -homogeneityPenalty + rng.generate_real_from_uniform<float>(-1.0f, 1.0f);
     it->second = score;
   }
+#else
+  // Randomly generate a list of candidate relocalisations.
+  std::list<Candidate> candidates;
+  const size_t desiredCandidateCount = 1;
+
+  const int sceneCount = static_cast<int>(m_trajectories.size());
+  if(sceneCount < 2) return;
+
+  static RandomNumberGenerator rng(12345);
+  for(size_t i = 0; i < desiredCandidateCount; ++i)
+  {
+    int ki = rng.generate_int_from_uniform(0, sceneCount - 1);
+    int kj = rng.generate_int_from_uniform(0, sceneCount - 2);
+    if(kj >= ki) ++kj;
+
+    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it = m_trajectories.begin();
+    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_trajectories.begin();
+
+    std::advance(it, ki);
+    std::advance(jt, kj);
+
+    const std::string sceneI = it->first, sceneJ = jt->first;
+
+    const int frameCount = static_cast<int>(jt->second.size());
+    const int frameIndex = rng.generate_int_from_uniform(0, frameCount - 1);
+
+    SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
+    const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
+
+    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndex];
+
+    SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, depthIntrinsicsJ, localPoseJ));
+    candidates.push_back(std::make_pair(candidate, 0.0f));
+  }
+
+  // Score all of the candidates.
+  for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+  {
+    SubmapRelocalisation_Ptr candidate = it->first;
+    float score = rng.generate_real_from_uniform<float>(-1.0f, 1.0f);
+    it->second = score;
+  }
+#endif
 
   candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
 
-#if 0
+#if 1
   std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
   for(std::list<Candidate>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
@@ -281,6 +341,20 @@ void CollaborativeComponent::try_schedule_relocalisation()
   }
 
   if(canRelocalise) m_readyToRelocalise.notify_one();
+}
+
+void CollaborativeComponent::update_trajectories()
+{
+  const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
+  for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
+  {
+    SLAMState_CPtr slamState = m_context->get_slam_state(sceneIDs[i]);
+    TrackingState_CPtr trackingState = slamState->get_tracking_state();
+    if(slamState->get_frame_processed() && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
+    {
+      m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
+    }
+  }
 }
 
 }

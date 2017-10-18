@@ -24,6 +24,7 @@ private:
   typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
   typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
 
+#if 0
   //#################### NESTED TYPES ####################
 private:
   /**
@@ -37,6 +38,7 @@ private:
     /** TODO */
     std::vector<ORUtils::SE3Pose> m_triedLocalPoses;
   };
+#endif
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -52,8 +54,10 @@ private:
   /** TODO */
   boost::mutex m_mutex;
 
+#if 0
   /** TODO */
   size_t m_nextScenePairIndex;
+#endif
 
   /** TODO */
   boost::condition_variable m_readyToRelocalise;
@@ -61,11 +65,16 @@ private:
   /** TODO */
   boost::thread m_relocalisationThread;
 
+#if 0
   /** TODO */
   std::map<std::pair<std::string,std::string>,ScenePairInfo> m_scenePairInfos;
+#endif
 
   /** TODO */
   boost::atomic<bool> m_stopRelocalisationThread;
+
+  /** TODO */
+  std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -92,10 +101,12 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+#if 0
   /**
    * \brief TODO
    */
   void add_relocalisation_candidates();
+#endif
 
   /**
    * \brief TODO
@@ -106,6 +117,11 @@ private:
    * \brief TODO
    */
   void try_schedule_relocalisation();
+
+  /**
+   * \brief TODO
+   */
+  void update_trajectories();
 };
 
 //#################### TYPEDEFS ####################

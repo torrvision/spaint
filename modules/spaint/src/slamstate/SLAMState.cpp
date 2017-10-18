@@ -11,6 +11,12 @@ using namespace ORUtils;
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+SLAMState::SLAMState()
+: m_frameProcessed(false)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 const Vector2i& SLAMState::get_depth_image_size() const
@@ -21,6 +27,11 @@ const Vector2i& SLAMState::get_depth_image_size() const
 const std::map<std::string,Fiducial_Ptr>& SLAMState::get_fiducials() const
 {
   return m_fiducials;
+}
+
+bool SLAMState::get_frame_processed() const
+{
+  return m_frameProcessed;
 }
 
 ITMUCharImage_CPtr SLAMState::get_input_mask() const
@@ -115,6 +126,11 @@ const SpaintVoxelScene_Ptr& SLAMState::get_voxel_scene()
 SpaintVoxelScene_CPtr SLAMState::get_voxel_scene() const
 {
   return m_voxelScene;
+}
+
+void SLAMState::set_frame_processed(bool frameProcessed)
+{
+  m_frameProcessed = frameProcessed;
 }
 
 void SLAMState::set_input_mask(const ITMUCharImage_Ptr& inputMask)
