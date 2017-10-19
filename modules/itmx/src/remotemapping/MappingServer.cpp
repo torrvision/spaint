@@ -313,6 +313,9 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     }
   }
 
+  // Delete the compressor to cleanly deallocate CUDA memory and avoid a crash on exit.
+  frameCompressor.reset();
+
   // Once we've finished reading messages, add the client to the finished clients set so that it can be cleaned up.
   {
     boost::lock_guard<boost::mutex> lock(m_mutex);
