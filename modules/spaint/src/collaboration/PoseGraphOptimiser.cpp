@@ -6,6 +6,8 @@
 #include "collaboration/PoseGraphOptimiser.h"
 using namespace ORUtils;
 
+#include <deque>
+
 #include <MiniSlamGraphLib/GraphEdgeSE3.h>
 #include <MiniSlamGraphLib/GraphNodeSE3.h>
 #include <MiniSlamGraphLib/LevenbergMarquardtMethod.h>
@@ -138,15 +140,79 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
       // Reset the change flag.
       m_relativeTransformSamplesChanged = false;
 
-      // Add an edge for each pair of scenes to the pose graph.
+      // Determine the ID of the primary scene.
       sceneIDs = std::vector<std::string>(m_sceneIDs.begin(), m_sceneIDs.end());
       const int sceneCount = static_cast<int>(sceneIDs.size());
-      std::map<int,bool> sceneIsConnected;
+      int primarySceneID = -1;
+      for(int i = 0; i < sceneCount; ++i)
+      {
+        // FIXME: The primary scene name shouldn't be hard-coded.
+        if(sceneIDs[i] == "World")
+        {
+          primarySceneID = i;
+          break;
+        }
+      }
+
+#if DEBUGGING
+      std::cout << "Primary Scene ID: " << primarySceneID << '\n';
+#endif
+
+      if(primarySceneID == -1) continue;
+
+      // Compute the reflexive transitive closure of the confident connections between the scenes.
+      std::deque<std::deque<bool> > connected(sceneCount);
+      for(int i = 0; i < sceneCount; ++i) connected[i].resize(sceneCount);
+
+      for(int i = 0; i < sceneCount; ++i)
+      {
+        connected[i][i] = true;
+
+        for(int j = 0; j < sceneCount; ++j)
+        {
+          if(j == i) continue;
+
+          boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
+          if(relativeTransform && relativeTransform->second >= confidence_threshold())
+          {
+            connected[i][j] = connected[j][i] = true;
+          }
+        }
+      }
+
+      for(int k = 0; k < sceneCount; ++k)
+      {
+        for(int i = 0; i < sceneCount; ++i)
+        {
+          for(int j = 0; j < sceneCount; ++j)
+          {
+            if(connected[i][k] && connected[k][j]) connected[i][j] = true;
+          }
+        }
+      }
+
+#if DEBUGGING
+      // Output the reflexive transitive closure of the confident connections for debugging purposes.
       for(int i = 0; i < sceneCount; ++i)
       {
         for(int j = 0; j < sceneCount; ++j)
         {
+          std::cout << connected[i][j] << ' ';
+        }
+        std::cout << '\n';
+      }
+#endif
+
+      // Add any edge whose endpoints are confidently connected (possibly transitively) to the primary scene to the pose graph.
+      bool graphHasEdges = false;
+      for(int i = 0; i < sceneCount; ++i)
+      {
+        if(!connected[i][primarySceneID]) continue;
+
+        for(int j = 0; j < sceneCount; ++j)
+        {
           if(j == i) continue;
+          if(!connected[j][primarySceneID]) continue;
 
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
           if(!relativeTransform || relativeTransform->second < confidence_threshold()) continue;
@@ -162,14 +228,16 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
           edge->setMeasurementSE3(relativeTransform->first);
           graph.addEdge(edge);
 
-          sceneIsConnected[i] = sceneIsConnected[j] = true;
+          graphHasEdges = true;
         }
       }
 
-      // Add a node for each connected scene to the pose graph.
+      if(!graphHasEdges) continue;
+
+      // Add a node for each scene that is confidently connected to the primary scene to the pose graph.
       for(int i = 0; i < sceneCount; ++i)
       {
-        if(sceneIsConnected.find(i) == sceneIsConnected.end()) continue;
+        if(!connected[i][primarySceneID]) continue;
 
         GraphNodeSE3 *node = new GraphNodeSE3;
 
@@ -178,8 +246,7 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
         node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
 
-        // FIXME: This shouldn't be hard-coded.
-        node->setFixed(sceneIDs[i] == "World");
+        node->setFixed(i == primarySceneID);
 
         graph.addNode(node);
       }
