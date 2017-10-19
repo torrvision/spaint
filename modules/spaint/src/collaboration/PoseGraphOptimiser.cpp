@@ -88,7 +88,7 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
   std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneJ);
   if(jt == m_estimatedGlobalPoses.end()) return try_get_relative_transform_sub(sceneI, sceneJ);
 
-  return std::make_pair(SE3Pose(it->second.GetM() * jt->second.GetInvM()), confidence_threshold());
+  return std::make_pair(SE3Pose(it->second.GetM() * jt->second.GetInvM()), static_cast<size_t>(confidence_threshold()));
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
