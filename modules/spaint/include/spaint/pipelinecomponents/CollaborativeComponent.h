@@ -106,7 +106,7 @@ private:
   /**
    * \brief TODO
    */
-  void update_trajectories();
+  bool update_trajectories();
 };
 
 //#################### TYPEDEFS ####################

@@ -48,9 +48,21 @@ CollaborativeComponent::~CollaborativeComponent()
 
 void CollaborativeComponent::run_collaborative_pose_estimation()
 {
-  update_trajectories();
+  // FIXME: Do this properly.
+  const bool batchMode = false;
 
-  if(m_frameIndex > 0 && m_frameIndex % 20 == 0)
+  bool trajectoriesWereUpdated = update_trajectories();
+
+  static int timeSinceLastFusion = 0;
+  if(trajectoriesWereUpdated) timeSinceLastFusion = 0;
+  else ++timeSinceLastFusion;
+
+  if(m_frameIndex > 0 &&
+     (
+      (batchMode && timeSinceLastFusion >= 30) ||
+      (!batchMode && m_frameIndex % 20 == 0)
+     )
+    )
   {
     try_schedule_relocalisation();
   }
@@ -258,8 +270,10 @@ void CollaborativeComponent::try_schedule_relocalisation()
   if(canRelocalise) m_readyToRelocalise.notify_one();
 }
 
-void CollaborativeComponent::update_trajectories()
+bool CollaborativeComponent::update_trajectories()
 {
+  bool trajectoriesWereUpdated = false;
+
   const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
   for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
   {
@@ -268,8 +282,11 @@ void CollaborativeComponent::update_trajectories()
     if(slamState->get_frame_processed() && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
     {
       m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
+      trajectoriesWereUpdated = true;
     }
   }
+
+  return trajectoriesWereUpdated;
 }
 
 }
