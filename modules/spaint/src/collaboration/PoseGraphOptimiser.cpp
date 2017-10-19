@@ -57,14 +57,18 @@ void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
-  add_relative_transform_sample_sub(sceneI, sceneJ, sample);
-  add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
+  bool signalOptimiser = true;
+  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneI, sceneJ, sample);
+  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
 
   m_sceneIDs.insert(sceneI);
   m_sceneIDs.insert(sceneJ);
 
-  m_relativeTransformSamplesChanged = true;
-  m_relativeTransformSamplesAdded.notify_one();
+  if(signalOptimiser)
+  {
+    m_relativeTransformSamplesChanged = true;
+    m_relativeTransformSamplesAdded.notify_one();
+  }
 }
 
 boost::optional<PoseGraphOptimiser::SE3PoseCluster>
@@ -89,7 +93,7 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
+bool PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
 {
 #if DEBUGGING
   std::cout << "Adding sample: " << sceneI << "<-" << sceneJ << '\n'
@@ -106,7 +110,7 @@ void PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
       if(GeometryUtil::poses_are_similar(sample, clusters[i][j]))
       {
         clusters[i].push_back(sample);
-        return;
+        return clusters[i].size() >= confidence_threshold();
       }
     }
   }
@@ -115,6 +119,7 @@ void PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
   SE3PoseCluster newCluster;
   newCluster.push_back(sample);
   clusters.push_back(newCluster);
+  return newCluster.size() >= confidence_threshold();
 }
 
 void PoseGraphOptimiser::run_pose_graph_optimisation()
@@ -249,7 +254,7 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         graph.addNode(node);
       }
 
-#if DEBUGGING
+#if 1
       std::cout << "Finished creating pose graph for optimisation" << std::endl;
 #endif
     }
