@@ -48,7 +48,7 @@ PoseGraphOptimiser::~PoseGraphOptimiser()
 
 int PoseGraphOptimiser::confidence_threshold()
 {
-  return 3;
+  return 2;
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

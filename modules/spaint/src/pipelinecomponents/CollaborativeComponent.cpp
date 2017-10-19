@@ -143,7 +143,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
 {
   // Randomly generate a list of candidate relocalisations.
   std::list<Candidate> candidates;
-  const size_t desiredCandidateCount = 1;
+  const size_t desiredCandidateCount = 10;
 
   const int sceneCount = static_cast<int>(m_trajectories.size());
   if(sceneCount < 2) return;
@@ -164,9 +164,10 @@ void CollaborativeComponent::try_schedule_relocalisation()
     const std::string sceneI = it->first, sceneJ = jt->first;
 
     const int frameCount = static_cast<int>(jt->second.size());
-    const int frameIndex = rng.generate_int_from_uniform(0, frameCount - 1);
 
     SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
+    const int frameIndex = rng.generate_int_from_uniform(0, frameCount - 1);
+
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
 
     const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndex];
@@ -179,7 +180,23 @@ void CollaborativeComponent::try_schedule_relocalisation()
   for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
     SubmapRelocalisation_Ptr candidate = it->first;
-    float score = rng.generate_real_from_uniform<float>(-1.0f, 1.0f);
+    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
+    size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
+    float confidenceTerm = largestClusterSize >= PoseGraphOptimiser::confidence_threshold() ? 0.0f : 3.0f;
+    float randomTerm = rng.generate_real_from_uniform<float>(-1.0f, 1.0f);
+
+    const std::deque<ORUtils::SE3Pose>& triedPoses = m_triedPoses[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
+    float homogeneityPenalty = 0.0f;
+    for(size_t j = 0, size = triedPoses.size(); j < size; ++j)
+    {
+      if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedPoses[j], 5 * M_PI / 180))
+      {
+        homogeneityPenalty = 5.0f;
+        break;
+      }
+    }
+
+    float score = confidenceTerm + randomTerm - homogeneityPenalty;
     it->second = score;
   }
 
@@ -205,6 +222,8 @@ void CollaborativeComponent::try_schedule_relocalisation()
       // Try to relocalise the best candidate.
       m_bestCandidate = candidates.back().first;
       candidates.pop_back();
+      std::deque<ORUtils::SE3Pose>& triedPoses = m_triedPoses[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+      triedPoses.push_back(m_bestCandidate->m_localPoseJ);
       canRelocalise = true;
     }
   }

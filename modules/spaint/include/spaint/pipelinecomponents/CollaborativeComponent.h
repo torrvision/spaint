@@ -50,6 +50,9 @@ private:
   /** TODO */
   std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
 
+  /** TODO */
+  std::map<std::pair<std::string,std::string>,std::deque<ORUtils::SE3Pose> > m_triedPoses;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
