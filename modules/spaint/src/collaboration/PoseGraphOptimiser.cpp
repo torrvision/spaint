@@ -84,8 +84,6 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
   std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneJ);
   if(jt == m_estimatedGlobalPoses.end()) return try_get_relative_transform_sub(sceneI, sceneJ);
 
-  //boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster_sub(sceneI, sceneJ);
-  //size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
   return std::make_pair(SE3Pose(it->second.GetM() * jt->second.GetInvM()), confidence_threshold());
 }
 
@@ -154,19 +152,19 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         }
       }
 
-#if DEBUGGING
-      std::cout << "Primary Scene ID: " << primarySceneID << '\n';
-#endif
-
+      // If no sample has been added for the primary scene yet, we can't build a valid pose graph.
       if(primarySceneID == -1) continue;
 
-      // Compute the reflexive transitive closure of the confident connections between the scenes.
-      std::deque<std::deque<bool> > connected(sceneCount);
-      for(int i = 0; i < sceneCount; ++i) connected[i].resize(sceneCount);
+      // Determine which connections between the scenes are confident ones.
+      std::deque<std::deque<bool> > confidentlyConnected(sceneCount);
+      for(int i = 0; i < sceneCount; ++i)
+      {
+        confidentlyConnected[i].resize(sceneCount);
+      }
 
       for(int i = 0; i < sceneCount; ++i)
       {
-        connected[i][i] = true;
+        confidentlyConnected[i][i] = true;
 
         for(int j = 0; j < sceneCount; ++j)
         {
@@ -175,18 +173,22 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
           if(relativeTransform && relativeTransform->second >= confidence_threshold())
           {
-            connected[i][j] = connected[j][i] = true;
+            confidentlyConnected[i][j] = confidentlyConnected[j][i] = true;
           }
         }
       }
 
+      // Use a variant of Floyd-Warshall to compute the reflexive transitive closure of the confident connections.
       for(int k = 0; k < sceneCount; ++k)
       {
         for(int i = 0; i < sceneCount; ++i)
         {
           for(int j = 0; j < sceneCount; ++j)
           {
-            if(connected[i][k] && connected[k][j]) connected[i][j] = true;
+            if(confidentlyConnected[i][k] && confidentlyConnected[k][j])
+            {
+              confidentlyConnected[i][j] = true;
+            }
           }
         }
       }
@@ -197,22 +199,20 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
       {
         for(int j = 0; j < sceneCount; ++j)
         {
-          std::cout << connected[i][j] << ' ';
+          std::cout << confidentlyConnected[i][j] << ' ';
         }
         std::cout << '\n';
       }
 #endif
 
-      // Add any edge whose endpoints are confidently connected (possibly transitively) to the primary scene to the pose graph.
+      // Add any edge with at least one endpoint that is confidently connected to the primary scene to the pose graph.
       bool graphHasEdges = false;
       for(int i = 0; i < sceneCount; ++i)
       {
-        if(!connected[i][primarySceneID]) continue;
-
         for(int j = 0; j < sceneCount; ++j)
         {
           if(j == i) continue;
-          if(!connected[j][primarySceneID]) continue;
+          if(!confidentlyConnected[i][primarySceneID] && !confidentlyConnected[j][primarySceneID]) continue;
 
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
           if(!relativeTransform || relativeTransform->second < confidence_threshold()) continue;
@@ -232,22 +232,20 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
         }
       }
 
+      // If no scenes are currently confidently connected to the primary scene, we can't build a valid pose graph.
       if(!graphHasEdges) continue;
 
       // Add a node for each scene that is confidently connected to the primary scene to the pose graph.
       for(int i = 0; i < sceneCount; ++i)
       {
-        if(!connected[i][primarySceneID]) continue;
-
-        GraphNodeSE3 *node = new GraphNodeSE3;
-
-        node->setId(i);
+        if(!confidentlyConnected[i][primarySceneID]) continue;
 
         std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
+
+        GraphNodeSE3 *node = new GraphNodeSE3;
+        node->setId(i);
         node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
-
         node->setFixed(i == primarySceneID);
-
         graph.addNode(node);
       }
 
