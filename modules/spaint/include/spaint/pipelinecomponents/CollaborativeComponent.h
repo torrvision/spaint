@@ -9,6 +9,8 @@
 #include <boost/atomic.hpp>
 #include <boost/thread.hpp>
 
+#include <tvgutil/numbers/RandomNumberGenerator.h>
+
 #include "CollaborativeContext.h"
 #include "../collaboration/SubmapRelocalisation.h"
 
@@ -43,6 +45,9 @@ private:
 
   /** TODO */
   boost::thread m_relocalisationThread;
+
+  /** A random number generator. */
+  mutable tvgutil::RandomNumberGenerator m_rng;
 
   /** TODO */
   boost::atomic<bool> m_stopRelocalisationThread;
@@ -81,7 +86,17 @@ private:
   /**
    * \brief TODO
    */
+  std::list<Candidate> generate_random_candidates(size_t desiredCandidateCount) const;
+
+  /**
+   * \brief TODO
+   */
   void run_relocalisation();
+
+  /**
+   * \brief TODO
+   */
+  void score_candidates(std::list<Candidate>& candidates) const;
 
   /**
    * \brief TODO

@@ -98,6 +98,14 @@ public:
   void terminate();
 
   /**
+   * \brief Attempts to get the estimated global pose (if any) of the specified scene.
+   *
+   * \param sceneID The scene whose estimated global pose we want to get.
+   * \return        The estimated global pose (if any) of the specified scene, or boost::none otherwise.
+   */
+  boost::optional<ORUtils::SE3Pose> try_get_estimated_global_pose(const std::string& sceneID) const;
+
+  /**
    * \brief Attempts to get the largest cluster of samples of the transformation from the coordinate system of scene j to that of scene i.
    *
    * \param sceneI  The ID of scene i.

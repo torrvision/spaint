@@ -71,6 +71,13 @@ void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI
   }
 }
 
+boost::optional<SE3Pose> PoseGraphOptimiser::try_get_estimated_global_pose(const std::string& sceneID) const
+{
+  boost::lock_guard<boost::mutex> lock(m_mutex);
+  std::map<std::string,ORUtils::SE3Pose>::const_iterator it = m_estimatedGlobalPoses.find(sceneID);
+  return it != m_estimatedGlobalPoses.end() ? boost::optional<SE3Pose>(it->second) : boost::none;
+}
+
 boost::optional<PoseGraphOptimiser::SE3PoseCluster>
 PoseGraphOptimiser::try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const
 {

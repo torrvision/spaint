@@ -19,9 +19,6 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
-#include <tvgutil/numbers/RandomNumberGenerator.h>
-using namespace tvgutil;
-
 #define USE_REAL_IMAGES 0
 #define SAVE_REAL_IMAGES USE_REAL_IMAGES
 
@@ -32,6 +29,7 @@ namespace spaint {
 CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context)
 : m_context(context),
   m_frameIndex(0),
+  m_rng(12345),
   m_stopRelocalisationThread(false)
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
@@ -65,6 +63,44 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
+{
+  std::list<Candidate> candidates;
+
+  const int sceneCount = static_cast<int>(m_trajectories.size());
+  if(sceneCount < 2) return std::list<Candidate>();
+
+  for(size_t i = 0; i < desiredCandidateCount; ++i)
+  {
+    // Randomly select the trajectories of two different scenes.
+    int ki = m_rng.generate_int_from_uniform(0, sceneCount - 1);
+    int kj = m_rng.generate_int_from_uniform(0, sceneCount - 2);
+    if(kj >= ki) ++kj;
+
+    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it = m_trajectories.begin();
+    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_trajectories.begin();
+    std::advance(it, ki);
+    std::advance(jt, kj);
+
+    const std::string sceneI = it->first;
+    const std::string sceneJ = jt->first;
+
+    // Randomly pick a frame from scene j.
+    SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
+    const int frameCount = static_cast<int>(jt->second.size());
+    const int frameIndex = m_rng.generate_int_from_uniform(0, frameCount - 1);
+
+    // Add a candidate to relocalise the selected frame of scene j against scene i.
+    const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
+    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndex];
+
+    SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, depthIntrinsicsJ, localPoseJ));
+    candidates.push_back(std::make_pair(candidate, 0.0f));
+  }
+
+  return candidates;
+}
 
 void CollaborativeComponent::run_relocalisation()
 {
@@ -139,70 +175,59 @@ void CollaborativeComponent::run_relocalisation()
   }
 }
 
-void CollaborativeComponent::try_schedule_relocalisation()
+void CollaborativeComponent::score_candidates(std::list<Candidate>& candidates) const
 {
-  // Randomly generate a list of candidate relocalisations.
-  std::list<Candidate> candidates;
-  const size_t desiredCandidateCount = 10;
-
-  const int sceneCount = static_cast<int>(m_trajectories.size());
-  if(sceneCount < 2) return;
-
-  static RandomNumberGenerator rng(12345);
-  for(size_t i = 0; i < desiredCandidateCount; ++i)
-  {
-    int ki = rng.generate_int_from_uniform(0, sceneCount - 1);
-    int kj = rng.generate_int_from_uniform(0, sceneCount - 2);
-    if(kj >= ki) ++kj;
-
-    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it = m_trajectories.begin();
-    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_trajectories.begin();
-
-    std::advance(it, ki);
-    std::advance(jt, kj);
-
-    const std::string sceneI = it->first, sceneJ = jt->first;
-
-    const int frameCount = static_cast<int>(jt->second.size());
-
-    SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
-    const int frameIndex = rng.generate_int_from_uniform(0, frameCount - 1);
-
-    const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
-
-    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndex];
-
-    SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, depthIntrinsicsJ, localPoseJ));
-    candidates.push_back(std::make_pair(candidate, 0.0f));
-  }
-
-  // Score all of the candidates.
   for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
     SubmapRelocalisation_Ptr candidate = it->first;
-    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = m_context->get_pose_graph_optimiser()->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
-    size_t largestClusterSize = largestCluster ? largestCluster->size() : 0;
-    float confidenceTerm = largestClusterSize >= PoseGraphOptimiser::confidence_threshold() ? 0.0f : 3.0f;
-    float randomTerm = rng.generate_real_from_uniform<float>(-1.0f, 1.0f);
 
-    const std::deque<ORUtils::SE3Pose>& triedPoses = m_triedPoses[std::make_pair(candidate->m_sceneI, candidate->m_sceneJ)];
+    // Boost candidates that may attach new confident nodes to the graph.
+    PoseGraphOptimiser_CPtr poseGraphOptimiser = m_context->get_pose_graph_optimiser();
+    boost::optional<ORUtils::SE3Pose> globalPoseI = poseGraphOptimiser->try_get_estimated_global_pose(candidate->m_sceneI);
+    boost::optional<ORUtils::SE3Pose> globalPoseJ = poseGraphOptimiser->try_get_estimated_global_pose(candidate->m_sceneJ);
+    float newNodeBoost = (globalPoseI && !globalPoseJ) || (globalPoseJ && !globalPoseI) ? 1.0f : 0.0f;
+
+    // Penalise candidates that will only add to an existing confident edge.
+    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
+    int largestClusterSize = largestCluster ? static_cast<int>(largestCluster->size()) : 0;
+    float confidencePenalty = 1.0f * std::max(largestClusterSize - PoseGraphOptimiser::confidence_threshold(), 0);
+
+    // Penalise candidates that are too close to ones we've tried before.
     float homogeneityPenalty = 0.0f;
-    for(size_t j = 0, size = triedPoses.size(); j < size; ++j)
+    std::map<std::pair<std::string,std::string>,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_triedPoses.find(std::make_pair(candidate->m_sceneI, candidate->m_sceneJ));
+    if(jt != m_triedPoses.end())
     {
-      if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedPoses[j], 5 * M_PI / 180))
+      const std::deque<ORUtils::SE3Pose>& triedPoses = jt->second;
+      for(size_t j = 0, size = triedPoses.size(); j < size; ++j)
       {
-        homogeneityPenalty = 5.0f;
-        break;
+        if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedPoses[j], 5 * M_PI / 180))
+        {
+          homogeneityPenalty = 5.0f;
+          break;
+        }
       }
     }
 
-    float score = confidenceTerm + randomTerm - homogeneityPenalty;
+    float score = newNodeBoost - confidencePenalty - homogeneityPenalty;
     it->second = score;
   }
+}
 
+void CollaborativeComponent::try_schedule_relocalisation()
+{
+  // Randomly generate a list of candidate relocalisations.
+  const size_t desiredCandidateCount = 10;
+  std::list<Candidate> candidates = generate_random_candidates(desiredCandidateCount);
+  if(candidates.empty()) return;
+
+  // Score all of the candidates.
+  score_candidates(candidates);
+
+  // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
   candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
 
 #if 0
+  // Print out all of the candidates for debugging purposes.
   std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
   for(std::list<Candidate>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
@@ -219,12 +244,14 @@ void CollaborativeComponent::try_schedule_relocalisation()
     boost::unique_lock<boost::mutex> lock(m_mutex);
     if(!m_bestCandidate)
     {
-      // Try to relocalise the best candidate.
+      // Schedule the best candidate for relocalisation.
       m_bestCandidate = candidates.back().first;
       candidates.pop_back();
+      canRelocalise = true;
+
+      // Record the pose we're trying in case we want to avoid similar poses later.
       std::deque<ORUtils::SE3Pose>& triedPoses = m_triedPoses[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
       triedPoses.push_back(m_bestCandidate->m_localPoseJ);
-      canRelocalise = true;
     }
   }
 
