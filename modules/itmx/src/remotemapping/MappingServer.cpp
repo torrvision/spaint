@@ -14,6 +14,7 @@ using namespace tvgutil;
 #include "ocv/OpenCVUtil.h"
 #endif
 
+#include "remotemapping/AckMessage.h"
 #include "remotemapping/CompressedRGBDFrameMessage.h"
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
@@ -223,6 +224,10 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     client = m_clients.find(clientID)->second;
   }
 
+  // Allocate an AckMessage to use later.
+  AckMessage ackMsg;
+  ackMsg.set_status_code(0);
+
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;
   bool connectionOk = read_message(sock, calibMsg);
@@ -259,6 +264,9 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
                                                   RGBDFrameCompressor::DEPTH_NO_COMPRESSION, RGBDFrameCompressor::RGB_NO_COMPRESSION));
   #endif
+
+    // Signal to the client that the server is ready.
+    connectionOk = write_message(sock, ackMsg);
   }
 
   // Signal that we're ready to start reading frame messages from the client.
@@ -286,6 +294,9 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
       {
         // Uncompress the images.
         frameCompressor->uncompress_rgbd_frame(*compressedRGBDMessage, msg);
+
+        // Signal the client that we are done.
+        connectionOk = write_message(sock, ackMsg);
 
 #if DEBUGGING
         std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
@@ -368,6 +379,12 @@ void MappingServer::run_server()
 #if DEBUGGING
   std::cout << "Server thread terminating" << std::endl;
 #endif
+}
+
+void MappingServer::write_message_handler(const boost::system::error_code &err, boost::optional<boost::system::error_code> &ret)
+{
+  // Store any error message so that it can be examined by write_message.
+  ret = err;
 }
 
 }

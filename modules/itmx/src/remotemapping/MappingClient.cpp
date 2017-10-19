@@ -11,6 +11,8 @@ using namespace tvgutil;
 #include <tvgutil/boost/WrappedAsio.h>
 using boost::asio::ip::tcp;
 
+#include "remotemapping/AckMessage.h"
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -31,6 +33,11 @@ MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr MappingClient::begin_push_
 void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
 {
   m_stream.write(msg.get_data_ptr(), msg.get_size());
+
+  // Wait for an Ack (synchronously).
+  AckMessage ackMsg;
+  m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
+
 
   const int capacity = 1;
   m_frameMessageQueue.initialise(capacity, boost::bind(&RGBDFrameMessage::make, msg.extract_rgb_image_size(), msg.extract_depth_image_size()));
@@ -55,6 +62,9 @@ void MappingClient::run_message_sender()
   CompressedRGBDFrameHeaderMessage_Ptr compressedRGBDMessageHeader(new CompressedRGBDFrameHeaderMessage);
   CompressedRGBDFrameMessage_Ptr compressedRGBDMessage(new CompressedRGBDFrameMessage(*compressedRGBDMessageHeader));
 
+  // Allocate AckMessage.
+  AckMessage_Ptr ackMessage(new AckMessage);
+
   bool connectionOk = true;
   while(connectionOk)
   {
@@ -64,9 +74,13 @@ void MappingClient::run_message_sender()
     m_frameCompressor->compress_rgbd_frame(*msg, *compressedRGBDMessageHeader, *compressedRGBDMessage);
 
     // Send first the header, then the compressed frame. Chained with && to early out in case one of the send fails.
+    // Finally, wait for an Ack.
     connectionOk = connectionOk
         && m_stream.write(compressedRGBDMessageHeader->get_data_ptr(), compressedRGBDMessageHeader->get_size())
-        && m_stream.write(compressedRGBDMessage->get_data_ptr(), compressedRGBDMessage->get_size());
+        && m_stream.write(compressedRGBDMessage->get_data_ptr(), compressedRGBDMessage->get_size())
+        && m_stream.read(ackMessage->get_data_ptr(), ackMessage->get_size());
+
+    // TODO: check Ack status if necessary.
 
     m_frameMessageQueue.pop();
   }

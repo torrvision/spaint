@@ -297,6 +297,32 @@ private:
    * \brief Runs the mapping server.
    */
   void run_server();
+
+  /**
+   * \brief Attempts to write a message of type T on the specified socket.
+   *
+   * This will block until either the write succeeds, an error occurs or the server terminates.
+   *
+   * \param sock  The socket from which to attempt to write the message.
+   * \param msg   The T to write.
+   * \return      true, if writing succeeded, or false otherwise.
+   */
+  template <typename T>
+  bool write_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const T& msg)
+  {
+    boost::optional<boost::system::error_code> err;
+    boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::write_message_handler, this, _1, boost::ref(err)));
+    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    return m_shouldTerminate ? false : !*err;
+  }
+
+  /**
+   * \brief The handler called when an asynchronous write of a message finishes.
+   *
+   * \param err The error code associated with the read.
+   * \param ret A location into which to write the error code so that write_message can access it.
+   */
+  void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
 };
 
 //#################### TYPEDEFS ####################
