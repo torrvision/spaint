@@ -24,6 +24,9 @@ private:
   /** The collaborative SLAM component used to determine the relative poses between the different agents. */
   spaint::CollaborativeComponent_Ptr m_collaborativeComponent;
 
+  /** Signals whether or not the World scene is coming from a remote agent. */
+  bool m_worldIsRemote;
+
   //#################### CONSTRUCTORS ####################
 public:
   CollaborativePipeline(const Settings_Ptr& settings, const std::string& resourcesDir,
@@ -42,6 +45,10 @@ public:
 
   /** Override */
   virtual void set_mode(Mode mode);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  void create_remote_slam_component(const std::string& localSceneID, int remoteClientID);
 };
 
 #endif

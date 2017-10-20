@@ -56,6 +56,11 @@ public:
   virtual bool hasMoreImages() const;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<RemoteImageSourceEngine> RemoteImageSourceEngine_Ptr;
+typedef boost::shared_ptr<const RemoteImageSourceEngine> RemoteImageSourceEngine_CPtr;
+
 }
 
 #endif

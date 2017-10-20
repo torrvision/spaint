@@ -651,47 +651,30 @@ try
     std::vector<SLAMComponent::TrackingMode> trackingModes;
     std::vector<std::string> trackerConfigs;
 
-    if(args.runServer)
+    // Add an image source engine for each disk sequence specified.
+    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
     {
-      const int expectedClientCount = 2;
-      for(int clientID = 0; clientID < expectedClientCount; ++clientID)
-      {
-        CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
-        imageSourceEngine->addSubengine(new RemoteImageSourceEngine(mappingServer, clientID));
-        imageSourceEngines.push_back(imageSourceEngine);
+      const std::string& depthImageMask = args.depthImageMasks[i];
+      const std::string& rgbImageMask = args.rgbImageMasks[i];
 
-        mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
-        trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
-        trackerConfigs.push_back("<tracker type='remote'><params>" + boost::lexical_cast<std::string>(clientID) + "</params></tracker>");
-      }
+      std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
+      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+                                        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+                                        args.prefetchBufferCapacity
+                                        ));
+
+      imageSourceEngines.push_back(imageSourceEngine);
     }
-    else
+
+    // Set up the mapping modes, tracking modes and tracker configurations.
+    const std::string trackerConfig = make_tracker_config(args);
+    for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
     {
-      // Add an image source engine for each disk sequence specified.
-      for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
-      {
-        const std::string& depthImageMask = args.depthImageMasks[i];
-        const std::string& rgbImageMask = args.rgbImageMasks[i];
-
-        std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
-        ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-        CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
-        imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-          new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-          args.prefetchBufferCapacity
-        ));
-
-        imageSourceEngines.push_back(imageSourceEngine);
-      }
-
-      // Set up the mapping modes, tracking modes and tracker configurations.
-      const std::string trackerConfig = make_tracker_config(args);
-      for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
-      {
-        mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
-        trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
-        trackerConfigs.push_back(trackerConfig);
-      }
+      mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
+      trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
+      trackerConfigs.push_back(trackerConfig);
     }
 
     // Construct the fiducial detector (if any).
