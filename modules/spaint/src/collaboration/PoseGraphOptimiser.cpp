@@ -45,13 +45,13 @@ int PoseGraphOptimiser::confidence_threshold()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
+void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample, CollaborationMode mode)
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
   bool signalOptimiser = true;
-  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneI, sceneJ, sample);
-  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()));
+  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneI, sceneJ, sample, mode);
+  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()), mode);
 
   m_sceneIDs.insert(sceneI);
   m_sceneIDs.insert(sceneJ);
@@ -109,7 +109,7 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-bool PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample)
+bool PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample, CollaborationMode mode)
 {
 #if DEBUGGING
   std::cout << "Adding sample: " << sceneI << "<-" << sceneJ << '\n'
@@ -129,16 +129,17 @@ bool PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
 
         if(clusters[i].size() >= confidence_threshold())
         {
-#if 0
-          // TODO: Hysteresis
-          for(size_t k = 0; k < clusterCount; ++k)
+          if(mode == CM_LIVE)
           {
-            if(k != i && clusters[k].size() > 1)
+            // TODO: Hysteresis
+            for(size_t k = 0; k < clusterCount; ++k)
             {
-              clusters[k].pop_back();
+              if(k != i && clusters[k].size() > 1)
+              {
+                clusters[k].pop_back();
+              }
             }
           }
-#endif
 
           return true;
         }

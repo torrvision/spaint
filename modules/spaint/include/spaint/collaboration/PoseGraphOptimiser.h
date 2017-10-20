@@ -14,6 +14,8 @@
 
 #include <ORUtils/SE3Pose.h>
 
+#include "CollaborationMode.h"
+
 namespace spaint {
 
 /**
@@ -89,8 +91,9 @@ public:
    * \param sceneI  The ID of scene i.
    * \param sceneJ  The ID of scene j.
    * \param sample  A sample of the transformation from the coordinate system of scene j to that of scene i.
+   * \param mode    TODO
    */
-  void add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
+  void add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample, CollaborationMode mode);
 
   /**
    * \brief Starts the pose graph optimiser.
@@ -138,9 +141,10 @@ private:
    * \param sceneI  The ID of scene i.
    * \param sceneJ  The ID of scene j.
    * \param sample  A sample of the transformation from the coordinate system of scene j to that of scene i.
+   * \param mode    TODO
    * \return        true, if the cluster to which the sample was added is now a confident one, or false otherwise.
    */
-  bool add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
+  bool add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample, CollaborationMode mode);
 
   /**
    * \brief Optimises the relative transformations between the different scenes.

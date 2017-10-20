@@ -44,6 +44,7 @@ src/collaboration/PoseGraphOptimiser.cpp
 )
 
 SET(collaboration_headers
+include/spaint/collaboration/CollaborationMode.h
 include/spaint/collaboration/PoseGraphOptimiser.h
 include/spaint/collaboration/SubmapRelocalisation.h
 )

@@ -26,7 +26,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context, Mode mode)
+CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context, CollaborationMode mode)
 : m_context(context),
   m_frameIndex(0),
   m_mode(mode),
@@ -51,9 +51,9 @@ CollaborativeComponent::~CollaborativeComponent()
 void CollaborativeComponent::run_collaborative_pose_estimation()
 {
   bool fusionMayStillRun = update_trajectories();
-  if(!fusionMayStillRun) m_mode = MODE_BATCH;
+  if(!fusionMayStillRun) m_mode = CM_BATCH;
 
-  if(m_frameIndex > 0 && (m_mode == MODE_BATCH || (m_mode == MODE_LIVE && m_frameIndex % 20 == 0)))
+  if(m_frameIndex > 0 && (m_mode == CM_BATCH || (m_mode == CM_LIVE && m_frameIndex % 20 == 0)))
   {
     try_schedule_relocalisation();
   }
@@ -92,7 +92,7 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
     // Randomly pick a frame from scene j.
     SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
     const int frameCount = static_cast<int>(jt->second.size());
-    const int frameIndex = m_mode == MODE_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
+    const int frameIndex = m_mode == CM_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
       ? m_rng.generate_int_from_uniform(0, frameCount - 1)
       : frameCount - 1;
 
@@ -162,7 +162,7 @@ void CollaborativeComponent::run_relocalisation()
     {
       // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
-      m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose);
+      m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
       std::cout << "succeeded!\n";
     }
     else

@@ -12,6 +12,7 @@
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "CollaborativeContext.h"
+#include "../collaboration/CollaborationMode.h"
 #include "../collaboration/SubmapRelocalisation.h"
 
 namespace spaint {
@@ -21,20 +22,6 @@ namespace spaint {
  */
 class CollaborativeComponent
 {
-  //#################### ENUMERATIONS ####################
-public:
-  /**
-   * \brief TODO
-   */
-  enum Mode
-  {
-    /** TODO */
-    MODE_BATCH,
-
-    /** TODO */
-    MODE_LIVE
-  };
-
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
@@ -52,7 +39,7 @@ private:
   int m_frameIndex;
 
   /** TODO */
-  Mode m_mode;
+  CollaborationMode m_mode;
 
   /** TODO */
   boost::mutex m_mutex;
@@ -83,7 +70,7 @@ public:
    * \param context The shared context needed for collaborative SLAM.
    * \param mode    TODO
    */
-  CollaborativeComponent(const CollaborativeContext_Ptr& context, Mode mode = MODE_LIVE);
+  CollaborativeComponent(const CollaborativeContext_Ptr& context, CollaborationMode mode = CM_LIVE);
 
   //#################### DESTRUCTOR ####################
 public:
