@@ -25,8 +25,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 PoseGraphOptimiser::PoseGraphOptimiser()
-: m_optimisationThread(new boost::thread(boost::bind(&PoseGraphOptimiser::run_pose_graph_optimisation, this))),
-  m_relativeTransformSamplesChanged(false),
+: m_relativeTransformSamplesChanged(false),
   m_shouldTerminate(false)
 {}
 
@@ -34,14 +33,7 @@ PoseGraphOptimiser::PoseGraphOptimiser()
 
 PoseGraphOptimiser::~PoseGraphOptimiser()
 {
-  m_shouldTerminate = true;
-
-  if(m_optimisationThread)
-  {
-    // Artificially wake up the pose graph optimisation thread and wait for it to terminate.
-    m_relativeTransformSamplesAdded.notify_one();
-    m_optimisationThread->join();
-  }
+  terminate();
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -68,6 +60,23 @@ void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI
   {
     m_relativeTransformSamplesChanged = true;
     m_relativeTransformSamplesAdded.notify_one();
+  }
+}
+
+void PoseGraphOptimiser::start()
+{
+  m_optimisationThread.reset(new boost::thread(boost::bind(&PoseGraphOptimiser::run_pose_graph_optimisation, this)));
+}
+
+void PoseGraphOptimiser::terminate()
+{
+  m_shouldTerminate = true;
+
+  if(m_optimisationThread)
+  {
+    // Artificially wake up the pose graph optimisation thread and wait for it to terminate.
+    m_relativeTransformSamplesAdded.notify_one();
+    m_optimisationThread->join();
   }
 }
 
@@ -117,7 +126,23 @@ bool PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
       if(GeometryUtil::poses_are_similar(sample, clusters[i][j]))
       {
         clusters[i].push_back(sample);
-        return clusters[i].size() >= confidence_threshold();
+
+        if(clusters[i].size() >= confidence_threshold())
+        {
+#if 0
+          // TODO: Hysteresis
+          for(size_t k = 0; k < clusterCount; ++k)
+          {
+            if(k != i && clusters[k].size() > 1)
+            {
+              clusters[k].pop_back();
+            }
+          }
+#endif
+
+          return true;
+        }
+        else return false;
       }
     }
   }

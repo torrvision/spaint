@@ -93,6 +93,11 @@ public:
   void add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const ORUtils::SE3Pose& sample);
 
   /**
+   * \brief Starts the pose graph optimiser.
+   */
+  void start();
+
+  /**
    * \brief Terminates the pose graph optimiser.
    */
   void terminate();

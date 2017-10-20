@@ -26,13 +26,15 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context)
+CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& context, Mode mode)
 : m_context(context),
   m_frameIndex(0),
+  m_mode(mode),
   m_rng(12345),
   m_stopRelocalisationThread(false)
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
+  m_context->get_pose_graph_optimiser()->start();
 }
 
 //#################### DESTRUCTOR ####################
@@ -48,19 +50,17 @@ CollaborativeComponent::~CollaborativeComponent()
 
 void CollaborativeComponent::run_collaborative_pose_estimation()
 {
-  // FIXME: Do this properly.
-  const bool batchMode = false;
-
   bool trajectoriesWereUpdated = update_trajectories();
 
+  // FIXME: Do this properly.
   static int timeSinceLastFusion = 0;
   if(trajectoriesWereUpdated) timeSinceLastFusion = 0;
   else ++timeSinceLastFusion;
 
   if(m_frameIndex > 0 &&
      (
-      (batchMode && timeSinceLastFusion >= 30) ||
-      (!batchMode && m_frameIndex % 20 == 0)
+      (m_mode == MODE_BATCH && timeSinceLastFusion >= 30) ||
+      (m_mode == MODE_LIVE && m_frameIndex % 20 == 0)
      )
     )
   {
@@ -101,7 +101,7 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
     // Randomly pick a frame from scene j.
     SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
     const int frameCount = static_cast<int>(jt->second.size());
-    const int frameIndex = m_rng.generate_int_from_uniform(0, frameCount - 1);
+    const int frameIndex = m_mode == MODE_BATCH || !slamStateJ->get_frame_processed() ? m_rng.generate_int_from_uniform(0, frameCount - 1) : frameCount - 1;
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;

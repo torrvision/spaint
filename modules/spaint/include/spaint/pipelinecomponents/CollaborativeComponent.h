@@ -21,6 +21,20 @@ namespace spaint {
  */
 class CollaborativeComponent
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  enum Mode
+  {
+    /** TODO */
+    MODE_BATCH,
+
+    /** TODO */
+    MODE_LIVE
+  };
+
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
@@ -36,6 +50,9 @@ private:
 
   /** TODO */
   int m_frameIndex;
+
+  /** TODO */
+  Mode m_mode;
 
   /** TODO */
   boost::mutex m_mutex;
@@ -64,8 +81,9 @@ public:
    * \brief Constructs a collaborative component.
    *
    * \param context The shared context needed for collaborative SLAM.
+   * \param mode    TODO
    */
-  explicit CollaborativeComponent(const CollaborativeContext_Ptr& context);
+  CollaborativeComponent(const CollaborativeContext_Ptr& context, Mode mode = MODE_LIVE);
 
   //#################### DESTRUCTOR ####################
 public:

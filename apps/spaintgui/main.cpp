@@ -653,8 +653,8 @@ try
 
     if(args.runServer)
     {
-      const int clientCount = 4;
-      for(int clientID = 0; clientID < clientCount; ++clientID)
+      const int expectedClientCount = 2;
+      for(int clientID = 0; clientID < expectedClientCount; ++clientID)
       {
         CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
         imageSourceEngine->addSubengine(new RemoteImageSourceEngine(mappingServer, clientID));
