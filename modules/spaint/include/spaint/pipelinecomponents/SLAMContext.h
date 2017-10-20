@@ -85,10 +85,10 @@ public:
   virtual const SLAMState_Ptr& get_slam_state(const std::string& sceneID);
 
   /**
-   * \brief Gets the SLAM state for the specified scene.
+   * \brief Gets the SLAM state for the specified scene (if any).
    *
    * \param sceneID The scene ID.
-   * \return        The SLAM state for the specified scene.
+   * \return        The SLAM state for the specified scene (if any), or null otherwise.
    */
   virtual SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
 };

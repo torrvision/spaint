@@ -320,7 +320,8 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
 
     // If we have not yet started reconstruction for this sub-window's scene, skip rendering it.
     const std::string& sceneID = subwindow.get_scene_id();
-    if(!m_model->get_slam_state(sceneID)->get_view()) continue;
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+    if(!slamState || !slamState->get_view()) continue;
 
     // Set the viewport for the sub-window.
     int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
@@ -332,7 +333,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     // If the sub-window is in follow mode, update its camera.
     if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
     {
-      ORUtils::SE3Pose livePose = m_model->get_slam_state(subwindow.get_scene_id())->get_pose();
+      ORUtils::SE3Pose livePose = slamState->get_pose();
       subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
     }
 
@@ -492,7 +493,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
 
       // If we have not yet started reconstruction for this scene, avoid rendering it.
-      if(!slamState->get_view()) continue;
+      if(!slamState || !slamState->get_view()) continue;
 
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),

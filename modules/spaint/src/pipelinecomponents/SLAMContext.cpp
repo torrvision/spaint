@@ -42,7 +42,8 @@ const SLAMState_Ptr& SLAMContext::get_slam_state(const std::string& sceneID)
 
 SLAMState_CPtr SLAMContext::get_slam_state(const std::string& sceneID) const
 {
-  return MapUtil::lookup(m_slamStates, sceneID);
+  std::map<std::string,SLAMState_Ptr>::const_iterator it = m_slamStates.find(sceneID);
+  return it != m_slamStates.end() ? it->second : SLAMState_CPtr();
 }
 
 }
