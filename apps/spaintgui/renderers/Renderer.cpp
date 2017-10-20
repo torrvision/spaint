@@ -477,6 +477,9 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
     for(size_t i = 0; i < sceneIDs.size(); ++i)
     {
+      images[i]->Clear();
+      depthImages[i]->Clear();
+
       SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
       visualisationTypes[i] = subwindow.get_type();
 
