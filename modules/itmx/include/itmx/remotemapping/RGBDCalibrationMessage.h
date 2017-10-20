@@ -12,6 +12,32 @@
 
 namespace itmx {
 
+//#################### ENUMS ####################
+
+/**
+ * \brief This enum allows the specification of different compression modes for the depth images.
+ */
+enum DepthCompressionType
+{
+  /** Depth images are not compressed. */
+  DEPTH_NO_COMPRESSION,
+  /** Depth images are compressed using lossless PNG compression. Requires OpenCV. */
+  DEPTH_PNG_COMPRESSION
+};
+
+/**
+ * \brief This enum allows the specification of different compression modes for the colour images.
+ */
+enum RGBCompressionType
+{
+  /** Colour images are not compressed. */
+  RGB_NO_COMPRESSION,
+  /** Colour images are compressed using lossless PNG compression. Requires OpenCV. */
+  RGB_PNG_COMPRESSION,
+  /** Colour images are compressed using lossy JPG compression. Requires OpenCV. */
+  RGB_JPG_COMPRESSION
+};
+
 /**
  * \brief An instance of this class represents a message containing the calibration for an RGB-D camera.
  */
@@ -22,8 +48,14 @@ private:
   /** The byte segment within the message data that corresponds to the calibration parameters. */
   Segment m_calibSegment;
 
+  /** The type of compression applied to the depth images. */
+  Segment m_depthCompressionTypeSegment;
+
   /** The byte segment within the message data that corresponds to the depth image size. */
   Segment m_depthImageSizeSegment;
+
+  /** The type of compression applied to the RGB images. */
+  Segment m_rgbCompressionTypeSegment;
 
   /** The byte segment within the message data that corresponds to the RGB image size. */
   Segment m_rgbImageSizeSegment;
@@ -45,11 +77,25 @@ public:
   ITMLib::ITMRGBDCalib extract_calib() const;
 
   /**
+   * \brief Extracts the type of compression applied to the depth images.
+   *
+   * \return  The type of compression applied to the depth images.
+   */
+  DepthCompressionType extract_depth_compression_type() const;
+
+  /**
    * \brief Extracts the camera's depth image size from the message.
    *
    * \return  The camera's depth image size.
    */
   Vector2i extract_depth_image_size() const;
+
+  /**
+   * \brief Extracts the type of compression applied to the RGB images.
+   *
+   * \return  The type of compression applied to the RGB images.
+   */
+  RGBCompressionType extract_rgb_compression_type() const;
 
   /**
    * \brief Extracts the camera's RGB image size from the message.
@@ -66,11 +112,25 @@ public:
   void set_calib(const ITMLib::ITMRGBDCalib& calib);
 
   /**
+   * \brief Sets the type of compression applied to the depth images.
+   *
+   * \param depthCompressionType  The type of compression applied to the depth images.
+   */
+  void set_depth_compression_type(DepthCompressionType depthCompressionType);
+
+  /**
    * \brief Copies the camera's depth image size into the appropriate byte segment in the message.
    *
    * \param depthImageSize  The camera's depth image size.
    */
   void set_depth_image_size(const Vector2i& depthImageSize);
+
+  /**
+   * \brief Sets the type of compression applied to the RGB images.
+   *
+   * \param rgbCompressionType  The type of compression applied to the RGB images.
+   */
+  void set_rgb_compression_type(RGBCompressionType rgbCompressionType);
 
   /**
    * \brief Copies the camera's RGB image size into the appropriate byte segment in the message.

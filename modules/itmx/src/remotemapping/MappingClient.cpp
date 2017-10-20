@@ -38,18 +38,12 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   AckMessage ackMsg;
   m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
 
-
   const int capacity = 1;
   m_frameMessageQueue.initialise(capacity, boost::bind(&RGBDFrameMessage::make, msg.extract_rgb_image_size(), msg.extract_depth_image_size()));
 
   // Setup RGB-D compression.
-#ifdef WITH_OPENCV
   m_frameCompressor.reset(new RGBDFrameCompressor(msg.extract_rgb_image_size(), msg.extract_depth_image_size(),
-                                                  RGBDFrameCompressor::DEPTH_PNG_COMPRESSION, RGBDFrameCompressor::RGB_JPG_COMPRESSION));
-#else
-  m_frameCompressor.reset(new RGBDFrameCompressor(msg.extract_rgb_image_size(), msg.extract_depth_image_size(),
-                                                  RGBDFrameCompressor::DEPTH_NO_COMPRESSION, RGBDFrameCompressor::RGB_NO_COMPRESSION));
-#endif
+                                                  msg.extract_depth_compression_type(), msg.extract_rgb_compression_type()));
 
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
