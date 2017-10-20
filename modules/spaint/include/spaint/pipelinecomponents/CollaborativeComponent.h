@@ -70,7 +70,7 @@ public:
    * \param context The shared context needed for collaborative SLAM.
    * \param mode    TODO
    */
-  CollaborativeComponent(const CollaborativeContext_Ptr& context, CollaborationMode mode = CM_LIVE);
+  CollaborativeComponent(const CollaborativeContext_Ptr& context, CollaborationMode mode);
 
   //#################### DESTRUCTOR ####################
 public:

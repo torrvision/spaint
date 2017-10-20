@@ -53,7 +53,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   bool fusionMayStillRun = update_trajectories();
   if(!fusionMayStillRun) m_mode = CM_BATCH;
 
-  if(m_frameIndex > 0 && (m_mode == CM_BATCH || (m_mode == CM_LIVE && m_frameIndex % 20 == 0)))
+  if(m_frameIndex > 0 && (!fusionMayStillRun || (m_mode == CM_LIVE && m_frameIndex % 20 == 0)))
   {
     try_schedule_relocalisation();
   }

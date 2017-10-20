@@ -32,7 +32,8 @@ public:
                         const std::vector<spaint::SLAMComponent::MappingMode>& mappingModes,
                         const std::vector<spaint::SLAMComponent::TrackingMode>& trackingModes,
                         const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),
-                        bool detectFiducials = false, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr());
+                        bool detectFiducials = false, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr(),
+                        spaint::CollaborationMode collaborationMode = spaint::CM_LIVE);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -15,7 +15,7 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
                                              const std::vector<SLAMComponent::MappingMode>& mappingModes,
                                              const std::vector<SLAMComponent::TrackingMode>& trackingModes,
                                              const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials,
-                                             const MappingServer_Ptr& mappingServer)
+                                             const MappingServer_Ptr& mappingServer, CollaborationMode collaborationMode)
   // Note: A minimum of 2 labels is required (background and foreground).
 : MultiScenePipeline("collaborative", settings, resourcesDir, 2, mappingServer), m_collaborationStarted(false)
 {
@@ -25,7 +25,7 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
     m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngines[i], trackerConfigs[i], mappingModes[i], trackingModes[i], fiducialDetector, detectFiducials));
   }
 
-  m_collaborativeComponent.reset(new CollaborativeComponent(m_model));
+  m_collaborativeComponent.reset(new CollaborativeComponent(m_model, collaborationMode));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

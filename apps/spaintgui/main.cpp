@@ -701,6 +701,7 @@ try
   #endif
 
     // Construct the pipeline itself.
+    const CollaborationMode collaborationMode = CM_LIVE; // FIXME: This should be determined from the command line.
     pipeline.reset(new CollaborativePipeline(
       settings,
       Application::resources_dir().string(),
@@ -710,7 +711,8 @@ try
       trackingModes,
       fiducialDetector,
       args.detectFiducials,
-      mappingServer
+      mappingServer,
+      collaborationMode
     ));
   }
 
