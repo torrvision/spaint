@@ -35,6 +35,26 @@ MappingServer::~MappingServer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+std::vector<int> MappingServer::get_active_clients() const
+{
+  std::vector<int> activeClients;
+
+  boost::lock_guard<boost::mutex> lock(m_mutex);
+
+  activeClients.reserve(m_clients.size());
+  for(std::map<int,Client_Ptr>::const_iterator it = m_clients.begin(); it != m_clients.end(); ++it)
+  {
+    //A client is active only if it has not finished.
+    // TODO: Possible optimization: cache the list and update it when new connections are accepted and clients terminate.
+    if(m_finishedClients.find(it->first) == m_finishedClients.end())
+    {
+      activeClients.push_back(it->first);
+    }
+  }
+
+  return activeClients;
+}
+
 ITMRGBDCalib MappingServer::get_calib(int clientID) const
 {
   // FIXME: What to do when the client no longer exists needs more thought.
