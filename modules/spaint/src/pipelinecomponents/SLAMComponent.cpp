@@ -131,11 +131,11 @@ bool SLAMComponent::process_frame()
 
   if(m_imageSourceEngine->hasImagesNow())
   {
-    slamState->set_frame_processed(true);
+    slamState->set_input_status(SLAMState::IS_ACTIVE);
   }
   else
   {
-    slamState->set_frame_processed(false);
+    slamState->set_input_status(m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED);
     return false;
   }
 

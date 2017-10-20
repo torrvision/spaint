@@ -14,7 +14,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SLAMState::SLAMState()
-: m_frameProcessed(false)
+: m_inputStatus(IS_IDLE)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -27,11 +27,6 @@ const Vector2i& SLAMState::get_depth_image_size() const
 const std::map<std::string,Fiducial_Ptr>& SLAMState::get_fiducials() const
 {
   return m_fiducials;
-}
-
-bool SLAMState::get_frame_processed() const
-{
-  return m_frameProcessed;
 }
 
 ITMUCharImage_CPtr SLAMState::get_input_mask() const
@@ -61,6 +56,11 @@ ITMUChar4Image_Ptr SLAMState::get_input_rgb_image_copy() const
   ITMUChar4Image_Ptr copy(new ITMUChar4Image(m_inputRGBImage->noDims, true, false));
   copy->SetFrom(m_inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
+}
+
+SLAMState::InputStatus SLAMState::get_input_status() const
+{
+  return m_inputStatus;
 }
 
 const ITMIntrinsics& SLAMState::get_intrinsics() const
@@ -128,11 +128,6 @@ SpaintVoxelScene_CPtr SLAMState::get_voxel_scene() const
   return m_voxelScene;
 }
 
-void SLAMState::set_frame_processed(bool frameProcessed)
-{
-  m_frameProcessed = frameProcessed;
-}
-
 void SLAMState::set_input_mask(const ITMUCharImage_Ptr& inputMask)
 {
   m_inputMask = inputMask;
@@ -146,6 +141,11 @@ void SLAMState::set_input_raw_depth_image(const ITMShortImage_Ptr& inputRawDepth
 void SLAMState::set_input_rgb_image(const ITMUChar4Image_Ptr& inputRGBImage)
 {
   m_inputRGBImage = inputRGBImage;
+}
+
+void SLAMState::set_input_status(InputStatus inputStatus)
+{
+  m_inputStatus = inputStatus;
 }
 
 void SLAMState::set_live_surfel_render_state(const SurfelRenderState_Ptr& liveSurfelRenderState)

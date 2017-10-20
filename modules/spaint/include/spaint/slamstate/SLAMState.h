@@ -22,13 +22,27 @@ namespace spaint {
  */
 class SLAMState
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration can be used to denote the status of the input stream to a SLAM component.
+   */
+  enum InputStatus
+  {
+    /** Input was available last time the SLAM component attempted to process a frame. */
+    IS_ACTIVE,
+
+    /** Input was not available the last time the SLAM component attempted to process a frame, but might be again in the future. */
+    IS_IDLE,
+
+    /** The input sequence to the SLAM component has terminated. */
+    IS_TERMINATED
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The fiducials (if any) that have been detected in the 3D scene. */
   std::map<std::string,Fiducial_Ptr> m_fiducials;
-
-  /** Whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded. */
-  bool m_frameProcessed;
 
   /** The mask to apply to the input images during tracking. */
   ITMUCharImage_Ptr m_inputMask;
@@ -38,6 +52,9 @@ private:
 
   /** The image into which RGB input is read each frame. */
   ITMUChar4Image_Ptr m_inputRGBImage;
+
+  /** The status of the input stream to the SLAM component. */
+  InputStatus m_inputStatus;
 
   /** The surfel render state corresponding to the live camera pose. */
   SurfelRenderState_Ptr m_liveSurfelRenderState;
@@ -81,13 +98,6 @@ public:
   const std::map<std::string,Fiducial_Ptr>& get_fiducials() const;
 
   /**
-   * \brief Gets whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded.
-   *
-   * \return  true, if the most recent call to the corresponding SLAM component's process_frame() function succeeded, or false otherwise.
-   */
-  bool get_frame_processed() const;
-
-  /**
    * \brief Gets the mask to apply to the input images during tracking.
    *
    * \return  The mask to apply to the input images during tracking (may be NULL).
@@ -121,6 +131,13 @@ public:
    * \return        A copy of the image into which RGB input is read each frame.
    */
   ITMUChar4Image_Ptr get_input_rgb_image_copy() const;
+
+  /**
+   * \brief Gets the status of the input stream to the SLAM component.
+   *
+   * \return  The status of the input stream to the SLAM component.
+   */
+  InputStatus get_input_status() const;
 
   /**
    * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the scene.
@@ -214,13 +231,6 @@ public:
   SpaintVoxelScene_CPtr get_voxel_scene() const;
 
   /**
-   * \brief Sets whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded.
-   *
-   * \param frameProcessed  Whether or not the most recent call to the corresponding SLAM component's process_frame() function succeeded.
-   */
-  void set_frame_processed(bool frameProcessed);
-
-  /**
    * \brief Sets the mask to apply to the input images during tracking.
    *
    * \param inputMask The mask to apply to the input images during tracking (may be NULL).
@@ -240,6 +250,13 @@ public:
    * \param inputRGBImage The image into which RGB input is read each frame.
    */
   void set_input_rgb_image(const ITMUChar4Image_Ptr& inputRGBImage);
+
+  /**
+   * \brief Sets the status of the input stream to the SLAM component.
+   *
+   * \param inputStatus The status of the input stream to the SLAM component.
+   */
+  void set_input_status(InputStatus inputStatus);
 
   /**
    * \brief Sets the surfel render state corresponding to the live camera pose.

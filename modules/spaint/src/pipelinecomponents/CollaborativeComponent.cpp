@@ -50,19 +50,10 @@ CollaborativeComponent::~CollaborativeComponent()
 
 void CollaborativeComponent::run_collaborative_pose_estimation()
 {
-  bool trajectoriesWereUpdated = update_trajectories();
+  bool fusionMayStillRun = update_trajectories();
+  if(!fusionMayStillRun) m_mode = MODE_BATCH;
 
-  // FIXME: Do this properly.
-  static int timeSinceLastFusion = 0;
-  if(trajectoriesWereUpdated) timeSinceLastFusion = 0;
-  else ++timeSinceLastFusion;
-
-  if(m_frameIndex > 0 &&
-     (
-      (m_mode == MODE_BATCH && timeSinceLastFusion >= 30) ||
-      (m_mode == MODE_LIVE && m_frameIndex % 20 == 0)
-     )
-    )
+  if(m_frameIndex > 0 && (m_mode == MODE_BATCH || (m_mode == MODE_LIVE && m_frameIndex % 20 == 0)))
   {
     try_schedule_relocalisation();
   }
@@ -101,7 +92,9 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
     // Randomly pick a frame from scene j.
     SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
     const int frameCount = static_cast<int>(jt->second.size());
-    const int frameIndex = m_mode == MODE_BATCH || !slamStateJ->get_frame_processed() ? m_rng.generate_int_from_uniform(0, frameCount - 1) : frameCount - 1;
+    const int frameIndex = m_mode == MODE_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
+      ? m_rng.generate_int_from_uniform(0, frameCount - 1)
+      : frameCount - 1;
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
@@ -272,21 +265,23 @@ void CollaborativeComponent::try_schedule_relocalisation()
 
 bool CollaborativeComponent::update_trajectories()
 {
-  bool trajectoriesWereUpdated = false;
+  bool fusionMayStillRun = false;
 
   const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
   for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
   {
     SLAMState_CPtr slamState = m_context->get_slam_state(sceneIDs[i]);
+    SLAMState::InputStatus inputStatus = slamState->get_input_status();
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
-    if(slamState->get_frame_processed() && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
+    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
     {
       m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
-      trajectoriesWereUpdated = true;
     }
+
+    if(inputStatus != SLAMState::IS_TERMINATED) fusionMayStillRun = true;
   }
 
-  return trajectoriesWereUpdated;
+  return fusionMayStillRun;
 }
 
 }
