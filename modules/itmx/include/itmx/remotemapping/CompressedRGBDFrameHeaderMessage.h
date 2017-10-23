@@ -6,10 +6,9 @@
 #ifndef H_ITMX_COMPRESSEDRGBDFRAMEHEADERMESSAGE
 #define H_ITMX_COMPRESSEDRGBDFRAMEHEADERMESSAGE
 
-#include <ORUtils/SE3Pose.h>
+#include <boost/cstdint.hpp>
 
 #include "MappingMessage.h"
-#include "../base/ITMImagePtrTypes.h"
 
 namespace itmx {
 
@@ -32,13 +31,6 @@ public:
    * \brief Constructs the header for a compressed RGB-D frame message.
    */
   CompressedRGBDFrameHeaderMessage();
-
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Makes a CompressedRGBDFrameHeaderMessage.
-   */
-  static boost::shared_ptr<CompressedRGBDFrameHeaderMessage> make();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -70,11 +62,6 @@ public:
    */
   void set_rgb_image_size(uint32_t rgbImageSize);
 };
-
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<CompressedRGBDFrameHeaderMessage> CompressedRGBDFrameHeaderMessage_Ptr;
-typedef boost::shared_ptr<const CompressedRGBDFrameHeaderMessage> CompressedRGBDFrameHeaderMessage_CPtr;
 
 }
 

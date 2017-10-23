@@ -16,13 +16,6 @@ CompressedRGBDFrameHeaderMessage::CompressedRGBDFrameHeaderMessage()
   m_data.resize(m_rgbSizeSegment.first + m_rgbSizeSegment.second);
 }
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
-CompressedRGBDFrameHeaderMessage_Ptr CompressedRGBDFrameHeaderMessage::make()
-{
-  return CompressedRGBDFrameHeaderMessage_Ptr(new CompressedRGBDFrameHeaderMessage());
-}
-
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 uint32_t CompressedRGBDFrameHeaderMessage::extract_depth_image_size() const

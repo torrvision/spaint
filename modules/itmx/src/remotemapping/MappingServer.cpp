@@ -239,8 +239,8 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
   RGBDFrameCompressor_Ptr frameCompressor;
 
   // Prepare a header and a compressed frame message, that will be filled with data received from the network, ready to unpack them.
-  CompressedRGBDFrameHeaderMessage_Ptr compressedRGBDMessageHeader(new CompressedRGBDFrameHeaderMessage);
-  CompressedRGBDFrameMessage_Ptr compressedRGBDMessage(new CompressedRGBDFrameMessage(*compressedRGBDMessageHeader));
+  CompressedRGBDFrameHeaderMessage compressedRGBDMessageHeader;
+  CompressedRGBDFrameMessage compressedRGBDMessage(compressedRGBDMessageHeader);
 
   // Save the image sizes and calibration parameters, and initialise the frame message queue. We also initialise
   // a dummy frame message, which will be used to consume messages that cannot be pushed onto the queue.
@@ -279,16 +279,16 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
 
     // First, read the message header.
-    if((connectionOk = read_message(sock, *compressedRGBDMessageHeader)))
+    if((connectionOk = read_message(sock, compressedRGBDMessageHeader)))
     {
       // Setup the message according to the header received.
-      compressedRGBDMessage->set_compressed_image_sizes(*compressedRGBDMessageHeader);
+      compressedRGBDMessage.set_compressed_image_sizes(compressedRGBDMessageHeader);
 
       // Now read the the actual message.
-      if((connectionOk = read_message(sock, *compressedRGBDMessage)))
+      if((connectionOk = read_message(sock, compressedRGBDMessage)))
       {
         // Uncompress the images.
-        frameCompressor->uncompress_rgbd_frame(*compressedRGBDMessage, msg);
+        frameCompressor->uncompress_rgbd_frame(compressedRGBDMessage, msg);
 
         // Signal the client that we are done.
         connectionOk = write_message(sock, ackMsg);
