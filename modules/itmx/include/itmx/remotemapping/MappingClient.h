@@ -26,7 +26,7 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A frame compressor, used to send/receive less data over the network. */
+  /** A frame compressor, used to compress frame messages to reduce the network bandwidth they consume. */
   RGBDFrameCompressor_Ptr m_frameCompressor;
 
   /** A queue containing the RGB-D frame messages to be sent to the server. */

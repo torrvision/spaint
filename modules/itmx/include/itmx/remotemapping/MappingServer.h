@@ -303,7 +303,7 @@ private:
    *
    * This will block until either the write succeeds, an error occurs or the server terminates.
    *
-   * \param sock  The socket from which to attempt to write the message.
+   * \param sock  The socket to which to attempt to write the message.
    * \param msg   The T to write.
    * \return      true, if writing succeeded, or false otherwise.
    */
@@ -319,7 +319,7 @@ private:
   /**
    * \brief The handler called when an asynchronous write of a message finishes.
    *
-   * \param err The error code associated with the read.
+   * \param err The error code associated with the write.
    * \param ret A location into which to write the error code so that write_message can access it.
    */
   void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
