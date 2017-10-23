@@ -6,7 +6,7 @@
 #ifndef H_ITMX_ACKMESSAGE
 #define H_ITMX_ACKMESSAGE
 
-#include <boost/shared_ptr.hpp>
+#include <boost/cstdint.hpp>
 
 #include "MappingMessage.h"
 
@@ -30,13 +30,6 @@ public:
    */
   AckMessage();
 
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Makes an acknowledgement message.
-   */
-  static boost::shared_ptr<AckMessage> make();
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -53,11 +46,6 @@ public:
    */
   void set_status_code(int32_t statusCode);
 };
-
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<AckMessage> AckMessage_Ptr;
-typedef boost::shared_ptr<const AckMessage> AckMessage_CPtr;
 
 }
 

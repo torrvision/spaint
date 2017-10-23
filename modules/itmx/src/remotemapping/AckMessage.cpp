@@ -17,13 +17,6 @@ AckMessage::AckMessage()
   m_data.resize(m_statusCodeSegment.second);
 }
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
-AckMessage_Ptr AckMessage::make()
-{
-  return AckMessage_Ptr(new AckMessage());
-}
-
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 int32_t AckMessage::extract_status_code() const
