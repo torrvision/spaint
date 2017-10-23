@@ -6,9 +6,9 @@
 #ifndef H_ITMX_ACKMESSAGE
 #define H_ITMX_ACKMESSAGE
 
-#include "MappingMessage.h"
-
 #include <boost/shared_ptr.hpp>
+
+#include "MappingMessage.h"
 
 namespace itmx {
 
@@ -20,36 +20,36 @@ class AckMessage : public MappingMessage
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The byte segment within the message data that corresponds to the size in bytes of the acknowledgement. */
-  Segment m_acknowledgementSegment;
+  /** The byte segment within the message data that corresponds to the status code. */
+  Segment m_statusCodeSegment;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs the header for a compressed RGB-D frame message.
+   * \brief Constructs an acknowledgement message.
    */
   AckMessage();
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Makes an AckMessage.
+   * \brief Makes an acknowledgement message.
    */
   static boost::shared_ptr<AckMessage> make();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Extracts the status code.
+   * \brief Extracts the status code from the message.
    *
-   * \return The status code.
+   * \return  The status code.
    */
   int32_t extract_status_code() const;
 
   /**
    * \brief Sets the status code.
    *
-   * \param statusCode The status code.
+   * \param statusCode  The status code.
    */
   void set_status_code(int32_t statusCode);
 };
