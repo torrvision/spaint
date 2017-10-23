@@ -8,35 +8,11 @@
 
 #include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
+#include "DepthCompressionType.h"
 #include "MappingMessage.h"
+#include "RGBCompressionType.h"
 
 namespace itmx {
-
-//#################### ENUMS ####################
-
-/**
- * \brief This enum allows the specification of different compression modes for the depth images.
- */
-enum DepthCompressionType
-{
-  /** Depth images are not compressed. */
-  DEPTH_NO_COMPRESSION,
-  /** Depth images are compressed using lossless PNG compression. Requires OpenCV. */
-  DEPTH_PNG_COMPRESSION
-};
-
-/**
- * \brief This enum allows the specification of different compression modes for the colour images.
- */
-enum RGBCompressionType
-{
-  /** Colour images are not compressed. */
-  RGB_NO_COMPRESSION,
-  /** Colour images are compressed using lossless PNG compression. Requires OpenCV. */
-  RGB_PNG_COMPRESSION,
-  /** Colour images are compressed using lossy JPG compression. Requires OpenCV. */
-  RGB_JPG_COMPRESSION
-};
 
 /**
  * \brief An instance of this class represents a message containing the calibration for an RGB-D camera.

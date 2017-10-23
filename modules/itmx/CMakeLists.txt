@@ -121,9 +121,11 @@ SET(remotemapping_headers
 include/itmx/remotemapping/AckMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameMessage.h
+include/itmx/remotemapping/DepthCompressionType.h
 include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingMessage.h
 include/itmx/remotemapping/MappingServer.h
+include/itmx/remotemapping/RGBCompressionType.h
 include/itmx/remotemapping/RGBDCalibrationMessage.h
 include/itmx/remotemapping/RGBDFrameCompressor.h
 include/itmx/remotemapping/RGBDFrameMessage.h
