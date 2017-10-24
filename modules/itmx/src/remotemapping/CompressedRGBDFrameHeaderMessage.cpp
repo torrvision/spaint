@@ -11,31 +11,31 @@ namespace itmx {
 
 CompressedRGBDFrameHeaderMessage::CompressedRGBDFrameHeaderMessage()
 {
-  m_depthSizeSegment = std::make_pair(0, sizeof(uint32_t));
-  m_rgbSizeSegment = std::make_pair(m_depthSizeSegment.second, sizeof(uint32_t));
-  m_data.resize(m_rgbSizeSegment.first + m_rgbSizeSegment.second);
+  m_depthImageSizeSegment = std::make_pair(0, sizeof(uint32_t));
+  m_rgbImageSizeSegment = std::make_pair(m_depthImageSizeSegment.second, sizeof(uint32_t));
+  m_data.resize(m_rgbImageSizeSegment.first + m_rgbImageSizeSegment.second);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 uint32_t CompressedRGBDFrameHeaderMessage::extract_depth_image_size() const
 {
-  return *reinterpret_cast<const uint32_t *>(&m_data[m_depthSizeSegment.first]);
+  return *reinterpret_cast<const uint32_t*>(&m_data[m_depthImageSizeSegment.first]);
 }
 
 uint32_t CompressedRGBDFrameHeaderMessage::extract_rgb_image_size() const
 {
-  return *reinterpret_cast<const uint32_t *>(&m_data[m_rgbSizeSegment.first]);
+  return *reinterpret_cast<const uint32_t*>(&m_data[m_rgbImageSizeSegment.first]);
 }
 
 void CompressedRGBDFrameHeaderMessage::set_depth_image_size(uint32_t depthImageSize)
 {
-  memcpy(&m_data[m_depthSizeSegment.first], reinterpret_cast<const char *>(&depthImageSize), m_depthSizeSegment.second);
+  memcpy(&m_data[m_depthImageSizeSegment.first], reinterpret_cast<const char*>(&depthImageSize), m_depthImageSizeSegment.second);
 }
 
 void CompressedRGBDFrameHeaderMessage::set_rgb_image_size(uint32_t rgbImageSize)
 {
-  memcpy(&m_data[m_rgbSizeSegment.first], reinterpret_cast<const char *>(&rgbImageSize), m_rgbSizeSegment.second);
+  memcpy(&m_data[m_rgbImageSizeSegment.first], reinterpret_cast<const char*>(&rgbImageSize), m_rgbImageSizeSegment.second);
 }
 
 }

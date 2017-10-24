@@ -20,10 +20,10 @@ class CompressedRGBDFrameHeaderMessage : public MappingMessage
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The byte segment within the message data that corresponds to the size in bytes of the compressed depth image. */
-  Segment m_depthSizeSegment;
+  Segment m_depthImageSizeSegment;
 
   /** The byte segment within the message data that corresponds to the size in bytes of the compressed RGB image. */
-  Segment m_rgbSizeSegment;
+  Segment m_rgbImageSizeSegment;
 
   //#################### CONSTRUCTORS ####################
 public:
