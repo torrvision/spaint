@@ -257,8 +257,11 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     dummyFrameMsg.reset(new RGBDFrameMessage(client->m_rgbImageSize, client->m_depthImageSize));
 
     // Setup RGB-D compression.
-    frameCompressor.reset(new RGBDFrameCompressor(client->m_rgbImageSize, client->m_depthImageSize,
-                                                  calibMsg.extract_depth_compression_type(), calibMsg.extract_rgb_compression_type()));
+    frameCompressor.reset(new RGBDFrameCompressor(
+      client->m_rgbImageSize, client->m_depthImageSize,
+      calibMsg.extract_rgb_compression_type(),
+      calibMsg.extract_depth_compression_type()
+    ));
 
     // Signal to the client that the server is ready.
     connectionOk = write_message(sock, ackMsg);

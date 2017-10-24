@@ -51,7 +51,7 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   // Set up the RGB-D frame compressor.
   m_frameCompressor.reset(new RGBDFrameCompressor(
     msg.extract_rgb_image_size(), msg.extract_depth_image_size(),
-    msg.extract_depth_compression_type(), msg.extract_rgb_compression_type()
+    msg.extract_rgb_compression_type(), msg.extract_depth_compression_type()
   ));
 
   // Start the message sender thread.
