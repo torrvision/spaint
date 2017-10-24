@@ -8,7 +8,6 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include "MappingMessage.h"
 #include "CompressedRGBDFrameHeaderMessage.h"
 #include "../base/ITMImagePtrTypes.h"
 
@@ -38,18 +37,9 @@ public:
   /**
    * \brief Constructs a compressed RGB-D frame message.
    *
-   * \param messageHeader  The header of the compressed message, specifying the size of the depth and colour segments.
+   * \param headerMsg The header message corresponding to this message, which specifies the size of the compressed depth and RGB segments.
    */
-  CompressedRGBDFrameMessage(const CompressedRGBDFrameHeaderMessage& messageHeader);
-
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Makes a compressed RGB-D frame message.
-   *
-   * \param messageHeader The header of the compressed message, specifying the size of the depth and colour segments.
-   */
-  static boost::shared_ptr<CompressedRGBDFrameMessage> make(const CompressedRGBDFrameHeaderMessage& messageHeader);
+  CompressedRGBDFrameMessage(const CompressedRGBDFrameHeaderMessage& headerMsg);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -82,6 +72,13 @@ public:
   void extract_rgb_image_data(std::vector<uint8_t>& rgbImageData) const;
 
   /**
+   * \brief Sets the segment sizes for the depth and colour images according to the compressed message header. Resizes the raw data storage accordingly.
+   *
+   * \param headerMsg The header message corresponding to this message, which specifies the size of the compressed depth and RGB segments.
+   */
+  void set_compressed_image_sizes(const CompressedRGBDFrameHeaderMessage& headerMsg);
+
+  /**
    * \brief Copies a compressed depth image into the appropriate byte segment in the message.
    *
    * \param depthImageData  The compressed depth image data.
@@ -103,24 +100,12 @@ public:
   void set_pose(const ORUtils::SE3Pose& pose);
 
   /**
-   * \brief Sets the segment sizes for the depth and colour images according to the compressed message header. Resizes the raw data storage accordingly.
-   *
-   * \param messageHeader  The header of the compressed message, specifying the size of the depth and colour segments.
-   */
-  void set_compressed_image_sizes(const CompressedRGBDFrameHeaderMessage& messageHeader);
-
-  /**
    * \brief Copies a compressed RGB image into the appropriate byte segment in the message.
    *
    * \param rgbImage  The compressed RGB image data.
    */
   void set_rgb_image_data(const std::vector<uint8_t>& rgbImageData);
 };
-
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<CompressedRGBDFrameMessage> CompressedRGBDFrameMessage_Ptr;
-typedef boost::shared_ptr<const CompressedRGBDFrameMessage> CompressedRGBDFrameMessage_CPtr;
 
 }
 
