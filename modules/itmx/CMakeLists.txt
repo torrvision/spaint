@@ -107,6 +107,7 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 ##
 SET(remotemapping_sources
 src/remotemapping/AckMessage.cpp
+src/remotemapping/BaseRGBDFrameMessage.cpp
 src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
 src/remotemapping/CompressedRGBDFrameMessage.cpp
 src/remotemapping/MappingClient.cpp
@@ -119,6 +120,7 @@ src/remotemapping/RGBDFrameMessage.cpp
 
 SET(remotemapping_headers
 include/itmx/remotemapping/AckMessage.h
+include/itmx/remotemapping/BaseRGBDFrameMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameMessage.h
 include/itmx/remotemapping/DepthCompressionType.h

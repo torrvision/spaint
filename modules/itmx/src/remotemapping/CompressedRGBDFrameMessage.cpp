@@ -5,6 +5,8 @@
 
 #include "remotemapping/CompressedRGBDFrameMessage.h"
 
+#include <ITMLib/Utils/ITMMath.h>
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -25,24 +27,6 @@ void CompressedRGBDFrameMessage::extract_depth_image_data(std::vector<uint8_t>& 
 {
   depthImageData.resize(m_depthImageSegment.second);
   memcpy(reinterpret_cast<char*>(depthImageData.data()), &m_data[m_depthImageSegment.first], m_depthImageSegment.second);
-}
-
-int CompressedRGBDFrameMessage::extract_frame_index() const
-{
-  return *reinterpret_cast<const int*>(&m_data[m_frameIndexSegment.first]);
-}
-
-ORUtils::SE3Pose CompressedRGBDFrameMessage::extract_pose() const
-{
-  ORUtils::SE3Pose pose;
-
-  Matrix4f M = *reinterpret_cast<const Matrix4f*>(&m_data[m_poseSegment.first]);
-
-  float params[6];
-  memcpy(params, &m_data[m_poseSegment.first + sizeof(Matrix4f)], 6 * sizeof(float));
-
-  pose.SetBoth(M, params);
-  return pose;
 }
 
 void CompressedRGBDFrameMessage::extract_rgb_image_data(std::vector<uint8_t>& rgbImageData) const
@@ -66,17 +50,6 @@ void CompressedRGBDFrameMessage::set_depth_image_data(const std::vector<uint8_t>
   }
 
   memcpy(&m_data[m_depthImageSegment.first], reinterpret_cast<const char*>(depthImageData.data()), m_depthImageSegment.second);
-}
-
-void CompressedRGBDFrameMessage::set_frame_index(int frameIndex)
-{
-  memcpy(&m_data[m_frameIndexSegment.first], reinterpret_cast<const char*>(&frameIndex), m_frameIndexSegment.second);
-}
-
-void CompressedRGBDFrameMessage::set_pose(const ORUtils::SE3Pose& pose)
-{
-  memcpy(&m_data[m_poseSegment.first], reinterpret_cast<const char*>(&pose.GetM()), sizeof(Matrix4f));
-  memcpy(&m_data[m_poseSegment.first + sizeof(Matrix4f)], reinterpret_cast<const char*>(pose.GetParams()), 6 * sizeof(float));
 }
 
 void CompressedRGBDFrameMessage::set_rgb_image_data(const std::vector<uint8_t>& rgbImageData)
