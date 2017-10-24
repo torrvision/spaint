@@ -14,8 +14,8 @@ RGBDCalibrationMessage::RGBDCalibrationMessage()
 {
   m_rgbImageSizeSegment = std::make_pair(0, sizeof(Vector2i));
   m_depthImageSizeSegment = std::make_pair(m_rgbImageSizeSegment.second, sizeof(Vector2i));
-  m_depthCompressionTypeSegment = std::make_pair(m_depthImageSizeSegment.first + m_depthImageSizeSegment.second, sizeof (DepthCompressionType));
-  m_rgbCompressionTypeSegment = std::make_pair(m_depthCompressionTypeSegment.first + m_depthCompressionTypeSegment.second, sizeof (RGBCompressionType));
+  m_depthCompressionTypeSegment = std::make_pair(m_depthImageSizeSegment.first + m_depthImageSizeSegment.second, sizeof(DepthCompressionType));
+  m_rgbCompressionTypeSegment = std::make_pair(m_depthCompressionTypeSegment.first + m_depthCompressionTypeSegment.second, sizeof(RGBCompressionType));
   m_calibSegment = std::make_pair(
     m_rgbCompressionTypeSegment.first + m_rgbCompressionTypeSegment.second,
     sizeof(Vector2f) + sizeof(ITMDisparityCalib::TrafoType) + // disparityCalib
