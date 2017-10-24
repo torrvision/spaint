@@ -64,7 +64,7 @@ RGBDFrameCompressor::RGBDFrameCompressor(const Vector2i &rgbImageSize,
   m_impl->rgbCompressionType = rgbCompressionType;
 
   // Handle depth compression type.
-  if (depthCompressionType == DepthCompressionType::DEPTH_PNG_COMPRESSION)
+  if (depthCompressionType == DepthCompressionType::DEPTH_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     // Needs to be CV_16U to properly encode into PNG. Will have to use convertTo to fill this Mat with ITMShortImages.
@@ -75,7 +75,7 @@ RGBDFrameCompressor::RGBDFrameCompressor(const Vector2i &rgbImageSize,
   }
 
   // Handle RGB compression type.
-  if (rgbCompressionType == RGBCompressionType::RGB_JPG_COMPRESSION || rgbCompressionType == RGBCompressionType::RGB_PNG_COMPRESSION)
+  if (rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_JPG || rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     // Three channel, will use cvtColor to fill it.
@@ -142,7 +142,7 @@ void RGBDFrameCompressor::uncompress_rgbd_frame(const CompressedRGBDFrameMessage
 
 void RGBDFrameCompressor::compress_depth_image()
 {
-  if(m_impl->depthCompressionType == DepthCompressionType::DEPTH_PNG_COMPRESSION)
+  if(m_impl->depthCompressionType == DepthCompressionType::DEPTH_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     cv::Mat depthWrapper(m_impl->uncompressedDepthImage->noDims.y,
@@ -167,7 +167,7 @@ void RGBDFrameCompressor::compress_depth_image()
 
 void RGBDFrameCompressor::compress_rgb_image()
 {
-  if(m_impl->rgbCompressionType == RGBCompressionType::RGB_NO_COMPRESSION)
+  if(m_impl->rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_NONE)
   {
     // No compression, just copy the bytes.
     m_impl->compressedRgbBytes.resize(m_impl->uncompressedRgbImage->dataSize * sizeof(Vector4u));
@@ -184,7 +184,7 @@ void RGBDFrameCompressor::compress_rgb_image()
     cv::cvtColor(rgbWrapper, m_impl->uncompressedRgbMat, CV_RGBA2BGR);
 
     // Now compress the images to the appropriate format.
-    const std::string outputFormat = m_impl->rgbCompressionType == RGBCompressionType::RGB_JPG_COMPRESSION ? ".jpg" : ".png";
+    const std::string outputFormat = m_impl->rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_JPG ? ".jpg" : ".png";
     cv::imencode(outputFormat, m_impl->uncompressedRgbMat, m_impl->compressedRgbBytes);
 #endif
   }
@@ -192,7 +192,7 @@ void RGBDFrameCompressor::compress_rgb_image()
 
 void RGBDFrameCompressor::uncompress_depth_image()
 {
-  if(m_impl->depthCompressionType == DepthCompressionType::DEPTH_PNG_COMPRESSION)
+  if(m_impl->depthCompressionType == DepthCompressionType::DEPTH_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     // Decode the image (using the current Mat as a placeholder, to avoid reallocations).
@@ -222,7 +222,7 @@ void RGBDFrameCompressor::uncompress_depth_image()
 
 void RGBDFrameCompressor::uncompress_rgb_image()
 {
-  if(m_impl->rgbCompressionType == RGBCompressionType::RGB_NO_COMPRESSION)
+  if(m_impl->rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_NONE)
   {
     // Check that the size of the output image matches the received data.
     if(m_impl->uncompressedRgbImage->dataSize * sizeof(Vector4u) != m_impl->compressedRgbBytes.size())

@@ -14,10 +14,10 @@ namespace itmx {
 enum DepthCompressionType
 {
   /** The depth images will not be compressed. */
-  DEPTH_NO_COMPRESSION,
+  DEPTH_COMPRESSION_NONE,
 
   /** The depth images will be compressed using lossless PNG compression (requires OpenCV). */
-  DEPTH_PNG_COMPRESSION,
+  DEPTH_COMPRESSION_PNG,
 };
 
 }

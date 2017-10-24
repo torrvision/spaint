@@ -14,13 +14,13 @@ namespace itmx {
 enum RGBCompressionType
 {
   /** The RGB images will be compressed using lossy JPG compression (requires OpenCV). */
-  RGB_JPG_COMPRESSION,
+  RGB_COMPRESSION_JPG,
 
   /** The RGB images will not be compressed. */
-  RGB_NO_COMPRESSION,
+  RGB_COMPRESSION_NONE,
 
   /** The RGB images will be compressed using lossless PNG compression (requires OpenCV). */
-  RGB_PNG_COMPRESSION,
+  RGB_COMPRESSION_PNG,
 };
 
 }

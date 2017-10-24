@@ -38,8 +38,8 @@ public:
    */
   RGBDFrameCompressor(const Vector2i& rgbImageSize,
                       const Vector2i& depthImageSize,
-                      DepthCompressionType depthCompressionType = DEPTH_NO_COMPRESSION,
-                      RGBCompressionType rgbCompressionType = RGB_NO_COMPRESSION);
+                      DepthCompressionType depthCompressionType = DEPTH_COMPRESSION_NONE,
+                      RGBCompressionType rgbCompressionType = RGB_COMPRESSION_NONE);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
