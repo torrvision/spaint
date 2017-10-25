@@ -15,8 +15,8 @@ using namespace tvgutil;
 #endif
 
 #include "remotemapping/AckMessage.h"
-#include "remotemapping/CompressedRGBDFrameMessage.h"
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
+#include "remotemapping/CompressedRGBDFrameMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 #include "remotemapping/RGBDFrameCompressor.h"
 
