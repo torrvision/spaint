@@ -224,10 +224,6 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     client = m_clients.find(clientID)->second;
   }
 
-  // Allocate an AckMessage to use later.
-  AckMessage ackMsg;
-  ackMsg.set_status_code(0);
-
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;
   bool connectionOk = read_message(sock, calibMsg);
@@ -235,42 +231,40 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
   std::cout << "Received calibration message from client: " << clientID << std::endl;
 #endif
 
-  // Compression variables.
+  // If the calibration message was successfully read:
   RGBDFrameCompressor_Ptr frameCompressor;
-
-  // Prepare a header and a compressed frame message, that will be filled with data received from the network, ready to unpack them.
-  CompressedRGBDFrameHeaderMessage compressedRGBDMessageHeader;
-  CompressedRGBDFrameMessage compressedRGBDMessage(compressedRGBDMessageHeader);
-
-  // Save the image sizes and calibration parameters, and initialise the frame message queue. We also initialise
-  // a dummy frame message, which will be used to consume messages that cannot be pushed onto the queue.
   RGBDFrameMessage_Ptr dummyFrameMsg;
   if(connectionOk)
   {
+    // Save the image sizes and calibration parameters.
     client->m_rgbImageSize = calibMsg.extract_rgb_image_size();
     client->m_depthImageSize = calibMsg.extract_depth_image_size();
     client->m_calib = calibMsg.extract_calib();
 
+    // Initialise the frame message queue.
     const size_t capacity = 5;
     client->m_frameMessageQueue->initialise(capacity, boost::bind(&RGBDFrameMessage::make, client->m_rgbImageSize, client->m_depthImageSize));
 
-    dummyFrameMsg.reset(new RGBDFrameMessage(client->m_rgbImageSize, client->m_depthImageSize));
-
-    // Setup RGB-D compression.
+    // Set up the frame compressor.
     frameCompressor.reset(new RGBDFrameCompressor(
       client->m_rgbImageSize, client->m_depthImageSize,
       calibMsg.extract_rgb_compression_type(),
       calibMsg.extract_depth_compression_type()
     ));
 
+    // Construct a dummy frame message to consume messages that cannot be pushed onto the queue.
+    dummyFrameMsg.reset(new RGBDFrameMessage(client->m_rgbImageSize, client->m_depthImageSize));
+
     // Signal to the client that the server is ready.
-    connectionOk = write_message(sock, ackMsg);
+    connectionOk = write_message(sock, AckMessage());
   }
 
   // Signal that we're ready to start reading frame messages from the client.
   m_clientReady.notify_one();
 
   // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
+  CompressedRGBDFrameHeaderMessage headerMsg;
+  CompressedRGBDFrameMessage frameMsg(headerMsg);
   while(connectionOk && !m_shouldTerminate)
   {
 #if DEBUGGING
@@ -281,37 +275,35 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
     RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
 
-    // First, read the message header.
-    if((connectionOk = read_message(sock, compressedRGBDMessageHeader)))
+    // First, try to read a frame header message.
+    if((connectionOk = read_message(sock, headerMsg)))
     {
-      // Setup the message according to the header received.
-      compressedRGBDMessage.set_compressed_image_sizes(compressedRGBDMessageHeader);
+      // If that succeeds, set up the frame message accordingly.
+      frameMsg.set_compressed_image_sizes(headerMsg);
 
-      // Now read the the actual message.
-      if((connectionOk = read_message(sock, compressedRGBDMessage)))
+      // Now, read the frame message itself.
+      if((connectionOk = read_message(sock, frameMsg)))
       {
-        // Uncompress the images.
-        frameCompressor->uncompress_rgbd_frame(compressedRGBDMessage, msg);
-
-        // Signal the client that we are done.
-        connectionOk = write_message(sock, ackMsg);
+        // If that succeeds, uncompress the images and send an acknowledgement to the client.
+        frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
+        connectionOk = write_message(sock, AckMessage());
 
 #if DEBUGGING
         std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
-#if defined(WITH_OPENCV)
+      #ifdef(WITH_OPENCV)
         static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
         msg.extract_rgb_image(rgbImage.get());
         cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
         cv::imshow("RGB", cvRGB);
         cv::waitKey(1);
-#endif
+      #endif
 #endif
       }
     }
   }
 
-  // Delete the compressor to cleanly deallocate CUDA memory and avoid a crash on exit.
+  // Destroy the frame compressor prior to stopping the client (this cleanly deallocates CUDA memory and avoids a crash on exit).
   frameCompressor.reset();
 
   // Once we've finished reading messages, add the client to the finished clients set so that it can be cleaned up.
@@ -382,7 +374,7 @@ void MappingServer::run_server()
 #endif
 }
 
-void MappingServer::write_message_handler(const boost::system::error_code &err, boost::optional<boost::system::error_code> &ret)
+void MappingServer::write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
 {
   // Store any error message so that it can be examined by write_message.
   ret = err;
