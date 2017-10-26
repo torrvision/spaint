@@ -259,7 +259,7 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     connectionOk = write_message(sock, AckMessage());
   }
 
-  // Signal that we're ready to start reading frame messages from the client.
+  // Signal to other threads that we're ready to start reading frame messages from the client.
   m_clientReady.notify_one();
 
   // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
