@@ -323,10 +323,20 @@ void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
   if(m_mappingClient)
   {
     SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
+
     RGBDCalibrationMessage calibMsg;
     calibMsg.set_rgb_image_size(slamState->get_rgb_image_size());
     calibMsg.set_depth_image_size(slamState->get_depth_image_size());
     calibMsg.set_calib(m_imageSourceEngine->getCalib());
+
+    // TODO: Allow these to be configured from the command line.
+#ifdef WITH_OPENCV
+    calibMsg.set_depth_compression_type(DepthCompressionType::DEPTH_COMPRESSION_PNG);
+    calibMsg.set_rgb_compression_type(RGBCompressionType::RGB_COMPRESSION_JPG);
+#else
+    calibMsg.set_depth_compression_type(DepthCompressionType::DEPTH_COMPRESSION_NONE);
+    calibMsg.set_rgb_compression_type(RGBCompressionType::RGB_COMPRESSION_NONE);
+#endif
 
     std::cout << "Sending calibration message" << std::endl;
     m_mappingClient->send_calibration_message(calibMsg);
