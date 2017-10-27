@@ -10,6 +10,7 @@
 #include <tvgutil/containers/PooledQueue.h>
 
 #include "RGBDCalibrationMessage.h"
+#include "RGBDFrameCompressor.h"
 #include "RGBDFrameMessage.h"
 
 namespace itmx {
@@ -25,6 +26,9 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** A frame compressor, used to compress frame messages to reduce the network bandwidth they consume. */
+  RGBDFrameCompressor_Ptr m_frameCompressor;
+
   /** A queue containing the RGB-D frame messages to be sent to the server. */
   RGBDFrameMessageQueue m_frameMessageQueue;
 

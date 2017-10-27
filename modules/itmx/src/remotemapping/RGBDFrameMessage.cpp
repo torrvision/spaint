@@ -37,24 +37,6 @@ void RGBDFrameMessage::extract_depth_image(ITMShortImage *depthImage) const
   memcpy(reinterpret_cast<char*>(depthImage->GetData(MEMORYDEVICE_CPU)), &m_data[m_depthImageSegment.first], m_depthImageSegment.second);
 }
 
-int RGBDFrameMessage::extract_frame_index() const
-{
-  return *reinterpret_cast<const int*>(&m_data[m_frameIndexSegment.first]);
-}
-
-ORUtils::SE3Pose RGBDFrameMessage::extract_pose() const
-{
-  ORUtils::SE3Pose pose;
-
-  Matrix4f M = *reinterpret_cast<const Matrix4f*>(&m_data[m_poseSegment.first]);
-
-  float params[6];
-  memcpy(params, &m_data[m_poseSegment.first + sizeof(Matrix4f)], 6 * sizeof(float));
-
-  pose.SetBoth(M, params);
-  return pose;
-}
-
 void RGBDFrameMessage::extract_rgb_image(ITMUChar4Image *rgbImage) const
 {
   if(rgbImage->dataSize * sizeof(Vector4u) != m_rgbImageSegment.second)
@@ -68,17 +50,6 @@ void RGBDFrameMessage::extract_rgb_image(ITMUChar4Image *rgbImage) const
 void RGBDFrameMessage::set_depth_image(const ITMShortImage_CPtr& depthImage)
 {
   memcpy(&m_data[m_depthImageSegment.first], reinterpret_cast<const char*>(depthImage->GetData(MEMORYDEVICE_CPU)), m_depthImageSegment.second);
-}
-
-void RGBDFrameMessage::set_frame_index(int frameIndex)
-{
-  memcpy(&m_data[m_frameIndexSegment.first], reinterpret_cast<const char*>(&frameIndex), m_frameIndexSegment.second);
-}
-
-void RGBDFrameMessage::set_pose(const ORUtils::SE3Pose& pose)
-{
-  memcpy(&m_data[m_poseSegment.first], reinterpret_cast<const char*>(&pose.GetM()), sizeof(Matrix4f));
-  memcpy(&m_data[m_poseSegment.first + sizeof(Matrix4f)], reinterpret_cast<const char*>(pose.GetParams()), 6 * sizeof(float));
 }
 
 void RGBDFrameMessage::set_rgb_image(const ITMUChar4Image_CPtr& rgbImage)
