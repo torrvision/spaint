@@ -75,7 +75,7 @@ RGBDFrameCompressor::RGBDFrameCompressor(const Vector2i& rgbImageSize, const Vec
   }
 
   // If we're using either the JPG or PNG compression from OpenCV to compress RGB images, allocate a temporary OpenCV image accordingly.
-  // The image we allocate will be a three channel image, and we will use cvtColor to fill it.
+  // The image we allocate will have 3 channels, and we will use cvtColor to fill it.
   if(rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_JPG || rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV

@@ -56,7 +56,7 @@ void CompressedRGBDFrameMessage::set_rgb_image_data(const std::vector<uint8_t>& 
 {
   if(rgbImageData.size() != m_rgbImageSegment.second)
   {
-    throw std::runtime_error("Error: The compressed source RGB image has a different size to that of the depth segment in the message.");
+    throw std::runtime_error("Error: The compressed source RGB image has a different size to that of the RGB segment in the message");
   }
 
   memcpy(&m_data[m_rgbImageSegment.first], reinterpret_cast<const char*>(rgbImageData.data()), m_rgbImageSegment.second);

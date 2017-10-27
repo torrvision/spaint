@@ -32,7 +32,7 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an RGB-DD frame compressor.
+   * \brief Constructs an RGB-D frame compressor.
    *
    * \param rgbImageSize          The size of the RGB images to be compressed.
    * \param depthImageSize        The size of the depth images to be compressed.

@@ -30,19 +30,19 @@ public:
   /**
    * \brief Extracts the compressed depth image data from the message and writes it into the specified destination vector.
    *
-   * \param depthImageData  The vector into which to write the message's compressed depth image. It will be resized as necessary.
+   * \param depthImageData  The vector into which to write the message's compressed depth image data. It will be resized as necessary.
    */
   void extract_depth_image_data(std::vector<uint8_t>& depthImageData) const;
 
   /**
-   * \brief Extracts the compressed colour image data from the message and writes it into the specified destination vector.
+   * \brief Extracts the compressed RGB image data from the message and writes it into the specified destination vector.
    *
-   * \param rgbImageData  The vector into which to write the message's compressed colour image. It will be resized as necessary.
+   * \param rgbImageData  The vector into which to write the message's compressed RGB image data. It will be resized as necessary.
    */
   void extract_rgb_image_data(std::vector<uint8_t>& rgbImageData) const;
 
   /**
-   * \brief Sets the segment sizes for the depth and colour images according to the compressed message header. Resizes the raw data storage accordingly.
+   * \brief Sets the segment sizes for the depth and RGB images according to the compressed message header. Resizes the raw data storage accordingly.
    *
    * \param headerMsg The header message corresponding to this message, which specifies the size of the compressed depth and RGB segments.
    */
