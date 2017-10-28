@@ -83,7 +83,7 @@ void CollaborativePipeline::create_remote_slam_component(const std::string& loca
   const MappingServer_Ptr mappingServer = m_model->get_mapping_server();
 
   // Setup needed variables.
-  const RemoteImageSourceEngine_Ptr imageSource(new RemoteImageSourceEngine(mappingServer, remoteClientID));
+  const ImageSourceEngine_Ptr imageSourceEngine(new RemoteImageSourceEngine(mappingServer, remoteClientID));
   const std::string trackerConfig = "<tracker type='remote'><params>" + boost::lexical_cast<std::string>(remoteClientID) + "</params></tracker>";
 
   // Remote Clients are voxel-only and have no support for fiducials.
@@ -92,5 +92,5 @@ void CollaborativePipeline::create_remote_slam_component(const std::string& loca
   const FiducialDetector_CPtr fiducialDetector;
   const bool detectFiducials = false;
 
-  m_slamComponents[localSceneID].reset(new SLAMComponent(m_model, localSceneID, imageSource, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));
+  m_slamComponents[localSceneID].reset(new SLAMComponent(m_model, localSceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));
 }
