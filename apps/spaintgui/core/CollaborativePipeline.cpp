@@ -26,10 +26,19 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
   if(imageSourceEngines.empty())
   {
     // The current implementation of spaintgui relies on the existence of a scene called "World".
-    // If no local scenes were specified when the pipeline was instantiated, we wait for the first
-    // remote client to join instead, and call its scene "World" when it connects. The creation
-    // of the SLAM component for the remote client will block until it does so.
-    add_remote_slam_component(Model::get_world_scene_id(), 0);
+    // If no local scenes were specified when the pipeline was instantiated, then we check to
+    // see if a mapping server exists:
+    if(mappingServer)
+    {
+      // If it does, we wait for the first remote client to join instead, and call its scene "World" when it
+      // connects. The creation of the SLAM component for the remote client will block until it does so.
+      add_remote_slam_component(Model::get_world_scene_id(), 0);
+    }
+    else
+    {
+      // Otherwise, no scene called "World" will ever exist, so we throw.
+      throw std::runtime_error("Error: Cannot run a collaborative pipeline without a scene called 'World' (did you mean to specify --runServer?)");
+    }
   }
   else
   {
