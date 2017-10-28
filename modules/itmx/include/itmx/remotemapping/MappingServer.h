@@ -154,6 +154,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets the IDs of the clients that are currently active.
+   *
+   * \return  The IDs of the clients that are currently active.
+   */
+  std::vector<int> get_active_clients() const;
+
+  /**
    * \brief Attempts to get the calibration parameters of the camera associated with the specified client.
    *
    * \param clientID  The ID of the client whose camera's calibration parameters we want to get.
