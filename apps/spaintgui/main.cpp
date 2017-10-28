@@ -661,9 +661,9 @@ try
       ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
       CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
       imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-                                        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-                                        args.prefetchBufferCapacity
-                                        ));
+        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        args.prefetchBufferCapacity
+      ));
 
       imageSourceEngines.push_back(imageSourceEngine);
     }
