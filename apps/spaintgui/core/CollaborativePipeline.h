@@ -24,7 +24,7 @@ private:
   /** The collaborative SLAM component used to determine the relative poses between the different agents. */
   spaint::CollaborativeComponent_Ptr m_collaborativeComponent;
 
-  /** Signals whether or not the World scene is coming from a remote agent. */
+  /** A flag indicating whether or not the "World" scene is being fed from a remote agent. */
   bool m_worldIsRemote;
 
   //#################### CONSTRUCTORS ####################
@@ -48,7 +48,18 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  void create_remote_slam_component(const std::string& localSceneID, int remoteClientID);
+  /**
+   * \brief Adds a SLAM component that will construct a scene using RGB-D frames and poses from a remote client.
+   *
+   * \param sceneID         The ID to give the scene.
+   * \param remoteClientID  The mapping server's ID for the remote client.
+   */
+  void add_remote_slam_component(const std::string& sceneID, int remoteClientID);
+
+  /**
+   * \brief Adds SLAM components for any newly-connected remote clients.
+   */
+  void check_for_new_clients();
 };
 
 #endif
