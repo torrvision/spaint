@@ -338,6 +338,13 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     args.detectFiducials = true;
   }
 
+  // If the user wants to use a collaborative pipeline, but doesn't specify any disk sequences,
+  // make sure a mapping server is started.
+  if(args.pipelineType == "collaborative" && args.sequenceSpecifiers.empty())
+  {
+    args.runServer = true;
+  }
+
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
 
