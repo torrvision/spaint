@@ -58,8 +58,8 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 
 size_t CollaborativePipeline::run_main_section()
 {
-  // Add SLAM components for any newly-connected remote clients.
-  check_for_new_clients();
+  // If we're running a mapping server, add SLAM components for any newly-connected remote clients.
+  if(m_model->get_mapping_server()) check_for_new_clients();
 
   // Run the main section of the pipeline.
   size_t scenesFused = MultiScenePipeline::run_main_section();
