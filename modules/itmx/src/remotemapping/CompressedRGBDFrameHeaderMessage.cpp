@@ -5,6 +5,8 @@
 
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 
+#include <string.h>
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
