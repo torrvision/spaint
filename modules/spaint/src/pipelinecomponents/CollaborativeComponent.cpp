@@ -176,9 +176,34 @@ void CollaborativeComponent::run_relocalisation()
     cv::imshow("Relocalisation RGB", cvRGB);
     cv::Mat3b cvDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
     cv::imshow("Relocalisation Depth", cvDepth);
-    cv::waitKey(1);
 
-    if(result && result->quality == Relocaliser::RELOCALISATION_GOOD) cv::waitKey();
+    if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
+    {
+      const SLAMState_CPtr slamStateI = m_context->get_slam_state(m_bestCandidate->m_sceneI);
+      renderStateD.reset();
+      renderStateRGB.reset();
+      m_context->get_visualisation_generator()->generate_depth_from_voxels(
+        depth, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+      );
+
+      m_context->get_visualisation_generator()->generate_voxel_visualisation(
+        rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR
+      );
+
+      ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
+      ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
+
+      cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
+      cv::imshow("Target RGB", cvRGB);
+      cv::Mat3b cvDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+      cv::imshow("Target Depth", cvDepth);
+
+      cv::waitKey();
+    }
+    else
+    {
+      cv::waitKey(1);
+    }
 #endif
 
     // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
