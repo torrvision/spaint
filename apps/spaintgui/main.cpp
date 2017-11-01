@@ -67,6 +67,7 @@ struct CommandLineArguments
   bool batch;
   std::string calibrationFilename;
   bool cameraAfterDisk;
+  std::string collaborationMode;
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
@@ -107,6 +108,7 @@ struct CommandLineArguments
     #define ADD_SETTINGS(arg) for(size_t i = 0; i < arg.size(); ++i) { settings->add_value(#arg, boost::lexical_cast<std::string>(arg[i])); }
       ADD_SETTING(batch);
       ADD_SETTING(calibrationFilename);
+      ADD_SETTING(collaborationMode);
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
@@ -417,6 +419,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("batch", po::bool_switch(&args.batch), "enable batch mode")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("collaborationMode", po::value<std::string>(&args.collaborationMode)->default_value("batch"), "collaboration mode (batch|live)")
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
@@ -552,6 +555,12 @@ try
   set_surfel_scene_params_from_global_options(settings, settings->surfelSceneParams);
 
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
+
+#if 1
+  // FIXME: This is to allow large-scale scenes to work. We should do this properly.
+  settings->sceneParams.voxelSize = 0.01f;
+  settings->sceneParams.mu = 0.04f;
+#endif
 
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
@@ -691,7 +700,7 @@ try
   #endif
 
     // Construct the pipeline itself.
-    const CollaborationMode collaborationMode = CM_LIVE; // FIXME: This should be determined from the command line.
+    const CollaborationMode collaborationMode = args.collaborationMode == "batch" ? CM_BATCH : CM_LIVE;
     pipeline.reset(new CollaborativePipeline(
       settings,
       Application::resources_dir().string(),
