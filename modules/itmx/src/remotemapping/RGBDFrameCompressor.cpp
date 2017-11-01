@@ -65,7 +65,7 @@ RGBDFrameCompressor::RGBDFrameCompressor(const Vector2i& rgbImageSize, const Vec
   // If we're using the PNG compression from OpenCV to compress depth images, allocate a temporary OpenCV image accordingly.
   // The format of this image needs to be CV_16U to properly encode a depth image as PNG. We will use convertTo to fill
   // this image from an ITMShortImage.
-  if(depthCompressionType == DepthCompressionType::DEPTH_COMPRESSION_PNG)
+  if(depthCompressionType == DEPTH_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     m_impl->uncompressedDepthMat.create(depthImageSize.y, depthImageSize.x, CV_16UC1);
@@ -76,7 +76,7 @@ RGBDFrameCompressor::RGBDFrameCompressor(const Vector2i& rgbImageSize, const Vec
 
   // If we're using either the JPG or PNG compression from OpenCV to compress RGB images, allocate a temporary OpenCV image accordingly.
   // The image we allocate will have 3 channels, and we will use cvtColor to fill it.
-  if(rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_JPG || rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_PNG)
+  if(rgbCompressionType == RGB_COMPRESSION_JPG || rgbCompressionType == RGB_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     m_impl->uncompressedRgbMat.create(rgbImageSize.y, rgbImageSize.x, CV_8UC3);
@@ -135,7 +135,7 @@ void RGBDFrameCompressor::uncompress_rgbd_frame(const CompressedRGBDFrameMessage
 
 void RGBDFrameCompressor::compress_depth_image()
 {
-  if(m_impl->depthCompressionType == DepthCompressionType::DEPTH_COMPRESSION_PNG)
+  if(m_impl->depthCompressionType == DEPTH_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     // If we're using PNG compresson, first wrap the InfiniTAM depth image as an OpenCV image.
@@ -163,7 +163,7 @@ void RGBDFrameCompressor::compress_depth_image()
 
 void RGBDFrameCompressor::compress_rgb_image()
 {
-  if(m_impl->rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_NONE)
+  if(m_impl->rgbCompressionType == RGB_COMPRESSION_NONE)
   {
     // If we're not using compression, simply copy the raw bytes of the image into an internal buffer.
     m_impl->compressedRgbBytes.resize(m_impl->uncompressedRgbImage->dataSize * sizeof(Vector4u));
@@ -184,7 +184,7 @@ void RGBDFrameCompressor::compress_rgb_image()
     cv::cvtColor(rgbWrapper, m_impl->uncompressedRgbMat, CV_RGBA2BGR);
 
     // Finally, compress the image using the appropriate format, storing the compressed representation in the internal buffer.
-    const std::string outputFormat = m_impl->rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_JPG ? ".jpg" : ".png";
+    const std::string outputFormat = m_impl->rgbCompressionType == RGB_COMPRESSION_JPG ? ".jpg" : ".png";
     cv::imencode(outputFormat, m_impl->uncompressedRgbMat, m_impl->compressedRgbBytes);
 #endif
   }
@@ -192,7 +192,7 @@ void RGBDFrameCompressor::compress_rgb_image()
 
 void RGBDFrameCompressor::uncompress_depth_image()
 {
-  if(m_impl->depthCompressionType == DepthCompressionType::DEPTH_COMPRESSION_PNG)
+  if(m_impl->depthCompressionType == DEPTH_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
     // If we're using PNG compression, first decode the image into a preallocated internal buffer.
@@ -225,7 +225,7 @@ void RGBDFrameCompressor::uncompress_depth_image()
 
 void RGBDFrameCompressor::uncompress_rgb_image()
 {
-  if(m_impl->rgbCompressionType == RGBCompressionType::RGB_COMPRESSION_NONE)
+  if(m_impl->rgbCompressionType == RGB_COMPRESSION_NONE)
   {
     // If we're not using compression, check that the size of the uncompressed image matches that of the compressed data.
     if(m_impl->uncompressedRgbImage->dataSize * sizeof(Vector4u) != m_impl->compressedRgbBytes.size())
