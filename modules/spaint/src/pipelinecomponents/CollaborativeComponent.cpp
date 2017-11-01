@@ -153,17 +153,6 @@ void CollaborativeComponent::run_relocalisation()
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
 
-#if defined(WITH_OPENCV) && 0
-    ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
-    ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
-
-    cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
-    cv::imshow("Relocalisation RGB", cvRGB);
-    cv::Mat3b cvDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
-    cv::imshow("Relocalisation Depth", cvDepth);
-    cv::waitKey(1);
-#endif
-
     boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
@@ -176,6 +165,19 @@ void CollaborativeComponent::run_relocalisation()
     {
       std::cout << "failed :(\n";
     }
+
+#if defined(WITH_OPENCV) && 1
+    ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
+    ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
+
+    cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
+    cv::imshow("Relocalisation RGB", cvRGB);
+    cv::Mat3b cvDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+    cv::imshow("Relocalisation Depth", cvDepth);
+    cv::waitKey(1);
+
+    if(result && result->quality == Relocaliser::RELOCALISATION_GOOD) cv::waitKey();
+#endif
 
     // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
     SubmapRelocalisation_Ptr bestCandidateCopy;
