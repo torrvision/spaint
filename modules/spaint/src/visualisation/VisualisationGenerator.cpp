@@ -132,9 +132,14 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
     return;
   }
 
-  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+  const bool colour = visualisationType == VT_SCENE_COLOUR && !renderState;
 
-  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
+  if(!renderState)
+  {
+    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(colour ? view->rgb->noDims : view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+  }
+
+  const ITMIntrinsics *intrinsics = colour ? &view->calib.intrinsics_rgb : &view->calib.intrinsics_d;
   m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
   m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 

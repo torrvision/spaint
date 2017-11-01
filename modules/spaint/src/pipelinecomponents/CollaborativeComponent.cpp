@@ -142,12 +142,14 @@ void CollaborativeComponent::run_relocalisation()
     depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
     rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
 #else
-    VoxelRenderState_Ptr renderState;
+    VoxelRenderState_Ptr renderStateD;
     m_context->get_visualisation_generator()->generate_depth_from_voxels(
-      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, DepthVisualiser::DT_ORTHOGRAPHIC
+      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
+
+    VoxelRenderState_Ptr renderStateRGB;
     m_context->get_visualisation_generator()->generate_voxel_visualisation(
-      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderState, VisualisationGenerator::VT_SCENE_COLOUR
+      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR
     );
 #endif
     depth->UpdateDeviceFromHost();
