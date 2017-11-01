@@ -322,11 +322,11 @@ void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
 
     // TODO: Allow these to be configured from the command line.
 #ifdef WITH_OPENCV
-    calibMsg.set_depth_compression_type(DepthCompressionType::DEPTH_COMPRESSION_PNG);
-    calibMsg.set_rgb_compression_type(RGBCompressionType::RGB_COMPRESSION_JPG);
+    calibMsg.set_depth_compression_type(DEPTH_COMPRESSION_PNG);
+    calibMsg.set_rgb_compression_type(RGB_COMPRESSION_JPG);
 #else
-    calibMsg.set_depth_compression_type(DepthCompressionType::DEPTH_COMPRESSION_NONE);
-    calibMsg.set_rgb_compression_type(RGBCompressionType::RGB_COMPRESSION_NONE);
+    calibMsg.set_depth_compression_type(DEPTH_COMPRESSION_NONE);
+    calibMsg.set_rgb_compression_type(RGB_COMPRESSION_NONE);
 #endif
 
     std::cout << "Sending calibration message" << std::endl;
