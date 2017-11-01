@@ -109,9 +109,6 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
 
 void CollaborativeComponent::run_relocalisation()
 {
-  const float failurePenaltyIncrease = 1.0f;
-  const float failurePenaltyMax = 5.0f;
-
   while(!m_stopRelocalisationThread)
   {
     {
