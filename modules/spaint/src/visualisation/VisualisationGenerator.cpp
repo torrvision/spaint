@@ -124,7 +124,7 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
 
 void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                           const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
-                                                          const boost::optional<Postprocessor>& postprocessor) const
+                                                          const boost::optional<Postprocessor>& postprocessor, bool useColourIntrinsics) const
 {
   if(!scene || !view)
   {
@@ -132,14 +132,12 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
     return;
   }
 
-  const bool colour = visualisationType == VT_SCENE_COLOUR && !renderState;
-
   if(!renderState)
   {
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(colour ? view->rgb->noDims : view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(useColourIntrinsics ? view->rgb->noDims : view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
   }
 
-  const ITMIntrinsics *intrinsics = colour ? &view->calib.intrinsics_rgb : &view->calib.intrinsics_d;
+  const ITMIntrinsics *intrinsics = useColourIntrinsics ? &view->calib.intrinsics_rgb : &view->calib.intrinsics_d;
   m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
   m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 

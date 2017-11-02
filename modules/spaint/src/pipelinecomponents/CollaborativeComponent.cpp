@@ -19,8 +19,7 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
-#define USE_REAL_IMAGES 0
-#define SAVE_REAL_IMAGES USE_REAL_IMAGES
+#define DEBUGGING 1
 
 namespace spaint {
 
@@ -121,6 +120,7 @@ void CollaborativeComponent::run_relocalisation()
 {
   while(!m_stopRelocalisationThread)
   {
+    // Wait for a relocalisation to be scheduled.
     {
       boost::unique_lock<boost::mutex> lock(m_mutex);
       while(!m_bestCandidate)
@@ -133,94 +133,122 @@ void CollaborativeComponent::run_relocalisation()
     }
 
     std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndex << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
-    Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
 
+    // Render synthetic images of the source scene from the relevant pose and copy them across to the GPU for use by the relocaliser.
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
-#if USE_REAL_IMAGES
-    depth->SetFrom(m_bestCandidate->m_depthJ.get(), ITMFloatImage::CPU_TO_CPU);
-    rgb->SetFrom(m_bestCandidate->m_rgbJ.get(), ITMUChar4Image::CPU_TO_CPU);
-#else
+
     VoxelRenderState_Ptr renderStateD;
     m_context->get_visualisation_generator()->generate_depth_from_voxels(
       depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
     VoxelRenderState_Ptr renderStateRGB;
+    const bool useColourIntrinsics = true;
     m_context->get_visualisation_generator()->generate_voxel_visualisation(
-      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR
+      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(),
+      renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
     );
-#endif
+
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
 
 #ifdef WITH_OPENCV
+    // Make OpenCV copies of the synthetic images we're trying to relocalise (these may be needed later).
     cv::Mat3b cvSourceRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
-    cv::imshow("Source RGB", cvSourceRGB);
     cv::Mat1b cvSourceDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), depth->noDims.x, depth->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
+
+  #if DEBUGGING
+    // If we're debugging, show the synthetic images of the source scene to the user.
     cv::imshow("Source Depth", cvSourceDepth);
+    cv::imshow("Source RGB", cvSourceRGB);
+  #endif
 #endif
 
+    // Attempt to relocalise the synthetic images using the relocaliser for the target scene.
+    Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
     boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
+
+    // If relocalisation succeeded, verify the result by thresholding the difference between the
+    // source depth image and a rendered depth image of the target scene at the relevant pose.
     bool verified = false;
     cv::Scalar meanDepthDiff;
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
 #ifdef WITH_OPENCV
+      // Render synthetic images of the target scene from the relevant pose.
       const SLAMState_CPtr slamStateI = m_context->get_slam_state(m_bestCandidate->m_sceneI);
       renderStateD.reset();
       renderStateRGB.reset();
+
       m_context->get_visualisation_generator()->generate_depth_from_voxels(
         depth, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
       );
 
       m_context->get_visualisation_generator()->generate_voxel_visualisation(
-        rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR
+        rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(),
+        renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
       );
 
+      // Make OpenCV copies of the synthetic images of the target scene.
       cv::Mat3b cvTargetRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
-      cv::imshow("Target RGB", cvTargetRGB);
       cv::Mat1b cvTargetDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), depth->noDims.x, depth->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
-      cv::imshow("Target Depth", cvTargetDepth);
 
+    #if DEBUGGING
+      // If we're debugging, show the synthetic images of the target scene to the user.
+      cv::imshow("Target RGB", cvTargetRGB);
+      cv::imshow("Target Depth", cvTargetDepth);
+    #endif
+
+      // Compute a binary mask showing which pixels are valid in both the source and target depth images.
       cv::Mat cvSourceMask;
       cv::inRange(cvSourceDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvSourceMask);
       cv::bitwise_not(cvSourceMask, cvSourceMask);
-      //cv::imshow("Source Mask", cvSourceMask);
 
       cv::Mat cvTargetMask;
       cv::inRange(cvTargetDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvTargetMask);
       cv::bitwise_not(cvTargetMask, cvTargetMask);
-      //cv::imshow("Target Mask", cvTargetMask);
-
-      const float emptyTargetFraction = static_cast<float>(cv::countNonZero(cvTargetMask == 0)) / (cvTargetMask.size().width * cvTargetMask.size().height);
 
       cv::Mat cvCombinedMask;
       cv::bitwise_and(cvSourceMask, cvTargetMask, cvCombinedMask);
-      //cv::imshow("Combined Mask", cvCombinedMask);
 
+      // Compute the difference between the source and target depth images, and mask it using the combined mask.
       cv::Mat cvDepthDiff, cvMaskedDepthDiff;
       cv::absdiff(cvSourceDepth, cvTargetDepth, cvDepthDiff);
       cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
+    #if DEBUGGING
       cv::imshow("Masked Depth Difference", cvMaskedDepthDiff);
+    #endif
 
+      // Determine the average depth difference for valid pixels in the source and target depth images.
       meanDepthDiff = cv::mean(cvMaskedDepthDiff);
-      std::cout << "\nZero Pixels: " << cv::countNonZero(cvTargetMask == 0) << std::endl;
-      std::cout << "Mean Depth Difference: " << meanDepthDiff << std::endl;
-      verified = meanDepthDiff(0) < 5.0f && emptyTargetFraction < 0.5f;
+    #if DEBUGGING
+      std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
+    #endif
+
+      // Compute the fraction of the target depth image that is valid.
+      const float targetValidFraction = static_cast<float>(cv::countNonZero(cvTargetMask == 255)) / (cvTargetMask.size().width * cvTargetMask.size().height);
+    #if DEBUGGING
+      std::cout << "Valid Target Pixels: " << cv::countNonZero(cvTargetMask == 255) << std::endl;
+    #endif
+
+      // Decide whether or not to verify the relocalisation, based on the average depth difference and the fraction of the target depth image that is valid.
+      verified = meanDepthDiff(0) < 5.0f && targetValidFraction >= 0.5f;
 #else
+      // If we didn't build with OpenCV, we can't do any verification, so just mark the relocalisation as verified and hope for the best.
       verified = true;
 #endif
     }
 
+    // If relocalisation succeeded and we successfully verified the result, add a sample of the
+    // relative transform between the source and target scenes to the pose graph optimiser.
     if(verified)
     {
       // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
       m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
       std::cout << "succeeded!" << std::endl;
-      std::cout << "Mean Depth Difference: " << meanDepthDiff << std::endl;
 
 #ifdef WITH_OPENCV
       cv::waitKey(1);
