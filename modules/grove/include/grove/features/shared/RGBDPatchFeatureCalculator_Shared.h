@@ -181,11 +181,23 @@ inline void compute_depth_features(const Vector2i& xyDepth, const Vector2i& xyOu
   // Look up the depth for the input pixel. This must be available, since otherwise the pixel's keypoint would have been invalid.
   const float depth = depths[xyDepth.y * depthSize.width + xyDepth.x];
 
+  // Compute the ratio between the size of depth image we're currently using and the size of depth
+  // image used to train the forest. We use this to scale the offsets before sampling pixels.
+  // FIXME: The depth training image size should be passed in, not hard-coded.
+  const Vector2f trainDepthSize(640.0f, 480.0f);
+  const Vector2f offsetRatio(depthSize.x / trainDepthSize.x, depthSize.y / trainDepthSize.y);
+
   // Compute the features and fill in the descriptor.
   DescriptorType& descriptor = descriptors[rasterIdxOut];
   for(uint32_t featIdx = 0; featIdx < depthFeatureCount; ++featIdx)
   {
-    const Vector4i offsets = depthOffsets[featIdx];
+    Vector4i offsets = depthOffsets[featIdx];
+
+    // Rescale the offsets using the offset ratio.
+    offsets[0] = static_cast<int>(offsets[0] * offsetRatio.x);
+    offsets[1] = static_cast<int>(offsets[1] * offsetRatio.y);
+    offsets[2] = static_cast<int>(offsets[2] * offsetRatio.x);
+    offsets[3] = static_cast<int>(offsets[3] * offsetRatio.y);
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
