@@ -7,9 +7,19 @@
 
 #include <stdexcept>
 
+#include <opencv2/features2d.hpp>
+
 namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+size_t OpenCVUtil::count_orb_keypoints(const cv::Mat3b& image)
+{
+  static cv::Ptr<cv::ORB> orb = cv::ORB::create();
+  std::vector<cv::KeyPoint> keypoints;
+  orb->detect(image, keypoints);
+  return keypoints.size();
+}
 
 cv::Mat3b OpenCVUtil::make_rgb_image(const float *rgbData, int width, int height)
 {

@@ -89,6 +89,15 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Counts the number of ORB keypoints in the specified image.
+   *
+   * \param image                 The image whose ORB keypoints we want to count.
+   * \param defaultKeypointCount  The number of ORB keypoints to return if keypoint detection fails (e.g. if we didn't build with OpenCV).
+   * \return                      The number of ORB keypoints in the image, if keypoint detection succeeded, or defaultKeypointCount otherwise.
+   */
+  size_t count_orb_keypoints(const ITMUChar4Image *image, size_t defaultKeypointCount = 500) const;
+
+  /**
    * \brief TODO
    */
   std::list<Candidate> generate_random_candidates(size_t desiredCandidateCount) const;

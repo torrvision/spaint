@@ -67,6 +67,16 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+size_t CollaborativeComponent::count_orb_keypoints(const ITMUChar4Image *image, size_t defaultKeypointCount) const
+{
+#ifdef WITH_OPENCV
+  cv::Mat3b cvImage = OpenCVUtil::make_rgb_image(image->GetData(MEMORYDEVICE_CPU), image->noDims.x, image->noDims.y);
+  return OpenCVUtil::count_orb_keypoints(cvImage);
+#else
+  return defaultKeypointCount;
+#endif
+}
+
 std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
 {
   std::list<Candidate> candidates;
@@ -268,9 +278,11 @@ bool CollaborativeComponent::update_trajectories()
   for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
   {
     SLAMState_CPtr slamState = m_context->get_slam_state(sceneIDs[i]);
+    if(!slamState || !slamState->get_view()) continue;
+
     SLAMState::InputStatus inputStatus = slamState->get_input_status();
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
-    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
+    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(slamState->get_view()->rgb) >= 400)
     {
       m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
     }
