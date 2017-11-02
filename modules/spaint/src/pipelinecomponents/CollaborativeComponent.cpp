@@ -12,10 +12,6 @@ using namespace ORUtils;
 #include <boost/bind.hpp>
 using boost::bind;
 
-#ifdef WITH_OPENCV
-#include <opencv2/features2d.hpp>
-#endif
-
 #include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
