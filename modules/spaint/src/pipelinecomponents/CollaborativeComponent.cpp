@@ -178,7 +178,8 @@ void CollaborativeComponent::run_relocalisation()
 
     cv::Mat3b cvSourceRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
     cv::imshow("Source RGB", cvSourceRGB);
-    cv::Mat3b cvSourceDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+    //cv::Mat3b cvSourceDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+    cv::Mat1b cvSourceDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
     cv::imshow("Source Depth", cvSourceDepth);
 
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
@@ -199,7 +200,8 @@ void CollaborativeComponent::run_relocalisation()
 
       cv::Mat3b cvTargetRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
       cv::imshow("Target RGB", cvTargetRGB);
-      cv::Mat3b cvTargetDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+      //cv::Mat3b cvTargetDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+      cv::Mat1b cvTargetDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
       cv::imshow("Target Depth", cvTargetDepth);
 
       cv::Mat cvSourceMask;
@@ -214,7 +216,7 @@ void CollaborativeComponent::run_relocalisation()
 
       cv::Mat cvCombinedMask, cvResizedMask;
       cv::bitwise_and(cvSourceMask, cvTargetMask, cvCombinedMask);
-      cv::resize(cvCombinedMask, cvResizedMask, cvSourceRGB.size());
+      cv::resize(cvCombinedMask, cvResizedMask, cvSourceDepth.size());
       cv::imshow("Combined Mask", cvResizedMask);
 
       cv::Mat a, b, c, cvDiffRGB;
@@ -225,13 +227,14 @@ void CollaborativeComponent::run_relocalisation()
       //b.convertTo(b, CV_8UC1);
       //cv::absdiff(a, b, c);
 #else
-      cv::absdiff(cvSourceRGB, cvTargetRGB, c);
+      //cv::absdiff(cvSourceRGB, cvTargetRGB, c);
+      cv::absdiff(cvSourceDepth, cvTargetDepth, c);
 #endif
       c.copyTo(cvDiffRGB, cvResizedMask);
       cv::imshow("Diff RGB", cvDiffRGB);
 
       cv::Scalar meanDiff = cv::mean(cvDiffRGB);
-      if(meanDiff(0) >= 40 || meanDiff(1) >= 40 || meanDiff(2) >= 40)
+      if(false)//meanDiff(0) >= 40 || meanDiff(1) >= 40 || meanDiff(2) >= 40)
       {
         cv::waitKey(1);
       }
