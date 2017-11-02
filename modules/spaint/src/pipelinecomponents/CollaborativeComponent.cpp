@@ -159,31 +159,19 @@ void CollaborativeComponent::run_relocalisation()
     depth->UpdateDeviceFromHost();
     rgb->UpdateDeviceFromHost();
 
-    boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
-    if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
-    {
-      // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
-      m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
-      m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
-      std::cout << "succeeded!\n";
-    }
-    else
-    {
-      std::cout << "failed :(\n";
-    }
-
-#if defined(WITH_OPENCV) && 1
-    ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
-    ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
-
+#ifdef WITH_OPENCV
     cv::Mat3b cvSourceRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
     cv::imshow("Source RGB", cvSourceRGB);
-    //cv::Mat3b cvSourceDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
-    cv::Mat1b cvSourceDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
+    cv::Mat1b cvSourceDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), depth->noDims.x, depth->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
     cv::imshow("Source Depth", cvSourceDepth);
+#endif
 
+    boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
+    bool verified = false;
+    cv::Scalar meanDepthDiff;
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
+#ifdef WITH_OPENCV
       const SLAMState_CPtr slamStateI = m_context->get_slam_state(m_bestCandidate->m_sceneI);
       renderStateD.reset();
       renderStateRGB.reset();
@@ -195,60 +183,61 @@ void CollaborativeComponent::run_relocalisation()
         rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR
       );
 
-      ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
-      ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
-
       cv::Mat3b cvTargetRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
       cv::imshow("Target RGB", cvTargetRGB);
-      //cv::Mat3b cvTargetDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
-      cv::Mat1b cvTargetDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
+      cv::Mat1b cvTargetDepth = OpenCVUtil::make_greyscale_image(depth->GetData(MEMORYDEVICE_CPU), depth->noDims.x, depth->noDims.y, OpenCVUtil::ROW_MAJOR, 100.0f);
       cv::imshow("Target Depth", cvTargetDepth);
 
       cv::Mat cvSourceMask;
       cv::inRange(cvSourceDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvSourceMask);
       cv::bitwise_not(cvSourceMask, cvSourceMask);
-      cv::imshow("Source Mask", cvSourceMask);
+      //cv::imshow("Source Mask", cvSourceMask);
 
       cv::Mat cvTargetMask;
       cv::inRange(cvTargetDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvTargetMask);
       cv::bitwise_not(cvTargetMask, cvTargetMask);
-      cv::imshow("Target Mask", cvTargetMask);
+      //cv::imshow("Target Mask", cvTargetMask);
 
-      cv::Mat cvCombinedMask, cvResizedMask;
+      const float emptyTargetFraction = static_cast<float>(cv::countNonZero(cvTargetMask == 0)) / (cvTargetMask.size().width * cvTargetMask.size().height);
+
+      cv::Mat cvCombinedMask;
       cv::bitwise_and(cvSourceMask, cvTargetMask, cvCombinedMask);
-      cv::resize(cvCombinedMask, cvResizedMask, cvSourceDepth.size());
-      cv::imshow("Combined Mask", cvResizedMask);
+      //cv::imshow("Combined Mask", cvCombinedMask);
 
-      cv::Mat a, b, c, cvDiffRGB;
-#if 0
-      //cv::cvtColor(cvSourceRGB, a, cv::COLOR_RGB2GRAY);
-      //a.convertTo(a, CV_8UC1);
-      //cv::cvtColor(cvTargetRGB, b, cv::COLOR_RGB2GRAY);
-      //b.convertTo(b, CV_8UC1);
-      //cv::absdiff(a, b, c);
+      cv::Mat cvDepthDiff, cvMaskedDepthDiff;
+      cv::absdiff(cvSourceDepth, cvTargetDepth, cvDepthDiff);
+      cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
+      cv::imshow("Masked Depth Difference", cvMaskedDepthDiff);
+
+      meanDepthDiff = cv::mean(cvMaskedDepthDiff);
+      std::cout << "\nZero Pixels: " << cv::countNonZero(cvTargetMask == 0) << std::endl;
+      std::cout << "Mean Depth Difference: " << meanDepthDiff << std::endl;
+      verified = meanDepthDiff(0) < 5.0f && emptyTargetFraction < 0.5f;
 #else
-      //cv::absdiff(cvSourceRGB, cvTargetRGB, c);
-      cv::absdiff(cvSourceDepth, cvTargetDepth, c);
+      verified = true;
 #endif
-      c.copyTo(cvDiffRGB, cvResizedMask);
-      cv::imshow("Diff RGB", cvDiffRGB);
+    }
 
-      cv::Scalar meanDiff = cv::mean(cvDiffRGB);
-      if(false)//meanDiff(0) >= 40 || meanDiff(1) >= 40 || meanDiff(2) >= 40)
-      {
-        cv::waitKey(1);
-      }
-      else
-      {
-        std::cout << "Mean Difference: " << meanDiff << std::endl;
-        cv::waitKey();
-      }
+    if(verified)
+    {
+      // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
+      m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
+      m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
+      std::cout << "succeeded!" << std::endl;
+      std::cout << "Mean Depth Difference: " << meanDepthDiff << std::endl;
+
+#ifdef WITH_OPENCV
+      cv::waitKey(1);
+#endif
     }
     else
     {
+      std::cout << "failed :(" << std::endl;
+
+#ifdef WITH_OPENCV
       cv::waitKey(1);
-    }
 #endif
+    }
 
     // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
     SubmapRelocalisation_Ptr bestCandidateCopy;
@@ -358,20 +347,16 @@ bool CollaborativeComponent::update_trajectories()
     if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(slamState->get_view()->rgb) >= 400)
     {
       size_t keypointCount = 500;
+
 #ifdef WITH_OPENCV
       View_CPtr view = slamState->get_view();
       cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(view->rgb->GetData(MEMORYDEVICE_CPU), view->rgb->noDims.x, view->rgb->noDims.y);
       static cv::Ptr<cv::ORB> orb = cv::ORB::create();
       std::vector<cv::KeyPoint> keypoints;
       orb->detect(rgbImage, keypoints);
-#if 0
-      cv::Mat3b keypointImage = cv::Mat3b::zeros(rgbImage.size());
-      cv::drawKeypoints(rgbImage, keypoints, keypointImage, cv::Scalar(0,255,0));
-      cv::imshow("ORB Keypoints", keypointImage);
-#endif
       keypointCount = keypoints.size();
-      std::cout << "Keypoint Count: " << keypoints.size() << std::endl;
 #endif
+
       if(keypointCount >= 400)
       {
         m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
