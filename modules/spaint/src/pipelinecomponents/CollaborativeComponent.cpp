@@ -12,6 +12,10 @@ using namespace ORUtils;
 #include <boost/bind.hpp>
 using boost::bind;
 
+#ifdef WITH_OPENCV
+#include <opencv2/features2d.hpp>
+#endif
+
 #include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
@@ -172,10 +176,10 @@ void CollaborativeComponent::run_relocalisation()
     ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
     ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
 
-    cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
-    cv::imshow("Relocalisation RGB", cvRGB);
-    cv::Mat3b cvDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
-    cv::imshow("Relocalisation Depth", cvDepth);
+    cv::Mat3b cvSourceRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
+    cv::imshow("Source RGB", cvSourceRGB);
+    cv::Mat3b cvSourceDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+    cv::imshow("Source Depth", cvSourceDepth);
 
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
@@ -193,12 +197,49 @@ void CollaborativeComponent::run_relocalisation()
       ITMUChar4Image_Ptr temp(new ITMUChar4Image(depth->noDims, true, false));
       ITMLib::IITMVisualisationEngine::DepthToUchar4(temp.get(), depth.get());
 
-      cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
-      cv::imshow("Target RGB", cvRGB);
-      cv::Mat3b cvDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
-      cv::imshow("Target Depth", cvDepth);
+      cv::Mat3b cvTargetRGB = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
+      cv::imshow("Target RGB", cvTargetRGB);
+      cv::Mat3b cvTargetDepth = OpenCVUtil::make_rgb_image(temp->GetData(MEMORYDEVICE_CPU), temp->noDims.x, temp->noDims.y);
+      cv::imshow("Target Depth", cvTargetDepth);
 
-      cv::waitKey();
+      cv::Mat cvSourceMask;
+      cv::inRange(cvSourceDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvSourceMask);
+      cv::bitwise_not(cvSourceMask, cvSourceMask);
+      cv::imshow("Source Mask", cvSourceMask);
+
+      cv::Mat cvTargetMask;
+      cv::inRange(cvTargetDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvTargetMask);
+      cv::bitwise_not(cvTargetMask, cvTargetMask);
+      cv::imshow("Target Mask", cvTargetMask);
+
+      cv::Mat cvCombinedMask, cvResizedMask;
+      cv::bitwise_and(cvSourceMask, cvTargetMask, cvCombinedMask);
+      cv::resize(cvCombinedMask, cvResizedMask, cvSourceRGB.size());
+      cv::imshow("Combined Mask", cvResizedMask);
+
+      cv::Mat a, b, c, cvDiffRGB;
+#if 0
+      //cv::cvtColor(cvSourceRGB, a, cv::COLOR_RGB2GRAY);
+      //a.convertTo(a, CV_8UC1);
+      //cv::cvtColor(cvTargetRGB, b, cv::COLOR_RGB2GRAY);
+      //b.convertTo(b, CV_8UC1);
+      //cv::absdiff(a, b, c);
+#else
+      cv::absdiff(cvSourceRGB, cvTargetRGB, c);
+#endif
+      c.copyTo(cvDiffRGB, cvResizedMask);
+      cv::imshow("Diff RGB", cvDiffRGB);
+
+      cv::Scalar meanDiff = cv::mean(cvDiffRGB);
+      if(meanDiff(0) >= 40 || meanDiff(1) >= 40 || meanDiff(2) >= 40)
+      {
+        cv::waitKey(1);
+      }
+      else
+      {
+        std::cout << "Mean Difference: " << meanDiff << std::endl;
+        cv::waitKey();
+      }
     }
     else
     {
@@ -313,7 +354,25 @@ bool CollaborativeComponent::update_trajectories()
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
     if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(slamState->get_view()->rgb) >= 400)
     {
-      m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
+      size_t keypointCount = 500;
+#ifdef WITH_OPENCV
+      View_CPtr view = slamState->get_view();
+      cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(view->rgb->GetData(MEMORYDEVICE_CPU), view->rgb->noDims.x, view->rgb->noDims.y);
+      static cv::Ptr<cv::ORB> orb = cv::ORB::create();
+      std::vector<cv::KeyPoint> keypoints;
+      orb->detect(rgbImage, keypoints);
+#if 0
+      cv::Mat3b keypointImage = cv::Mat3b::zeros(rgbImage.size());
+      cv::drawKeypoints(rgbImage, keypoints, keypointImage, cv::Scalar(0,255,0));
+      cv::imshow("ORB Keypoints", keypointImage);
+#endif
+      keypointCount = keypoints.size();
+      std::cout << "Keypoint Count: " << keypoints.size() << std::endl;
+#endif
+      if(keypointCount >= 400)
+      {
+        m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
+      }
     }
 
     if(inputStatus != SLAMState::IS_TERMINATED) fusionMayStillRun = true;
