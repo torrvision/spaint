@@ -346,21 +346,7 @@ bool CollaborativeComponent::update_trajectories()
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
     if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(slamState->get_view()->rgb) >= 400)
     {
-      size_t keypointCount = 500;
-
-#ifdef WITH_OPENCV
-      View_CPtr view = slamState->get_view();
-      cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(view->rgb->GetData(MEMORYDEVICE_CPU), view->rgb->noDims.x, view->rgb->noDims.y);
-      static cv::Ptr<cv::ORB> orb = cv::ORB::create();
-      std::vector<cv::KeyPoint> keypoints;
-      orb->detect(rgbImage, keypoints);
-      keypointCount = keypoints.size();
-#endif
-
-      if(keypointCount >= 400)
-      {
-        m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
-      }
+      m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
     }
 
     if(inputStatus != SLAMState::IS_TERMINATED) fusionMayStillRun = true;
