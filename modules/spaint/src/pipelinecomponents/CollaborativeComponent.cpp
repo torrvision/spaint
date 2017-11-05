@@ -328,11 +328,10 @@ void CollaborativeComponent::try_schedule_relocalisation()
 #if 0
   // Print out all of the candidates for debugging purposes.
   std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
-  for(std::list<Candidate>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+  for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
-    const SubmapRelocalisation_Ptr& candidate = it->first;
-    const float score = it->second;
-    std::cout << candidate->m_sceneI << ' ' << candidate->m_sceneJ << ' ' << candidate->m_frameIndex << ' ' << score << '\n';
+    const SubmapRelocalisation& candidate = *it;
+    std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
   }
   std::cout << "END CANDIDATES\n";
 #endif
