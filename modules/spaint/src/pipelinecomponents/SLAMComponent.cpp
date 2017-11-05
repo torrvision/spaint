@@ -462,17 +462,14 @@ void SLAMComponent::setup_relocaliser()
     // Load the relocaliser from the specified file.
     int deviceCount = 1;
     cudaGetDeviceCount(&deviceCount);
-
-    if(deviceCount > 1) ORcudaSafeCall(cudaSetDevice(1));
-
-    Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
-
     if(deviceCount > 1)
     {
+      ORcudaSafeCall(cudaSetDevice(1));
+      Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
       innerRelocaliser.reset(new BackgroundRelocaliser(scoreRelocaliser, 1));
       ORcudaSafeCall(cudaSetDevice(0));
     }
-    else innerRelocaliser = scoreRelocaliser;
+    else innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
 #endif
   }
   else if(m_relocaliserType == "ferns")
