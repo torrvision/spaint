@@ -9,6 +9,8 @@
 #include <boost/atomic.hpp>
 #include <boost/thread.hpp>
 
+#include <itmx/relocalisation/Relocaliser.h>
+
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "CollaborativeContext.h"
@@ -22,15 +24,10 @@ namespace spaint {
  */
 class CollaborativeComponent
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
-  typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
-  SubmapRelocalisation_Ptr m_bestCandidate;
+  boost::shared_ptr<SubmapRelocalisation> m_bestCandidate;
 
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
@@ -60,7 +57,7 @@ private:
   std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
 
   /** TODO */
-  std::map<std::pair<std::string,std::string>,std::deque<int> > m_triedFrameIndices;
+  std::map<std::pair<std::string,std::string>,std::set<int> > m_triedFrameIndices;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -100,7 +97,7 @@ private:
   /**
    * \brief TODO
    */
-  std::list<Candidate> generate_random_candidates(size_t desiredCandidateCount) const;
+  std::list<SubmapRelocalisation> generate_random_candidates(size_t desiredCandidateCount) const;
 
   /**
    * \brief TODO
@@ -110,7 +107,7 @@ private:
   /**
    * \brief TODO
    */
-  void score_candidates(std::list<Candidate>& candidates) const;
+  void score_candidates(std::list<SubmapRelocalisation>& candidates) const;
 
   /**
    * \brief TODO

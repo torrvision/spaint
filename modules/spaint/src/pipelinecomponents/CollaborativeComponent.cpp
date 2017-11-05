@@ -76,12 +76,12 @@ size_t CollaborativeComponent::count_orb_keypoints(const ITMUChar4Image *image, 
 #endif
 }
 
-std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
+std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
 {
-  std::list<Candidate> candidates;
+  std::list<SubmapRelocalisation> candidates;
 
   const int sceneCount = static_cast<int>(m_trajectories.size());
-  if(sceneCount < 2) return std::list<Candidate>();
+  if(sceneCount < 2) return std::list<SubmapRelocalisation>();
 
   for(size_t i = 0; i < desiredCandidateCount; ++i)
   {
@@ -109,8 +109,7 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
     const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
 
-    SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
-    candidates.push_back(std::make_pair(candidate, 0.0f));
+    candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
   }
 
   return candidates;
@@ -170,10 +169,12 @@ void CollaborativeComponent::run_relocalisation()
     Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
     boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
 
+    // If the relocaliser returned a result, store the initial relocalisation quality for later examination.
+    if(result) m_bestCandidate->m_initialRelocalisationQuality = result->quality;
+
     // If relocalisation succeeded, verify the result by thresholding the difference between the
     // source depth image and a rendered depth image of the target scene at the relevant pose.
     bool verified = false;
-    cv::Scalar meanDepthDiff;
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
 #ifdef WITH_OPENCV
@@ -222,19 +223,19 @@ void CollaborativeComponent::run_relocalisation()
     #endif
 
       // Determine the average depth difference for valid pixels in the source and target depth images.
-      meanDepthDiff = cv::mean(cvMaskedDepthDiff);
+      m_bestCandidate->m_meanDepthDiff = cv::mean(cvMaskedDepthDiff);
     #if DEBUGGING
-      std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
+      std::cout << "\nMean Depth Difference: " << m_bestCandidate->m_meanDepthDiff << std::endl;
     #endif
 
       // Compute the fraction of the target depth image that is valid.
-      const float targetValidFraction = static_cast<float>(cv::countNonZero(cvTargetMask == 255)) / (cvTargetMask.size().width * cvTargetMask.size().height);
+      m_bestCandidate->m_targetValidFraction = static_cast<float>(cv::countNonZero(cvTargetMask == 255)) / (cvTargetMask.size().width * cvTargetMask.size().height);
     #if DEBUGGING
       std::cout << "Valid Target Pixels: " << cv::countNonZero(cvTargetMask == 255) << std::endl;
     #endif
 
       // Decide whether or not to verify the relocalisation, based on the average depth difference and the fraction of the target depth image that is valid.
-      verified = meanDepthDiff(0) < 5.0f && targetValidFraction >= 0.5f;
+      verified = m_bestCandidate->m_meanDepthDiff(0) < 5.0f && m_bestCandidate->m_targetValidFraction >= 0.5f;
 #else
       // If we didn't build with OpenCV, we can't do any verification, so just mark the relocalisation as verified and hope for the best.
       verified = true;
@@ -264,7 +265,7 @@ void CollaborativeComponent::run_relocalisation()
     }
 
     // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
-    SubmapRelocalisation_Ptr bestCandidateCopy;
+    boost::shared_ptr<SubmapRelocalisation> bestCandidateCopy;
     {
       boost::unique_lock<boost::mutex> lock(m_mutex);
       bestCandidateCopy = m_bestCandidate;
@@ -273,33 +274,33 @@ void CollaborativeComponent::run_relocalisation()
   }
 }
 
-void CollaborativeComponent::score_candidates(std::list<Candidate>& candidates) const
+void CollaborativeComponent::score_candidates(std::list<SubmapRelocalisation>& candidates) const
 {
-  for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+  for(std::list<SubmapRelocalisation>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
-    SubmapRelocalisation_Ptr candidate = it->first;
+    SubmapRelocalisation& candidate = *it;
 
     // Boost candidates that may attach new confident nodes to the graph.
     PoseGraphOptimiser_CPtr poseGraphOptimiser = m_context->get_pose_graph_optimiser();
-    boost::optional<ORUtils::SE3Pose> globalPoseI = poseGraphOptimiser->try_get_estimated_global_pose(candidate->m_sceneI);
-    boost::optional<ORUtils::SE3Pose> globalPoseJ = poseGraphOptimiser->try_get_estimated_global_pose(candidate->m_sceneJ);
+    boost::optional<ORUtils::SE3Pose> globalPoseI = poseGraphOptimiser->try_get_estimated_global_pose(candidate.m_sceneI);
+    boost::optional<ORUtils::SE3Pose> globalPoseJ = poseGraphOptimiser->try_get_estimated_global_pose(candidate.m_sceneJ);
     float newNodeBoost = (globalPoseI && !globalPoseJ) || (globalPoseJ && !globalPoseI) ? 1.0f : 0.0f;
 
     // Penalise candidates that will only add to an existing confident edge.
-    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
+    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(candidate.m_sceneI, candidate.m_sceneJ);
     int largestClusterSize = largestCluster ? static_cast<int>(largestCluster->size()) : 0;
     float confidencePenalty = 1.0f * std::max(largestClusterSize - PoseGraphOptimiser::confidence_threshold(), 0);
 
     // Penalise candidates that are too close to ones we've tried before.
     float homogeneityPenalty = 0.0f;
-    std::map<std::pair<std::string,std::string>,std::deque<int> >::const_iterator jt = m_triedFrameIndices.find(std::make_pair(candidate->m_sceneI, candidate->m_sceneJ));
+    std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator jt = m_triedFrameIndices.find(std::make_pair(candidate.m_sceneI, candidate.m_sceneJ));
     if(jt != m_triedFrameIndices.end())
     {
-      const std::deque<int>& triedFrameIndices = jt->second;
-      for(size_t j = 0, size = triedFrameIndices.size(); j < size; ++j)
+      const std::set<int>& triedFrameIndices = jt->second;
+      for(std::set<int>::const_iterator kt = triedFrameIndices.begin(), kend = triedFrameIndices.end(); kt != kend; ++kt)
       {
-        const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate->m_sceneJ)->second[triedFrameIndices[j]];
-        if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedPose, 5 * M_PI / 180))
+        const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate.m_sceneJ)->second[*kt];
+        if(GeometryUtil::poses_are_similar(candidate.m_localPoseJ, triedPose, 5 * M_PI / 180))
         {
           homogeneityPenalty = 5.0f;
           break;
@@ -307,8 +308,7 @@ void CollaborativeComponent::score_candidates(std::list<Candidate>& candidates) 
       }
     }
 
-    float score = newNodeBoost - confidencePenalty - homogeneityPenalty;
-    it->second = score;
+    candidate.m_candidateScore = newNodeBoost - confidencePenalty - homogeneityPenalty;
   }
 }
 
@@ -316,14 +316,14 @@ void CollaborativeComponent::try_schedule_relocalisation()
 {
   // Randomly generate a list of candidate relocalisations.
   const size_t desiredCandidateCount = 10;
-  std::list<Candidate> candidates = generate_random_candidates(desiredCandidateCount);
+  std::list<SubmapRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
   if(candidates.empty()) return;
 
   // Score all of the candidates.
   score_candidates(candidates);
 
   // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
-  candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
+  candidates.sort(bind(&SubmapRelocalisation::m_candidateScore, _1) < bind(&SubmapRelocalisation::m_candidateScore, _2));
 
 #if 0
   // Print out all of the candidates for debugging purposes.
@@ -344,13 +344,13 @@ void CollaborativeComponent::try_schedule_relocalisation()
     if(!m_bestCandidate)
     {
       // Schedule the best candidate for relocalisation.
-      m_bestCandidate = candidates.back().first;
+      m_bestCandidate.reset(new SubmapRelocalisation(candidates.back()));
       candidates.pop_back();
       canRelocalise = true;
 
       // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
-      std::deque<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
-      triedFrameIndices.push_back(m_bestCandidate->m_frameIndexJ);
+      std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+      triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
     }
   }
 
