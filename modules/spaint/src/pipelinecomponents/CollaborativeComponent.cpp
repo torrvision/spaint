@@ -119,6 +119,35 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidat
   return candidates;
 }
 
+std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_candidate() const
+{
+  std::list<SubmapRelocalisation> candidates;
+
+  const int sceneCount = static_cast<int>(m_trajectories.size());
+  if(sceneCount < 2) return std::list<SubmapRelocalisation>();
+
+  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it = m_trajectories.begin();
+  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_trajectories.begin();
+  ++jt;
+
+  const std::string sceneI = it->first;
+  const std::string sceneJ = jt->first;
+
+  // Add a candidate to relocalise the next untried frame (if any) of scene j against scene i.
+  std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator kt = m_triedFrameIndices.find(std::make_pair(sceneI, sceneJ));
+  const int frameIndexJ = kt != m_triedFrameIndices.end() ? *kt->second.rbegin() + 1 : 0;
+  const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
+
+  const int frameCountJ = static_cast<int>(jt->second.size());
+  if(frameIndexJ < frameCountJ)
+  {
+    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
+    candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+  }
+
+  return candidates;
+}
+
 bool CollaborativeComponent::is_verified(const SubmapRelocalisation& candidate) const
 {
   return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
@@ -131,7 +160,6 @@ void CollaborativeComponent::output_results() const
 
   // First, output the results themselves.
   std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\n\n";
-  //for(std::deque<SubmapRelocalisation>::const_iterator it = m_results.begin(), iend = m_results.end(); it != iend; ++it)
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
     const SubmapRelocalisation& result = m_results[i];
@@ -378,9 +406,14 @@ void CollaborativeComponent::score_candidates(std::list<SubmapRelocalisation>& c
 
 void CollaborativeComponent::try_schedule_relocalisation()
 {
+#if 0
   // Randomly generate a list of candidate relocalisations.
   const size_t desiredCandidateCount = 10;
   std::list<SubmapRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
+#else
+  // Generate the frames from the source scene in order, for evaluation purposes.
+  std::list<SubmapRelocalisation> candidates = generate_sequential_candidate();
+#endif
   if(candidates.empty()) return;
 
   // Score all of the candidates.

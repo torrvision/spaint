@@ -105,6 +105,11 @@ private:
   /**
    * \brief TODO
    */
+  std::list<SubmapRelocalisation> generate_sequential_candidate() const;
+
+  /**
+   * \brief TODO
+   */
   bool is_verified(const SubmapRelocalisation& candidate) const;
 
   /**
