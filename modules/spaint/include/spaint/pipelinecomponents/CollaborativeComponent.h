@@ -57,7 +57,7 @@ private:
   boost::atomic<bool> m_stopRelocalisationThread;
 
   /** TODO */
-  std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
+  std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > > m_trajectories;
 
   /** TODO */
   std::map<std::pair<std::string,std::string>,std::set<int> > m_triedFrameIndices;

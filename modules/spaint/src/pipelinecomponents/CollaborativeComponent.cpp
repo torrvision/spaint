@@ -94,8 +94,8 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidat
     int kj = m_rng.generate_int_from_uniform(0, sceneCount - 2);
     if(kj >= ki) ++kj;
 
-    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it = m_trajectories.begin();
-    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_trajectories.begin();
+    std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator it = m_trajectories.begin();
+    std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator jt = m_trajectories.begin();
     std::advance(it, ki);
     std::advance(jt, kj);
 
@@ -111,9 +111,10 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidat
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
-    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
+    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ].first;
+    const size_t orbKeypointCountJ = jt->second[frameIndexJ].second;
 
-    candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+    candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ, orbKeypointCountJ));
   }
 
   return candidates;
@@ -126,8 +127,8 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_cand
   const int sceneCount = static_cast<int>(m_trajectories.size());
   if(sceneCount < 2) return std::list<SubmapRelocalisation>();
 
-  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it1 = m_trajectories.begin();
-  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it2 = m_trajectories.begin();
+  std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator it1 = m_trajectories.begin();
+  std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator it2 = m_trajectories.begin();
   ++it2;
 
   const std::string scene1 = it1->first;
@@ -137,8 +138,8 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_cand
   {
     const std::string& sceneI = n == 0 ? scene1 : scene2;
     const std::string& sceneJ = n == 0 ? scene2 : scene1;
-    const std::deque<ORUtils::SE3Pose>& trajectoryI = n == 0 ? it1->second : it2->second;
-    const std::deque<ORUtils::SE3Pose>& trajectoryJ = n == 0 ? it2->second : it1->second;
+    const std::deque<std::pair<ORUtils::SE3Pose,size_t> >& trajectoryI = n == 0 ? it1->second : it2->second;
+    const std::deque<std::pair<ORUtils::SE3Pose,size_t> >& trajectoryJ = n == 0 ? it2->second : it1->second;
 
     // Try to add a candidate to relocalise the next untried frame (if any) of scene j against scene i.
     std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator kt = m_triedFrameIndices.find(std::make_pair(sceneI, sceneJ));
@@ -147,8 +148,9 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_cand
     if(frameIndexJ < frameCountJ)
     {
       const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
-      const ORUtils::SE3Pose& localPoseJ = trajectoryJ[frameIndexJ];
-      candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+      const ORUtils::SE3Pose& localPoseJ = trajectoryJ[frameIndexJ].first;
+      size_t orbKeypointCountJ = trajectoryJ[frameIndexJ].second;
+      candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ, orbKeypointCountJ));
       return candidates;
     }
   }
@@ -167,7 +169,7 @@ void CollaborativeComponent::output_results() const
   size_t firstVerification = 0;
 
   // First, output the results themselves.
-  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\n\n";
+  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tORBs\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\n\n";
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
     const SubmapRelocalisation& result = m_results[i];
@@ -194,10 +196,9 @@ void CollaborativeComponent::output_results() const
     }
 
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << result.m_sceneI << '\t' << result.m_sceneJ << '\t' << result.m_frameIndexJ << "\t\t"
+    std::cout << result.m_sceneI << '\t' << result.m_sceneJ << '\t' << result.m_frameIndexJ << '\t' << result.m_orbKeypointCountJ << '\t'
               << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor")
-              << "\t\t" << result.m_meanDepthDiff(0) << "\t\t" << result.m_targetValidFraction << "\t\t\t"
-              << finalStatus << '\n';
+              << '\t' << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t' << finalStatus << '\n';
   }
 
   // Then, output the overall statistics.
@@ -399,7 +400,7 @@ void CollaborativeComponent::score_candidates(std::list<SubmapRelocalisation>& c
       const std::set<int>& triedFrameIndices = jt->second;
       for(std::set<int>::const_iterator kt = triedFrameIndices.begin(), kend = triedFrameIndices.end(); kt != kend; ++kt)
       {
-        const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate.m_sceneJ)->second[*kt];
+        const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate.m_sceneJ)->second[*kt].first;
         if(GeometryUtil::poses_are_similar(candidate.m_localPoseJ, triedPose, 5 * M_PI / 180))
         {
           homogeneityPenalty = 5.0f;
@@ -475,9 +476,10 @@ bool CollaborativeComponent::update_trajectories()
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
     const ITMUChar4Image *rgbImage = slamState->get_view()->rgb;
     rgbImage->UpdateHostFromDevice();
-    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(rgbImage) >= 400)
+    size_t orbKeypointCount;
+    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && (orbKeypointCount = count_orb_keypoints(rgbImage)) >= 400)
     {
-      m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
+      m_trajectories[sceneIDs[i]].push_back(std::make_pair(*trackingState->pose_d, orbKeypointCount));
     }
 
     if(inputStatus != SLAMState::IS_TERMINATED) fusionMayStillRun = true;
