@@ -100,16 +100,16 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
 
     // Randomly pick a frame from scene j.
     SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
-    const int frameCount = static_cast<int>(jt->second.size());
-    const int frameIndex = m_mode == CM_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
-      ? m_rng.generate_int_from_uniform(0, frameCount - 1)
-      : frameCount - 1;
+    const int frameCountJ = static_cast<int>(jt->second.size());
+    const int frameIndexJ = m_mode == CM_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
+      ? m_rng.generate_int_from_uniform(0, frameCountJ - 1)
+      : frameCountJ - 1;
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
-    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndex];
+    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
 
-    SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, depthIntrinsicsJ, localPoseJ));
+    SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
     candidates.push_back(std::make_pair(candidate, 0.0f));
   }
 
@@ -132,7 +132,7 @@ void CollaborativeComponent::run_relocalisation()
       }
     }
 
-    std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndex << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
+    std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndexJ << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
 
     // Render synthetic images of the source scene from the relevant pose and copy them across to the GPU for use by the relocaliser.
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
@@ -292,13 +292,14 @@ void CollaborativeComponent::score_candidates(std::list<Candidate>& candidates) 
 
     // Penalise candidates that are too close to ones we've tried before.
     float homogeneityPenalty = 0.0f;
-    std::map<std::pair<std::string,std::string>,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_triedPoses.find(std::make_pair(candidate->m_sceneI, candidate->m_sceneJ));
-    if(jt != m_triedPoses.end())
+    std::map<std::pair<std::string,std::string>,std::deque<int> >::const_iterator jt = m_triedFrameIndices.find(std::make_pair(candidate->m_sceneI, candidate->m_sceneJ));
+    if(jt != m_triedFrameIndices.end())
     {
-      const std::deque<ORUtils::SE3Pose>& triedPoses = jt->second;
-      for(size_t j = 0, size = triedPoses.size(); j < size; ++j)
+      const std::deque<int>& triedFrameIndices = jt->second;
+      for(size_t j = 0, size = triedFrameIndices.size(); j < size; ++j)
       {
-        if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedPoses[j], 5 * M_PI / 180))
+        const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate->m_sceneJ)->second[triedFrameIndices[j]];
+        if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedPose, 5 * M_PI / 180))
         {
           homogeneityPenalty = 5.0f;
           break;
@@ -347,9 +348,9 @@ void CollaborativeComponent::try_schedule_relocalisation()
       candidates.pop_back();
       canRelocalise = true;
 
-      // Record the pose we're trying in case we want to avoid similar poses later.
-      std::deque<ORUtils::SE3Pose>& triedPoses = m_triedPoses[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
-      triedPoses.push_back(m_bestCandidate->m_localPoseJ);
+      // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
+      std::deque<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+      triedFrameIndices.push_back(m_bestCandidate->m_frameIndexJ);
     }
   }
 

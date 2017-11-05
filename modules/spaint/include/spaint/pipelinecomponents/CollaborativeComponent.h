@@ -60,7 +60,7 @@ private:
   std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
 
   /** TODO */
-  std::map<std::pair<std::string,std::string>,std::deque<ORUtils::SE3Pose> > m_triedPoses;
+  std::map<std::pair<std::string,std::string>,std::deque<int> > m_triedFrameIndices;
 
   //#################### CONSTRUCTORS ####################
 public:
