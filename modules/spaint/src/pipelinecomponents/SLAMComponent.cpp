@@ -460,10 +460,11 @@ void SLAMComponent::setup_relocaliser()
     std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
 
     // Load the relocaliser from the specified file.
-    ORcudaSafeCall(cudaSetDevice(1));
+    //ORcudaSafeCall(cudaSetDevice(1));
     Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
-    innerRelocaliser.reset(new BackgroundRelocaliser(scoreRelocaliser, 1));
-    ORcudaSafeCall(cudaSetDevice(0));
+    //innerRelocaliser.reset(new BackgroundRelocaliser(scoreRelocaliser, 1));
+    innerRelocaliser = scoreRelocaliser;
+    //ORcudaSafeCall(cudaSetDevice(0));
 #endif
   }
   else if(m_relocaliserType == "ferns")

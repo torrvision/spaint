@@ -685,12 +685,13 @@ try
     }
 
     // Set up the mapping modes, tracking modes and tracker configurations.
-    const std::string trackerConfig = make_tracker_config(args);
+    //const std::string trackerConfig = make_tracker_config(args);
     for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
     {
       mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
       trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
-      trackerConfigs.push_back(trackerConfig);
+      //trackerConfigs.push_back(trackerConfig);
+      trackerConfigs.push_back("<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>");
     }
 
     // Construct the fiducial detector (if any).

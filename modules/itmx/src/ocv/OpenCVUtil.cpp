@@ -5,9 +5,12 @@
 
 #include "ocv/OpenCVUtil.h"
 
+#include <iostream>
 #include <stdexcept>
 
 #include <opencv2/features2d.hpp>
+
+#define DEBUGGING 0
 
 namespace itmx {
 
@@ -18,6 +21,14 @@ size_t OpenCVUtil::count_orb_keypoints(const cv::Mat3b& image)
   static cv::Ptr<cv::ORB> orb = cv::ORB::create();
   std::vector<cv::KeyPoint> keypoints;
   orb->detect(image, keypoints);
+
+#if DEBUGGING
+  cv::Mat3b keypointImage = cv::Mat3b::zeros(image.size());
+  cv::drawKeypoints(image, keypoints, keypointImage, cv::Scalar(0,255,0));
+  cv::imshow("ORB Keypoints", keypointImage);
+  std::cout << "ORB Keypoint Count: " << keypoints.size() << std::endl;
+#endif
+
   return keypoints.size();
 }
 

@@ -69,6 +69,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 size_t CollaborativeComponent::count_orb_keypoints(const ITMUChar4Image *image, size_t defaultKeypointCount) const
 {
 #ifdef WITH_OPENCV
+  image->UpdateHostFromDevice();
   cv::Mat3b cvImage = OpenCVUtil::make_rgb_image(image->GetData(MEMORYDEVICE_CPU), image->noDims.x, image->noDims.y);
   return OpenCVUtil::count_orb_keypoints(cvImage);
 #else
@@ -368,7 +369,9 @@ bool CollaborativeComponent::update_trajectories()
 
     SLAMState::InputStatus inputStatus = slamState->get_input_status();
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
-    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(slamState->get_view()->rgb) >= 400)
+    const ITMUChar4Image *rgbImage = slamState->get_view()->rgb;
+    rgbImage->UpdateHostFromDevice();
+    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD/* && count_orb_keypoints(rgbImage) >= 400*/)
     {
       m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
     }
