@@ -43,6 +43,10 @@ CollaborativeComponent::~CollaborativeComponent()
   m_stopRelocalisationThread = true;
   m_readyToRelocalise.notify_one();
   m_relocalisationThread.join();
+
+#if DEBUGGING
+  output_results();
+#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -113,6 +117,65 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidat
   }
 
   return candidates;
+}
+
+bool CollaborativeComponent::is_verified(const SubmapRelocalisation& candidate) const
+{
+  return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
+}
+
+void CollaborativeComponent::output_results() const
+{
+  int failed = 0, rejected = 0, verified = 0;
+  size_t firstVerification = 0;
+
+  // First, output the results themselves.
+  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\n\n";
+  //for(std::deque<SubmapRelocalisation>::const_iterator it = m_results.begin(), iend = m_results.end(); it != iend; ++it)
+  for(size_t i = 0, size = m_results.size(); i < size; ++i)
+  {
+    const SubmapRelocalisation& result = m_results[i];
+
+    std::string finalStatus;
+    if(is_verified(result))
+    {
+      finalStatus = "Verified";
+      ++verified;
+      if(firstVerification == 0)
+      {
+        firstVerification = i + 1;
+      }
+    }
+    else if(result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD)
+    {
+      finalStatus = "Rejected";
+      ++rejected;
+    }
+    else
+    {
+      finalStatus = "Failed";
+      ++failed;
+    }
+
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << result.m_sceneI << '\t' << result.m_sceneJ << '\t' << result.m_frameIndexJ << "\t\t"
+              << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor")
+              << "\t\t" << result.m_meanDepthDiff(0) << "\t\t" << result.m_targetValidFraction << "\t\t\t"
+              << finalStatus << '\n';
+  }
+
+  // Then, output the overall statistics.
+  std::cout << "\nTried: " << m_results.size() << '\n';
+  if(!m_results.empty())
+  {
+    float tried = static_cast<float>(m_results.size());
+    std::cout << "Verified: " << verified << " (" << verified * 100 / tried << "%)\n";
+    std::cout << "Rejected: " << rejected << " (" << rejected * 100 / tried << "%)\n";
+    std::cout << "Failed: " << failed << " (" << failed * 100 / tried << "%)\n";
+
+    std::cout << "\nExpected Tries To First Verification: " << static_cast<int>(ceil(tried / verified)) << '\n';
+    std::cout << "Actual Tries To First Verification: " << firstVerification << '\n';
+  }
 }
 
 void CollaborativeComponent::run_relocalisation()
@@ -235,7 +298,7 @@ void CollaborativeComponent::run_relocalisation()
     #endif
 
       // Decide whether or not to verify the relocalisation, based on the average depth difference and the fraction of the target depth image that is valid.
-      verified = m_bestCandidate->m_meanDepthDiff(0) < 5.0f && m_bestCandidate->m_targetValidFraction >= 0.5f;
+      verified = is_verified(*m_bestCandidate);
 #else
       // If we didn't build with OpenCV, we can't do any verification, so just mark the relocalisation as verified and hope for the best.
       verified = true;
@@ -264,11 +327,12 @@ void CollaborativeComponent::run_relocalisation()
 #endif
     }
 
-    // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
-    boost::shared_ptr<SubmapRelocalisation> bestCandidateCopy;
+    // Record the results of the relocalisation we just tried if desired, and prepare for another relocalisation.
     {
       boost::unique_lock<boost::mutex> lock(m_mutex);
-      bestCandidateCopy = m_bestCandidate;
+#if DEBUGGING
+      m_results.push_back(*m_bestCandidate);
+#endif
       m_bestCandidate.reset();
     }
   }

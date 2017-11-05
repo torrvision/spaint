@@ -47,6 +47,9 @@ private:
   /** TODO */
   boost::thread m_relocalisationThread;
 
+  /** TODO */
+  std::deque<SubmapRelocalisation> m_results;
+
   /** A random number generator. */
   mutable tvgutil::RandomNumberGenerator m_rng;
 
@@ -98,6 +101,16 @@ private:
    * \brief TODO
    */
   std::list<SubmapRelocalisation> generate_random_candidates(size_t desiredCandidateCount) const;
+
+  /**
+   * \brief TODO
+   */
+  bool is_verified(const SubmapRelocalisation& candidate) const;
+
+  /**
+   * \brief TODO
+   */
+  void output_results() const;
 
   /**
    * \brief TODO
