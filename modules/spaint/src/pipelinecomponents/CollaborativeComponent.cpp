@@ -371,7 +371,7 @@ bool CollaborativeComponent::update_trajectories()
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
     const ITMUChar4Image *rgbImage = slamState->get_view()->rgb;
     rgbImage->UpdateHostFromDevice();
-    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD/* && count_orb_keypoints(rgbImage) >= 400*/)
+    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(rgbImage) >= 400)
     {
       m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
     }
