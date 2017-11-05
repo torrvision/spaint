@@ -69,7 +69,6 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 size_t CollaborativeComponent::count_orb_keypoints(const ITMUChar4Image *image, size_t defaultKeypointCount) const
 {
 #ifdef WITH_OPENCV
-  image->UpdateHostFromDevice();
   cv::Mat3b cvImage = OpenCVUtil::make_rgb_image(image->GetData(MEMORYDEVICE_CPU), image->noDims.x, image->noDims.y);
   return OpenCVUtil::count_orb_keypoints(cvImage);
 #else
