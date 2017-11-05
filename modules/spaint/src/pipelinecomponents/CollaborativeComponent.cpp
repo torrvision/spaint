@@ -126,23 +126,31 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_cand
   const int sceneCount = static_cast<int>(m_trajectories.size());
   if(sceneCount < 2) return std::list<SubmapRelocalisation>();
 
-  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it = m_trajectories.begin();
-  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_trajectories.begin();
-  ++jt;
+  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it1 = m_trajectories.begin();
+  std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it2 = m_trajectories.begin();
+  ++it2;
 
-  const std::string sceneI = it->first;
-  const std::string sceneJ = jt->first;
+  const std::string scene1 = it1->first;
+  const std::string scene2 = it2->first;
 
-  // Add a candidate to relocalise the next untried frame (if any) of scene j against scene i.
-  std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator kt = m_triedFrameIndices.find(std::make_pair(sceneI, sceneJ));
-  const int frameIndexJ = kt != m_triedFrameIndices.end() ? *kt->second.rbegin() + 1 : 0;
-  const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
-
-  const int frameCountJ = static_cast<int>(jt->second.size());
-  if(frameIndexJ < frameCountJ)
+  for(int n = 0; n < 2; ++n)
   {
-    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
-    candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+    const std::string& sceneI = n == 0 ? scene1 : scene2;
+    const std::string& sceneJ = n == 0 ? scene2 : scene1;
+    const std::deque<ORUtils::SE3Pose>& trajectoryI = n == 0 ? it1->second : it2->second;
+    const std::deque<ORUtils::SE3Pose>& trajectoryJ = n == 0 ? it2->second : it1->second;
+
+    // Try to add a candidate to relocalise the next untried frame (if any) of scene j against scene i.
+    std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator kt = m_triedFrameIndices.find(std::make_pair(sceneI, sceneJ));
+    const int frameIndexJ = kt != m_triedFrameIndices.end() ? *kt->second.rbegin() + 1 : 0;
+    const int frameCountJ = static_cast<int>(trajectoryJ.size());
+    if(frameIndexJ < frameCountJ)
+    {
+      const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
+      const ORUtils::SE3Pose& localPoseJ = trajectoryJ[frameIndexJ];
+      candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+      return candidates;
+    }
   }
 
   return candidates;
