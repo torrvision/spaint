@@ -415,7 +415,7 @@ void CollaborativeComponent::score_candidates(std::list<SubmapRelocalisation>& c
 
 void CollaborativeComponent::try_schedule_relocalisation()
 {
-#if 0
+#if 1
   // Randomly generate a list of candidate relocalisations.
   const size_t desiredCandidateCount = 10;
   std::list<SubmapRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
