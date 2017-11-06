@@ -766,8 +766,14 @@ void Application::save_mesh() const
     Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
     m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-    // Try to get the relative transform between the World scene and the current one.
-    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform = model->get_pose_graph_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
+    // Will store the relative transform between the World scene and the current one.
+    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform;
+
+    // If there is a pose optimiser, try to find a relative transform between this scene and the World.
+    if(model->get_pose_graph_optimiser() && sceneID != Model::get_world_scene_id())
+    {
+      relativeTransform = model->get_pose_graph_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
+    }
 
     // If we have a relative transform, we need to update every triangle in the mesh.
     // We do this on the CPU since this is not currently a time-sensitive operation.
