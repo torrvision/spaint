@@ -738,31 +738,81 @@ void Application::save_mesh() const
   Model_CPtr model = m_pipeline->get_model();
   const Settings_CPtr& settings = model->get_settings();
 
-  const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
-  const std::string& sceneID = mainSubwindow.get_scene_id();
-  SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
-
-  // Construct the mesh (specify a maximum number of triangles to avoid crash on the Titan Black).
-  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
-  m_meshingEngine->MeshScene(mesh.get(), scene.get());
+  // Get all scene IDs.
+  std::vector<std::string> sceneIDs = model->get_scene_ids();
 
   // Find the meshes directory and make sure that it exists.
   boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
   boost::filesystem::create_directories(meshesSubdir);
 
-  // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "");
-  if(meshFilename == "")
+  // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
+  std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "");
+  if(meshBaseName == "")
   {
     // Not using the default parameter of the settings->get_first_value call because
     // experimentTag is a registered program option in main.cpp, with a default value of "".
-    meshFilename = "spaint-" + TimeUtil::get_iso_timestamp();
+    meshBaseName = "spaint-" + TimeUtil::get_iso_timestamp();
   }
-  const boost::filesystem::path meshPath = meshesSubdir / (meshFilename +  ".obj");
 
-  // Save the mesh to disk.
-  std::cout << "Saving mesh to: " << meshPath << '\n';
-  mesh->WriteOBJ(meshPath.string().c_str());
+  // Mesh each scene independently.
+  for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
+  {
+    const std::string& sceneID = sceneIDs[sceneIdx];
+    std::cout << "Meshing " << sceneID << " scene.\n";
+
+    SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
+
+    // Construct the mesh (specify a maximum number of triangles to avoid crash on Titan Black cards).
+    Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
+    m_meshingEngine->MeshScene(mesh.get(), scene.get());
+
+    // Will store the relative transform between the World scene and the current one.
+    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform;
+
+    // If there is a pose optimiser, try to find a relative transform between this scene and the World.
+    if(model->get_pose_graph_optimiser() && sceneID != Model::get_world_scene_id())
+    {
+      relativeTransform = model->get_pose_graph_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
+    }
+
+    // If we have a relative transform, we need to update every triangle in the mesh.
+    // We do this on the CPU since this is not currently a time-sensitive operation.
+    // Might want to use a proper CUDA kernel in the future.
+    if(relativeTransform)
+    {
+      const Matrix4f transform = relativeTransform->first.GetM();
+
+      // Need to copy the triangles on the CPU to transform them.
+      typedef ITMMesh::Triangle Triangle;
+      typedef ORUtils::MemoryBlock<Triangle> TriangleBlock;
+
+      // CPU-only allocation.
+      boost::shared_ptr<TriangleBlock> triangles(new TriangleBlock(mesh->noMaxTriangles, MEMORYDEVICE_CPU));
+
+      // Copy them from the mesh.
+      // The update could be done in place if the mesh was allocated on the CPU, might be a future optimisation.
+      // Not really needed right now since if the mesh was allocated on the CPU then the meshing would have been much slower, thus not really worth the optimisation.
+      triangles->SetFrom(mesh->triangles, mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CUDA_TO_CPU : TriangleBlock::CPU_TO_CPU);
+
+      // Now perform the update.
+      Triangle *trianglesData = triangles->GetData(MEMORYDEVICE_CPU);
+      for(size_t triangleIdx = 0; triangleIdx < mesh->noTotalTriangles; ++triangleIdx)
+      {
+        trianglesData[triangleIdx].p0  = transform * trianglesData[triangleIdx].p0;
+        trianglesData[triangleIdx].p1  = transform * trianglesData[triangleIdx].p1;
+        trianglesData[triangleIdx].p2  = transform * trianglesData[triangleIdx].p2;
+      }
+
+      // Put them back.
+      mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
+    }
+
+    const boost::filesystem::path meshPath = meshesSubdir / (meshBaseName + "_" + sceneID + ".obj");
+
+    // Save the mesh to disk.
+    std::cout << "Saving mesh to: " << meshPath << '\n';
+    mesh->WriteOBJ(meshPath.string().c_str());
+  }
 }
 
 void Application::save_screenshot() const
