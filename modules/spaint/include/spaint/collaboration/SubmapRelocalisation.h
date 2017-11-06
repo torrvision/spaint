@@ -8,8 +8,13 @@
 
 #include <boost/optional.hpp>
 
+#ifdef WITH_OPENCV
+#include <opencv2/core/core.hpp>
+#endif
+
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMObjectPtrTypes.h>
+#include <itmx/relocalisation/Relocaliser.h>
 
 namespace spaint {
 
@@ -21,22 +26,30 @@ struct SubmapRelocalisation
   //#################### PUBLIC VARIABLES ####################
 
   /** TODO */
+  float m_candidateScore;
+
+  /** TODO */
   Vector4f m_depthIntrinsicsJ;
 
   /** TODO */
-  ITMFloatImage_Ptr m_depthJ;
+  int m_frameIndexJ;
 
   /** TODO */
-  int m_frameIndex;
+  itmx::Relocaliser::Quality m_initialRelocalisationQuality;
 
   /** TODO */
   ORUtils::SE3Pose m_localPoseJ;
 
+#ifdef WITH_OPENCV
   /** TODO */
-  boost::optional<ORUtils::SE3Pose> m_relativePose;
+  cv::Scalar m_meanDepthDiff;
 
   /** TODO */
-  ITMUChar4Image_Ptr m_rgbJ;
+  size_t m_orbKeypointCountJ;
+#endif
+
+  /** TODO */
+  boost::optional<ORUtils::SE3Pose> m_relativePose;
 
   /** TODO */
   std::string m_sceneI;
@@ -44,17 +57,22 @@ struct SubmapRelocalisation
   /** TODO */
   std::string m_sceneJ;
 
+  /** TODO */
+  float m_targetValidFraction;
+
   //#################### CONSTRUCTORS ####################
 
-  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndex, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ,
-                       const ITMFloatImage_Ptr& depthJ = ITMFloatImage_Ptr(), const ITMUChar4Image_Ptr& rgbJ = ITMUChar4Image_Ptr())
-  : m_depthJ(depthJ),
+  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndexJ, const Vector4f& depthIntrinsicsJ,
+                       const ORUtils::SE3Pose& localPoseJ, size_t orbKeypointCountJ)
+  : m_candidateScore(0.0f),
     m_depthIntrinsicsJ(depthIntrinsicsJ),
-    m_frameIndex(frameIndex),
+    m_frameIndexJ(frameIndexJ),
+    m_initialRelocalisationQuality(itmx::Relocaliser::RELOCALISATION_POOR),
     m_localPoseJ(localPoseJ),
-    m_rgbJ(rgbJ),
+    m_orbKeypointCountJ(orbKeypointCountJ),
     m_sceneI(sceneI),
-    m_sceneJ(sceneJ)
+    m_sceneJ(sceneJ),
+    m_targetValidFraction(0.0f)
   {}
 };
 

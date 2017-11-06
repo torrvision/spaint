@@ -43,6 +43,10 @@ CollaborativeComponent::~CollaborativeComponent()
   m_stopRelocalisationThread = true;
   m_readyToRelocalise.notify_one();
   m_relocalisationThread.join();
+
+#if DEBUGGING
+  output_results();
+#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -76,12 +80,12 @@ size_t CollaborativeComponent::count_orb_keypoints(const ITMUChar4Image *image, 
 #endif
 }
 
-std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
+std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
 {
-  std::list<Candidate> candidates;
+  std::list<SubmapRelocalisation> candidates;
 
   const int sceneCount = static_cast<int>(m_trajectories.size());
-  if(sceneCount < 2) return std::list<Candidate>();
+  if(sceneCount < 2) return std::list<SubmapRelocalisation>();
 
   for(size_t i = 0; i < desiredCandidateCount; ++i)
   {
@@ -90,8 +94,8 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
     int kj = m_rng.generate_int_from_uniform(0, sceneCount - 2);
     if(kj >= ki) ++kj;
 
-    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it = m_trajectories.begin();
-    std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_trajectories.begin();
+    std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator it = m_trajectories.begin();
+    std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator jt = m_trajectories.begin();
     std::advance(it, ki);
     std::advance(jt, kj);
 
@@ -100,20 +104,115 @@ std::list<CollaborativeComponent::Candidate> CollaborativeComponent::generate_ra
 
     // Randomly pick a frame from scene j.
     SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
-    const int frameCount = static_cast<int>(jt->second.size());
-    const int frameIndex = m_mode == CM_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
-      ? m_rng.generate_int_from_uniform(0, frameCount - 1)
-      : frameCount - 1;
+    const int frameCountJ = static_cast<int>(jt->second.size());
+    const int frameIndexJ = m_mode == CM_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
+      ? m_rng.generate_int_from_uniform(0, frameCountJ - 1)
+      : frameCountJ - 1;
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
-    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndex];
+    const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ].first;
+    const size_t orbKeypointCountJ = jt->second[frameIndexJ].second;
 
-    SubmapRelocalisation_Ptr candidate(new SubmapRelocalisation(sceneI, sceneJ, frameIndex, depthIntrinsicsJ, localPoseJ));
-    candidates.push_back(std::make_pair(candidate, 0.0f));
+    candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ, orbKeypointCountJ));
   }
 
   return candidates;
+}
+
+std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_candidate() const
+{
+  std::list<SubmapRelocalisation> candidates;
+
+  const int sceneCount = static_cast<int>(m_trajectories.size());
+  if(sceneCount < 2) return std::list<SubmapRelocalisation>();
+
+  std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator it1 = m_trajectories.begin();
+  std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > >::const_iterator it2 = m_trajectories.begin();
+  ++it2;
+
+  const std::string scene1 = it1->first;
+  const std::string scene2 = it2->first;
+
+  for(int n = 0; n < 2; ++n)
+  {
+    const std::string& sceneI = n == 0 ? scene1 : scene2;
+    const std::string& sceneJ = n == 0 ? scene2 : scene1;
+    const std::deque<std::pair<ORUtils::SE3Pose,size_t> >& trajectoryI = n == 0 ? it1->second : it2->second;
+    const std::deque<std::pair<ORUtils::SE3Pose,size_t> >& trajectoryJ = n == 0 ? it2->second : it1->second;
+
+    // Try to add a candidate to relocalise the next untried frame (if any) of scene j against scene i.
+    std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator kt = m_triedFrameIndices.find(std::make_pair(sceneI, sceneJ));
+    const int frameIndexJ = kt != m_triedFrameIndices.end() ? *kt->second.rbegin() + 1 : 0;
+    const int frameCountJ = static_cast<int>(trajectoryJ.size());
+    if(frameIndexJ < frameCountJ)
+    {
+      const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
+      const ORUtils::SE3Pose& localPoseJ = trajectoryJ[frameIndexJ].first;
+      size_t orbKeypointCountJ = trajectoryJ[frameIndexJ].second;
+      candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ, orbKeypointCountJ));
+      return candidates;
+    }
+  }
+
+  return candidates;
+}
+
+bool CollaborativeComponent::is_verified(const SubmapRelocalisation& candidate) const
+{
+  return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
+}
+
+void CollaborativeComponent::output_results() const
+{
+  int failed = 0, rejected = 0, verified = 0;
+  size_t firstVerification = 0;
+
+  // First, output the results themselves.
+  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tORBs\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\n\n";
+  for(size_t i = 0, size = m_results.size(); i < size; ++i)
+  {
+    const SubmapRelocalisation& result = m_results[i];
+
+    std::string finalStatus;
+    if(is_verified(result))
+    {
+      finalStatus = "Verified";
+      ++verified;
+      if(firstVerification == 0)
+      {
+        firstVerification = i + 1;
+      }
+    }
+    else if(result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD)
+    {
+      finalStatus = "Rejected";
+      ++rejected;
+    }
+    else
+    {
+      finalStatus = "Failed";
+      ++failed;
+    }
+
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << result.m_sceneI << '\t' << result.m_sceneJ << '\t' << result.m_frameIndexJ << '\t' << result.m_orbKeypointCountJ << '\t'
+              << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor")
+              << '\t' << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t' << finalStatus << '\n';
+  }
+
+  // Then, output the overall statistics.
+  std::cout << "\nTried: " << m_results.size() << '\n';
+  if(!m_results.empty())
+  {
+    float tried = static_cast<float>(m_results.size());
+    std::cout << "Verified: " << verified << " (" << verified * 100 / tried << "%)\n";
+    std::cout << "Rejected: " << rejected << " (" << rejected * 100 / tried << "%)\n";
+    std::cout << "Failed: " << failed << " (" << failed * 100 / tried << "%)\n";
+
+    std::cout << "\nExpected Tries To First Verification: " << static_cast<int>(ceil(tried / verified)) << '\n';
+    std::cout << "Actual Tries To First Verification: " << firstVerification << '\n';
+  }
 }
 
 void CollaborativeComponent::run_relocalisation()
@@ -132,7 +231,7 @@ void CollaborativeComponent::run_relocalisation()
       }
     }
 
-    std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndex << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
+    std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndexJ << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
 
     // Render synthetic images of the source scene from the relevant pose and copy them across to the GPU for use by the relocaliser.
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
@@ -170,10 +269,12 @@ void CollaborativeComponent::run_relocalisation()
     Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
     boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
 
+    // If the relocaliser returned a result, store the initial relocalisation quality for later examination.
+    if(result) m_bestCandidate->m_initialRelocalisationQuality = result->quality;
+
     // If relocalisation succeeded, verify the result by thresholding the difference between the
     // source depth image and a rendered depth image of the target scene at the relevant pose.
     bool verified = false;
-    cv::Scalar meanDepthDiff;
     if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
     {
 #ifdef WITH_OPENCV
@@ -222,19 +323,19 @@ void CollaborativeComponent::run_relocalisation()
     #endif
 
       // Determine the average depth difference for valid pixels in the source and target depth images.
-      meanDepthDiff = cv::mean(cvMaskedDepthDiff);
+      m_bestCandidate->m_meanDepthDiff = cv::mean(cvMaskedDepthDiff);
     #if DEBUGGING
-      std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
+      std::cout << "\nMean Depth Difference: " << m_bestCandidate->m_meanDepthDiff << std::endl;
     #endif
 
       // Compute the fraction of the target depth image that is valid.
-      const float targetValidFraction = static_cast<float>(cv::countNonZero(cvTargetMask == 255)) / (cvTargetMask.size().width * cvTargetMask.size().height);
+      m_bestCandidate->m_targetValidFraction = static_cast<float>(cv::countNonZero(cvTargetMask == 255)) / (cvTargetMask.size().width * cvTargetMask.size().height);
     #if DEBUGGING
       std::cout << "Valid Target Pixels: " << cv::countNonZero(cvTargetMask == 255) << std::endl;
     #endif
 
       // Decide whether or not to verify the relocalisation, based on the average depth difference and the fraction of the target depth image that is valid.
-      verified = meanDepthDiff(0) < 5.0f && targetValidFraction >= 0.5f;
+      verified = is_verified(*m_bestCandidate);
 #else
       // If we didn't build with OpenCV, we can't do any verification, so just mark the relocalisation as verified and hope for the best.
       verified = true;
@@ -263,42 +364,44 @@ void CollaborativeComponent::run_relocalisation()
 #endif
     }
 
-    // Note: We make a copy of the best candidate before resetting it so that the deallocation of memory can happen after the lock has been released.
-    SubmapRelocalisation_Ptr bestCandidateCopy;
+    // Record the results of the relocalisation we just tried if desired, and prepare for another relocalisation.
     {
       boost::unique_lock<boost::mutex> lock(m_mutex);
-      bestCandidateCopy = m_bestCandidate;
+#if DEBUGGING
+      m_results.push_back(*m_bestCandidate);
+#endif
       m_bestCandidate.reset();
     }
   }
 }
 
-void CollaborativeComponent::score_candidates(std::list<Candidate>& candidates) const
+void CollaborativeComponent::score_candidates(std::list<SubmapRelocalisation>& candidates) const
 {
-  for(std::list<Candidate>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+  for(std::list<SubmapRelocalisation>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
-    SubmapRelocalisation_Ptr candidate = it->first;
+    SubmapRelocalisation& candidate = *it;
 
     // Boost candidates that may attach new confident nodes to the graph.
     PoseGraphOptimiser_CPtr poseGraphOptimiser = m_context->get_pose_graph_optimiser();
-    boost::optional<ORUtils::SE3Pose> globalPoseI = poseGraphOptimiser->try_get_estimated_global_pose(candidate->m_sceneI);
-    boost::optional<ORUtils::SE3Pose> globalPoseJ = poseGraphOptimiser->try_get_estimated_global_pose(candidate->m_sceneJ);
+    boost::optional<ORUtils::SE3Pose> globalPoseI = poseGraphOptimiser->try_get_estimated_global_pose(candidate.m_sceneI);
+    boost::optional<ORUtils::SE3Pose> globalPoseJ = poseGraphOptimiser->try_get_estimated_global_pose(candidate.m_sceneJ);
     float newNodeBoost = (globalPoseI && !globalPoseJ) || (globalPoseJ && !globalPoseI) ? 1.0f : 0.0f;
 
     // Penalise candidates that will only add to an existing confident edge.
-    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(candidate->m_sceneI, candidate->m_sceneJ);
+    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(candidate.m_sceneI, candidate.m_sceneJ);
     int largestClusterSize = largestCluster ? static_cast<int>(largestCluster->size()) : 0;
     float confidencePenalty = 1.0f * std::max(largestClusterSize - PoseGraphOptimiser::confidence_threshold(), 0);
 
     // Penalise candidates that are too close to ones we've tried before.
     float homogeneityPenalty = 0.0f;
-    std::map<std::pair<std::string,std::string>,std::deque<ORUtils::SE3Pose> >::const_iterator jt = m_triedPoses.find(std::make_pair(candidate->m_sceneI, candidate->m_sceneJ));
-    if(jt != m_triedPoses.end())
+    std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator jt = m_triedFrameIndices.find(std::make_pair(candidate.m_sceneI, candidate.m_sceneJ));
+    if(jt != m_triedFrameIndices.end())
     {
-      const std::deque<ORUtils::SE3Pose>& triedPoses = jt->second;
-      for(size_t j = 0, size = triedPoses.size(); j < size; ++j)
+      const std::set<int>& triedFrameIndices = jt->second;
+      for(std::set<int>::const_iterator kt = triedFrameIndices.begin(), kend = triedFrameIndices.end(); kt != kend; ++kt)
       {
-        if(GeometryUtil::poses_are_similar(candidate->m_localPoseJ, triedPoses[j], 5 * M_PI / 180))
+        const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate.m_sceneJ)->second[*kt].first;
+        if(GeometryUtil::poses_are_similar(candidate.m_localPoseJ, triedPose, 5 * M_PI / 180))
         {
           homogeneityPenalty = 5.0f;
           break;
@@ -306,32 +409,35 @@ void CollaborativeComponent::score_candidates(std::list<Candidate>& candidates) 
       }
     }
 
-    float score = newNodeBoost - confidencePenalty - homogeneityPenalty;
-    it->second = score;
+    candidate.m_candidateScore = newNodeBoost - confidencePenalty - homogeneityPenalty;
   }
 }
 
 void CollaborativeComponent::try_schedule_relocalisation()
 {
+#if 1
   // Randomly generate a list of candidate relocalisations.
   const size_t desiredCandidateCount = 10;
-  std::list<Candidate> candidates = generate_random_candidates(desiredCandidateCount);
+  std::list<SubmapRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
+#else
+  // Generate the frames from the source scene in order, for evaluation purposes.
+  std::list<SubmapRelocalisation> candidates = generate_sequential_candidate();
+#endif
   if(candidates.empty()) return;
 
   // Score all of the candidates.
   score_candidates(candidates);
 
   // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
-  candidates.sort(bind(&Candidate::second, _1) < bind(&Candidate::second, _2));
+  candidates.sort(bind(&SubmapRelocalisation::m_candidateScore, _1) < bind(&SubmapRelocalisation::m_candidateScore, _2));
 
 #if 0
   // Print out all of the candidates for debugging purposes.
   std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
-  for(std::list<Candidate>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+  for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
-    const SubmapRelocalisation_Ptr& candidate = it->first;
-    const float score = it->second;
-    std::cout << candidate->m_sceneI << ' ' << candidate->m_sceneJ << ' ' << candidate->m_frameIndex << ' ' << score << '\n';
+    const SubmapRelocalisation& candidate = *it;
+    std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
   }
   std::cout << "END CANDIDATES\n";
 #endif
@@ -343,13 +449,13 @@ void CollaborativeComponent::try_schedule_relocalisation()
     if(!m_bestCandidate)
     {
       // Schedule the best candidate for relocalisation.
-      m_bestCandidate = candidates.back().first;
+      m_bestCandidate.reset(new SubmapRelocalisation(candidates.back()));
       candidates.pop_back();
       canRelocalise = true;
 
-      // Record the pose we're trying in case we want to avoid similar poses later.
-      std::deque<ORUtils::SE3Pose>& triedPoses = m_triedPoses[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
-      triedPoses.push_back(m_bestCandidate->m_localPoseJ);
+      // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
+      std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+      triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
     }
   }
 
@@ -370,9 +476,14 @@ bool CollaborativeComponent::update_trajectories()
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
     const ITMUChar4Image *rgbImage = slamState->get_view()->rgb;
     rgbImage->UpdateHostFromDevice();
-    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD && count_orb_keypoints(rgbImage) >= 400)
+    size_t orbKeypointCount = count_orb_keypoints(rgbImage);
+    if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD
+#if 0
+      && orbKeypointCount >= 400
+#endif
+      )
     {
-      m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);
+      m_trajectories[sceneIDs[i]].push_back(std::make_pair(*trackingState->pose_d, orbKeypointCount));
     }
 
     if(inputStatus != SLAMState::IS_TERMINATED) fusionMayStillRun = true;

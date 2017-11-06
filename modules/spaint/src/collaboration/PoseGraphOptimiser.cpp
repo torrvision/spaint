@@ -282,7 +282,7 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
 
         GraphNodeSE3 *node = new GraphNodeSE3;
         node->setId(i);
-        node->setPose(jt != m_estimatedGlobalPoses.end() ? jt->second : ORUtils::SE3Pose());
+        node->setPose(/*jt != m_estimatedGlobalPoses.end() ? jt->second : */ORUtils::SE3Pose());
         node->setFixed(i == primarySceneID);
         graph.addNode(node);
       }

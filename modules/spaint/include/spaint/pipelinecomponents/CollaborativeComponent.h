@@ -9,6 +9,8 @@
 #include <boost/atomic.hpp>
 #include <boost/thread.hpp>
 
+#include <itmx/relocalisation/Relocaliser.h>
+
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "CollaborativeContext.h"
@@ -22,15 +24,10 @@ namespace spaint {
  */
 class CollaborativeComponent
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<SubmapRelocalisation> SubmapRelocalisation_Ptr;
-  typedef std::pair<SubmapRelocalisation_Ptr,float> Candidate;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
-  SubmapRelocalisation_Ptr m_bestCandidate;
+  boost::shared_ptr<SubmapRelocalisation> m_bestCandidate;
 
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
@@ -50,6 +47,9 @@ private:
   /** TODO */
   boost::thread m_relocalisationThread;
 
+  /** TODO */
+  std::deque<SubmapRelocalisation> m_results;
+
   /** A random number generator. */
   mutable tvgutil::RandomNumberGenerator m_rng;
 
@@ -57,10 +57,10 @@ private:
   boost::atomic<bool> m_stopRelocalisationThread;
 
   /** TODO */
-  std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
+  std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > > m_trajectories;
 
   /** TODO */
-  std::map<std::pair<std::string,std::string>,std::deque<ORUtils::SE3Pose> > m_triedPoses;
+  std::map<std::pair<std::string,std::string>,std::set<int> > m_triedFrameIndices;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -100,7 +100,22 @@ private:
   /**
    * \brief TODO
    */
-  std::list<Candidate> generate_random_candidates(size_t desiredCandidateCount) const;
+  std::list<SubmapRelocalisation> generate_random_candidates(size_t desiredCandidateCount) const;
+
+  /**
+   * \brief TODO
+   */
+  std::list<SubmapRelocalisation> generate_sequential_candidate() const;
+
+  /**
+   * \brief TODO
+   */
+  bool is_verified(const SubmapRelocalisation& candidate) const;
+
+  /**
+   * \brief TODO
+   */
+  void output_results() const;
 
   /**
    * \brief TODO
@@ -110,7 +125,7 @@ private:
   /**
    * \brief TODO
    */
-  void score_candidates(std::list<Candidate>& candidates) const;
+  void score_candidates(std::list<SubmapRelocalisation>& candidates) const;
 
   /**
    * \brief TODO
