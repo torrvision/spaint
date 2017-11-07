@@ -254,7 +254,7 @@ private:
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
   /** TODO */
-  mutable boost::mutex m_mutex;
+  mutable boost::recursive_mutex m_mutex;
 
   /** An image storing the predictions associated to the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;

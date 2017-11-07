@@ -100,7 +100,7 @@ void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr &re
 
 void ScoreRelocaliser::update_all_clusters()
 {
-  boost::lock_guard<boost::mutex> lock(m_mutex);
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
   while (m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
@@ -111,6 +111,8 @@ void ScoreRelocaliser::update_all_clusters()
 
 void ScoreRelocaliser::finish_training()
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   // First, update all clusters.
   update_all_clusters();
 
@@ -124,7 +126,7 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
                                                                   const ITMFloatImage *depthImage,
                                                                   const Vector4f &depthIntrinsics) const
 {
-  boost::lock_guard<boost::mutex> lock(m_mutex);
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   // Try to estimate a pose only if we have enough valid depth values.
   if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
@@ -159,7 +161,7 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
 
 void ScoreRelocaliser::reset()
 {
-  boost::lock_guard<boost::mutex> lock(m_mutex);
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   m_relocaliserState->exampleReservoirs->reset();
   m_relocaliserState->predictionsBlock->Clear();
@@ -171,12 +173,12 @@ void ScoreRelocaliser::reset()
 void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                              const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose)
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   if(!m_relocaliserState->exampleReservoirs)
   {
     throw std::runtime_error("finish_training() has been called, cannot train the relocaliser until reset() is called.");
   }
-
-  boost::lock_guard<boost::mutex> lock(m_mutex);
 
   // First: select keypoints and compute descriptors.
   const Matrix4f invCameraPose = cameraPose.GetInvM();
@@ -211,12 +213,12 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
 
 void ScoreRelocaliser::update()
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   if(!m_relocaliserState->exampleReservoirs)
   {
     throw std::runtime_error("finish_training() has been called, cannot update the relocaliser until reset() is called.");
   }
-
-  boost::lock_guard<boost::mutex> lock(m_mutex);
 
   // We are back to the first reservoir that was updated when
   // the last batch of features were added to the forest.
