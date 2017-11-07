@@ -136,6 +136,13 @@ bool SLAMComponent::process_frame()
   else
   {
     slamState->set_input_status(m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED);
+
+    // If no more images are expected, we also release the memory held by the relocalisers.
+    if(!m_imageSourceEngine->hasMoreImages())
+    {
+      m_context->get_relocaliser(m_sceneID)->finish_training();
+    }
+
     return false;
   }
 

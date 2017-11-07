@@ -17,6 +17,14 @@ BackgroundRelocaliser::BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser,
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void BackgroundRelocaliser::finish_training()
+{
+  // TODO: check threading.
+  to_relocalisation_gpu();
+  m_relocaliser->finish_training();
+  to_old_gpu();
+}
+
 boost::optional<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   m_relocaliserRunning = true;
