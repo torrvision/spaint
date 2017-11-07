@@ -165,6 +165,11 @@ void ScoreRelocaliser::reset()
 void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                              const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose)
 {
+  if(!m_relocaliserState->exampleReservoirs)
+  {
+    throw std::runtime_error("finish_training() has been called, cannot train the relocaliser until reset() is called.");
+  }
+
   // First: select keypoints and compute descriptors.
   const Matrix4f invCameraPose = cameraPose.GetInvM();
   m_featureCalculator->compute_keypoints_and_features(colourImage,
@@ -198,6 +203,11 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
 
 void ScoreRelocaliser::update()
 {
+  if(!m_relocaliserState->exampleReservoirs)
+  {
+    throw std::runtime_error("finish_training() has been called, cannot update the relocaliser until reset() is called.");
+  }
+
   // We are back to the first reservoir that was updated when
   // the last batch of features were added to the forest.
   // No need to perform further updates, we would get the same modes.
