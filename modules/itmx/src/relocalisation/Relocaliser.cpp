@@ -13,6 +13,11 @@ Relocaliser::~Relocaliser() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void Relocaliser::finish_training()
+{
+  // No-op by default
+}
+
 void Relocaliser::update()
 {
   // No-op by default

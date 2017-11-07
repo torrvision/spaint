@@ -77,6 +77,12 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::~ICPRefiningRelocaliser()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+template<typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::finish_training()
+{
+  m_innerRelocaliser->finish_training();
+}
+
 template <typename VoxelType, typename IndexType>
 boost::optional<Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType,IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
