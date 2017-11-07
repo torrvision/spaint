@@ -146,6 +146,9 @@ public:
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
+  /** Override */
+  virtual void finish_training();
+
   /**
    * \brief Returns a specific prediction from the forest.
    *

@@ -56,7 +56,7 @@ public:
   virtual ~Relocaliser();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
-public:
+public: 
   /**
    * \brief Attempts to determine the location from which an RGB-D image pair was acquired,
    *        thereby relocalising the camera with respect to the 3D scene.
@@ -86,6 +86,13 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Signal that the training of the relocaliser has finished. No more calls to train and update are allowed.
+   *
+   * \note  From this moment going forward (until the next reset) calls to train and update have undefined behaviour.
+   */
+  virtual void finish_training();
+
   /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.
    *
