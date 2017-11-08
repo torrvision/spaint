@@ -3,6 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
+#include <iostream>
+
 #include "remotemapping/RGBDFrameMessage.h"
 
 namespace itmx {
@@ -10,6 +12,7 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 RGBDFrameMessage::RGBDFrameMessage(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
+: m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize)
 {
   m_frameIndexSegment = std::make_pair(0, sizeof(int));
   m_poseSegment = std::make_pair(m_frameIndexSegment.second, sizeof(Matrix4f) + 6 * sizeof(float));
@@ -31,7 +34,8 @@ void RGBDFrameMessage::extract_depth_image(ITMShortImage *depthImage) const
 {
   if(depthImage->dataSize * sizeof(short) != m_depthImageSegment.second)
   {
-    throw std::runtime_error("Error: The target image has a different size to that of the depth image in the message");
+    std::cerr << "Warning: The target image has a different size to that of the depth image in the message" << std::endl;
+    depthImage->ChangeDims(m_depthImageSize);
   }
 
   memcpy(reinterpret_cast<char*>(depthImage->GetData(MEMORYDEVICE_CPU)), &m_data[m_depthImageSegment.first], m_depthImageSegment.second);
@@ -41,7 +45,8 @@ void RGBDFrameMessage::extract_rgb_image(ITMUChar4Image *rgbImage) const
 {
   if(rgbImage->dataSize * sizeof(Vector4u) != m_rgbImageSegment.second)
   {
-    throw std::runtime_error("Error: The target image has a different size to that of the RGB image in the message");
+    std::cerr << "Warning: The target image has a different size to that of the RGB image in the message" << std::endl;
+    rgbImage->ChangeDims(m_rgbImageSize);
   }
 
   memcpy(reinterpret_cast<char*>(rgbImage->GetData(MEMORYDEVICE_CPU)), &m_data[m_rgbImageSegment.first], m_rgbImageSegment.second);
