@@ -165,11 +165,12 @@ bool CollaborativeComponent::is_verified(const SubmapRelocalisation& candidate) 
 
 void CollaborativeComponent::output_results() const
 {
+  int good = 0, bad = 0, unknown = 0;
   int failed = 0, rejected = 0, verified = 0;
   size_t firstVerification = 0;
 
   // First, output the results themselves.
-  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tORBs\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\n\n";
+  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tORBs\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\tGoodStatus\n\n";
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
     const SubmapRelocalisation& result = m_results[i];
@@ -195,10 +196,35 @@ void CollaborativeComponent::output_results() const
       ++failed;
     }
 
+    std::string goodStatus;
+    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform = m_context->get_pose_graph_optimiser()->try_get_relative_transform(result.m_sceneI, result.m_sceneJ);
+    if(!relativeTransform)
+    {
+      goodStatus = "Unknown";
+      ++unknown;
+    }
+    else
+    {
+      bool similar;
+      try        { similar = GeometryUtil::poses_are_similar(relativeTransform->first, *result.m_relativePose); }
+      catch(...) { similar = false; }
+
+      if(similar)
+      {
+        goodStatus = "Good";
+        ++good;
+      }
+      else
+      {
+        goodStatus = "Bad";
+        ++bad;
+      }
+    }
+
     std::cout << std::fixed << std::setprecision(2);
     std::cout << result.m_sceneI << '\t' << result.m_sceneJ << '\t' << result.m_frameIndexJ << '\t' << result.m_orbKeypointCountJ << '\t'
               << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor")
-              << '\t' << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t' << finalStatus << '\n';
+              << '\t' << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t' << finalStatus << '\t' << goodStatus << '\n';
   }
 
   // Then, output the overall statistics.
@@ -208,9 +234,13 @@ void CollaborativeComponent::output_results() const
     float tried = static_cast<float>(m_results.size());
     std::cout << "Verified: " << verified << " (" << verified * 100 / tried << "%)\n";
     std::cout << "Rejected: " << rejected << " (" << rejected * 100 / tried << "%)\n";
-    std::cout << "Failed: " << failed << " (" << failed * 100 / tried << "%)\n";
+    std::cout << "Failed: " << failed << " (" << failed * 100 / tried << "%)\n\n";
 
-    std::cout << "\nExpected Tries To First Verification: " << static_cast<int>(ceil(tried / verified)) << '\n';
+    std::cout << "Good: " << good << " (" << good * 100 / tried << "%)\n";
+    std::cout << "Bad: " << bad << " (" << bad * 100 / tried << "%)\n";
+    std::cout << "Unknown: " << unknown << " (" << unknown * 100 / tried << "%)\n\n";
+
+    std::cout << "Expected Tries To First Verification: " << static_cast<int>(ceil(tried / verified)) << '\n';
     std::cout << "Actual Tries To First Verification: " << firstVerification << '\n';
   }
 }
