@@ -63,6 +63,9 @@ private:
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
 
+  /** The stream used to output the memory usage, if m_saveMemoryUsage is enabled. */
+  std::ofstream m_memoryUsageOutputStream;
+
   /** The meshing engine. */
   MeshingEngine_Ptr m_meshingEngine;
 
@@ -80,6 +83,9 @@ private:
 
   /** Whether or not to render the fiducials (if any) that have been detected in the 3D scene. */
   bool m_renderFiducials;
+
+  /** Whether or not to save memory usage during the execution of the application. */
+  bool m_saveMemoryUsage;
 
   /** Whether or not to save a mesh of the scene on exiting the application. */
   bool m_saveMeshOnExit;
@@ -131,6 +137,14 @@ public:
    * \param frameDebugHook  The debug hook function (if any) to call after processing each frame.
    */
   void set_frame_debug_hook(const FrameDebugHook& frameDebugHook);
+
+  /**
+   * \brief Sets whether or not to profile the memory usage of the application and save the used GPU memory to a file
+   *        after processing each frame.
+   *
+   * \param saveMemoryUsage  Whether or not to save the memory usage to a file.
+   */
+  void set_save_memory_usage(bool saveMemoryUsage);
 
   /**
    * \brief Sets whether or not to save a mesh of the scene on exiting the application.
@@ -269,6 +283,11 @@ private:
    * \brief Processes voice input from the user.
    */
   void process_voice_input();
+
+  /**
+   * \brief Saves the current memory usage.
+   */
+  void save_current_memory_usage();
 
   /**
    * \brief Saves a mesh of the scene to disk.

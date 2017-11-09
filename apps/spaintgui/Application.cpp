@@ -51,6 +51,7 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
   m_paused(true),
   m_pipeline(pipeline),
   m_renderFiducials(renderFiducials),
+  m_saveMemoryUsage(false),
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
@@ -88,6 +89,9 @@ bool Application::run()
       {
         // If a frame debug hook is active, call it.
         if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
+
+        // Save the memory usage.
+        if(m_saveMemoryUsage) save_current_memory_usage();
 
         // If we're currently recording the sequence, save the frame to disk.
         if(m_sequencePathGenerator) save_sequence_frame();
@@ -132,6 +136,52 @@ void Application::set_server_mode_enabled(bool serverModeEnabled)
 void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
   m_frameDebugHook = frameDebugHook;
+}
+
+void Application::set_save_memory_usage(bool saveMemoryUsage)
+{
+  m_saveMemoryUsage = saveMemoryUsage;
+
+  // Prepare the output stream.
+  if(saveMemoryUsage)
+  {
+    // Find the profiling subdirectory and make sure that it exists.
+    boost::filesystem::path profilingSubdir = find_subdir_from_executable("profiling");
+    boost::filesystem::create_directories(profilingSubdir);
+
+    // Use the experimentTag from the settings if available, and the current timestamp if not.
+    Model_CPtr model = m_pipeline->get_model();
+    const Settings_CPtr& settings = model->get_settings();
+    std::string profilingFileName = settings->get_first_value<std::string>("experimentTag", "");
+    if(profilingFileName == "")
+    {
+      // Not using the default parameter of the settings->get_first_value call because
+      // experimentTag is a registered program option in main.cpp, with a default value of "".
+      profilingFileName = "spaint-" + TimeUtil::get_iso_timestamp();
+    }
+
+    // Add the extension.
+    profilingFileName += ".csv";
+
+    // Open the file and write the header.
+    boost::filesystem::path profilingFile = profilingSubdir / profilingFileName;
+    m_memoryUsageOutputStream.open(profilingFile.string().c_str());
+
+    std::cout << "Saving memory usage information in: " << profilingFile << "\n";
+
+    // Check how many GPUs are available and format the header accordingly.
+    int gpuCount = 0;
+    ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+    for(int i = 0; i < gpuCount; ++i)
+    {
+      cudaDeviceProp props;
+      ORcudaSafeCall(cudaGetDeviceProperties(&props, i));
+
+      m_memoryUsageOutputStream << "(" << i << ")" << props.name << " - Free;" << "(" << i << ")" << props.name << " - Used;" << "(" << i << ")" << props.name << " - Total;";
+    }
+
+    m_memoryUsageOutputStream << '\n';
+  }
 }
 
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
@@ -729,6 +779,47 @@ void Application::process_voice_input()
     if(command == "switch to correction mode") m_pipeline->set_mode(MultiScenePipeline::MODE_TRAIN_AND_PREDICT);
     if(command == "switch to smoothing mode") m_pipeline->set_mode(MultiScenePipeline::MODE_SMOOTHING);
   }
+}
+
+void Application::save_current_memory_usage()
+{
+  if(!m_saveMemoryUsage || !m_memoryUsageOutputStream)
+  {
+    throw std::runtime_error("Error saving current memory usage.");
+  }
+
+  // Find how many GPUs are available.
+  int gpuCount = 0;
+  ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+
+  // Save the currently active GPU because to query the memory in the others we have to change it.
+  int activeGpu = -1;
+  ORcudaSafeCall(cudaGetDevice(&activeGpu));
+
+  // Loop over all the GPUs.
+  for(int i = 0; i < gpuCount; ++i)
+  {
+    // Set the current GPU.
+    ORcudaSafeCall(cudaSetDevice(i));
+
+    // Query for the memory.
+    size_t freeMemory, totalMemory;
+    ORcudaSafeCall(cudaMemGetInfo(&freeMemory, &totalMemory));
+
+    // Convert to MB.
+    const size_t megaByte = 1024 * 1024;
+    const size_t freeMb = freeMemory / megaByte;
+    const size_t usedMb = (totalMemory - freeMemory) / megaByte;
+    const size_t totalMb = totalMemory / megaByte;
+
+    // Output to file.
+    m_memoryUsageOutputStream << freeMb << ";" << usedMb << ";" << totalMb << ";";
+  }
+
+  m_memoryUsageOutputStream << '\n';
+
+  // Restore the active GPU.
+  ORcudaSafeCall(cudaSetDevice(activeGpu));
 }
 
 void Application::save_mesh() const
