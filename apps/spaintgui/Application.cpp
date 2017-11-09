@@ -832,9 +832,8 @@ void Application::save_mesh() const
   // Get all scene IDs.
   std::vector<std::string> sceneIDs = model->get_scene_ids();
 
-  // Find the meshes directory and make sure that it exists.
+  // Find the meshes directory.
   boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
-  boost::filesystem::create_directories(meshesSubdir);
 
   // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
   std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "");
@@ -844,6 +843,15 @@ void Application::save_mesh() const
     // experimentTag is a registered program option in main.cpp, with a default value of "".
     meshBaseName = "spaint-" + TimeUtil::get_iso_timestamp();
   }
+
+  // If we are meshing multiple scenes we put them in a common subdirectory.
+  if(sceneIDs.size() > 1)
+  {
+    meshesSubdir = meshesSubdir / meshBaseName;
+  }
+
+  // Make sure that the output folder exists.
+  boost::filesystem::create_directories(meshesSubdir);
 
   // Mesh each scene independently.
   for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
