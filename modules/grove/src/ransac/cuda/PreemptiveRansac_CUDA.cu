@@ -393,6 +393,7 @@ void PreemptiveRansac_CUDA::init_random()
   dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
   ck_reinit_rngs<<<gridSize, blockSize>>>(randomGenerators, m_maxPoseCandidates, m_rngSeed);
+  ORcudaKernelCheck;
 }
 
 }
