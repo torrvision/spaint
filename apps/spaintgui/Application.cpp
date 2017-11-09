@@ -76,6 +76,9 @@ bool Application::run()
     if(m_batchModeEnabled) { if(eventQuit) return false; }
     else                   { if(eventQuit || escQuit) break; }
 
+    // Save the memory usage.
+    if(m_saveMemoryUsage) save_current_memory_usage();
+
     // Take action as relevant based on the current input state.
     process_input();
 
@@ -89,9 +92,6 @@ bool Application::run()
       {
         // If a frame debug hook is active, call it.
         if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
-
-        // Save the memory usage.
-        if(m_saveMemoryUsage) save_current_memory_usage();
 
         // If we're currently recording the sequence, save the frame to disk.
         if(m_sequencePathGenerator) save_sequence_frame();
