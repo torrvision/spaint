@@ -88,6 +88,7 @@ struct CommandLineArguments
   bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
+  bool sevenScenesNames;
   std::string subwindowConfigurationIndex;
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
@@ -130,6 +131,7 @@ struct CommandLineArguments
       ADD_SETTING(saveMeshOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
+      ADD_SETTING(sevenScenesNames);
       ADD_SETTING(subwindowConfigurationIndex);
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
@@ -317,9 +319,18 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     args.sequenceDirs.push_back(dir);
 
     // Set the depth / RGB image masks.
-    args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
-    args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
-    args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    if(args.sevenScenesNames)
+    {
+      args.depthImageMasks.push_back((dir / "frame-%06i.depth.png").string());
+      args.poseFileMasks.push_back((dir / "frame-%06i.pose.txt").string());
+      args.rgbImageMasks.push_back((dir / "frame-%06i.color.png").string());
+    }
+    else
+    {
+      args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+      args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
+      args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    }
   }
 
   // If the user hasn't explicitly specified a calibration file, try to find one in the first sequence directory (if it exists).
@@ -454,6 +465,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
     ("sequenceType", po::value<std::vector<std::string> >(&args.sequenceTypes)->multitoken(), "sequence type")
+    ("sevenScenesNames", po::bool_switch(&args.sevenScenesNames)->default_value(false), "use 7scenes naming strategy")
   ;
 
   po::options_description objectivePipelineOptions("Objective pipeline options");
