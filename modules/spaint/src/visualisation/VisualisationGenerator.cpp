@@ -132,26 +132,40 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
     return;
   }
 
-  if(!renderState)
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+
+  ITMIntrinsics intrinsics;
+  if(useColourIntrinsics)
   {
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(useColourIntrinsics ? view->rgb->noDims : view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+    float fx = view->calib.intrinsics_rgb.projectionParamsSimple.fx * output->noDims.x / view->rgb->noDims.x;
+    float fy = view->calib.intrinsics_rgb.projectionParamsSimple.fy * output->noDims.y / view->rgb->noDims.y;
+    float px = view->calib.intrinsics_rgb.projectionParamsSimple.px * output->noDims.x / view->rgb->noDims.x;
+    float py = view->calib.intrinsics_rgb.projectionParamsSimple.py * output->noDims.y / view->rgb->noDims.y;
+    intrinsics.SetFrom(fx, fy, px, py);
+  }
+  else
+  {
+    float fx = view->calib.intrinsics_d.projectionParamsSimple.fx * output->noDims.x / view->depth->noDims.x;
+    float fy = view->calib.intrinsics_d.projectionParamsSimple.fy * output->noDims.y / view->depth->noDims.y;
+    float px = view->calib.intrinsics_d.projectionParamsSimple.px * output->noDims.x / view->depth->noDims.x;
+    float py = view->calib.intrinsics_d.projectionParamsSimple.py * output->noDims.y / view->depth->noDims.y;
+    intrinsics.SetFrom(fx, fy, px, py);
   }
 
-  const ITMIntrinsics *intrinsics = useColourIntrinsics ? &view->calib.intrinsics_rgb : &view->calib.intrinsics_d;
-  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
 
   switch(visualisationType)
   {
     case VT_SCENE_COLOUR:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case VT_SCENE_NORMAL:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_NORMAL);
       break;
     }
@@ -167,14 +181,14 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
       else if(visualisationType == VT_SCENE_SEMANTICPHONG) lightingType = LT_PHONG;
 
       float labelAlpha = visualisationType == VT_SCENE_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
+      m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
+      m_semanticVisualiser->render(scene.get(), &pose, &intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }
     case VT_SCENE_LAMBERTIAN:
     default:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }

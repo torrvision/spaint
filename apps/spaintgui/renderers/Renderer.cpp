@@ -467,6 +467,15 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
   std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
+
+  bool supersample = m_model->get_slam_state(Model::get_world_scene_id())->get_input_status() == SLAMState::IS_TERMINATED;
+  if(supersample && image->noDims != Vector2i(1280,960))
+  {
+    image->ChangeDims(Vector2i(1280,960));
+    images.clear();
+    depthImages.clear();
+  }
+
   if(sceneID == "World")
   {
     while(images.size() < sceneIDs.size())
@@ -498,9 +507,11 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       // If we have not yet started reconstruction for this scene, avoid rendering it.
       if(!slamState || !slamState->get_view()) continue;
 
+      VoxelRenderState_Ptr renderState;
+      subwindow.get_voxel_render_state(viewIndex);
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-        subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+        supersample ? renderState : subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
         tempPose, slamState->get_view(), visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
@@ -508,7 +519,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
       depthVisualiser->render_depth(
         DepthVisualiser::DT_EUCLIDEAN, to_itm(camera.p()), to_itm(camera.n()),
-        subwindow.get_voxel_render_state(viewIndex).get(),
+        renderState.get(),
         m_model->get_settings()->sceneParams.voxelSize, -1.0f,
         depthImages[i]
       );
@@ -519,9 +530,11 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 #endif
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+  VoxelRenderState_Ptr renderState;
+  subwindow.get_voxel_render_state(viewIndex);
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    supersample ? renderState : subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
     pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
