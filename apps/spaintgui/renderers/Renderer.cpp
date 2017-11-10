@@ -536,7 +536,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
 
       depthVisualiser->render_depth(
-        DepthVisualiser::DT_EUCLIDEAN, to_itm(camera.p()), to_itm(camera.n()),
+        DepthVisualiser::DT_ORTHOGRAPHIC, to_itm(camera.p()), to_itm(camera.n()),
         m_supersamplingEnabled ? renderState.get() : subwindow.get_voxel_render_state(viewIndex).get(),
         m_model->get_settings()->sceneParams.voxelSize, -1.0f,
         depthImages[i]
