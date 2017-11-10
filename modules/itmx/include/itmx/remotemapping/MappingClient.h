@@ -43,7 +43,7 @@ public:
    * \param host  The mapping host to which to connect.
    * \param port  The port on the mapping host to which to connect.
    */
-  explicit MappingClient(const std::string& host = "localhost", const std::string& port = "7851");
+  explicit MappingClient(const std::string& host = "localhost", const std::string& port = "7851", tvgutil::pooled_queue::PoolEmptyStrategy pooledQueueStrategy = tvgutil::pooled_queue::PES_DISCARD);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
