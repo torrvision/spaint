@@ -78,6 +78,7 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::string port;
   std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
   bool profileMemory;
@@ -121,6 +122,7 @@ struct CommandLineArguments
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
+      ADD_SETTING(port);
       ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
       ADD_SETTING(profileMemory);
@@ -360,6 +362,13 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     args.runServer = true;
   }
 
+  // Make sure we are not running simultaneously in batch and server mode. The Application does not support this at the moment.
+  if(args.batch && args.runServer)
+  {
+    std::cout << "Error: cannot run in batch and server mode simultaneously.\n";
+    return false;
+  }
+
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
 
@@ -441,6 +450,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("port", po::value<std::string>(&args.port)->default_value("7851"), "remote mapping port")
     ("profileMemory", po::bool_switch(&args.profileMemory)->default_value(false), "whether or not to profile the memory usage")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
@@ -733,8 +743,16 @@ try
   // If a remote host was specified, set up a mapping client for the world scene.
   if(args.host != "")
   {
-    std::cout << "Setting mapping client for host '" << args.host << "'\n";
-    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host)));
+    std::cout << "Setting mapping client for host '" << args.host << "' and port '" << args.port << "'\n";
+
+    pooled_queue::PoolEmptyStrategy poolStrategy = pooled_queue::PES_DISCARD;
+    // If we are connecting to localhost AND we are running in batch collaboration mode then we use a waiting policy.
+    if((args.host == "localhost" || args.host == "127.0.0.1") && args.collaborationMode == "batch")
+    {
+       poolStrategy = pooled_queue::PES_WAIT;
+    }
+
+    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host, args.port, poolStrategy)));
   }
 
 #ifdef WITH_LEAP
@@ -744,8 +762,9 @@ try
 
   // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
-  app.set_batch_mode_enabled(args.batch);
-  app.set_server_mode_enabled(pipeline->get_model()->get_mapping_server().get() != NULL);
+  // Need to check before setting batch and server mode because they override the m_paused behaviour of the Application.
+  if(args.batch) app.set_batch_mode_enabled(true);
+  if(args.runServer) app.set_server_mode_enabled(true);
   app.set_save_memory_usage(args.profileMemory);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
