@@ -311,7 +311,7 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
 #if DEBUGGING
         std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
-      #ifdef(WITH_OPENCV)
+      #ifdef WITH_OPENCV
         static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
         msg.extract_rgb_image(rgbImage.get());
         cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);

@@ -186,6 +186,7 @@ Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& su
 : m_medianFilteringEnabled(false),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
+  m_supersamplingEnabled(false),
   m_windowViewportSize(windowViewportSize)
 {
   // Reset the camera for each sub-window.
@@ -243,9 +244,19 @@ SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
   return m_subwindowConfiguration;
 }
 
+bool Renderer::get_supersampling_enabled() const
+{
+  return m_supersamplingEnabled;
+}
+
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
+}
+
+void Renderer::set_supersampling_enabled(bool supersamplingEnabled)
+{
+  m_supersamplingEnabled = supersamplingEnabled;
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -459,6 +470,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
+  static Vector2i initialImgSize = image->noDims;
+  const Vector2i supersampledImgSize(1280,960);
 
 #if 1
   // FIXME: This is a disgusting hack.
@@ -467,6 +480,20 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
   std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
+
+  if(m_supersamplingEnabled && image->noDims != supersampledImgSize)
+  {
+    image->ChangeDims(supersampledImgSize);
+    images.clear();
+    depthImages.clear();
+  }
+  else if(!m_supersamplingEnabled && image->noDims != initialImgSize)
+  {
+    image->ChangeDims(initialImgSize);
+    images.clear();
+    depthImages.clear();
+  }
+
   if(sceneID == "World")
   {
     while(images.size() < sceneIDs.size())
@@ -498,17 +525,19 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       // If we have not yet started reconstruction for this scene, avoid rendering it.
       if(!slamState || !slamState->get_view()) continue;
 
+      VoxelRenderState_Ptr renderState;
+      subwindow.get_voxel_render_state(viewIndex);
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-        subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+        m_supersamplingEnabled ? renderState : subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
         tempPose, slamState->get_view(), visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
       SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
 
       depthVisualiser->render_depth(
-        DepthVisualiser::DT_EUCLIDEAN, to_itm(camera.p()), to_itm(camera.n()),
-        subwindow.get_voxel_render_state(viewIndex).get(),
+        DepthVisualiser::DT_ORTHOGRAPHIC, to_itm(camera.p()), to_itm(camera.n()),
+        m_supersamplingEnabled ? renderState.get() : subwindow.get_voxel_render_state(viewIndex).get(),
         m_model->get_settings()->sceneParams.voxelSize, -1.0f,
         depthImages[i]
       );
@@ -519,9 +548,11 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 #endif
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+  VoxelRenderState_Ptr renderState;
+  subwindow.get_voxel_render_state(viewIndex);
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    m_supersamplingEnabled ? renderState : subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
     pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 

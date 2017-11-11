@@ -50,8 +50,9 @@ void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
   bool signalOptimiser = true;
-  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneI, sceneJ, sample, mode);
-  signalOptimiser = signalOptimiser && add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()), mode);
+
+  if(!add_relative_transform_sample_sub(sceneI, sceneJ, sample, mode)) signalOptimiser = false;
+  if(!add_relative_transform_sample_sub(sceneJ, sceneI, SE3Pose(sample.GetInvM()), mode)) signalOptimiser = false;
 
   m_sceneIDs.insert(sceneI);
   m_sceneIDs.insert(sceneJ);
@@ -61,6 +62,16 @@ void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI
     m_relativeTransformSamplesChanged = true;
     m_relativeTransformSamplesAdded.notify_one();
   }
+
+#if 1
+  std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
+  std::cout << "Cluster sizes: ";
+  for(size_t i = 0, size = it->second.size(); i < size; ++i)
+  {
+    std::cout << it->second[i].size() << ' ';
+  }
+  std::cout << std::endl;
+#endif
 }
 
 void PoseGraphOptimiser::start()

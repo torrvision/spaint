@@ -261,6 +261,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
+  // If the quote key is pressed, toggle whether or not supersampling is used when rendering the scene raycast.
+  if(keysym.sym == KEYCODE_QUOTE)
+  {
+    m_renderer->set_supersampling_enabled(!m_renderer->get_supersampling_enabled());
+  }
+
   // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
   // If right shift + / is pressed, toggle video recording.
   if(keysym.sym == SDLK_SLASH)
@@ -395,6 +401,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RCtrl + Backspace = Clear Current Label\n"
               << "RCtrl + RShift + Backspace = Reset Classifier (Clear Labels and Forest)\n"
               << "; = Toggle Median Filtering\n"
+              << "' = Toggle Supersampling\n"
               << "/ = Save Screenshot\n"
               << "LShift + / = Toggle Sequence Recording\n"
               << "RShift + / = Toggle Video Recording\n";
