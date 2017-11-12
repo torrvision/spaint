@@ -8,6 +8,7 @@
 
 #include <boost/atomic.hpp>
 #include <boost/thread.hpp>
+#include <boost/timer/timer.hpp>
 
 #include <itmx/relocalisation/Relocaliser.h>
 
@@ -29,6 +30,9 @@ private:
   /** TODO */
   boost::shared_ptr<SubmapRelocalisation> m_bestCandidate;
 
+  /** The timer used to compute the time spent collaborating. */
+  boost::optional<boost::timer::cpu_timer> m_collaborationTimer;
+
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
 
@@ -44,6 +48,9 @@ private:
   /** TODO */
   boost::condition_variable m_readyToRelocalise;
 
+  /** Whether or not the current reconstruction is already consistent (i.e. all scenes are connected to the primary one). */
+  bool m_reconstructionIsConsistent;
+
   /** TODO */
   boost::thread m_relocalisationThread;
 
@@ -53,8 +60,14 @@ private:
   /** A random number generator. */
   mutable tvgutil::RandomNumberGenerator m_rng;
 
+  /** Whether or not to stop the collaborative component at the first full reconstruction. */
+  bool m_stopAtFirstConsistentReconstruction;
+
   /** TODO */
   boost::atomic<bool> m_stopRelocalisationThread;
+
+  /** Whether or not to time the time spent collaborating. */
+  bool m_timeCollaboration;
 
   /** TODO */
   std::map<std::string,std::deque<std::pair<ORUtils::SE3Pose,size_t> > > m_trajectories;
