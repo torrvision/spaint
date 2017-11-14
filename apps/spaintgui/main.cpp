@@ -89,7 +89,6 @@ struct CommandLineArguments
   bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
-  bool sevenScenesNames;
   std::string subwindowConfigurationIndex;
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
@@ -133,7 +132,6 @@ struct CommandLineArguments
       ADD_SETTING(saveMeshOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
-      ADD_SETTING(sevenScenesNames);
       ADD_SETTING(subwindowConfigurationIndex);
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
@@ -320,18 +318,33 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
+    // Try to figure out the format of the sequence stored in the folder. Just check for the depth because colour might be missing.
+    const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
+    const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
+
+    if(sevenScenesNaming && spaintNaming)
+    {
+      std::cout << "Error: the sequence folder specified contains both 'seven scenes' and 'spaint'-named files.\n";
+      return false;
+    }
+
     // Set the depth / RGB image masks.
-    if(args.sevenScenesNames)
+    if(sevenScenesNaming)
     {
       args.depthImageMasks.push_back((dir / "frame-%06i.depth.png").string());
       args.poseFileMasks.push_back((dir / "frame-%06i.pose.txt").string());
       args.rgbImageMasks.push_back((dir / "frame-%06i.color.png").string());
     }
-    else
+    else if(spaintNaming)
     {
       args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
       args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
       args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    }
+    else
+    {
+      std::cout << "Error: the sequence folder specified does not contain validly-named depth files. Manually specify the masks using the -d and -r options.\n";
+      return false;
     }
   }
 
@@ -475,7 +488,6 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
     ("sequenceType", po::value<std::vector<std::string> >(&args.sequenceTypes)->multitoken(), "sequence type")
-    ("sevenScenesNames", po::bool_switch(&args.sevenScenesNames)->default_value(false), "use 7scenes naming strategy")
   ;
 
   po::options_description objectivePipelineOptions("Objective pipeline options");
