@@ -34,6 +34,7 @@ struct FeatureCalculatorFactory
    * \param rgbFeatureOffset     The offset in the descriptor after which we store the RGB features.
    * \param rgbMinRadius         The minimum radius used to generate colour offsets.
    * \param rgbMaxRadius         The maximum radius used to generate colour offsets.
+   * \return                     The feature calculator.
    *
    * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets cause out-of-bounds access.
    */
@@ -48,14 +49,16 @@ struct FeatureCalculatorFactory
   /**
    * \brief Makes a DA-RGBD patch feature calculator.
    *
-   * \param deviceType The device on which the feature calculator should operate.
+   * \param deviceType  The device on which the feature calculator should operate.
+   * \return            The feature calculator.
    */
   static DA_RGBDPatchFeatureCalculator_Ptr make_da_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   /**
    * \brief Makes an RGB patch feature calculator.
    *
-   * \param deviceType The device on which the feature calculator should operate.
+   * \param deviceType  The device on which the feature calculator should operate.
+   * \return            The feature calculator.
    */
   static RGBPatchFeatureCalculator_Ptr make_rgb_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
 };
