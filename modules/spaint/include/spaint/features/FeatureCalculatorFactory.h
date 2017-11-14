@@ -27,6 +27,7 @@ struct FeatureCalculatorFactory
    * \param patchSpacing          The spacing in the scene (in voxels) between individual pixels in a patch.
    * \param binCount              The number of bins into which to quantize orientations when aligning voxel patches.
    * \param deviceType            The device on which the feature calculator should operate.
+   * \return                      The feature calculator.
    */
   static FeatureCalculator_CPtr make_vop_feature_calculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount,
                                                             ITMLib::ITMLibSettings::DeviceType deviceType);
