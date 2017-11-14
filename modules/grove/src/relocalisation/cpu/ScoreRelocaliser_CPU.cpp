@@ -47,7 +47,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-      ITMLibSettings::DEVICE_CPU, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
+      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CPU);
 
   // P-RANSAC.
   m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU, m_settings);

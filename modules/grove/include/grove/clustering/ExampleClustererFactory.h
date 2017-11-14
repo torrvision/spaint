@@ -37,33 +37,30 @@ namespace grove {
  *                     lesser or equal value in the make_clusterer function.
  */
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-class ExampleClustererFactory
+struct ExampleClustererFactory
 {
   //#################### TYPEDEFS ####################
-public:
+
   typedef ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS> Clusterer;
   typedef boost::shared_ptr<Clusterer> Clusterer_Ptr;
   typedef boost::shared_ptr<const Clusterer> Clusterer_CPtr;
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
   /**
    * \brief Instantiate an ExampleClusterer.
    *
-   * \param deviceType      The device used to cluster examples.
    * \param sigma           The sigma of the Gaussian used when computing the example densities.
    * \param tau             The maximum distance between examples to be considered part of the same example.
    * \param maxClusterCount The maximum number of clusters to extract from each example set.
    * \param minClusterSize  The minimum size of cluster to keep.
+   * \param deviceType      The device used to cluster examples.
    *
    * \return                An instance of ExampleClusterer.
    *
    * \throws std::invalid_argument If maxClusterCount > than MAX_CLUSTERS.
    */
-  static Clusterer_Ptr make_clusterer(ITMLib::ITMLibSettings::DeviceType deviceType,
-                                      float sigma,
-                                      float tau,
-                                      uint32_t maxClusterCount,
-                                      uint32_t minClusterSize);
+  static Clusterer_Ptr make_clusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, ITMLib::ITMLibSettings::DeviceType deviceType);
 };
 
 }
