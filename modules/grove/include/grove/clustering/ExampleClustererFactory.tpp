@@ -16,33 +16,27 @@ namespace grove {
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-typename ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::Clusterer_Ptr
-    ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::make_clusterer(
-        ITMLib::ITMLibSettings::DeviceType deviceType,
-        float sigma,
-        float tau,
-        uint32_t maxClusterCount,
-        uint32_t minClusterSize)
+typename ExampleClustererFactory<ExampleType,ClusterType,MAX_CLUSTERS>::Clusterer_Ptr
+ExampleClustererFactory<ExampleType,ClusterType,MAX_CLUSTERS>::make_clusterer(
+  float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, ITMLib::ITMLibSettings::DeviceType deviceType
+)
 {
   Clusterer_Ptr clusterer;
 
-  if (deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    clusterer.reset(
-        new ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize));
+    clusterer.reset(new ExampleClusterer_CUDA<ExampleType,ClusterType,MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize));
 #else
-    throw std::runtime_error(
-        "Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
   {
-    clusterer.reset(
-        new ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize));
+    clusterer.reset(new ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize));
   }
 
   return clusterer;
 }
 
-} // namespace grove
+}
