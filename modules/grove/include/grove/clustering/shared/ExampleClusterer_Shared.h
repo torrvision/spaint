@@ -212,7 +212,7 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
   // Write the parent of the specified example to global memory.
   parents[exampleOffset] = parentIdx;
 
-  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root).
+  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root.)
   clusterIndices[exampleOffset] = clusterIdx;
 }
 
