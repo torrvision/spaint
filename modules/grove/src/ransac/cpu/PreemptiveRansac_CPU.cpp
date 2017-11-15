@@ -18,9 +18,10 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
+PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr& settings)
+: PreemptiveRansac(settings)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   m_randomGenerators = mbf.make_block<CPURNG>(m_maxPoseCandidates);
   m_rngSeed = 42;
 
@@ -191,7 +192,7 @@ void PreemptiveRansac_CPU::update_candidate_poses()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
+void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate& candidate) const
 {
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
   const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CPU);

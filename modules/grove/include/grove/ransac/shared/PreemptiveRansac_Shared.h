@@ -35,7 +35,7 @@ enum { MAX_COLOUR_DELTA = 30, SAMPLE_INLIER_ITERATIONS = 50 };
  * \return The sum of energies contributed by the inliers.
  */
 _CPU_AND_GPU_CODE_
-inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidatePose,
+inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidatePose,
                                                         const Keypoint3DColour *keypoints,
                                                         const ScorePrediction *predictions,
                                                         const int *inlierIndices,
@@ -53,7 +53,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
     const Vector3f inlierWorldCoordinates = candidatePose * inlierCameraCoordinates;
 
     // Get the prediction associated to the current inlier.
-    const ScorePrediction &pred = predictions[linearIdx];
+    const ScorePrediction& pred = predictions[linearIdx];
 
     // Evaluate individual energy. First find the mode closest to the predicted world coordinates.
     float energy;
@@ -122,9 +122,9 @@ template <typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
     preemptive_ransac_generate_candidate(const Keypoint3DColour *keypointsData,
                                          const ScorePrediction *predictionsData,
-                                         const Vector2i &imgSize,
-                                         RNG &randomGenerator,
-                                         PoseCandidate &poseCandidate,
+                                         const Vector2i& imgSize,
+                                         RNG& randomGenerator,
+                                         PoseCandidate& poseCandidate,
                                          uint32_t maxCandidateGenerationIterations,
                                          bool useAllModesPerLeafInPoseHypothesisGeneration,
                                          bool checkMinDistanceBetweenSampledModes,
@@ -148,12 +148,12 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
     const int linearFeatureIdx = y * imgSize.width + x;
 
     // Grab its associated keypoint and continue only if it's valid.
-    const Keypoint3DColour &selectedKeypoint = keypointsData[linearFeatureIdx];
+    const Keypoint3DColour& selectedKeypoint = keypointsData[linearFeatureIdx];
     // Invalid keypoint, try again.
     if (!selectedKeypoint.valid) continue;
 
     // Grab its associated score prediction.
-    const ScorePrediction &selectedPrediction = predictionsData[linearFeatureIdx];
+    const ScorePrediction& selectedPrediction = predictionsData[linearFeatureIdx];
     // If the prediction has no modes, try again.
     if (selectedPrediction.size == 0) continue;
 
@@ -187,7 +187,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
       {
         const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
         const int otherModeIdx = selectedPixelMode[idxOther];
-        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
+        const ScorePrediction& otherPrediction = predictionsData[otherLinearIdx];
 
         const Vector3f otherModeWorldPt = otherPrediction.elts[otherModeIdx].position;
         const Vector3f diff = otherModeWorldPt - selectedModeWorldPt;
@@ -212,7 +212,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
       {
         const int otherModeIdx = selectedPixelMode[m];
         const int otherLinearIdx = selectedPixelLinearIdx[m];
-        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
+        const ScorePrediction& otherPrediction = predictionsData[otherLinearIdx];
 
         // First check that the current keypoint is far enough from the other keypoints, similarly to the previous
         // check.
@@ -264,9 +264,9 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
     const int linearIdx = selectedPixelLinearIdx[s];
     const int modeIdx = selectedPixelMode[s];
 
-    const Keypoint3DColour &selectedKeypoint = keypointsData[linearIdx];
-    const ScorePrediction &selectedPrediction = predictionsData[linearIdx];
-    const Mode3DColour &selectedMode = selectedPrediction.elts[modeIdx];
+    const Keypoint3DColour& selectedKeypoint = keypointsData[linearIdx];
+    const ScorePrediction& selectedPrediction = predictionsData[linearIdx];
+    const Mode3DColour& selectedMode = selectedPrediction.elts[modeIdx];
 
     poseCandidate.pointsCamera[s] = selectedKeypoint.position;
     poseCandidate.pointsWorld[s] = selectedMode.position;
@@ -288,10 +288,10 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
                                                         uint32_t inlierIdx)
 {
   const int inlierLinearIdx = inlierIndices[inlierIdx];
-  const PoseCandidate &poseCandidate = poseCandidates[candidateIdx];
+  const PoseCandidate& poseCandidate = poseCandidates[candidateIdx];
   const Vector3f inlierCameraPosition = keypoints[inlierLinearIdx].position;
   const Vector3f inlierWorldPosition = poseCandidate.cameraPose * inlierCameraPosition;
-  const ScorePrediction &prediction = predictions[inlierLinearIdx];
+  const ScorePrediction& prediction = predictions[inlierLinearIdx];
 
   // Find the best mode, do not rely on the one stored in the inlier because for the randomly sampled inliers it will
   // not be set.
@@ -308,7 +308,7 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
 #endif
   }
 
-  const Mode3DColour &bestMode = prediction.elts[bestModeIdx];
+  const Mode3DColour& bestMode = prediction.elts[bestModeIdx];
 
   uint32_t outputIdx = candidateIdx * nbInliers + inlierIdx; // The index in the row associated to the current candidate.
 
@@ -341,8 +341,8 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
 template <bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Keypoint3DColour *keypointsData,
                                                                        const ScorePrediction *predictionsData,
-                                                                       const Vector2i &imgSize,
-                                                                       RNG &randomGenerator,
+                                                                       const Vector2i& imgSize,
+                                                                       RNG& randomGenerator,
                                                                        int *inlierMaskData = NULL)
 {
   int inlierLinearIdx = -1;
