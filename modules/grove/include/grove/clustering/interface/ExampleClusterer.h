@@ -42,14 +42,14 @@ namespace grove {
  *
  * \param ExampleType  The type of example to cluster.
  * \param ClusterType  The type of cluster being generated.
- * \param MAX_CLUSTERS The maximum number of clusters being generated for each set of examples.
+ * \param MaxClusters  The maximum number of clusters being generated for each set of examples.
  */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+template <typename ExampleType, typename ClusterType, int MaxClusters>
 class ExampleClusterer
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef Array<ClusterType,MAX_CLUSTERS> ClusterContainer;
+  typedef Array<ClusterType,MaxClusters> ClusterContainer;
   typedef ORUtils::MemoryBlock<ClusterContainer> ClusterContainers;
   typedef boost::shared_ptr<ClusterContainers> ClusterContainers_Ptr;
   typedef ORUtils::Image<ExampleType> ExampleImage;
@@ -116,10 +116,10 @@ public:
    * \param sigma            The sigma of the Gaussian used when computing the example densities.
    * \param tau              The maximum distance there can be between two examples that are part of the same cluster.
    * \param maxClusterCount  The maximum number of clusters retained for each set of examples (all clusters are estimated
-   *                         but only the maxClusterCount largest ones are returned). Must be <= MAX_CLUSTERS.
+   *                         but only the maxClusterCount largest ones are returned). Must be <= MaxClusters.
    * \param minClusterSize   The minimum size of cluster to keep.
    *
-   * \throws std::invalid_argument If maxClusterCount > MAX_CLUSTERS.
+   * \throws std::invalid_argument If maxClusterCount > MaxClusters.
    */
   ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 

@@ -13,14 +13,14 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+ExampleClusterer<ExampleType, ClusterType, MaxClusters>::ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
 : m_maxClusterCount(maxClusterCount), m_minClusterSize(minClusterSize), m_sigma(sigma), m_tau(tau)
 {
   // Check the preconditions.
-  if(maxClusterCount > MAX_CLUSTERS)
+  if(maxClusterCount > MaxClusters)
   {
-    throw std::invalid_argument("Error: maxClusterCount > MAX_CLUSTERS");
+    throw std::invalid_argument("Error: maxClusterCount > MaxClusters");
   }
 
   // Initialise the temporary variables that are used as part of a find_modes call.
@@ -38,15 +38,15 @@ ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float
 
 //#################### DESTRUCTOR ####################
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::~ExampleClusterer()
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+ExampleClusterer<ExampleType,ClusterType,MaxClusters>::~ExampleClusterer()
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
-                                                                              uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
+                                                                             uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers)
 {
   const uint32_t nbExampleSets = exampleSets->noDims.height;
   const uint32_t exampleSetCapacity = exampleSets->noDims.width;
@@ -113,8 +113,8 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::reallocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::reallocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   // Get the current size of (most of) the temporary images.
   const Vector2i oldImgSize = m_densities->noDims;
