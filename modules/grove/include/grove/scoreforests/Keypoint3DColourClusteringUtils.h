@@ -49,10 +49,10 @@ inline void create_cluster_from_examples(int key, const Keypoint3DColour *exampl
   Vector3f colourMean(0.f);
 
   // Iterate over all examples and use only those belonging to cluster key.
-  for (int sampleIdx = 0; sampleIdx < examplesCount; ++sampleIdx)
+  for(int sampleIdx = 0; sampleIdx < examplesCount; ++sampleIdx)
   {
     const int sampleCluster = exampleKeys[sampleIdx];
-    if (sampleCluster == key)
+    if(sampleCluster == key)
     {
       const Keypoint3DColour &sample = examples[sampleIdx];
 
@@ -63,7 +63,7 @@ inline void create_cluster_from_examples(int key, const Keypoint3DColour *exampl
   }
 
   // This mode is invalid.
-  if (sampleCount <= 1)
+  if(sampleCount <= 1)
   {
 // Should never reach this point since we should have checked minClusterSize earlier.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
@@ -81,17 +81,17 @@ inline void create_cluster_from_examples(int key, const Keypoint3DColour *exampl
   Matrix3f positionCovariance;
   positionCovariance.setZeros();
 
-  for (int sampleIdx = 0; sampleIdx < examplesCount; ++sampleIdx)
+  for(int sampleIdx = 0; sampleIdx < examplesCount; ++sampleIdx)
   {
     const int sampleCluster = exampleKeys[sampleIdx];
 
-    if (sampleCluster == key)
+    if(sampleCluster == key)
     {
-      const Keypoint3DColour &sample = examples[sampleIdx];
+      const Keypoint3DColour& sample = examples[sampleIdx];
 
-      for (int i = 0; i < 3; ++i)
+      for(int i = 0; i < 3; ++i)
       {
-        for (int j = 0; j < 3; ++j)
+        for(int j = 0; j < 3; ++j)
         {
           positionCovariance.m[i * 3 + j] +=
               (sample.position.v[i] - positionMean.v[i]) * (sample.position.v[j] - positionMean.v[j]);
