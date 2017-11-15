@@ -23,7 +23,7 @@ ExampleClusterer<ExampleType, ClusterType, MaxClusters>::ExampleClusterer(float 
     throw std::invalid_argument("Error: maxClusterCount > MaxClusters");
   }
 
-  // Initialise the temporary variables that are used as part of a find_modes call.
+  // Initialise the temporary variables that are used as part of a cluster_examples call.
   // Initially, all are empty. We resize them later, once we know the right sizes.
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
 
@@ -56,9 +56,9 @@ void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::cluster_examples(con
     throw std::invalid_argument("Error: exampleSetStart + exampleSetCount > nbExampleSets");
   }
 
-  // Reallocate the temporary variables needed for the call as necessary. In practice, this tends to be a no-op
-  // for all calls to find_modes except the first, since we only need to reallocate if more memory is required,
-  // and the way in which find_modes is usually called tends not to cause this to happen.
+  // Reallocate the temporary variables needed for the call as necessary. In practice, this tends to be a no-op for
+  // all calls to cluster_examples except the first, since we only need to reallocate if more memory is required,
+  // and the way in which cluster_examples is usually called tends not to cause this to happen.
   reallocate_temporaries(exampleSetCapacity, exampleSetCount);
 
   // Reset the temporary variables needed for the call.
@@ -90,8 +90,8 @@ void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::cluster_examples(con
   // Finally, compute the parameters for and store each selected cluster for each example set.
   create_selected_clusters(exampleSetsData, exampleSetSizesData, exampleSetCapacity, exampleSetCount, clusterContainersPtr);
 
-// Debug.
 #if 0
+  // For debugging purposes only.
   m_nbClustersPerExampleSet->UpdateHostFromDevice();
   m_clusterSizes->UpdateHostFromDevice();
   exampleSetSizes->UpdateHostFromDevice();

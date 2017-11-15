@@ -212,7 +212,7 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
   // Write the parent of the specified example to global memory.
   parents[exampleOffset] = parentIdx;
 
-  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root).
+  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root.)
   clusterIndices[exampleOffset] = clusterIdx;
 }
 
@@ -283,12 +283,12 @@ inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, c
 /**
  * \brief Resets a cluster container.
  *
- * \param clusterContainers A pointer to the cluster containers.
  * \param exampleSetIdx     The index of the example set whose cluster container we want to reset.
+ * \param clusterContainers A pointer to the cluster containers.
  */
 template <typename ClusterType, int MaxClusters>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void reset_cluster_container(Array<ClusterType,MaxClusters> *clusterContainers, int exampleSetIdx)
+inline void reset_cluster_container(int exampleSetIdx, Array<ClusterType,MaxClusters> *clusterContainers)
 {
   // It is sufficient to just reset the size of the container (i.e. the number of clusters) to zero.
   // There is no need to modify the actual clusters, since they will be overwritten later.

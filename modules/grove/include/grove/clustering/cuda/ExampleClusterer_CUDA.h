@@ -69,10 +69,10 @@ private:
   virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const;
 
   /** Override */
-  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const;
+  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t exampleSetIdx) const;
 
   /** Override */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const;
+  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t exampleSetIdx) const;
 
   /** Override */
   virtual void reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const;
