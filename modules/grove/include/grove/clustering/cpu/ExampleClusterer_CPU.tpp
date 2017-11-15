@@ -129,10 +129,10 @@ ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::get_pointer_to_cluste
 }
 
 template <typename ExampleType, typename ClusterType, int MaxClusters>
-const ExampleType *ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const
+const ExampleType *ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t exampleSetIdx) const
 {
-  const int setCapacity = exampleSets->noDims.width;
-  return exampleSets->GetData(MEMORYDEVICE_CPU) + setIdx * setCapacity;
+  const int exampleSetCapacity = exampleSets->noDims.width;
+  return exampleSets->GetData(MEMORYDEVICE_CPU) + exampleSetIdx * exampleSetCapacity;
 }
 
 template <typename ExampleType, typename ClusterType, int MaxClusters>

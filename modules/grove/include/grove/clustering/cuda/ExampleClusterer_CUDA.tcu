@@ -238,10 +238,10 @@ ExampleClusterer_CUDA<ExampleType,ClusterType,MaxClusters>::get_pointer_to_clust
 }
 
 template <typename ExampleType, typename ClusterType, int MaxClusters>
-const ExampleType *ExampleClusterer_CUDA<ExampleType, ClusterType, MaxClusters>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const
+const ExampleType *ExampleClusterer_CUDA<ExampleType, ClusterType, MaxClusters>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t exampleSetIdx) const
 {
   const int exampleSetCapacity = exampleSets->noDims.width;
-  return exampleSets->GetData(MEMORYDEVICE_CUDA) + setIdx * exampleSetCapacity;
+  return exampleSets->GetData(MEMORYDEVICE_CUDA) + exampleSetIdx * exampleSetCapacity;
 }
 
 template <typename ExampleType, typename ClusterType, int MaxClusters>

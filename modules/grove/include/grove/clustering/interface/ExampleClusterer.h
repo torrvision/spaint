@@ -210,15 +210,14 @@ private:
   virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const = 0;
 
   /**
-   * \brief Virtual function returning a pointer to the first example of the example set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
+   * \brief Gets a raw pointer to the first example of the specified example set.
    *
-   * \param exampleSets An image containing the sets of examples to be clustered (one set per row). The width of
-   *                    the image specifies the maximum number of examples that can be contained in each set.
-   * \param setIdx      The index to the first set of interest.
-   * \return            A raw pointer to the first example of the example set setIdx.
+   * \param exampleSets   An image containing the sets of examples to be clustered (one set per row). The width of
+   *                      the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetIdx The index of the example set to whose first example we want to get a pointer.
+   * \return              A raw pointer to the first example of the specified example set.
    */
-  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const = 0;
+  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t exampleSetIdx) const = 0;
 
   /**
    * \brief Gets a raw pointer to the size of the specified example set.
