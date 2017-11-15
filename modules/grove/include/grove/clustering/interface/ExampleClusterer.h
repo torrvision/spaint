@@ -6,11 +6,6 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER
 #define H_GROVE_EXAMPLECLUSTERER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ORUtils/Image.h>
-#include <ORUtils/MemoryBlock.h>
-
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
