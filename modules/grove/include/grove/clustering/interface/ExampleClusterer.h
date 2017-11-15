@@ -19,7 +19,7 @@
 namespace grove {
 
 /**
- * \brief An instance of a class deriving from this one can find clusters from a set of examples.
+ * \brief An instance of a class deriving from this one can be used to cluster sets of examples.
  *        Clustering is performed via the "Really quick shift" algorithm by Fulkerson and Soatto.
  *        See http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf for details.
  *
