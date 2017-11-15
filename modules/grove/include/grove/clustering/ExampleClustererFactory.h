@@ -13,57 +13,32 @@
 namespace grove {
 
 /**
- * \brief An instance of this struct can be used to create ExampleClusterers.
- *
- *        Clustering is performed via the "Really Quick shift" algorithm by Fulkerson and Soatto.
- *        See: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf for details.
- *
- * \note  The clusterer is capable of clustering multiple sets of examples (in parallel, when using CUDA or OpenMP),
- *        for this reason the interface to the main clustering method expects not a single set of examples but an
- *        "image" wherein each row contains a certain number examples to be clustered.
- *        Different rows are then clustered independently.
- *
- * \note  The following functions are required to be defined:
- *        - _CPU_AND_GPU_CODE_ inline float distance_squared(const ExampleType &a, const ExampleType &b)
- *          Returns the squared distancebetween two examples.
- *        - _CPU_AND_GPU_CODE_ inline void create_cluster_from_examples(const ExampleType *examples,
- *                                                                      const int *exampleKeys, int examplesCount,
- *                                                                      int key, ClusterType &outputCluster)
- *          Aggregates all the examples in the examples array having a certain key into a single cluster mode.
- *
- * \param ExampleType  The type of examples to cluster.
- * \param ClusterType  The type of clusters to generate.
- * \param MAX_CLUSTERS The maximum number of clusters to generate for each set of examples. Can be overridden with a
- *                     lesser or equal value in the make_clusterer function.
+ * \brief This struct can be used to construct example clusterers.
  */
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-class ExampleClustererFactory
+struct ExampleClustererFactory
 {
   //#################### TYPEDEFS ####################
-public:
-  typedef ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS> Clusterer;
+
+  typedef ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS> Clusterer;
   typedef boost::shared_ptr<Clusterer> Clusterer_Ptr;
-  typedef boost::shared_ptr<const Clusterer> Clusterer_CPtr;
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
   /**
-   * \brief Instantiate an ExampleClusterer.
+   * \brief Makes an example clusterer.
    *
-   * \param deviceType      The device used to cluster examples.
-   * \param sigma           The sigma of the Gaussian used when computing the example densities.
-   * \param tau             The maximum distance between examples to be considered part of the same example.
-   * \param maxClusterCount The maximum number of clusters to extract from each example set.
-   * \param minClusterSize  The minimum size of cluster to keep.
+   * \param sigma            The sigma of the Gaussian used when computing the example densities.
+   * \param tau              The maximum distance there can be between two examples that are part of the same cluster.
+   * \param maxClusterCount  The maximum number of clusters retained for each set of examples (all clusters are estimated
+   *                         but only the maxClusterCount largest ones are returned). Must be <= MAX_CLUSTERS.
+   * \param minClusterSize   The minimum size of cluster to keep.
+   * \param deviceType       The device on which the example clusterer should operate.
+   * \return                 The example clusterer.
    *
-   * \return                An instance of ExampleClusterer.
-   *
-   * \throws std::invalid_argument If maxClusterCount > than MAX_CLUSTERS.
+   * \throws std::invalid_argument If maxClusterCount > MAX_CLUSTERS.
    */
-  static Clusterer_Ptr make_clusterer(ITMLib::ITMLibSettings::DeviceType deviceType,
-                                      float sigma,
-                                      float tau,
-                                      uint32_t maxClusterCount,
-                                      uint32_t minClusterSize);
+  static Clusterer_Ptr make_clusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, ITMLib::ITMLibSettings::DeviceType deviceType);
 };
 
 }

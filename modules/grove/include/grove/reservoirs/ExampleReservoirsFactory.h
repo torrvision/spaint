@@ -32,6 +32,7 @@ struct ExampleReservoirsFactory
    * \param reservoirCapacity The capacity (maximum size) of each reservoir.
    * \param deviceType        The device on which the example reservoirs should be stored.
    * \param rngSeed           The seed for the random number generator.
+   * \return                  The set of example reservoirs.
    */
   static Reservoirs_Ptr make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t rngSeed = 42);
 };

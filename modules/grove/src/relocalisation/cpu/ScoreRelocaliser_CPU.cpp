@@ -90,7 +90,7 @@ void ScoreRelocaliser_CPU::reset()
   if(!m_exampleClusterer)
   {
     m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-        ITMLibSettings::DEVICE_CPU, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
+        m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CPU);
   }
 
   // Setup the reservoirs if they haven't been allocated yet.
