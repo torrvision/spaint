@@ -118,6 +118,6 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
   outPredictions[linearIdx] = finalPrediction;
 }
 
-} // namespace grove
+}
 
-#endif // H_GROVE_SCORERELOCALISERSHARED
+#endif
