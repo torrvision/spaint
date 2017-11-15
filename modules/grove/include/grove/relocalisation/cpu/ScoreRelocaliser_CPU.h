@@ -65,6 +65,6 @@ protected:
                                           ScorePredictionsImage_Ptr &outputPredictions) const;
 };
 
-} // namespace grove
+}
 
-#endif // H_GROVE_SCORERELOCALISERCPU
+#endif

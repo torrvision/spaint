@@ -135,4 +135,4 @@ void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CP
   ORcudaKernelCheck;
 }
 
-} // namespace grove
+}
