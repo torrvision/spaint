@@ -26,7 +26,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_cluster_
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
@@ -45,7 +45,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_cluster_
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
@@ -63,7 +63,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_densitie
   float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
@@ -84,7 +84,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_parents(
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
@@ -107,7 +107,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::create_selected_
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
@@ -145,7 +145,7 @@ template <typename ExampleType, typename ClusterType, int MaxClusters>
 void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const
 {
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
@@ -161,7 +161,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::reset_temporarie
   int *nbClustersPerExampleSet = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
   {
@@ -178,7 +178,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::select_clusters(
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
