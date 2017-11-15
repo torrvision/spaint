@@ -132,4 +132,4 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPt
   }
 }
 
-} // namespace grove
+}

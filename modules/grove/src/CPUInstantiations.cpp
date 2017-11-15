@@ -33,7 +33,7 @@ namespace {
 
 template class ExampleClusterer<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
 template class ExampleClusterer_CPU<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
-template class ExampleClustererFactory<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
+template struct ExampleClustererFactory<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
 
 template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescriptor> >
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint2D,RGBDPatchDescriptor>(

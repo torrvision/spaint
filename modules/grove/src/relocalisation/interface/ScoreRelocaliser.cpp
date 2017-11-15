@@ -256,4 +256,4 @@ void ScoreRelocaliser::update_reservoir_start_idx()
   if (m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirsCount) m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
-} // namespace grove
+}

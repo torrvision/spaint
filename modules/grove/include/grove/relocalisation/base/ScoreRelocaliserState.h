@@ -52,4 +52,4 @@ typedef boost::shared_ptr<const ScoreRelocaliserState> ScoreRelocaliserState_CPt
 
 }
 
-#endif // H_GROVE_SCORERELOCALISERSTATE
+#endif
