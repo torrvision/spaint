@@ -50,14 +50,14 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
 
   // Setup and zero the indices of the current mode for each prediction
   int treeModeIdx[TREE_COUNT];
-  for (int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
+  for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
     treeModeIdx[treeIdx] = 0;
   }
 
   // Copy the selected prediction for each leaf. This is to have them contigous in memory for the following operations.
   ScorePrediction selectedPredictions[TREE_COUNT];
-  for (int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
+  for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
     selectedPredictions[treeIdx] = leafPredictions[selectedLeaves[treeIdx]];
   }
@@ -74,7 +74,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
     int bestTreeNbInliers = 0;
 
     // Find the tree having the first (not yet processed) mode with most inliers
-    for (int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
+    for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
     {
       // Index of the mode that we have to check for the current tree.
       const int currentModeIdx = treeModeIdx[treeIdx];
@@ -83,7 +83,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
       const int predictionModeCount = selectedPredictions[treeIdx].size;
 
       // If the prediction has less modes than currentModeIdx we cannot do anything for this tree.
-      if (predictionModeCount <= currentModeIdx)
+      if(predictionModeCount <= currentModeIdx)
       {
         continue;
       }
@@ -92,7 +92,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
       const Mode3DColour &currentMode = selectedPredictions[treeIdx].elts[currentModeIdx];
 
       // The current mode has more inliers than the currently best mode.
-      if (currentMode.nbInliers > bestTreeNbInliers)
+      if(currentMode.nbInliers > bestTreeNbInliers)
       {
         // Update best tree index and number of inliers.
         bestTreeIdx = treeIdx;
@@ -101,7 +101,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
     }
 
     // No valid modes in any tree. Early out.
-    if (bestTreeNbInliers == 0)
+    if(bestTreeNbInliers == 0)
     {
       break;
     }

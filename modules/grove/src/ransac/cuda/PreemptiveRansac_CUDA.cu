@@ -47,7 +47,7 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
     return;
   }
 
-  PoseCandidate &currentCandidate = poseCandidates[candidateIdx];
+  PoseCandidate& currentCandidate = poseCandidates[candidateIdx];
 
   // Compute the energy for a strided subset of inliers.
   float localEnergy = preemptive_ransac_compute_candidate_energy(
@@ -178,9 +178,10 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
+PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& settings)
+: PreemptiveRansac(settings)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Allocate memory blocks.
   m_nbPoseCandidates_device =
