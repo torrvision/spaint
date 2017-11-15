@@ -7,8 +7,8 @@
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu"
 #include "forests/cuda/DecisionForest_CUDA.tcu"
 #include "reservoirs/cuda/ExampleReservoirs_CUDA.tcu"
+#include "scoreforests/Keypoint3DColourCluster.h"
 #include "scoreforests/Keypoint3DColourClusteringUtils.h"
-#include "scoreforests/Mode3DColour.h"
 #include "scoreforests/ScorePrediction.h"
 using namespace boost;
 using namespace ORUtils;
@@ -22,7 +22,7 @@ namespace {
 //#################### EXPLICIT INSTANTIATIONS ####################
 
 template class DecisionForest_CUDA<RGBDPatchDescriptor,FOREST_TREES>;
-template class ExampleClusterer_CUDA<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
+template class ExampleClusterer_CUDA<Keypoint3DColour, Keypoint3DColourCluster, ScorePrediction::Capacity>;
 template class ExampleReservoirs_CUDA<Keypoint2D>;
 template class ExampleReservoirs_CUDA<Keypoint3DColour>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>;

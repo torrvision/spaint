@@ -9,7 +9,7 @@
 #include <ORUtils/PlatformIndependence.h>
 
 #include "../keypoints/Keypoint3DColour.h"
-#include "Mode3DColour.h"
+#include "Keypoint3DColourCluster.h"
 
 namespace grove {
 
@@ -41,7 +41,7 @@ inline float distance_squared(const Keypoint3DColour& a, const Keypoint3DColour&
  * \param outputCluster The constructed cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void create_cluster_from_examples(int key, const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, Mode3DColour& outputCluster)
+inline void create_cluster_from_examples(int key, const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, Keypoint3DColourCluster& outputCluster)
 {
   // Compute position and colour mean.
   int sampleCount = 0;

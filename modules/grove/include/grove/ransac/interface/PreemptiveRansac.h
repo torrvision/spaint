@@ -158,7 +158,7 @@ protected:
   uint32_t m_poseOptimisationMaxIterations;
 
   /** The modes used for the pose optimisation step. Each row represents the modes for a pose candidate. */
-  Mode3DColourMemoryBlock_Ptr m_poseOptimisationPredictedModes;
+  Keypoint3DColourClusterMemoryBlock_Ptr m_poseOptimisationPredictedModes;
 
   /** The minimum value that has to be reached by the step's norm during pose optimisation to terminate. */
   double m_poseOptimisationStepThreshold;

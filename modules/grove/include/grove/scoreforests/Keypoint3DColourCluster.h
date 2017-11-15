@@ -1,18 +1,16 @@
 /**
- * grove: Mode3DColour.h
+ * grove: Keypoint3DColourCluster.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_MODE3DCOLOUR
-#define H_GROVE_MODE3DCOLOUR
+#ifndef H_GROVE_KEYPOINT3DCOLOURCLUSTER
+#define H_GROVE_KEYPOINT3DCOLOURCLUSTER
 
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
-#include <ORUtils/Vector.h>
 
 namespace grove {
 
@@ -20,7 +18,7 @@ namespace grove {
  * \brief This struct represents a 3D modal cluster of points with an associated colour.
  *        Used during the camera pose regression.
  */
-struct Mode3DColour
+struct Keypoint3DColourCluster
 {
   /** The colour associated to the cluster. */
   Vector3u colour;
@@ -38,13 +36,8 @@ struct Mode3DColour
   Matrix3f positionInvCovariance;
 };
 
-typedef ORUtils::Image<Mode3DColour> Mode3DColourImage;
-typedef boost::shared_ptr<Mode3DColourImage> Mode3DColourImage_Ptr;
-typedef boost::shared_ptr<const Mode3DColourImage> Mode3DColourImage_CPtr;
-
-typedef ORUtils::MemoryBlock<Mode3DColour> Mode3DColourMemoryBlock;
-typedef boost::shared_ptr<Mode3DColourMemoryBlock> Mode3DColourMemoryBlock_Ptr;
-typedef boost::shared_ptr<const Mode3DColourMemoryBlock> Mode3DColourMemoryBlock_CPtr;
+typedef ORUtils::MemoryBlock<Keypoint3DColourCluster> Keypoint3DColourClusterMemoryBlock;
+typedef boost::shared_ptr<Keypoint3DColourClusterMemoryBlock> Keypoint3DColourClusterMemoryBlock_Ptr;
 
 }
 

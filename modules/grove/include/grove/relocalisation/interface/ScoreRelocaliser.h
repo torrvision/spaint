@@ -27,7 +27,7 @@
 #include "../../forests/interface/DecisionForest.h"
 #include "../../ransac/interface/PreemptiveRansac.h"
 #include "../../reservoirs/interface/ExampleReservoirs.h"
-#include "../../scoreforests/Mode3DColour.h"
+#include "../../scoreforests/Keypoint3DColourCluster.h"
 #include "../../scoreforests/ScorePrediction.h"
 
 namespace grove {
@@ -49,7 +49,7 @@ public:
   //#################### TYPEDEFS ####################
 public:
   typedef Keypoint3DColour ExampleType;
-  typedef Mode3DColour ClusterType;
+  typedef Keypoint3DColourCluster ClusterType;
   typedef RGBDPatchDescriptor DescriptorType;
   typedef ScorePrediction PredictionType;
 
