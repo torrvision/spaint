@@ -6,11 +6,6 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER
 #define H_GROVE_EXAMPLECLUSTERER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ORUtils/Image.h>
-#include <ORUtils/MemoryBlock.h>
-
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
@@ -38,7 +33,7 @@ namespace grove {
  *                                                                       const int *exampleKeys, int examplesCount,
  *                                                                       ClusterType& outputCluster);
  *
- *           Aggregates all the examples in the examples array that have a certain key into a single cluster mode.
+ *           Aggregates all the examples in the examples array that have a certain key into a single cluster.
  *
  * \param ExampleType  The type of example to cluster.
  * \param ClusterType  The type of cluster being generated.
@@ -215,25 +210,23 @@ private:
   virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const = 0;
 
   /**
-   * \brief Virtual function returning a pointer to the first example of the example set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
+   * \brief Gets a raw pointer to the first example of the specified example set.
    *
-   * \param exampleSets An image containing the sets of examples to be clustered (one set per row). The width of
-   *                    the image specifies the maximum number of examples that can be contained in each set.
-   * \param setIdx      The index to the first set of interest.
-   * \return            A raw pointer to the first example of the example set setIdx.
+   * \param exampleSets   An image containing the sets of examples to be clustered (one set per row). The width of
+   *                      the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetIdx The index of the example set to whose first example we want to get a pointer.
+   * \return              A raw pointer to the first example of the specified example set.
    */
-  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const = 0;
+  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t exampleSetIdx) const = 0;
 
   /**
-   * \brief Virtual function returning a pointer to the size of the example set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
+   * \brief Gets a raw pointer to the size of the specified example set.
    *
-   * \param exampleSetSizes The number of valid examples in each example set.
-   * \param setIdx          The index to the first set of interest.
-   * \return                A raw pointer to the size of the example set setIdx.
+   * \param exampleSetSizes The size each example set.
+   * \param exampleSetIdx   The index of the example set to whose size we want to get a pointer.
+   * \return                A raw pointer to the size of the specified example set.
    */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const = 0;
+  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t exampleSetIdx) const = 0;
 
   /**
    * \brief Resets the cluster containers for the example sets that are being clustered.
@@ -244,7 +237,7 @@ private:
   virtual void reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const = 0;
 
   /**
-   * \brief Resets the temporary variables needed during a find_modes call.
+   * \brief Resets the temporary variables needed during a cluster_examples call.
    *
    * \param exampleSetCapacity The maximum size of each example set.
    * \param exampleSetCount    The number of example sets being clustered.
@@ -262,7 +255,7 @@ private:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Reallocates the temporary variables needed during a find_modes call as necessary.
+   * \brief Reallocates the temporary variables needed during a cluster_examples call as necessary.
    *
    * \param exampleSetCapacity The maximum size of each example set.
    * \param exampleSetCount    The number of example sets being clustered.
