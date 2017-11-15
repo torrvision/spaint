@@ -16,7 +16,7 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-PreemptiveRansac_Ptr RansacFactory::make_preemptive_ransac(ITMLibSettings::DeviceType deviceType, const tvgutil::SettingsContainer_CPtr &settings)
+PreemptiveRansac_Ptr RansacFactory::make_preemptive_ransac(ITMLibSettings::DeviceType deviceType, const tvgutil::SettingsContainer_CPtr& settings)
 {
   PreemptiveRansac_Ptr ransac;
 

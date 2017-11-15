@@ -35,7 +35,7 @@ enum { MAX_COLOUR_DELTA = 30, SAMPLE_INLIER_ITERATIONS = 50 };
  * \return The sum of energies contributed by the inliers.
  */
 _CPU_AND_GPU_CODE_
-inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidatePose,
+inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidatePose,
                                                         const Keypoint3DColour *keypoints,
                                                         const ScorePrediction *predictions,
                                                         const int *inlierIndices,
@@ -46,21 +46,21 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
   float localEnergy = 0.f;
 
   // Strided sum loop.
-  for (uint32_t inlierIdx = inlierStartIdx; inlierIdx < nbInliers; inlierIdx += inlierStep)
+  for(uint32_t inlierIdx = inlierStartIdx; inlierIdx < nbInliers; inlierIdx += inlierStep)
   {
     const int linearIdx = inlierIndices[inlierIdx];
     const Vector3f inlierCameraCoordinates = keypoints[linearIdx].position;
     const Vector3f inlierWorldCoordinates = candidatePose * inlierCameraCoordinates;
 
     // Get the prediction associated to the current inlier.
-    const ScorePrediction &pred = predictions[linearIdx];
+    const ScorePrediction& pred = predictions[linearIdx];
 
     // Evaluate individual energy. First find the mode closest to the predicted world coordinates.
     float energy;
     int argmax = score_prediction_get_best_mode_and_energy(pred, inlierWorldCoordinates, energy);
 
     // The inlier must have at least a valid mode (made sure by the inlier sampling method). If not throw.
-    if (argmax < 0)
+    if(argmax < 0)
     {
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
       printf("prediction has no valid modes\n");
@@ -72,7 +72,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
 
     // If the best mode had no inliers throw (shouldn't be a mode, so something obviously went wrong during the
     // clustering). The original implementation (from Valentin's paper) had a simple continue.
-    if (pred.elts[argmax].nbInliers == 0)
+    if(pred.elts[argmax].nbInliers == 0)
     {
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
       printf("mode has no inliers\n");
@@ -86,7 +86,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
     energy /= static_cast<float>(pred.size);
     energy /= static_cast<float>(pred.elts[argmax].nbInliers);
 
-    if (energy < 1e-6f) energy = 1e-6f;
+    if(energy < 1e-6f) energy = 1e-6f;
     energy = -log10f(energy);
 
     localEnergy += energy;
@@ -122,9 +122,9 @@ template <typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
     preemptive_ransac_generate_candidate(const Keypoint3DColour *keypointsData,
                                          const ScorePrediction *predictionsData,
-                                         const Vector2i &imgSize,
-                                         RNG &randomGenerator,
-                                         PoseCandidate &poseCandidate,
+                                         const Vector2i& imgSize,
+                                         RNG& randomGenerator,
+                                         PoseCandidate& poseCandidate,
                                          uint32_t maxCandidateGenerationIterations,
                                          bool useAllModesPerLeafInPoseHypothesisGeneration,
                                          bool checkMinDistanceBetweenSampledModes,
@@ -138,9 +138,9 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
   // Try to generate a candidate (sample KABSCH_POINTS point pairs) for a certain number of times and return false if we
   // fail.
-  for (uint32_t iterationIdx = 0;
-       selectedPixelCount != PoseCandidate::KABSCH_POINTS && iterationIdx < maxCandidateGenerationIterations;
-       ++iterationIdx)
+  for(uint32_t iterationIdx = 0;
+      selectedPixelCount != PoseCandidate::KABSCH_POINTS && iterationIdx < maxCandidateGenerationIterations;
+      ++iterationIdx)
   {
     // Sample a pixel in the input image.
     const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width - 1);
@@ -148,14 +148,14 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
     const int linearFeatureIdx = y * imgSize.width + x;
 
     // Grab its associated keypoint and continue only if it's valid.
-    const Keypoint3DColour &selectedKeypoint = keypointsData[linearFeatureIdx];
+    const Keypoint3DColour& selectedKeypoint = keypointsData[linearFeatureIdx];
     // Invalid keypoint, try again.
-    if (!selectedKeypoint.valid) continue;
+    if(!selectedKeypoint.valid) continue;
 
     // Grab its associated score prediction.
-    const ScorePrediction &selectedPrediction = predictionsData[linearFeatureIdx];
+    const ScorePrediction& selectedPrediction = predictionsData[linearFeatureIdx];
     // If the prediction has no modes, try again.
-    if (selectedPrediction.size == 0) continue;
+    if(selectedPrediction.size == 0) continue;
 
     // Either use the first mode or select one randomly, depending on the parameters.
     const int selectedModeIdx = useAllModesPerLeafInPoseHypothesisGeneration
@@ -167,7 +167,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
     const Vector3f selectedFeatureCameraPt = selectedKeypoint.position;
 
     // If this is the first pixel, check that the pixel colour corresponds with the selected mode's colour.
-    if (selectedPixelCount == 0)
+    if(selectedPixelCount == 0)
     {
       const Vector3i colourDiff =
           selectedKeypoint.colour.toInt() - selectedPrediction.elts[selectedModeIdx].colour.toInt();
@@ -175,44 +175,44 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
                                     abs(colourDiff.z) <= MAX_COLOUR_DELTA;
 
       // If not try to sample another pixel.
-      if (!consistentColour) continue;
+      if(!consistentColour) continue;
     }
 
-    if (checkMinDistanceBetweenSampledModes)
+    if(checkMinDistanceBetweenSampledModes)
     {
       // Check that this mode is far enough from the other modes in world coordinates.
       bool farEnough = true;
 
-      for (int idxOther = 0; farEnough && idxOther < selectedPixelCount; ++idxOther)
+      for(int idxOther = 0; farEnough && idxOther < selectedPixelCount; ++idxOther)
       {
         const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
         const int otherModeIdx = selectedPixelMode[idxOther];
-        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
+        const ScorePrediction& otherPrediction = predictionsData[otherLinearIdx];
 
         const Vector3f otherModeWorldPt = otherPrediction.elts[otherModeIdx].position;
         const Vector3f diff = otherModeWorldPt - selectedModeWorldPt;
 
         // If they are too close, drop the current pixel and try to sample another one.
         const float distOtherSq = dot(diff, diff);
-        if (distOtherSq < minSqDistanceBetweenSampledModes)
+        if(distOtherSq < minSqDistanceBetweenSampledModes)
         {
           farEnough = false;
         }
       }
 
-      if (!farEnough) continue;
+      if(!farEnough) continue;
     }
 
-    if (checkRigidTransformationConstraint)
+    if(checkRigidTransformationConstraint)
     {
       // Check that the sampled point pairs represent a quasi rigid triangle.
       bool violatesConditions = false;
 
-      for (int m = 0; m < selectedPixelCount && !violatesConditions; ++m)
+      for(int m = 0; m < selectedPixelCount && !violatesConditions; ++m)
       {
         const int otherModeIdx = selectedPixelMode[m];
         const int otherLinearIdx = selectedPixelLinearIdx[m];
-        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
+        const ScorePrediction& otherPrediction = predictionsData[otherLinearIdx];
 
         // First check that the current keypoint is far enough from the other keypoints, similarly to the previous
         // check.
@@ -220,7 +220,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
         const Vector3f diffCamera = otherFeatureCameraPt - selectedFeatureCameraPt;
         const float distCameraSq = dot(diffCamera, diffCamera);
 
-        if (distCameraSq < minSqDistanceBetweenSampledModes)
+        if(distCameraSq < minSqDistanceBetweenSampledModes)
         {
           violatesConditions = true;
           break;
@@ -233,14 +233,14 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
         const float distWorld = length(diffWorld);
         const float distCamera = sqrtf(distCameraSq);
-        if (fabsf(distCamera - distWorld) > 0.5f * maxTranslationErrorForCorrectPose)
+        if(fabsf(distCamera - distWorld) > 0.5f * maxTranslationErrorForCorrectPose)
         {
           violatesConditions = true;
         }
       }
 
       // If we failed try to sample another pixel.
-      if (violatesConditions) continue;
+      if(violatesConditions) continue;
     }
 
     // We succeeded, save the current pixel raster index and the selected mode index.
@@ -250,7 +250,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
   }
 
   // Reached limit of iterations and didn't find enough points. Early out.
-  if (selectedPixelCount != PoseCandidate::KABSCH_POINTS) return false;
+  if(selectedPixelCount != PoseCandidate::KABSCH_POINTS) return false;
 
   // Populate resulting pose candidate (except the actual pose that is computed on the CPU due to the Kabsch
   // implementation which is currently CPU only).
@@ -259,14 +259,14 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
   poseCandidate.energy = 0.f;
 
   // Copy the camera and corresponding world points.
-  for (int s = 0; s < selectedPixelCount; ++s)
+  for(int s = 0; s < selectedPixelCount; ++s)
   {
     const int linearIdx = selectedPixelLinearIdx[s];
     const int modeIdx = selectedPixelMode[s];
 
-    const Keypoint3DColour &selectedKeypoint = keypointsData[linearIdx];
-    const ScorePrediction &selectedPrediction = predictionsData[linearIdx];
-    const Mode3DColour &selectedMode = selectedPrediction.elts[modeIdx];
+    const Keypoint3DColour& selectedKeypoint = keypointsData[linearIdx];
+    const ScorePrediction& selectedPrediction = predictionsData[linearIdx];
+    const Mode3DColour& selectedMode = selectedPrediction.elts[modeIdx];
 
     poseCandidate.pointsCamera[s] = selectedKeypoint.position;
     poseCandidate.pointsWorld[s] = selectedMode.position;
@@ -288,16 +288,16 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
                                                         uint32_t inlierIdx)
 {
   const int inlierLinearIdx = inlierIndices[inlierIdx];
-  const PoseCandidate &poseCandidate = poseCandidates[candidateIdx];
+  const PoseCandidate& poseCandidate = poseCandidates[candidateIdx];
   const Vector3f inlierCameraPosition = keypoints[inlierLinearIdx].position;
   const Vector3f inlierWorldPosition = poseCandidate.cameraPose * inlierCameraPosition;
-  const ScorePrediction &prediction = predictions[inlierLinearIdx];
+  const ScorePrediction& prediction = predictions[inlierLinearIdx];
 
   // Find the best mode, do not rely on the one stored in the inlier because for the randomly sampled inliers it will
   // not be set.
   // We also assume that the inlier is valid (we checked that before, when we selected it).
   const int bestModeIdx = score_prediction_get_best_mode(prediction, inlierWorldPosition);
-  if (bestModeIdx < 0 || bestModeIdx >= prediction.size)
+  if(bestModeIdx < 0 || bestModeIdx >= prediction.size)
   {
     // This point should not have been selected as inlier.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
@@ -308,13 +308,13 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
 #endif
   }
 
-  const Mode3DColour &bestMode = prediction.elts[bestModeIdx];
+  const Mode3DColour& bestMode = prediction.elts[bestModeIdx];
 
   uint32_t outputIdx = candidateIdx * nbInliers + inlierIdx; // The index in the row associated to the current candidate.
 
   // We add this pair to the vector of pairs to be evaluated iff the predicted mode and the world position estimated
   // by the current camera pose agree.
-  if (length(bestMode.position - inlierWorldPosition) >= inlierThreshold)
+  if(length(bestMode.position - inlierWorldPosition) >= inlierThreshold)
   {
     inlierCameraPoints[outputIdx] = Vector4f(0.f);
     return;
@@ -341,28 +341,28 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
 template <bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Keypoint3DColour *keypointsData,
                                                                        const ScorePrediction *predictionsData,
-                                                                       const Vector2i &imgSize,
-                                                                       RNG &randomGenerator,
+                                                                       const Vector2i& imgSize,
+                                                                       RNG& randomGenerator,
                                                                        int *inlierMaskData = NULL)
 {
   int inlierLinearIdx = -1;
 
   // Limit the number of sampling attempts.
-  for (int iterationIdx = 0; inlierLinearIdx < 0 && iterationIdx < SAMPLE_INLIER_ITERATIONS; ++iterationIdx)
+  for(int iterationIdx = 0; inlierLinearIdx < 0 && iterationIdx < SAMPLE_INLIER_ITERATIONS; ++iterationIdx)
   {
     // Sample a keypoint index.
     const int linearIdx = randomGenerator.generate_int_from_uniform(0, imgSize.width * imgSize.height - 1);
 
     // Check that we have a valid keypoint.
-    if (!keypointsData[linearIdx].valid) continue;
+    if(!keypointsData[linearIdx].valid) continue;
 
     // Check that we have a prediction with a non null number of modes.
-    if (predictionsData[linearIdx].size == 0) continue;
+    if(predictionsData[linearIdx].size == 0) continue;
 
     // Finally, check the mask if necessary.
     bool validIndex = !useMask;
 
-    if (useMask)
+    if(useMask)
     {
       int *maskPtr = &inlierMaskData[linearIdx];
       int maskValue = -1;
@@ -382,7 +382,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Key
       validIndex = maskValue == 0;
     }
 
-    if (validIndex) inlierLinearIdx = linearIdx;
+    if(validIndex) inlierLinearIdx = linearIdx;
   }
 
   return inlierLinearIdx;

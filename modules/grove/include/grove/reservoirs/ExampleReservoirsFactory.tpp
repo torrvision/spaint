@@ -21,7 +21,7 @@ ExampleReservoirsFactory<ExampleType>::make_reservoirs(uint32_t reservoirCount, 
 {
   Reservoirs_Ptr reservoir;
 
-  if (deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     reservoir.reset(new ExampleReservoirs_CUDA<ExampleType>(reservoirCount, reservoirCapacity, rngSeed));

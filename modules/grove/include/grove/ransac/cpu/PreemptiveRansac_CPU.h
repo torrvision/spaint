@@ -76,7 +76,7 @@ private:
    *
    * \param candidate The pose hypothesis to evaluate.
    */
-  void compute_pose_energy(PoseCandidate &candidate) const;
+  void compute_pose_energy(PoseCandidate& candidate) const;
 
   /**
    * \brief Initialises the random number generators in a deterministic manner.

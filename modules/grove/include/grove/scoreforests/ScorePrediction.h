@@ -49,7 +49,7 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction &pred
   maxScore = 0.0f;
 
   // Iterate over all the modal clusters stored in the struct.
-  for (int m = 0; m < prediction.size; ++m)
+  for(int m = 0; m < prediction.size; ++m)
   {
     const Mode3DColour &currentMode = prediction.elts[m];
 
@@ -67,7 +67,7 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction &pred
     const float score = nbPts * evalGaussian;
 
     // If the point is "closer" to the center of the anisotropic gaussian associated to this mode, store its index.
-    if (score > maxScore)
+    if(score > maxScore)
     {
       maxScore = score;
       argmax = m;

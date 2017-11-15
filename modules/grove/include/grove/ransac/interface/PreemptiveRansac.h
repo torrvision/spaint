@@ -70,8 +70,8 @@ public:
    *
    * \return The estimated pose if successful, an empty optional value otherwise.
    */
-  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr &keypoints,
-                                               const ScorePredictionsImage_CPtr &forestPredictions);
+  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypoints,
+                                               const ScorePredictionsImage_CPtr& forestPredictions);
 
   /**
    * \brief Returns the best poses estimated by the P-RANSAC algorithm.
@@ -79,7 +79,7 @@ public:
    * \param poseCandidates Output array that will be filled with the best poses estimated by P-RANSAC.
    *                       Poses are sorted in descending quality order.
    */
-  void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
+  void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
   /**
    * \brief Gets the minimum number of points that have to be valid for the algorithm to attempt the pose estimation.
