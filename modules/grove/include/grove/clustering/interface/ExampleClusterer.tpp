@@ -96,13 +96,13 @@ void ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>::cluster_examples(co
   m_clusterSizes->UpdateHostFromDevice();
   exampleSetSizes->UpdateHostFromDevice();
 
-  for (uint32_t i = 0; i < exampleSetCount; ++i)
+  for(uint32_t i = 0; i < exampleSetCount; ++i)
   {
     std::cout << "Example set " << i + exampleSetStart << " has "
               << m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU)[i + exampleSetStart] << " clusters and "
               << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[i + exampleSetStart] << " elements.\n";
 
-    for (int j = 0; j < m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU)[i + exampleSetStart]; ++j)
+    for(int j = 0; j < m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU)[i + exampleSetStart]; ++j)
     {
       std::cout << "\tCluster " << j << ": "
                 << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[(i + exampleSetStart) * exampleSetCapacity + j] << " elements.\n";

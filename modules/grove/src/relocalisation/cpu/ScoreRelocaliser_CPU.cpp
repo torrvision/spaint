@@ -52,7 +52,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
 
 ScorePrediction ScoreRelocaliser_CPU::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
   {
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
@@ -62,7 +62,7 @@ ScorePrediction ScoreRelocaliser_CPU::get_raw_prediction(uint32_t treeIdx, uint3
 
 std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
   {
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
@@ -122,9 +122,9 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPt
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (int y = 0; y < imgSize.y; ++y)
+  for(int y = 0; y < imgSize.y; ++y)
   {
-    for (int x = 0; x < imgSize.x; ++x)
+    for(int x = 0; x < imgSize.x; ++x)
     {
       get_prediction_for_leaf_shared(
           leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);

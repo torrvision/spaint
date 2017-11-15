@@ -48,7 +48,7 @@ struct PoseCandidate
  * \return Whether the energy of the first is lower than the energy of the second candidate.
  */
 _CPU_AND_GPU_CODE_
-inline bool operator <(const PoseCandidate &first, const PoseCandidate &second)
+inline bool operator<(const PoseCandidate& first, const PoseCandidate& second)
 {
   return first.energy < second.energy;
 }

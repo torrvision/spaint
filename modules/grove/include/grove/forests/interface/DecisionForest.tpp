@@ -203,7 +203,7 @@ void DecisionForest<DescriptorType,TreeCount>::load_structure_from_file(const st
       // The magic numbers mimic the distribution found in the pre-trained office forest.
       bool depthFeature = rng.generate_real_from_uniform(0.f, 1.f) < 0.3886f;
 
-      if (depthFeature)
+      if(depthFeature)
       {
         node.featureIdx = rng.generate_int_from_uniform(0, 127);
 
