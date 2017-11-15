@@ -22,6 +22,25 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
+SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
+SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
+
+##
+SET(clustering_cpu_headers include/grove/clustering/cpu/ExampleClusterer_CPU.h)
+SET(clustering_cpu_templates include/grove/clustering/cpu/ExampleClusterer_CPU.tpp)
+
+##
+SET(clustering_cuda_headers include/grove/clustering/cuda/ExampleClusterer_CUDA.h)
+SET(clustering_cuda_templates include/grove/clustering/cuda/ExampleClusterer_CUDA.tcu)
+
+##
+SET(clustering_interface_headers include/grove/clustering/interface/ExampleClusterer.h)
+SET(clustering_interface_templates include/grove/clustering/interface/ExampleClusterer.tpp)
+
+##
+SET(clustering_shared_headers include/grove/clustering/shared/ExampleClusterer_Shared.h)
+
+##
 SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 SET(features_templates include/grove/features/FeatureCalculatorFactory.tpp)
@@ -114,6 +133,10 @@ ${numbers_sources}
 )
 
 SET(headers
+${clustering_headers}
+${clustering_cpu_headers}
+${clustering_interface_headers}
+${clustering_shared_headers}
 ${features_headers}
 ${features_base_headers}
 ${features_cpu_headers}
@@ -133,6 +156,9 @@ ${util_headers}
 )
 
 SET(templates
+${clustering_templates}
+${clustering_cpu_templates}
+${clustering_interface_templates}
 ${features_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
@@ -146,12 +172,14 @@ ${reservoirs_interface_templates}
 
 IF(WITH_CUDA)
   SET(headers ${headers}
+    ${clustering_cuda_headers}
     ${features_cuda_headers}
     ${forests_cuda_headers}
     ${reservoirs_cuda_headers}
   )
 
   SET(templates ${templates}
+    ${clustering_cuda_templates}
     ${features_cuda_templates}
     ${forests_cuda_templates}
     ${reservoirs_cuda_templates}
@@ -162,6 +190,11 @@ ENDIF()
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP(clustering FILES ${clustering_headers} ${clustering_templates})
+SOURCE_GROUP(clustering\\cpu FILES ${clustering_cpu_headers} ${clustering_cpu_templates})
+SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
+SOURCE_GROUP(clustering\\interface FILES ${clustering_interface_headers} ${clustering_interface_templates})
+SOURCE_GROUP(clustering\\shared FILES ${clustering_shared_headers})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers} ${features_templates})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_templates})
