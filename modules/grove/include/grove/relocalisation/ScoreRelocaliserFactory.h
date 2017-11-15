@@ -37,6 +37,6 @@ public:
                                                      const std::string &forestFilename);
 };
 
-} // namespace grove
+}
 
-#endif // H_GROVE_SCORERELOCALISERFACTORY
+#endif

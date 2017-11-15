@@ -23,13 +23,12 @@ ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSetti
 {
   ScoreRelocaliser_Ptr relocaliser;
 
-  if (deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     relocaliser.reset(new ScoreRelocaliser_CUDA(settings, forestFilename));
 #else
-    throw std::runtime_error(
-        "Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
@@ -40,4 +39,4 @@ ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSetti
   return relocaliser;
 }
 
-} // namespace grove
+}
