@@ -11,15 +11,15 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::ExampleClusterer_CPU(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
-: ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::ExampleClusterer_CPU(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
+: ExampleClusterer<ExampleType,ClusterType,MaxClusters>(sigma, tau, maxClusterCount, minClusterSize)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
@@ -37,8 +37,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
   }
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
@@ -56,9 +56,9 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_cluster
   }
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densities(const ExampleType *examples, const int *exampleSetSizes,
-                                                                                   uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_densities(const ExampleType *examples, const int *exampleSetSizes,
+                                                                                  uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
 
@@ -74,9 +74,9 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_densiti
   }
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
-                                                                                 uint32_t exampleSetCount, float tauSq)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                                                                uint32_t exampleSetCount, float tauSq)
 {
   int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
@@ -98,10 +98,10 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::compute_parents
   }
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes,
-                                                                                          uint32_t exampleSetCapacity, uint32_t exampleSetCount,
-                                                                                          ClusterContainer *clusterContainers)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::create_selected_clusters(const ExampleType *examples, const int *exampleSetSizes,
+                                                                                         uint32_t exampleSetCapacity, uint32_t exampleSetCount,
+                                                                                         ClusterContainer *clusterContainers)
 {
   int *clusterIndices = this->m_clusterIndices->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
@@ -121,28 +121,28 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::create_selected
   }
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-typename ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::ClusterContainer *
-ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+typename ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::ClusterContainer *
+ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const
 {
   return clusterContainers->GetData(MEMORYDEVICE_CPU) + exampleSetIdx;
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-const ExampleType *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+const ExampleType *ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const
 {
   const int setCapacity = exampleSets->noDims.width;
   return exampleSets->GetData(MEMORYDEVICE_CPU) + setIdx * setCapacity;
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-const int *ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+const int *ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const
 {
   return exampleSetSizes->GetData(MEMORYDEVICE_CPU) + setIdx;
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const
 {
 #ifdef WITH_OPENMP
 #pragma omp parallel for
@@ -153,8 +153,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_cluster_c
   }
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
@@ -169,8 +169,8 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::reset_temporari
   }
 }
 
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer_CPU<ExampleType,ClusterType,MAX_CLUSTERS>::select_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::select_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount)
 {
   const int *clusterSizeHistograms = this->m_clusterSizeHistograms->GetData(MEMORYDEVICE_CPU);
   const int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
