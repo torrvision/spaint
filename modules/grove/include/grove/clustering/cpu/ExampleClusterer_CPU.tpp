@@ -149,7 +149,7 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::reset_cluster_co
 #endif
   for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    reset_cluster_container(clusterContainers, exampleSetIdx);
+    reset_cluster_container(exampleSetIdx, clusterContainers);
   }
 }
 
@@ -163,9 +163,9 @@ void ExampleClusterer_CPU<ExampleType,ClusterType,MaxClusters>::reset_temporarie
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
+  for(int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
-    reset_temporaries_for_set(setIdx, exampleSetCapacity, nbClustersPerExampleSet, clusterSizes, clusterSizeHistograms);
+    reset_temporaries_for_set(exampleSetIdx, exampleSetCapacity, nbClustersPerExampleSet, clusterSizes, clusterSizeHistograms);
   }
 }
 
