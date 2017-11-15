@@ -11,7 +11,7 @@
 namespace grove {
 
 /**
- * \brief An instance of this class can find clusters from a set of examples using CUDA.
+ * \brief An instance of this class can be used to cluster sets of examples using CUDA.
  *
  * See the base class template for additional documentation.
  *
