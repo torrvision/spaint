@@ -11,7 +11,7 @@
 namespace grove {
 
 /**
- * \brief An instance of this class can find clusters from a set of examples using the CPU.
+ * \brief An instance of this class can be used to cluster sets of examples using the CPU.
  *
  * See the base class template for additional documentation.
  *
