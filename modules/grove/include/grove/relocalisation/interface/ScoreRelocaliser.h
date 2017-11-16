@@ -96,7 +96,7 @@ public:
    * \param poseCandidates Output array that will be filled with the best poses estimated by the relocaliser.
    *                       Poses are sorted in descending quality order.
    */
-  void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
+  void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
   /**
    * \brief Returns a pointer to an image containing the keypoints used to perform the relocalisation.
@@ -133,7 +133,7 @@ public:
    *
    * \param relocaliserState The relocaliser state.
    */
-  void set_relocaliser_state(const ScoreRelocaliserState_Ptr &relocaliserState);
+  void set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState);
 
   /**
    * \brief Updates the contents of each cluster.
@@ -186,9 +186,9 @@ protected:
    * \param outputPredictions An image wherein each element represent the modal clsters associated to the predicted
    *                          leaves.
    */
-  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                          const ScorePredictionsBlock_CPtr &leafPredictions,
-                                          ScorePredictionsImage_Ptr &outputPredictions) const = 0;
+  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                          const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                          ScorePredictionsImage_Ptr& outputPredictions) const = 0;
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
