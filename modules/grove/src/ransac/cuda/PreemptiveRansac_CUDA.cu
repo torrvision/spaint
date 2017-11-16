@@ -117,7 +117,7 @@ __global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keyp
                                                                       const PoseCandidate *poseCandidates,
                                                                       int nbPoseCandidates,
                                                                       Vector4f *inlierCameraPoints,
-                                                                      Mode3DColour *inlierModes,
+                                                                      Keypoint3DColourCluster *inlierModes,
                                                                       float inlierThreshold)
 {
   const int candidateIdx = blockIdx.y;
@@ -291,7 +291,7 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
 
   // Grap pointers to the output storage.
   Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
-  Mode3DColour *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(256);
   dim3 gridSize((nbInliers + blockSize.x - 1) / blockSize.x, nbPoseCandidates);
