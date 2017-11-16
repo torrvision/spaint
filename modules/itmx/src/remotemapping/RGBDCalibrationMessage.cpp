@@ -42,10 +42,12 @@ ITMRGBDCalib RGBDCalibrationMessage::extract_calib() const
 
   calib.disparityCalib.SetFrom(params.x, params.y, type);
 
-  calib.intrinsics_d.projectionParamsSimple.all = *reinterpret_cast<const Vector4f*>(p);
+  Vector4f projectionParams = *reinterpret_cast<const Vector4f*>(p);
+  calib.intrinsics_d.SetFrom(projectionParams[0], projectionParams[1], projectionParams[2], projectionParams[3]);
   p += sizeof(Vector4f);
 
-  calib.intrinsics_rgb.projectionParamsSimple.all = *reinterpret_cast<const Vector4f*>(p);
+  projectionParams = *reinterpret_cast<const Vector4f*>(p);
+  calib.intrinsics_rgb.SetFrom(projectionParams[0], projectionParams[1], projectionParams[2], projectionParams[3]);
   p += sizeof(Vector4f);
 
   const Matrix4f m = *reinterpret_cast<const Matrix4f*>(p);
