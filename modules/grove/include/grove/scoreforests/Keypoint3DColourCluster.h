@@ -47,84 +47,77 @@ typedef boost::shared_ptr<Keypoint3DColourClusterMemoryBlock> Keypoint3DColourCl
 //#################### FUNCTIONS ####################
 
 /**
- * \brief Constructs a modal cluster given a certain number of example keypoints.
+ * \brief Constructs a modal cluster from those examples in an input list of examples that have the specified key.
  *
- * \note  Each example has an associated key, only examples with key equal to "key"
- *        are used to construct the cluster.
- *
- * \param key           Only examples having key equal to this parameter are used to compute the cluster parameters.
- * \param examples      The example keypoints that potentially may be part of the cluster.
- * \param exampleKeys   Keys associated to each example.
- * \param examplesCount The number of examples.
+ * \param key           The key associated with the cluster. Only examples with this key are used to compute the cluster parameters.
+ * \param examples      An input list of examples.
+ * \param exampleKeys   The keys associated with each example.
+ * \param exampleCount  The number of examples in the input list.
  * \param outputCluster The constructed cluster.
  */
 _CPU_AND_GPU_CODE_
-inline void create_cluster_from_examples(int key, const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, Keypoint3DColourCluster& outputCluster)
+inline void create_cluster_from_examples(int key, const Keypoint3DColour *examples, const int *exampleKeys, int exampleCount, Keypoint3DColourCluster& outputCluster)
 {
-  // Compute position and colour mean.
-  int sampleCount = 0;
-  Vector3f positionMean(0.f);
-  Vector3f colourMean(0.f);
+  // First, compute the cluster's position and colour by averaging the positions and colours of the examples that have the specified key.
+  int nbInliers = 0;
+  Vector3f positionMean(0.0f, 0.0f, 0.0f);
+  Vector3f colourMean(0.0f, 0.0f, 0.0f);
 
-  // Iterate over all examples and use only those belonging to cluster key.
-  for(int sampleIdx = 0; sampleIdx < examplesCount; ++sampleIdx)
+  for(int exampleIdx = 0; exampleIdx < exampleCount; ++exampleIdx)
   {
-    const int sampleCluster = exampleKeys[sampleIdx];
-    if(sampleCluster == key)
+    if(exampleKeys[exampleIdx] == key)
     {
-      const Keypoint3DColour &sample = examples[sampleIdx];
-
-      ++sampleCount;
-      positionMean += sample.position;
-      colourMean += sample.colour.toFloat();
+      const Keypoint3DColour& example = examples[exampleIdx];
+      positionMean += example.position;
+      colourMean += example.colour.toFloat();
+      ++nbInliers;
     }
   }
 
-  // This mode is invalid.
-  if(sampleCount <= 1)
+  if(nbInliers > 1)
   {
-// Should never reach this point since we should have checked minClusterSize earlier.
+    positionMean /= static_cast<float>(nbInliers);
+    colourMean /= static_cast<float>(nbInliers);
+  }
+  else
+  {
+    // If the cluster contains fewer than two examples, something has gone wrong, so signal an error. This should never
+    // happen in practice, since the clusterer is designed to only construct clusters whose size is >= minClusterSize.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-    printf("create_cluster_from_examples: got a cluster with less than 2 elements.\n");
+    printf("Error: create_cluster_from_examples: One of the clusters has less than 2 elements.\n");
     asm("trap;");
 #else
-    throw std::runtime_error("create_cluster_from_examples: got a cluster with less than 2 elements.");
+    throw std::runtime_error("Error: create_cluster_from_examples: One of the clusters has less than 2 elements.");
 #endif
   }
 
-  positionMean /= static_cast<float>(sampleCount);
-  colourMean /= static_cast<float>(sampleCount);
-
-  // Now iterate again and compute the covariance.
+  // Next, iterate again and compute the covariance matrix and its determinant.
   Matrix3f positionCovariance;
   positionCovariance.setZeros();
 
-  for(int sampleIdx = 0; sampleIdx < examplesCount; ++sampleIdx)
+  for(int exampleIdx = 0; exampleIdx < exampleCount; ++exampleIdx)
   {
-    const int sampleCluster = exampleKeys[sampleIdx];
-
-    if(sampleCluster == key)
+    if(exampleKeys[exampleIdx] == key)
     {
-      const Keypoint3DColour& sample = examples[sampleIdx];
+      const Keypoint3DColour& example = examples[exampleIdx];
 
       for(int i = 0; i < 3; ++i)
       {
         for(int j = 0; j < 3; ++j)
         {
-          positionCovariance.m[i * 3 + j] +=
-              (sample.position.v[i] - positionMean.v[i]) * (sample.position.v[j] - positionMean.v[j]);
+          positionCovariance.m[i * 3 + j] += (example.position.v[i] - positionMean.v[i]) * (example.position.v[j] - positionMean.v[j]);
         }
       }
     }
   }
 
-  positionCovariance /= static_cast<float>(sampleCount - 1);
+  positionCovariance /= static_cast<float>(nbInliers - 1);
   const float positionDeterminant = positionCovariance.det();
 
-  // Fill the cluster.
+  // Finally, fill in the output cluster using the computed values.
   outputCluster.colour = colourMean.toUChar();
   outputCluster.determinant = positionDeterminant;
-  outputCluster.nbInliers = sampleCount;
+  outputCluster.nbInliers = nbInliers;
   outputCluster.position = positionMean;
   positionCovariance.inv(outputCluster.positionInvCovariance);
 }
