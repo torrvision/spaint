@@ -15,8 +15,7 @@
 namespace grove {
 
 /**
- * \brief This struct represents a 3D modal cluster of points with an associated colour.
- *        Used during the camera pose regression.
+ * \brief An instance of this struct represents a modal cluster of 3D points with associated colours, as used during camera pose regression.
  */
 struct Keypoint3DColourCluster
 {
@@ -26,13 +25,13 @@ struct Keypoint3DColourCluster
   /** The determinant of the covariance matrix. */
   float determinant;
 
-  /** The number of points part of the modal cluster. */
+  /** The number of points that belong to the cluster. */
   int nbInliers;
 
   /** The position (in world coordinates) of the cluster. */
   Vector3f position;
 
-  /** The inverse covariance matrix of the points belonging to the cluster. Needed to compute Mahalanobis distances. */
+  /** The inverse covariance matrix of the points belonging to the cluster. This is needed to compute Mahalanobis distances. */
   Matrix3f positionInvCovariance;
 };
 
