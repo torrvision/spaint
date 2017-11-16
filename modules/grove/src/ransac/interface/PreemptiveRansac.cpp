@@ -215,7 +215,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 
   const uint32_t poseOptimisationBufferSize = m_nbMaxInliers * m_maxPoseCandidates;
   m_poseOptimisationCameraPoints = mbf.make_block<Vector4f>(poseOptimisationBufferSize);
-  m_poseOptimisationPredictedModes = mbf.make_block<Mode3DColour>(poseOptimisationBufferSize);
+  m_poseOptimisationPredictedModes = mbf.make_block<Keypoint3DColourCluster>(poseOptimisationBufferSize);
 
 #ifdef ENABLE_TIMERS
   // Force the average timers to on as well if we want verbose printing.
@@ -490,7 +490,7 @@ namespace {
 struct PointsForLM
 {
   const Vector4f *cameraPoints;
-  const Mode3DColour *predictedModes;
+  const Keypoint3DColourCluster *predictedModes;
   uint32_t nbPoints; // Comes last to avoid padding.
 };
 

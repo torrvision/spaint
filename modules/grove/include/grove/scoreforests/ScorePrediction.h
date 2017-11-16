@@ -11,13 +11,13 @@
 #include <itmx/base/ITMImagePtrTypes.h>
 
 #include "../util/Array.h"
-#include "Mode3DColour.h"
+#include "Keypoint3DColourCluster.h"
 
 namespace grove {
 
 //#################### TYPEDEFS ####################
 
-typedef Array<Mode3DColour, 50> ScorePrediction;
+typedef Array<Keypoint3DColourCluster, 50> ScorePrediction;
 
 typedef ORUtils::MemoryBlock<ScorePrediction> ScorePredictionsBlock;
 typedef boost::shared_ptr<ScorePredictionsBlock> ScorePredictionsBlock_Ptr;
@@ -51,7 +51,7 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction &pred
   // Iterate over all the modal clusters stored in the struct.
   for(int m = 0; m < prediction.size; ++m)
   {
-    const Mode3DColour &currentMode = prediction.elts[m];
+    const Keypoint3DColourCluster &currentMode = prediction.elts[m];
 
     const Vector3f diff = v - currentMode.position;
 

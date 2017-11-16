@@ -111,7 +111,7 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
 
   // Grap pointers to the output storage.
   Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
-  Mode3DColour *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
+  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for

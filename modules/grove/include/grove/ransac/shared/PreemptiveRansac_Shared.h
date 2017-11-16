@@ -266,7 +266,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
     const Keypoint3DColour& selectedKeypoint = keypointsData[linearIdx];
     const ScorePrediction& selectedPrediction = predictionsData[linearIdx];
-    const Mode3DColour& selectedMode = selectedPrediction.elts[modeIdx];
+    const Keypoint3DColourCluster& selectedMode = selectedPrediction.elts[modeIdx];
 
     poseCandidate.pointsCamera[s] = selectedKeypoint.position;
     poseCandidate.pointsWorld[s] = selectedMode.position;
@@ -282,7 +282,7 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
                                                         uint32_t nbInliers,
                                                         const PoseCandidate *poseCandidates,
                                                         Vector4f *inlierCameraPoints,
-                                                        Mode3DColour *inlierModes,
+                                                        Keypoint3DColourCluster *inlierModes,
                                                         float inlierThreshold,
                                                         uint32_t candidateIdx,
                                                         uint32_t inlierIdx)
@@ -308,7 +308,7 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
 #endif
   }
 
-  const Mode3DColour& bestMode = prediction.elts[bestModeIdx];
+  const Keypoint3DColourCluster& bestMode = prediction.elts[bestModeIdx];
 
   uint32_t outputIdx = candidateIdx * nbInliers + inlierIdx; // The index in the row associated to the current candidate.
 
