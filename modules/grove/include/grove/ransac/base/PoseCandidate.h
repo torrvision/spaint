@@ -10,47 +10,48 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include <ORUtils/Matrix.h>
 #include <ORUtils/MemoryBlock.h>
-#include <ORUtils/Vector.h>
 
 namespace grove {
 
 /**
- * \brief This struct represents a candidate camera pose.
+ * \brief An instance of this struct represents a candidate camera pose.
  */
 struct PoseCandidate
 {
+  //#################### CONSTANTS ####################
+
   /** The minimum number of points required to estimate a camera pose via the Kabsch algorithm. */
   enum { KABSCH_POINTS = 3 };
+
+  //#################### PUBLIC VARIABLES ####################
 
   /** The candidate camera pose. */
   Matrix4f cameraPose;
 
-  /** The energy associated to the pose candidate. */
+  /** The energy associated with the pose candidate. */
   float energy;
 
-  /** Points in camera reference frame used to estimate the cameraPose. */
+  /** The points in the camera's reference frame that were used to estimate the camera pose. */
   Vector3f pointsCamera[KABSCH_POINTS];
 
-  /** Points in world reference frame used to estimate the cameraPose. */
+  /** The points in the world reference frame that were used to estimate the camera pose. */
   Vector3f pointsWorld[KABSCH_POINTS];
 };
 
 //#################### OPERATORS ####################
 
 /**
- * \brief Custom operator used to compare candidate camera poses by energy.
+ * \brief Compares two pose candidates based on their energies.
  *
- * \param first  A pose candidate.
- * \param second A second pose candidate.
- *
- * \return Whether the energy of the first is lower than the energy of the second candidate.
+ * \param lhs     The first pose candidate.
+ * \param rhs     The second pose candidate.
+ * \return        true, if the energy of the first pose candidate is less than the energy of the second pose candidate, or false otherwise.
  */
 _CPU_AND_GPU_CODE_
-inline bool operator<(const PoseCandidate& first, const PoseCandidate& second)
+inline bool operator<(const PoseCandidate& lhs, const PoseCandidate& rhs)
 {
-  return first.energy < second.energy;
+  return lhs.energy < rhs.energy;
 }
 
 //#################### TYPEDEFS ####################
