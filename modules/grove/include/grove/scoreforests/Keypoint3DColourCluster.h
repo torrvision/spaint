@@ -51,7 +51,7 @@ typedef boost::shared_ptr<Keypoint3DColourClusterMemoryBlock> Keypoint3DColourCl
  *
  * \param key           The key associated with the cluster. Only examples with this key are used to compute the cluster parameters.
  * \param examples      An input list of examples.
- * \param exampleKeys   The keys associated with each example.
+ * \param exampleKeys   The keys associated with the examples (one per example).
  * \param exampleCount  The number of examples in the input list.
  * \param outputCluster The constructed cluster.
  */
