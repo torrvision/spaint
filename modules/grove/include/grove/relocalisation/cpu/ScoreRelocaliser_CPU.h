@@ -63,9 +63,9 @@ protected:
    * \param outputPredictions An image wherein each element represent the modal clsters associated to the predicted
    *                          leaves.
    */
-  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                          const ScorePredictionsBlock_CPtr &leafPredictions,
-                                          ScorePredictionsImage_Ptr &outputPredictions) const;
+  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                          const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                          ScorePredictionsImage_Ptr& outputPredictions) const;
 };
 
 }

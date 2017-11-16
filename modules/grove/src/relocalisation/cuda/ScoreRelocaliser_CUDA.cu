@@ -129,9 +129,9 @@ void ScoreRelocaliser_CUDA::reset()
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                                       const ScorePredictionsBlock_CPtr &leafPredictions,
-                                                       ScorePredictionsImage_Ptr &outputPredictions) const
+void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                                       const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                                       ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);

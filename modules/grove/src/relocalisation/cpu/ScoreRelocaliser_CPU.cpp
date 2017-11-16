@@ -106,9 +106,9 @@ void ScoreRelocaliser_CPU::reset()
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                                      const ScorePredictionsBlock_CPtr &leafPredictions,
-                                                      ScorePredictionsImage_Ptr &outputPredictions) const
+void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                                      const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                                      ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
@@ -120,14 +120,13 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPt
   ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int y = 0; y < imgSize.y; ++y)
   {
     for(int x = 0; x < imgSize.x; ++x)
     {
-      get_prediction_for_leaf_shared(
-          leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);
+      get_prediction_for_leaf_shared(leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);
     }
   }
 }
