@@ -121,6 +121,11 @@ SET(reservoirs_interface_templates include/grove/reservoirs/interface/ExampleRes
 SET(reservoirs_shared_headers include/grove/reservoirs/shared/ExampleReservoirs_Shared.h)
 
 ##
+SET(scoreforests_headers
+include/grove/scoreforests/Keypoint3DColourCluster.h
+)
+
+##
 SET(util_headers include/grove/util/Array.h)
 
 #################################################################
@@ -152,6 +157,7 @@ ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
 ${reservoirs_shared_headers}
+${scoreforests_headers}
 ${util_headers}
 )
 
@@ -213,6 +219,7 @@ SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_te
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_templates})
 SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})
 SOURCE_GROUP(reservoirs\\shared FILES ${reservoirs_shared_headers})
+SOURCE_GROUP(scoreforests FILES ${scoreforests_headers})
 SOURCE_GROUP(util FILES ${util_headers})
 
 ##########################################
