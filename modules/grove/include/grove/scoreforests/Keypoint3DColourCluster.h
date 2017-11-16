@@ -6,11 +6,9 @@
 #ifndef H_GROVE_KEYPOINT3DCOLOURCLUSTER
 #define H_GROVE_KEYPOINT3DCOLOURCLUSTER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Utils/ITMMath.h>
-
 #include <ORUtils/MemoryBlock.h>
+
+#include "../keypoints/Keypoint3DColour.h"
 
 namespace grove {
 
