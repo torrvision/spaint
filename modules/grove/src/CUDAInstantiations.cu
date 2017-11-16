@@ -8,7 +8,6 @@
 #include "forests/cuda/DecisionForest_CUDA.tcu"
 #include "reservoirs/cuda/ExampleReservoirs_CUDA.tcu"
 #include "scoreforests/Keypoint3DColourCluster.h"
-#include "scoreforests/Keypoint3DColourClusteringUtils.h"
 #include "scoreforests/ScorePrediction.h"
 using namespace boost;
 using namespace ORUtils;

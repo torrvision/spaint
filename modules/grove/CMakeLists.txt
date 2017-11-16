@@ -177,7 +177,6 @@ SET(reservoirs_shared_headers include/grove/reservoirs/shared/ExampleReservoirs_
 ##
 SET(scoreforests_headers
 include/grove/scoreforests/Keypoint3DColourCluster.h
-include/grove/scoreforests/Keypoint3DColourClusteringUtils.h
 include/grove/scoreforests/ScorePrediction.h
 )
 

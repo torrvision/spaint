@@ -20,7 +20,6 @@
 #include "reservoirs/interface/ExampleReservoirs.tpp"
 
 #include "scoreforests/Keypoint3DColourCluster.h"
-#include "scoreforests/Keypoint3DColourClusteringUtils.h"
 #include "scoreforests/ScorePrediction.h"
 
 namespace grove {
