@@ -36,16 +36,16 @@ private:
   /** The ID of the old GPU on which calls were previously being performed, so that it can be restored later. */
   mutable int m_oldDevice;
 
-  /** The ID of the GPU on which relocalisation calls should be performed. */
+  /** The ID of the GPU on which calls to the decorated relocaliser should be performed. */
   int m_relocalisationDevice;
 
   /** The relocaliser to decorate. */
   Relocaliser_Ptr m_relocaliser;
 
   /**
-   * An atomic flag recording whether or not the relocaliser is currently running. This is used to prevent attempts
-   * to train or update the relocaliser during relocalisation, since these would block the main thread and make the
-   * application less responsive.
+   * An atomic flag recording whether or not a relocalisation is currently running. This is used to prevent attempts
+   * to train or update the decorated relocaliser during relocalisation, since these would block the main thread and
+   * make the application less responsive.
    */
   mutable boost::atomic<bool> m_relocaliserRunning;
 
@@ -55,7 +55,7 @@ public:
    * \brief Constructs a background relocaliser.
    *
    * \param relocaliser           The relocaliser to decorate.
-   * \param relocalisationDevice  The ID of the GPU on which relocalisation calls should be performed.
+   * \param relocalisationDevice  The ID of the GPU on which calls to the decorated relocaliser should be performed.
    */
   BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser, int relocalisationDevice);
 
@@ -92,7 +92,7 @@ private:
   void to_old_gpu() const;
 
   /**
-   * \brief Sets the current GPU to the one on which relocalisation calls should be performed.
+   * \brief Sets the current GPU to the one on which calls to the decorated relocaliser should be performed.
    */
   void to_relocalisation_gpu() const;
 };
