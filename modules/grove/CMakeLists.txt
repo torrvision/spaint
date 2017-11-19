@@ -102,6 +102,11 @@ include/grove/numbers/CUDARNG.h
 )
 
 ##
+SET(ransac_shared_headers
+include/grove/ransac/shared/PoseCandidate.h
+)
+
+##
 SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)
 SET(reservoirs_templates include/grove/reservoirs/ExampleReservoirsFactory.tpp)
 
@@ -153,6 +158,7 @@ ${forests_interface_headers}
 ${forests_shared_headers}
 ${keypoints_headers}
 ${numbers_headers}
+${ransac_shared_headers}
 ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
@@ -214,6 +220,7 @@ SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_int
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
+SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_templates})
