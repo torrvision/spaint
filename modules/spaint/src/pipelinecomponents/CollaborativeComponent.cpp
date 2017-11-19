@@ -33,7 +33,7 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
   m_stopRelocalisationThread(false)
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
-  m_context->get_pose_graph_optimiser()->start();
+  m_context->get_collaborative_pose_optimiser()->start();
 }
 
 //#################### DESTRUCTOR ####################
@@ -70,12 +70,12 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
+std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
 {
-  std::list<SubmapRelocalisation> candidates;
+  std::list<CollaborativeRelocalisation> candidates;
 
   const int sceneCount = static_cast<int>(m_trajectories.size());
-  if(sceneCount < 2) return std::list<SubmapRelocalisation>();
+  if(sceneCount < 2) return std::list<CollaborativeRelocalisation>();
 
   for(size_t i = 0; i < desiredCandidateCount; ++i)
   {
@@ -103,18 +103,18 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_random_candidat
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
     const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
 
-    candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+    candidates.push_back(CollaborativeRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
   }
 
   return candidates;
 }
 
-std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_candidate() const
+std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequential_candidate() const
 {
-  std::list<SubmapRelocalisation> candidates;
+  std::list<CollaborativeRelocalisation> candidates;
 
   const int sceneCount = static_cast<int>(m_trajectories.size());
-  if(sceneCount < 2) return std::list<SubmapRelocalisation>();
+  if(sceneCount < 2) return std::list<CollaborativeRelocalisation>();
 
   std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it1 = m_trajectories.begin();
   std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it2 = m_trajectories.begin();
@@ -138,7 +138,7 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_cand
     {
       const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
       const ORUtils::SE3Pose& localPoseJ = trajectoryJ[frameIndexJ];
-      candidates.push_back(SubmapRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+      candidates.push_back(CollaborativeRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
       return candidates;
     }
   }
@@ -146,7 +146,7 @@ std::list<SubmapRelocalisation> CollaborativeComponent::generate_sequential_cand
   return candidates;
 }
 
-bool CollaborativeComponent::is_verified(const SubmapRelocalisation& candidate) const
+bool CollaborativeComponent::is_verified(const CollaborativeRelocalisation& candidate) const
 {
   return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
 }
@@ -161,7 +161,7 @@ void CollaborativeComponent::output_results() const
   std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\tGoodStatus\n\n";
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
-    const SubmapRelocalisation& result = m_results[i];
+    const CollaborativeRelocalisation& result = m_results[i];
 
     std::string finalStatus;
     if(is_verified(result))
@@ -185,7 +185,7 @@ void CollaborativeComponent::output_results() const
     }
 
     std::string goodStatus;
-    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform = m_context->get_pose_graph_optimiser()->try_get_relative_transform(result.m_sceneI, result.m_sceneJ);
+    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform = m_context->get_collaborative_pose_optimiser()->try_get_relative_transform(result.m_sceneI, result.m_sceneJ);
     if(!relativeTransform)
     {
       goodStatus = "Unknown";
@@ -366,7 +366,7 @@ void CollaborativeComponent::run_relocalisation()
     {
       // cjTwi^-1 * cjTwj = wiTcj * cjTwj = wiTwj
       m_bestCandidate->m_relativePose = ORUtils::SE3Pose(result->pose.GetInvM() * m_bestCandidate->m_localPoseJ.GetM());
-      m_context->get_pose_graph_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
+      m_context->get_collaborative_pose_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
       std::cout << "succeeded!" << std::endl;
 
 #ifdef WITH_OPENCV
@@ -393,22 +393,22 @@ void CollaborativeComponent::run_relocalisation()
   }
 }
 
-void CollaborativeComponent::score_candidates(std::list<SubmapRelocalisation>& candidates) const
+void CollaborativeComponent::score_candidates(std::list<CollaborativeRelocalisation>& candidates) const
 {
-  for(std::list<SubmapRelocalisation>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+  for(std::list<CollaborativeRelocalisation>::iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
   {
-    SubmapRelocalisation& candidate = *it;
+    CollaborativeRelocalisation& candidate = *it;
 
     // Boost candidates that may attach new confident nodes to the graph.
-    PoseGraphOptimiser_CPtr poseGraphOptimiser = m_context->get_pose_graph_optimiser();
-    boost::optional<ORUtils::SE3Pose> globalPoseI = poseGraphOptimiser->try_get_estimated_global_pose(candidate.m_sceneI);
-    boost::optional<ORUtils::SE3Pose> globalPoseJ = poseGraphOptimiser->try_get_estimated_global_pose(candidate.m_sceneJ);
+    CollaborativePoseOptimiser_CPtr poseOptimiser = m_context->get_collaborative_pose_optimiser();
+    boost::optional<ORUtils::SE3Pose> globalPoseI = poseOptimiser->try_get_estimated_global_pose(candidate.m_sceneI);
+    boost::optional<ORUtils::SE3Pose> globalPoseJ = poseOptimiser->try_get_estimated_global_pose(candidate.m_sceneJ);
     float newNodeBoost = (globalPoseI && !globalPoseJ) || (globalPoseJ && !globalPoseI) ? 1.0f : 0.0f;
 
     // Penalise candidates that will only add to an existing confident edge.
-    boost::optional<PoseGraphOptimiser::SE3PoseCluster> largestCluster = poseGraphOptimiser->try_get_largest_cluster(candidate.m_sceneI, candidate.m_sceneJ);
+    boost::optional<CollaborativePoseOptimiser::SE3PoseCluster> largestCluster = poseOptimiser->try_get_largest_cluster(candidate.m_sceneI, candidate.m_sceneJ);
     int largestClusterSize = largestCluster ? static_cast<int>(largestCluster->size()) : 0;
-    float confidencePenalty = 1.0f * std::max(largestClusterSize - PoseGraphOptimiser::confidence_threshold(), 0);
+    float confidencePenalty = 1.0f * std::max(largestClusterSize - CollaborativePoseOptimiser::confidence_threshold(), 0);
 
     // Penalise candidates that are too close to ones we've tried before.
     float homogeneityPenalty = 0.0f;
@@ -436,7 +436,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
 #if 1
   // Randomly generate a list of candidate relocalisations.
   const size_t desiredCandidateCount = 10;
-  std::list<SubmapRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
+  std::list<CollaborativeRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
 #else
   // Generate the frames from the source scene in order, for evaluation purposes.
   std::list<SubmapRelocalisation> candidates = generate_sequential_candidate();
@@ -447,7 +447,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
   score_candidates(candidates);
 
   // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
-  candidates.sort(bind(&SubmapRelocalisation::m_candidateScore, _1) < bind(&SubmapRelocalisation::m_candidateScore, _2));
+  candidates.sort(bind(&CollaborativeRelocalisation::m_candidateScore, _1) < bind(&CollaborativeRelocalisation::m_candidateScore, _2));
 
 #if 0
   // Print out all of the candidates for debugging purposes.
@@ -467,7 +467,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
     if(!m_bestCandidate)
     {
       // Schedule the best candidate for relocalisation.
-      m_bestCandidate.reset(new SubmapRelocalisation(candidates.back()));
+      m_bestCandidate.reset(new CollaborativeRelocalisation(candidates.back()));
       candidates.pop_back();
       canRelocalise = true;
 

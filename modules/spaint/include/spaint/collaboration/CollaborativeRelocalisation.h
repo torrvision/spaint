@@ -1,10 +1,10 @@
 /**
- * spaint: SubmapRelocalisation.h
+ * spaint: CollaborativeRelocalisation.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_SUBMAPRELOCALISATION
-#define H_SPAINT_SUBMAPRELOCALISATION
+#ifndef H_SPAINT_COLLABORATIVERELOCALISATION
+#define H_SPAINT_COLLABORATIVERELOCALISATION
 
 #include <boost/optional.hpp>
 
@@ -19,25 +19,28 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this struct represents a relocalisation between the scenes of two agents during a collaborative reconstruction.
+ *
+ * These are used by the collaborative relocaliser, which repeatedly chooses a scene pair (i,j) and attempts to relocalise an individual
+ * frame of scene j using the (local) relocaliser of scene i.
  */
-struct SubmapRelocalisation
+struct CollaborativeRelocalisation
 {
   //#################### PUBLIC VARIABLES ####################
 
-  /** TODO */
+  /** The score of this relocalisation as a candidate (used during relocalisation scheduling). */
   float m_candidateScore;
 
-  /** TODO */
+  /** The intrinsics of the depth camera used to capture scene j. */
   Vector4f m_depthIntrinsicsJ;
 
-  /** TODO */
+  /** The index of the frame in scene j's trajectory that is being relocalised against scene i. */
   int m_frameIndexJ;
 
   /** TODO */
   itmx::Relocaliser::Quality m_initialRelocalisationQuality;
 
-  /** TODO */
+  /** The local pose of the frame being relocalised in scene j's coordinate system. */
   ORUtils::SE3Pose m_localPoseJ;
 
 #ifdef WITH_OPENCV
@@ -48,10 +51,10 @@ struct SubmapRelocalisation
   /** TODO */
   boost::optional<ORUtils::SE3Pose> m_relativePose;
 
-  /** TODO */
+  /** The ID of scene i. */
   std::string m_sceneI;
 
-  /** TODO */
+  /** The ID of scene j. */
   std::string m_sceneJ;
 
   /** TODO */
@@ -59,7 +62,7 @@ struct SubmapRelocalisation
 
   //#################### CONSTRUCTORS ####################
 
-  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndexJ, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
+  CollaborativeRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndexJ, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
   : m_candidateScore(0.0f),
     m_depthIntrinsicsJ(depthIntrinsicsJ),
     m_frameIndexJ(frameIndexJ),

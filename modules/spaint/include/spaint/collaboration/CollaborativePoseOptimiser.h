@@ -1,10 +1,10 @@
 /**
- * spaint: PoseGraphOptimiser.h
+ * spaint: CollaborativePoseOptimiser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_POSEGRAPHOPTIMISER
-#define H_SPAINT_POSEGRAPHOPTIMISER
+#ifndef H_SPAINT_COLLABORATIVEPOSEOPTIMISER
+#define H_SPAINT_COLLABORATIVEPOSEOPTIMISER
 
 #include <set>
 
@@ -21,7 +21,7 @@ namespace spaint {
 /**
  * \brief TODO
  */
-class PoseGraphOptimiser
+class CollaborativePoseOptimiser
 {
   //#################### TYPEDEFS ####################
 public:
@@ -60,16 +60,16 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a pose graph optimiser.
+   * \brief Constructs a collaborative pose optimiser.
    */
-  PoseGraphOptimiser();
+  CollaborativePoseOptimiser();
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys the pose graph optimiser.
+   * \brief Destroys the collaborative pose optimiser.
    */
-  ~PoseGraphOptimiser();
+  ~CollaborativePoseOptimiser();
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -174,8 +174,8 @@ private:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<PoseGraphOptimiser> PoseGraphOptimiser_Ptr;
-typedef boost::shared_ptr<const PoseGraphOptimiser> PoseGraphOptimiser_CPtr;
+typedef boost::shared_ptr<CollaborativePoseOptimiser> CollaborativePoseOptimiser_Ptr;
+typedef boost::shared_ptr<const CollaborativePoseOptimiser> CollaborativePoseOptimiser_CPtr;
 
 }
 
