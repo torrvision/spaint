@@ -10,19 +10,19 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 CollaborativeContext::CollaborativeContext()
-: m_poseGraphOptimiser(new PoseGraphOptimiser)
+: m_collaborativePoseOptimiser(new CollaborativePoseOptimiser)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-const PoseGraphOptimiser_Ptr& CollaborativeContext::get_pose_graph_optimiser()
+const CollaborativePoseOptimiser_Ptr& CollaborativeContext::get_collaborative_pose_optimiser()
 {
-  return m_poseGraphOptimiser;
+  return m_collaborativePoseOptimiser;
 }
 
-PoseGraphOptimiser_CPtr CollaborativeContext::get_pose_graph_optimiser() const
+CollaborativePoseOptimiser_CPtr CollaborativeContext::get_collaborative_pose_optimiser() const
 {
-  return m_poseGraphOptimiser;
+  return m_collaborativePoseOptimiser;
 }
 
 }

@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "collaboration/PoseGraphOptimiser.h"
+#include "collaboration/CollaborativePoseOptimiser.h"
 using namespace ORUtils;
 
 #include <deque>
@@ -24,28 +24,28 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-PoseGraphOptimiser::PoseGraphOptimiser()
+CollaborativePoseOptimiser::CollaborativePoseOptimiser()
 : m_relativeTransformSamplesChanged(false),
   m_shouldTerminate(false)
 {}
 
 //#################### DESTRUCTOR ####################
 
-PoseGraphOptimiser::~PoseGraphOptimiser()
+CollaborativePoseOptimiser::~CollaborativePoseOptimiser()
 {
   terminate();
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-int PoseGraphOptimiser::confidence_threshold()
+int CollaborativePoseOptimiser::confidence_threshold()
 {
   return 2;
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample, CollaborationMode mode)
+void CollaborativePoseOptimiser::add_relative_transform_sample(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample, CollaborationMode mode)
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
@@ -74,12 +74,12 @@ void PoseGraphOptimiser::add_relative_transform_sample(const std::string& sceneI
 #endif
 }
 
-void PoseGraphOptimiser::start()
+void CollaborativePoseOptimiser::start()
 {
-  m_optimisationThread.reset(new boost::thread(boost::bind(&PoseGraphOptimiser::run_pose_graph_optimisation, this)));
+  m_optimisationThread.reset(new boost::thread(boost::bind(&CollaborativePoseOptimiser::run_pose_graph_optimisation, this)));
 }
 
-void PoseGraphOptimiser::terminate()
+void CollaborativePoseOptimiser::terminate()
 {
   m_shouldTerminate = true;
 
@@ -91,21 +91,21 @@ void PoseGraphOptimiser::terminate()
   }
 }
 
-boost::optional<SE3Pose> PoseGraphOptimiser::try_get_estimated_global_pose(const std::string& sceneID) const
+boost::optional<SE3Pose> CollaborativePoseOptimiser::try_get_estimated_global_pose(const std::string& sceneID) const
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
   std::map<std::string,ORUtils::SE3Pose>::const_iterator it = m_estimatedGlobalPoses.find(sceneID);
   return it != m_estimatedGlobalPoses.end() ? boost::optional<SE3Pose>(it->second) : boost::none;
 }
 
-boost::optional<PoseGraphOptimiser::SE3PoseCluster>
-PoseGraphOptimiser::try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const
+boost::optional<CollaborativePoseOptimiser::SE3PoseCluster>
+CollaborativePoseOptimiser::try_get_largest_cluster(const std::string& sceneI, const std::string& sceneJ) const
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
   return try_get_largest_cluster_sub(sceneI, sceneJ);
 }
 
-boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
+boost::optional<std::pair<SE3Pose,size_t> > CollaborativePoseOptimiser::try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
@@ -120,7 +120,7 @@ boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-bool PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample, CollaborationMode mode)
+bool CollaborativePoseOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample, CollaborationMode mode)
 {
 #if DEBUGGING
   std::cout << "Adding sample: " << sceneI << "<-" << sceneJ << '\n'
@@ -166,7 +166,7 @@ bool PoseGraphOptimiser::add_relative_transform_sample_sub(const std::string& sc
   return newCluster.size() >= confidence_threshold();
 }
 
-void PoseGraphOptimiser::run_pose_graph_optimisation()
+void CollaborativePoseOptimiser::run_pose_graph_optimisation()
 {
   std::cout << "Starting pose graph optimisation thread" << std::endl;
 
@@ -330,8 +330,8 @@ void PoseGraphOptimiser::run_pose_graph_optimisation()
   }
 }
 
-boost::optional<PoseGraphOptimiser::SE3PoseCluster>
-PoseGraphOptimiser::try_get_largest_cluster_sub(const std::string& sceneI, const std::string& sceneJ) const
+boost::optional<CollaborativePoseOptimiser::SE3PoseCluster>
+CollaborativePoseOptimiser::try_get_largest_cluster_sub(const std::string& sceneI, const std::string& sceneJ) const
 {
   // Try to look up the sample clusters of the relative transformation from the coordinate system of scene j to that of scene i.
   std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
@@ -356,7 +356,7 @@ PoseGraphOptimiser::try_get_largest_cluster_sub(const std::string& sceneI, const
   return largestCluster ? boost::optional<SE3PoseCluster>(*largestCluster) : boost::none;
 }
 
-boost::optional<std::pair<SE3Pose,size_t> > PoseGraphOptimiser::try_get_relative_transform_sub(const std::string& sceneI, const std::string& sceneJ) const
+boost::optional<std::pair<SE3Pose,size_t> > CollaborativePoseOptimiser::try_get_relative_transform_sub(const std::string& sceneI, const std::string& sceneJ) const
 {
   boost::optional<SE3PoseCluster> largestCluster = try_get_largest_cluster_sub(sceneI, sceneJ);
   return largestCluster ? boost::optional<std::pair<SE3Pose,size_t> >(std::make_pair(GeometryUtil::blend_poses(*largestCluster), largestCluster->size())) : boost::none;
