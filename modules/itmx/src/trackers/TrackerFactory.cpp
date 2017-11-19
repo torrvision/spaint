@@ -16,6 +16,8 @@ using namespace ITMLib;
 #include <tvgutil/persistence/PropertyUtil.h>
 using namespace tvgutil;
 
+#include "trackers/RemoteTracker.h"
+
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
 #endif
@@ -33,22 +35,22 @@ Tracker_Ptr TrackerFactory::make_tracker_from_file(const std::string& trackerCon
                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                    const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                    const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                                   NestingFlag nestingFlag)
+                                                   const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
 {
   Tree tree = PropertyUtil::load_properties_from_xml_file(trackerConfigFilename);
   Tree trackerTree = tree.get_child("tracker");
-  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag);
+  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag);
 }
 
 Tracker_Ptr TrackerFactory::make_tracker_from_string(const std::string& trackerConfig, bool trackSurfels,
                                                      const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                      const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                      const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                                     NestingFlag nestingFlag)
+                                                     const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
 {
   Tree tree = PropertyUtil::load_properties_from_xml_string(trackerConfig);
   Tree trackerTree = tree.get_child("tracker");
-  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag);
+  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag);
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
@@ -57,13 +59,17 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
                                                 const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                 const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                 const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                                NestingFlag nestingFlag)
+                                                const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
 {
   ITMTracker *tracker = NULL;
 
   // If the user wants to construct a non-InfiniTAM tracker (e.g. a Rift or Vicon tracker),
   // try to construct it, falling back on the InfiniTAM tracker if it doesn't work.
-  if(trackerType == "rift")
+  if(trackerType == "remote")
+  {
+    tracker = new RemoteTracker(mappingServer, boost::lexical_cast<int>(trackerParams));
+  }
+  else if(trackerType == "rift")
   {
 #ifdef WITH_OVR
     // If the Rift isn't available, make sure that we're not trying to use the Rift tracker.
@@ -132,7 +138,7 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                          const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                          const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                         NestingFlag nestingFlag)
+                                         const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
 {
   std::string trackerType, trackerParams;
   PropertyUtil::get_required_property(trackerTree, "<xmlattr>.type", trackerType);
@@ -156,7 +162,8 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
 
       Tracker_Ptr nestedTracker = make_tracker(
         it->second, trackSurfels, rgbImageSize, depthImageSize,
-        lowLevelEngine, imuCalibrator, settings, fallibleTracker, NESTED
+        lowLevelEngine, imuCalibrator, settings, fallibleTracker,
+        mappingServer, NESTED
       );
 
       compositeTracker->AddTracker(nestedTracker.get());
@@ -187,15 +194,15 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
 
     // Import the tracker configuration from the specified file.
     return make_tracker_from_file(
-      trackerConfigFilename, trackSurfels, rgbImageSize, depthImageSize,
-      lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag
+      trackerConfigFilename, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine,
+      imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag
     );
   }
   else
   {
     return make_simple_tracker(
-      trackerType, trackerParams, trackSurfels, rgbImageSize, depthImageSize,
-      lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag
+      trackerType, trackerParams, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine,
+      imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag
     );
   }
 }

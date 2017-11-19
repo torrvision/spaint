@@ -23,6 +23,7 @@ using namespace ORUtils;
 #endif
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
+#include <itmx/remotemapping/RGBDCalibrationMessage.h>
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
 
@@ -118,6 +119,7 @@ void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
 bool SLAMComponent::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
+  if(!m_imageSourceEngine->hasImagesNow()) return true;
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
@@ -213,6 +215,21 @@ bool SLAMComponent::process_frame()
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
     }
 
+    // If a mapping client is active, use it to send the current frame to the remote mapping server.
+    if(m_mappingClient)
+    {
+      MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_mappingClient->begin_push_frame_message();
+      boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
+      if(elt)
+      {
+        RGBDFrameMessage& msg = **elt;
+        msg.set_frame_index(static_cast<int>(m_fusedFramesCount));
+        msg.set_pose(*trackingState->pose_d);
+        msg.set_rgb_image(inputRGBImage);
+        msg.set_depth_image(inputRawDepthImage);
+      }
+    }
+
     ++m_fusedFramesCount;
   }
   else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
@@ -278,6 +295,34 @@ void SLAMComponent::set_detect_fiducials(bool detectFiducials)
 void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 {
   m_fusionEnabled = fusionEnabled;
+}
+
+void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
+{
+  m_mappingClient = mappingClient;
+
+  // If we're using a mapping client, send an initial calibration message across to the server.
+  if(m_mappingClient)
+  {
+    SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
+
+    RGBDCalibrationMessage calibMsg;
+    calibMsg.set_rgb_image_size(slamState->get_rgb_image_size());
+    calibMsg.set_depth_image_size(slamState->get_depth_image_size());
+    calibMsg.set_calib(m_imageSourceEngine->getCalib());
+
+    // TODO: Allow these to be configured from the command line.
+#ifdef WITH_OPENCV
+    calibMsg.set_depth_compression_type(DEPTH_COMPRESSION_PNG);
+    calibMsg.set_rgb_compression_type(RGB_COMPRESSION_JPG);
+#else
+    calibMsg.set_depth_compression_type(DEPTH_COMPRESSION_NONE);
+    calibMsg.set_rgb_compression_type(RGB_COMPRESSION_NONE);
+#endif
+
+    std::cout << "Sending calibration message" << std::endl;
+    m_mappingClient->send_calibration_message(calibMsg);
+  }
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -402,13 +447,16 @@ void SLAMComponent::setup_relocaliser()
 
 void SLAMComponent::setup_tracker()
 {
+  const MappingServer_Ptr& mappingServer = m_context->get_mapping_server();
   const Settings_CPtr& settings = m_context->get_settings();
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
 
   m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-  m_tracker = TrackerFactory::make_tracker_from_string(m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker);
+  m_tracker = TrackerFactory::make_tracker_from_string(
+    m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker, mappingServer
+  );
 }
 
 }

@@ -9,6 +9,7 @@
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMDenseSurfelMapper.h>
 
+#include <itmx/remotemapping/MappingClient.h>
 #include <itmx/trackers/FallibleTracker.h>
 
 #include "SLAMContext.h"
@@ -97,6 +98,9 @@ private:
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
+
+  /** The mapping client (if any) to use to communicate with the remote mapping server. */
+  itmx::MappingClient_Ptr m_mappingClient;
 
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
@@ -193,6 +197,13 @@ public:
    * \param fusionEnabled Whether or not the user wants fusion to be run.
    */
   void set_fusion_enabled(bool fusionEnabled);
+
+  /**
+   * \brief Sets the mapping client (if any) to use to communicate with the remote mapping server.
+   *
+   * \param mappingClient The mapping client (if any) to use to communicate with the remote mapping server.
+   */
+  void set_mapping_client(const itmx::MappingClient_Ptr& mappingClient);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

@@ -49,6 +49,9 @@ private:
   /** The ID of the fiducial (if any) from which to obtain the Leap Motion controller's coordinate frame. */
   std::string m_leapFiducialID;
 
+  /** The remote mapping server (if any). */
+  itmx::MappingServer_Ptr m_mappingServer;
+
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
@@ -84,8 +87,9 @@ public:
    * \param settings        The settings to use for InfiniTAM.
    * \param resourcesDir    The path to the resources directory.
    * \param maxLabelCount   The maximum number of labels that can be in use.
+   * \param mappingServer   The remote mapping server (if any).
    */
-  Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount);
+  Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount, const itmx::MappingServer_Ptr& mappingServer);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -110,6 +114,13 @@ public:
    * \return  The label manager.
    */
   virtual spaint::LabelManager_CPtr get_label_manager() const;
+
+  /**
+   * \brief Gets the remote mapping server (if any).
+   *
+   * \return  The remote mapping server (if any).
+   */
+  virtual const itmx::MappingServer_Ptr& get_mapping_server();
 
   /**
    * \brief Gets the path to the resources directory.

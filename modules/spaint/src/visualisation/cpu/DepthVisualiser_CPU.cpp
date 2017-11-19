@@ -14,6 +14,8 @@ namespace spaint {
 void DepthVisualiser_CPU::render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::ITMRenderState *renderState,
                                        float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const
 {
+  if(!renderState) return;
+
   int imgSize = outputImage->noDims.x * outputImage->noDims.y;
   float *outRendering = outputImage->GetData(MEMORYDEVICE_CPU);
   const Vector4f *pointsRay = renderState->raycastResult->GetData(MEMORYDEVICE_CPU);

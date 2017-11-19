@@ -124,6 +124,11 @@ void Application::set_batch_mode_enabled(bool batchModeEnabled)
   m_paused = m_pauseBetweenFrames = !batchModeEnabled;
 }
 
+void Application::set_server_mode_enabled(bool serverModeEnabled)
+{
+  m_paused = m_pauseBetweenFrames = !serverModeEnabled;
+}
+
 void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
   m_frameDebugHook = frameDebugHook;

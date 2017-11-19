@@ -5,6 +5,7 @@
 
 #include "Model.h"
 using namespace ORUtils;
+using namespace itmx;
 using namespace tvginput;
 
 #include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
@@ -27,8 +28,9 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount, const MappingServer_Ptr& mappingServer)
 : m_labelManager(new LabelManager(maxLabelCount)),
+  m_mappingServer(mappingServer),
   m_resourcesDir(resourcesDir),
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),
@@ -61,6 +63,11 @@ const LabelManager_Ptr& Model::get_label_manager()
 LabelManager_CPtr Model::get_label_manager() const
 {
   return m_labelManager;
+}
+
+const MappingServer_Ptr& Model::get_mapping_server()
+{
+  return m_mappingServer;
 }
 
 const std::string& Model::get_resources_dir() const

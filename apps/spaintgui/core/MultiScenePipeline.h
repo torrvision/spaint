@@ -89,8 +89,9 @@ public:
    * \param settings      The settings to use for InfiniTAM.
    * \param resourcesDir  The path to the resources directory.
    * \param maxLabelCount The maximum number of labels that can be in use.
+   * \param mappingServer The remote mapping server (if any).
    */
-  MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
+  MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr());
 
   //#################### DESTRUCTOR ####################
 public:
@@ -195,6 +196,14 @@ public:
    * \param fusionEnabled Whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    */
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
+
+  /**
+   * \brief Sets the mapping client (if any) for the specified scene.
+   *
+   * \param sceneID       The scene ID.
+   * \param mappingClient The mapping client (if any) for the specified scene.
+   */
+  void set_mapping_client(const std::string& sceneID, const itmx::MappingClient_Ptr& mappingClient);
 
   /**
    * \brief Toggles whether or not the world scene's object segmentation component (if any) should write to its output pipe.
