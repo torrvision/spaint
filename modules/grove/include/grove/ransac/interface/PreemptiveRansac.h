@@ -226,8 +226,7 @@ public:
    *
    * \return The estimated pose if successful, an empty optional value otherwise.
    */
-  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypoints,
-                                               const ScorePredictionsImage_CPtr& forestPredictions);
+  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypoints, const ScorePredictionsImage_CPtr& forestPredictions);
 
   /**
    * \brief Returns the best poses estimated by the P-RANSAC algorithm.
