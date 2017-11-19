@@ -21,28 +21,41 @@ class BackgroundRelocaliser : public Relocaliser
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /**
+   * An internal image in which to store a copy of a colour image that we are trying to pass to the decorated relocaliser.
+   * This internal image will be accessible from the GPU on which relocalisation calls will be performed.
+   */
   mutable ITMUChar4Image_Ptr m_colourImage;
 
-  /** TODO */
+  /**
+   * An internal image in which to store a copy of a depth image that we are trying to pass to the decorated relocaliser.
+   * This internal image will be accessible from the GPU on which relocalisation calls will be performed.
+   */
   mutable ITMFloatImage_Ptr m_depthImage;
 
   /** The ID of the old GPU on which calls were previously being performed, so that it can be restored later. */
   mutable int m_oldDevice;
 
-  /** The ID of the GPU on which relocalisation calls should be performed. */
+  /** The ID of the GPU on which calls to the decorated relocaliser should be performed. */
   int m_relocalisationDevice;
 
   /** The relocaliser to decorate. */
   Relocaliser_Ptr m_relocaliser;
 
-  /** TODO */
+  /**
+   * An atomic flag recording whether or not a relocalisation is currently running. This is used to prevent attempts
+   * to train or update the decorated relocaliser during relocalisation, since these would block the main thread and
+   * make the application less responsive.
+   */
   mutable boost::atomic<bool> m_relocaliserRunning;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a background relocaliser.
+   *
+   * \param relocaliser           The relocaliser to decorate.
+   * \param relocalisationDevice  The ID of the GPU on which calls to the decorated relocaliser should be performed.
    */
   BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser, int relocalisationDevice);
 
@@ -67,17 +80,22 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Makes internal copies of the specified colour and depth images that can be accessed from the relocalisation GPU.
+   *
+   * \note  The input images must be accessible on the CPU at the point at which this function is called.
+   *
+   * \param colourImage The colour image to copy.
+   * \param depthImage  The depth image to copy.
    */
   void copy_images(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage) const;
 
   /**
-   * \brief TODO
+   * \brief Sets the current GPU to the one on which calls were previously being performed.
    */
   void to_old_gpu() const;
 
   /**
-   * \brief TODO
+   * \brief Sets the current GPU to the one on which calls to the decorated relocaliser should be performed.
    */
   void to_relocalisation_gpu() const;
 };

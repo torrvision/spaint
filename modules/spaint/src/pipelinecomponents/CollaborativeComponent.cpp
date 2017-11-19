@@ -91,7 +91,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
       for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
       {
-        if(!m_context->get_pose_graph_optimiser()->try_get_estimated_global_pose(sceneIDs[sceneIdx]))
+        if(!m_context->get_collaborative_pose_optimiser()->try_get_estimated_global_pose(sceneIDs[sceneIdx]))
         {
           consistentReconstruction = false;
           break;
@@ -184,7 +184,6 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
   {
     const std::string& sceneI = n == 0 ? scene1 : scene2;
     const std::string& sceneJ = n == 0 ? scene2 : scene1;
-    const std::deque<ORUtils::SE3Pose>& trajectoryI = n == 0 ? it1->second : it2->second;
     const std::deque<ORUtils::SE3Pose>& trajectoryJ = n == 0 ? it2->second : it1->second;
 
     // Try to add a candidate to relocalise the next untried frame (if any) of scene j against scene i.
