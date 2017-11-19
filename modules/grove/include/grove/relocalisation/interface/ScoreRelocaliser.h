@@ -73,7 +73,7 @@ private:
   /** An image storing the indices of the forest leaves associated to the keypoint/descriptor pairs. */
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
-  /** TODO */
+  /** The mutex used to synchronise access to the relocaliser in a multithreaded environment. */
   mutable boost::mutex m_mutex;
 
   /** An image storing the predictions associated to the keypoint/descriptor pairs. */

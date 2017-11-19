@@ -5,7 +5,7 @@
 
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 
-#include <string.h>
+#include <cstring>
 
 namespace itmx {
 
