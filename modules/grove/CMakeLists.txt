@@ -116,9 +116,6 @@ SET(ransac_headers include/grove/ransac/RansacFactory.h)
 SET(ransac_sources src/ransac/RansacFactory.cpp)
 
 ##
-SET(ransac_base_headers include/grove/ransac/base/PoseCandidate.h)
-
-##
 SET(ransac_cpu_headers include/grove/ransac/cpu/PreemptiveRansac_CPU.h)
 SET(ransac_cpu_sources src/ransac/cpu/PreemptiveRansac_CPU.cpp)
 
@@ -131,7 +128,10 @@ SET(ransac_interface_headers include/grove/ransac/interface/PreemptiveRansac.h)
 SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
 
 ##
-SET(ransac_shared_headers include/grove/ransac/shared/PreemptiveRansac_Shared.h)
+SET(ransac_shared_headers
+include/grove/ransac/shared/PoseCandidate.h
+include/grove/ransac/shared/PreemptiveRansac_Shared.h
+)
 
 ##
 SET(relocalisation_headers include/grove/relocalisation/ScoreRelocaliserFactory.h)
@@ -216,7 +216,6 @@ ${forests_shared_headers}
 ${keypoints_headers}
 ${numbers_headers}
 ${ransac_headers}
-${ransac_base_headers}
 ${ransac_cpu_headers}
 ${ransac_interface_headers}
 ${ransac_shared_headers}
@@ -298,7 +297,6 @@ SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 SOURCE_GROUP(ransac FILES ${ransac_headers} ${ransac_sources})
-SOURCE_GROUP(ransac\\base FILES ${ransac_base_headers})
 SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})
 SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_headers} ${ransac_cuda_sources})
 SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_headers} ${ransac_interface_sources})
