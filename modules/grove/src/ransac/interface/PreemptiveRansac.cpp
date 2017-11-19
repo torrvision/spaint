@@ -39,11 +39,7 @@ namespace {
  * \param resRot   The resulting rotation matrix.
  * \param resTrans The resulting translation vector.
  */
-void Kabsch(Eigen::Matrix3f& P,
-            Eigen::Matrix3f& Q,
-            Eigen::Vector3f& weights,
-            Eigen::Matrix3f& resRot,
-            Eigen::Vector3f& resTrans)
+void Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q, Eigen::Vector3f& weights, Eigen::Matrix3f& resRot, Eigen::Vector3f& resTrans)
 {
   const int D = P.rows(); // dimension of the space
   const Eigen::Vector3f normalizedWeights = weights / weights.sum();
@@ -121,67 +117,57 @@ void printTimer(const PreemptiveRansac::AverageTimer& timer)
 {
   std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
 }
+
 }
 
 //#################### CONSTRUCTORS ####################
 
 PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
-  : m_settings(settings)
-  , m_timerCandidateGeneration("Candidate Generation")
-  , m_timerFirstComputeEnergy("First Energy Computation")
-  , m_timerFirstTrim("First Trim")
-  , m_timerTotal("P-RANSAC Total")
+: m_timerCandidateGeneration("Candidate Generation"),
+  m_timerFirstComputeEnergy("First Energy Computation"),
+  m_timerFirstTrim("First Trim"),
+  m_timerTotal("P-RANSAC Total"),
+  m_settings(settings)
 {
   const std::string settingsNamespace = "PreemptiveRansac.";
 
   // By default, we set all parameters as in scoreforests.
 
   // Whether or not to force sampled modes to have a minimum distance between them.
-  m_checkMinDistanceBetweenSampledModes =
-      m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);
+  m_checkMinDistanceBetweenSampledModes = m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);
 
   // Setting it to false speeds up a lot, at the expense of quality.
-  m_checkRigidTransformationConstraint =
-      m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);
+  m_checkRigidTransformationConstraint = m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);
 
   // The maximum number of times we sample three pixel-mode pairs in the attempt to generate a pose candidate.
-  m_maxCandidateGenerationIterations =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);
+  m_maxCandidateGenerationIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);
 
   // Number of initial pose candidates.
   m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);
 
   // Aggressively cull hypotheses to this number.
-  m_maxPoseCandidatesAfterCull =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
+  m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
 
   // In m.
-  m_maxTranslationErrorForCorrectPose =
-      m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);
+  m_maxTranslationErrorForCorrectPose = m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);
 
   // In m.
-  m_minSquaredDistanceBetweenSampledModes =
-      m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
+  m_minSquaredDistanceBetweenSampledModes = m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
 
   // Optimisation parameters defaulted as in Valentin's paper.
 
-  m_poseOptimisationEnergyThreshold =
-      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);
+  m_poseOptimisationEnergyThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);
 
   // Sets the termination condition for the pose optimisation.
-  m_poseOptimisationGradientThreshold =
-      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);
+  m_poseOptimisationGradientThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);
 
   // In m.
-  m_poseOptimisationInlierThreshold =
-      m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);
+  m_poseOptimisationInlierThreshold = m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);
 
   // Maximum number of LM iterations.
-  m_poseOptimisationMaxIterations =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);
+  m_poseOptimisationMaxIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);
 
-  m_poseOptimisationStepThreshold =
-      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);
+  m_poseOptimisationStepThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);
 
   // Whether or not to optimise the poses with LM.
   m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "poseUpdate", true);
@@ -190,21 +176,16 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
   m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);
 
   // The number of inliers sampled in each P-RANSAC iteration.
-  m_ransacInliersPerIteration =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
+  m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
 
   // If false use the first mode only (representing the largest cluster).
-  m_useAllModesPerLeafInPoseHypothesisGeneration =
-      m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true);
+  m_useAllModesPerLeafInPoseHypothesisGeneration = m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true);
 
   // If false use L2.
-  m_usePredictionCovarianceForPoseOptimization =
-      m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);
+  m_usePredictionCovarianceForPoseOptimization = m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);
 
-  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
-  // for all.
-  m_nbMaxInliers =
-      m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
+  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space for all.
+  m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
 
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
@@ -250,6 +231,23 @@ PreemptiveRansac::~PreemptiveRansac()
       printTimer(m_timerPrepareOptimisation[i]);
       printTimer(m_timerOptimisation[i]);
     }
+  }
+}
+
+//#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
+
+// Default implementation of the abstract function.
+void PreemptiveRansac::update_candidate_poses()
+{
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+
+// Update every pose in parallel
+#ifdef WITH_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+#endif
+  for(size_t i = 0; i < nbPoseCandidates; ++i)
+  {
+    update_candidate_pose(i);
   }
 }
 
@@ -422,30 +420,6 @@ int PreemptiveRansac::get_min_nb_required_points() const
 {
   // At least the number of inliers required for a RANSAC iteration.
   return m_ransacInliersPerIteration;
-}
-
-//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
-
-void PreemptiveRansac::update_host_pose_candidates() const
-{
-  // NOP by default.
-}
-
-//#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
-
-// Default implementation of the abstract function.
-void PreemptiveRansac::update_candidate_poses()
-{
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
-
-// Update every pose in parallel
-#ifdef WITH_OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-  for(size_t i = 0; i < nbPoseCandidates; ++i)
-  {
-    update_candidate_pose(i);
-  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -736,6 +710,11 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 
   // Optimisation failed.
   return false;
+}
+
+void PreemptiveRansac::update_host_pose_candidates() const
+{
+  // NOP by default.
 }
 
 }
