@@ -43,9 +43,6 @@ struct SubmapRelocalisation
 #ifdef WITH_OPENCV
   /** TODO */
   cv::Scalar m_meanDepthDiff;
-
-  /** TODO */
-  size_t m_orbKeypointCountJ;
 #endif
 
   /** TODO */
@@ -62,14 +59,12 @@ struct SubmapRelocalisation
 
   //#################### CONSTRUCTORS ####################
 
-  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndexJ, const Vector4f& depthIntrinsicsJ,
-                       const ORUtils::SE3Pose& localPoseJ, size_t orbKeypointCountJ)
+  SubmapRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndexJ, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
   : m_candidateScore(0.0f),
     m_depthIntrinsicsJ(depthIntrinsicsJ),
     m_frameIndexJ(frameIndexJ),
     m_initialRelocalisationQuality(itmx::Relocaliser::RELOCALISATION_POOR),
     m_localPoseJ(localPoseJ),
-    m_orbKeypointCountJ(orbKeypointCountJ),
     m_sceneI(sceneI),
     m_sceneJ(sceneJ),
     m_targetValidFraction(0.0f)

@@ -112,14 +112,6 @@ private:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Counts the number of ORB keypoints in the specified image.
-   *
-   * \param image The image whose ORB keypoints we want to count.
-   * \return      The number of ORB keypoints in the image.
-   */
-  static size_t count_orb_keypoints(const cv::Mat3b& image);
-
-  /**
    * \brief Makes a greyscale OpenCV image from some pixel data in the specified format.
    *
    * \param inputData The pixel data for the image.
