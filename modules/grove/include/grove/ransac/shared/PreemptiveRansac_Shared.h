@@ -8,9 +8,9 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
+#include "PoseCandidate.h"
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../scoreforests/ScorePrediction.h"
-#include "../base/PoseCandidate.h"
 
 namespace grove {
 
