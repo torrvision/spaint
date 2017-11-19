@@ -60,7 +60,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
 
   // Add each example to the relevant reservoirs.
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int y = 0; y < imgSize.height; ++y)
   {

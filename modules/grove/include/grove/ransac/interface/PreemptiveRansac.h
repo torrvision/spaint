@@ -16,8 +16,8 @@
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/AverageTimer.h>
 
+#include "../shared/PoseCandidate.h"
 #include "../../keypoints/Keypoint3DColour.h"
-#include "../../ransac/base/PoseCandidate.h"
 #include "../../scoreforests/ScorePrediction.h"
 
 namespace grove {
