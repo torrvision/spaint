@@ -289,7 +289,7 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
       {
         if(!confidentlyConnected[i][primarySceneID]) continue;
 
-        std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);
+        /*std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);*/
 
         GraphNodeSE3 *node = new GraphNodeSE3;
         node->setId(i);
