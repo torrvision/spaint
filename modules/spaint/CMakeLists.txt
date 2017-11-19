@@ -40,13 +40,13 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 
 ##
 SET(collaboration_sources
-src/collaboration/PoseGraphOptimiser.cpp
+src/collaboration/CollaborativePoseOptimiser.cpp
 )
 
 SET(collaboration_headers
 include/spaint/collaboration/CollaborationMode.h
-include/spaint/collaboration/PoseGraphOptimiser.h
-include/spaint/collaboration/SubmapRelocalisation.h
+include/spaint/collaboration/CollaborativePoseOptimiser.h
+include/spaint/collaboration/CollaborativeRelocalisation.h
 )
 
 ##

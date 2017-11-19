@@ -16,7 +16,7 @@
 
 #include "CollaborativeContext.h"
 #include "../collaboration/CollaborationMode.h"
-#include "../collaboration/SubmapRelocalisation.h"
+#include "../collaboration/CollaborativeRelocalisation.h"
 
 namespace spaint {
 
@@ -28,7 +28,7 @@ class CollaborativeComponent
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
-  boost::shared_ptr<SubmapRelocalisation> m_bestCandidate;
+  boost::shared_ptr<CollaborativeRelocalisation> m_bestCandidate;
 
   /** The timer used to compute the time spent collaborating. */
   boost::optional<boost::timer::cpu_timer> m_collaborationTimer;
@@ -55,7 +55,7 @@ private:
   boost::thread m_relocalisationThread;
 
   /** TODO */
-  std::deque<SubmapRelocalisation> m_results;
+  std::deque<CollaborativeRelocalisation> m_results;
 
   /** A random number generator. */
   mutable tvgutil::RandomNumberGenerator m_rng;
@@ -104,17 +104,17 @@ private:
   /**
    * \brief TODO
    */
-  std::list<SubmapRelocalisation> generate_random_candidates(size_t desiredCandidateCount) const;
+  std::list<CollaborativeRelocalisation> generate_random_candidates(size_t desiredCandidateCount) const;
 
   /**
    * \brief TODO
    */
-  std::list<SubmapRelocalisation> generate_sequential_candidate() const;
+  std::list<CollaborativeRelocalisation> generate_sequential_candidate() const;
 
   /**
    * \brief TODO
    */
-  bool is_verified(const SubmapRelocalisation& candidate) const;
+  bool is_verified(const CollaborativeRelocalisation& candidate) const;
 
   /**
    * \brief TODO
@@ -129,7 +129,7 @@ private:
   /**
    * \brief TODO
    */
-  void score_candidates(std::list<SubmapRelocalisation>& candidates) const;
+  void score_candidates(std::list<CollaborativeRelocalisation>& candidates) const;
 
   /**
    * \brief TODO

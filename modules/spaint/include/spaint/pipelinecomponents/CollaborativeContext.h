@@ -8,7 +8,7 @@
 
 #include <itmx/relocalisation/RefiningRelocaliser.h>
 
-#include "../collaboration/PoseGraphOptimiser.h"
+#include "../collaboration/CollaborativePoseOptimiser.h"
 #include "../slamstate/SLAMState.h"
 #include "../visualisation/VisualisationGenerator.h"
 
@@ -21,8 +21,8 @@ class CollaborativeContext
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The pose graph optimiser. */
-  PoseGraphOptimiser_Ptr m_poseGraphOptimiser;
+  /** The collaborative pose optimiser. */
+  CollaborativePoseOptimiser_Ptr m_collaborativePoseOptimiser;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -41,8 +41,8 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  virtual const PoseGraphOptimiser_Ptr& get_pose_graph_optimiser();
-  virtual PoseGraphOptimiser_CPtr get_pose_graph_optimiser() const;
+  virtual const CollaborativePoseOptimiser_Ptr& get_collaborative_pose_optimiser();
+  virtual CollaborativePoseOptimiser_CPtr get_collaborative_pose_optimiser() const;
 };
 
 //#################### TYPEDEFS ####################
