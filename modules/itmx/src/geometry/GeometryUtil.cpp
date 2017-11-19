@@ -92,4 +92,16 @@ Vector3f GeometryUtil::to_itm(const Eigen::Vector3f& v)
   return Vector3f(v[0], v[1], v[2]);
 }
 
+std::string GeometryUtil::to_matlab(const Matrix4f& m)
+{
+  std::ostringstream oss;
+  oss << '['
+      << m.m[0] << ' ' << m.m[4] << ' ' << m.m[8] << ' ' << m.m[12] << "; "
+      << m.m[1] << ' ' << m.m[5] << ' ' << m.m[9] << ' ' << m.m[13] << "; "
+      << m.m[2] << ' ' << m.m[6] << ' ' << m.m[10] << ' ' << m.m[14] << "; "
+      << m.m[3] << ' ' << m.m[7] << ' ' << m.m[11] << ' ' << m.m[15]
+      << ']';
+  return oss.str();
+}
+
 }

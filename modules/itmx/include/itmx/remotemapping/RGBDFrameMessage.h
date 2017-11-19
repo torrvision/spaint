@@ -16,6 +16,14 @@ namespace itmx {
  */
 class RGBDFrameMessage : public BaseRGBDFrameMessage
 {
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The size of the frame's depth image. */
+  Vector2i m_depthImageSize;
+
+  /** The size of the frame's RGB image. */
+  Vector2i m_rgbImageSize;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
