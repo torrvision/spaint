@@ -253,8 +253,7 @@ void PreemptiveRansac::update_candidate_poses()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DColourImage_CPtr& keypoints,
-                                                               const ScorePredictionsImage_CPtr& forestPredictions)
+boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DColourImage_CPtr& keypoints, const ScorePredictionsImage_CPtr& forestPredictions)
 {
   // NOTE: In this function and in the virtual functions of the CPU and CUDA subclasses we directly access and write
   // onto the dataSize of several MemoryBlock variables instead of keeping a separate "valid size" variable.
@@ -271,8 +270,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   // 1. Generate the pose hypotheses.
   {
 #ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-                                   "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+    boost::timer::auto_cpu_timer t(6, "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     m_timerCandidateGeneration.start();
     generate_pose_candidates();
@@ -471,9 +469,7 @@ struct PointsForLM
 /**
  * \brief Compute the energy using the Mahalanobis distance.
  */
-static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts,
-                                                                   const ORUtils::SE3Pose& candidateCameraPose,
-                                                                   double *jac = NULL)
+static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL)
 {
   double res = 0.0;
 
@@ -521,8 +517,7 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
 /**
  * \brief Function that will be called by alglib's optimiser.
  */
-static void
-    Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
+static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
@@ -535,10 +530,7 @@ static void
 /**
  * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
  */
-static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi,
-                                                           alglib::real_1d_array& fi,
-                                                           alglib::real_2d_array& jac,
-                                                           void *ptr)
+static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
@@ -555,9 +547,7 @@ static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d
 /**
  * \brief Compute the energy using the L2 distance between the points.
  */
-static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts,
-                                                       const ORUtils::SE3Pose& candidateCameraPose,
-                                                       double *jac = NULL)
+static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL)
 {
   double res = 0.0;
 
@@ -617,10 +607,7 @@ static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, al
 /**
  * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
  */
-static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi,
-                                               alglib::real_1d_array& fi,
-                                               alglib::real_2d_array& jac,
-                                               void *ptr)
+static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
@@ -667,39 +654,29 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   const double differentiationStep = 0.0001;
   alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
 //  alglib::minlmcreatevj(6, 1, ksi_, state);
-  alglib::minlmsetcond(state,
-                       m_poseOptimisationGradientThreshold,
-                       m_poseOptimisationEnergyThreshold,
-                       m_poseOptimisationStepThreshold,
-                       m_poseOptimisationMaxIterations);
+  alglib::minlmsetcond(state, m_poseOptimisationGradientThreshold, m_poseOptimisationEnergyThreshold, m_poseOptimisationStepThreshold, m_poseOptimisationMaxIterations);
 
   // Run the optimiser.
   if(m_usePredictionCovarianceForPoseOptimization)
   {
-    alglib::minlmoptimize(state,
-                          Continuous3DOptimizationUsingFullCovariance,
-                          Continuous3DOptimizationUsingFullCovarianceJac,
-                          call_after_each_step,
-                          &ptsForLM);
+    alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance, Continuous3DOptimizationUsingFullCovarianceJac, call_after_each_step, &ptsForLM);
   }
   else
   {
-    alglib::minlmoptimize(state,
-                          Continuous3DOptimizationUsingL2,
-                          Continuous3DOptimizationUsingL2Jac,
-                          call_after_each_step,
-                          &ptsForLM);
+    alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, Continuous3DOptimizationUsingL2Jac, call_after_each_step, &ptsForLM);
   }
 
   // Extract the results and update the SE3Pose accordingly.
   alglib::minlmreport rep;
   alglib::minlmresults(state, ksi_, rep);
-  candidateCameraPose.SetFrom(static_cast<float>(ksi_[0]),
-                              static_cast<float>(ksi_[1]),
-                              static_cast<float>(ksi_[2]),
-                              static_cast<float>(ksi_[3]),
-                              static_cast<float>(ksi_[4]),
-                              static_cast<float>(ksi_[5]));
+  candidateCameraPose.SetFrom(
+    static_cast<float>(ksi_[0]),
+    static_cast<float>(ksi_[1]),
+    static_cast<float>(ksi_[2]),
+    static_cast<float>(ksi_[3]),
+    static_cast<float>(ksi_[4]),
+    static_cast<float>(ksi_[5])
+  );
 
   // Store the updated pose iff the optimisation succeeded.
   if(rep.terminationtype >= 0)
