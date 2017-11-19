@@ -38,57 +38,36 @@ class PreemptiveRansac
 public:
   typedef tvgutil::AverageTimer<boost::chrono::nanoseconds> AverageTimer;
 
-  //#################### CONSTRUCTORS ####################
-protected:
-  /**
-   * \brief Constructs an instance of PreemptiveRansac.
-   *
-   * \param settings A pointer to the settings used to configure the algorithm.
-   */
-  PreemptiveRansac(const tvgutil::SettingsContainer_CPtr& settings);
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** Whether to print a summary of the timings of the various steps of P-RANSAC on destruction. */
+  bool m_printTimers;
 
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destroys an instance of PreemptiveRansac.
-   */
-  virtual ~PreemptiveRansac();
+  /** The timer for the pose hypothesis generation phase. */
+  AverageTimer m_timerCandidateGeneration;
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Estimates a 6DOF pose from a set of 3D keypoints and their associated ScoreForest predictions
-   *        using a Preemptive-RANSAC technique.
-   *
-   * \note  For details on the pose estimation process see:
-   *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
-   *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
-   *        Luigi Di Stefano and Philip H. S. Torr
-   *
-   * \param keypoints         An image representing 3D keypoints computed from an RGB-D input image pair.
-   * \param forestPredictions An image storing ScoreForest predictions for each keypoint in keypoints.
-   *
-   * \return The estimated pose if successful, an empty optional value otherwise.
-   */
-  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypoints,
-                                               const ScorePredictionsImage_CPtr& forestPredictions);
+  /** The timers for the energy computation phase. One per each RANSAC iteration. */
+  std::vector<AverageTimer> m_timerComputeEnergy;
 
-  /**
-   * \brief Returns the best poses estimated by the P-RANSAC algorithm.
-   *
-   * \param poseCandidates Output array that will be filled with the best poses estimated by P-RANSAC.
-   *                       Poses are sorted in descending quality order.
-   */
-  void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
+  /** The timer for the first energy computation phase, before the RANSAC iterations. */
+  AverageTimer m_timerFirstComputeEnergy;
 
-  /**
-   * \brief Gets the minimum number of points that have to be valid for the algorithm to attempt the pose estimation.
-   *
-   * \return The minimum number of points that have to be valid in order to attempt pose estimation.
-   */
-  int get_min_nb_required_points() const;
+  /** The timer for the first hypothesis culling. */
+  AverageTimer m_timerFirstTrim;
 
-  //#################### PROTECTED MEMBER VARIABLES ####################
+  /** The timers for the inlier sampling phases. One per each RANSAC iteration. */
+  std::vector<AverageTimer> m_timerInlierSampling;
+
+  /** The timers for the optimisation phase. One per each RANSAC iteration. */
+  std::vector<AverageTimer> m_timerOptimisation;
+
+  /** The timers for the optimisation preparation phase. One per each RANSAC iteration. */
+  std::vector<AverageTimer> m_timerPrepareOptimisation;
+
+  /** The timer for the entire P-RANSAC process. */
+  AverageTimer m_timerTotal;
+
+  //#################### PROTECTED VARIABLES ####################
 protected:
   /**
    * Whether or not to force the sampling of modes having a minimum distance between each other during the pose
@@ -185,14 +164,23 @@ protected:
    */
   bool m_usePredictionCovarianceForPoseOptimization;
 
-  //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+  //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Make sure that the host version of the pose candidates memory block contains up to date values.
+   * \brief Constructs an instance of PreemptiveRansac.
+   *
+   * \param settings A pointer to the settings used to configure the algorithm.
    */
-  virtual void update_host_pose_candidates() const;
+  PreemptiveRansac(const tvgutil::SettingsContainer_CPtr& settings);
 
-  //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys an instance of PreemptiveRansac.
+   */
+  virtual ~PreemptiveRansac();
+
+  //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
    * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
@@ -222,6 +210,40 @@ protected:
    */
   virtual void update_candidate_poses() = 0;
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Estimates a 6DOF pose from a set of 3D keypoints and their associated ScoreForest predictions
+   *        using a Preemptive-RANSAC technique.
+   *
+   * \note  For details on the pose estimation process see:
+   *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
+   *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
+   *        Luigi Di Stefano and Philip H. S. Torr
+   *
+   * \param keypoints         An image representing 3D keypoints computed from an RGB-D input image pair.
+   * \param forestPredictions An image storing ScoreForest predictions for each keypoint in keypoints.
+   *
+   * \return The estimated pose if successful, an empty optional value otherwise.
+   */
+  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypoints,
+                                               const ScorePredictionsImage_CPtr& forestPredictions);
+
+  /**
+   * \brief Returns the best poses estimated by the P-RANSAC algorithm.
+   *
+   * \param poseCandidates Output array that will be filled with the best poses estimated by P-RANSAC.
+   *                       Poses are sorted in descending quality order.
+   */
+  void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
+
+  /**
+   * \brief Gets the minimum number of points that have to be valid for the algorithm to attempt the pose estimation.
+   *
+   * \return The minimum number of points that have to be valid in order to attempt pose estimation.
+   */
+  int get_min_nb_required_points() const;
+
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
@@ -245,34 +267,10 @@ protected:
    */
   bool update_candidate_pose(int candidateIdx) const;
 
-  //#################### PRIVATE MEMBER VARIABLES ####################
-private:
-  /** Whether to print a summary of the timings of the various steps of P-RANSAC on destruction. */
-  bool m_printTimers;
-
-  /** The timer for the pose hypothesis generation phase. */
-  AverageTimer m_timerCandidateGeneration;
-
-  /** The timers for the energy computation phase. One per each RANSAC iteration. */
-  std::vector<AverageTimer> m_timerComputeEnergy;
-
-  /** The timer for the first energy computation phase, before the RANSAC iterations. */
-  AverageTimer m_timerFirstComputeEnergy;
-
-  /** The timer for the first hypothesis culling. */
-  AverageTimer m_timerFirstTrim;
-
-  /** The timers for the inlier sampling phases. One per each RANSAC iteration. */
-  std::vector<AverageTimer> m_timerInlierSampling;
-
-  /** The timers for the optimisation phase. One per each RANSAC iteration. */
-  std::vector<AverageTimer> m_timerOptimisation;
-
-  /** The timers for the optimisation preparation phase. One per each RANSAC iteration. */
-  std::vector<AverageTimer> m_timerPrepareOptimisation;
-
-  /** The timer for the entire P-RANSAC process. */
-  AverageTimer m_timerTotal;
+  /**
+   * \brief Make sure that the host version of the pose candidates memory block contains up to date values.
+   */
+  virtual void update_host_pose_candidates() const;
 };
 
 //#################### TYPEDEFS ####################
