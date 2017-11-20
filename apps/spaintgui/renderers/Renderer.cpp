@@ -8,6 +8,7 @@ using namespace ITMLib;
 using namespace ORUtils;
 using namespace rigging;
 
+#include <itmx/geometry/GeometryUtil.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
@@ -445,12 +446,6 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-// TEMPORARY
-Vector3f to_itm(const Eigen::Vector3f& v)
-{
-  return Vector3f(v[0], v[1], v[2]);
-}
-
 void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
@@ -536,7 +531,9 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
 
       depthVisualiser->render_depth(
-        DepthVisualiser::DT_ORTHOGRAPHIC, to_itm(camera.p()), to_itm(camera.n()),
+        DepthVisualiser::DT_ORTHOGRAPHIC,
+        GeometryUtil::to_itm(camera.p()),
+        GeometryUtil::to_itm(camera.n()),
         m_supersamplingEnabled ? renderState.get() : subwindow.get_voxel_render_state(viewIndex).get(),
         m_model->get_settings()->sceneParams.voxelSize, -1.0f,
         depthImages[i]
