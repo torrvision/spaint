@@ -484,7 +484,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
   std::list<CollaborativeRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
 #else
   // Generate the frames from the source scene in order, for evaluation purposes.
-  std::list<SubmapRelocalisation> candidates = generate_sequential_candidate();
+  std::list<CollaborativeRelocalisation> candidates = generate_sequential_candidate();
 #endif
   if(candidates.empty()) return;
 
