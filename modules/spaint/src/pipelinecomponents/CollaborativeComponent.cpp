@@ -230,6 +230,31 @@ void CollaborativeComponent::output_results() const
     std::cout << "Expected Tries To First Verification: " << static_cast<int>(ceil(tried / verified)) << '\n';
     std::cout << "Actual Tries To First Verification: " << firstVerification << '\n';
   }
+
+  // Finally, output the clusters.
+  CollaborativePoseOptimiser_CPtr poseOptimiser = m_context->get_collaborative_pose_optimiser();
+  const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
+  for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
+  {
+    for(size_t j = 0; j < sceneCount; ++j)
+    {
+      if(j == i) continue;
+
+      boost::optional<std::vector<CollaborativePoseOptimiser::SE3PoseCluster> > result = poseOptimiser->try_get_relative_transform_samples(sceneIDs[i], sceneIDs[j]);
+      if(!result) continue;
+
+      std::cout << "\nClusters " << i << " <- " << j << "\n\n";
+
+      const std::vector<CollaborativePoseOptimiser::SE3PoseCluster>& clusters = *result;
+      for(size_t k = 0, clusterCount = clusters.size(); k < clusterCount; ++k)
+      {
+        SE3Pose blendedTransform = GeometryUtil::blend_poses(clusters[k]);
+        Vector3f t, r;
+        blendedTransform.GetParams(t, r);
+        std::cout << clusters[k].size() << "; " << t << "; " << r << '\n';
+      }
+    }
+  }
 }
 
 void CollaborativeComponent::run_relocalisation()

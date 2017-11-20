@@ -133,6 +133,16 @@ public:
    */
   boost::optional<std::pair<ORUtils::SE3Pose,size_t> > try_get_relative_transform(const std::string& sceneI, const std::string& sceneJ) const;
 
+  /**
+   * \brief Attempts to get the samples (if any) of the transformation from the coordinate system of scene j to that of scene i.
+   *
+   * \param sceneI  The ID of scene i.
+   * \param sceneJ  The ID of scene j.
+   * \return        The samples of the transformation from the coordinate system of scene j to that of scene i,
+   *                if there are any, or boost::none otherwise.
+   */
+  boost::optional<std::vector<SE3PoseCluster> > try_get_relative_transform_samples(const std::string& sceneI, const std::string& sceneJ) const;
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
