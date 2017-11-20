@@ -7,7 +7,6 @@
 #define H_GROVE_PREEMPTIVERANSACCUDA
 
 #include "../interface/PreemptiveRansac.h"
-
 #include "../../numbers/CUDARNG.h"
 
 namespace grove {
@@ -24,6 +23,20 @@ namespace grove {
  */
 class PreemptiveRansac_CUDA : public PreemptiveRansac
 {
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The number of pose candidates currently sampled. Resides on device memory. */
+  ITMIntMemoryBlock_Ptr m_nbPoseCandidates_device;
+
+  /** The number of currently sampled inliers. Resides on device memory. */
+  ITMIntMemoryBlock_Ptr m_nbSampledInliers_device;
+
+  /** The random number generators used during the P-RANSAC process. */
+  CUDARNGMemoryBlock_Ptr m_randomGenerators;
+
+  /** The seed used to initialise the random number generators. */
+  uint32_t m_rngSeed;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -33,7 +46,7 @@ public:
    */
   PreemptiveRansac_CUDA(const tvgutil::SettingsContainer_CPtr& settings);
 
-  //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
    * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
@@ -45,7 +58,7 @@ protected:
    */
   virtual void generate_pose_candidates();
 
-  /** Override. */
+  /** Override */
   virtual void prepare_inliers_for_optimisation();
 
   /**
@@ -63,20 +76,6 @@ protected:
 
   /** Override */
   virtual void update_host_pose_candidates() const;
-
-  //#################### PRIVATE MEMBER VARIABLES ####################
-private:
-  /** The number of pose candidates currently sampled. Resides on device memory. */
-  ITMIntMemoryBlock_Ptr m_nbPoseCandidates_device;
-
-  /** The number of currently sampled inliers. Resides on device memory. */
-  ITMIntMemoryBlock_Ptr m_nbSampledInliers_device;
-
-  /** The random number generators used during the P-RANSAC process. */
-  CUDARNGMemoryBlock_Ptr m_randomGenerators;
-
-  /** The seed used to initialise the random number generators. */
-  uint32_t m_rngSeed;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
