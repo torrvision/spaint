@@ -231,7 +231,7 @@ void CollaborativeComponent::output_results() const
     std::cout << "Actual Tries To First Verification: " << firstVerification << '\n';
   }
 
-  // Finally, output the clusters.
+  // Finally, output the cluster statistics.
   CollaborativePoseOptimiser_CPtr poseOptimiser = m_context->get_collaborative_pose_optimiser();
   const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
   for(size_t i = 0, sceneCount = sceneIDs.size(); i < sceneCount; ++i)
@@ -246,12 +246,33 @@ void CollaborativeComponent::output_results() const
       std::cout << "\nClusters " << i << " <- " << j << "\n\n";
 
       const std::vector<CollaborativePoseOptimiser::SE3PoseCluster>& clusters = *result;
-      for(size_t k = 0, clusterCount = clusters.size(); k < clusterCount; ++k)
+      const size_t clusterCount = clusters.size();
+
+      // Find the largest cluster.
+      int largestClusterIndex = -1;
+      size_t largestClusterSize = 0;
+      for(size_t k = 0; k < clusterCount; ++k)
+      {
+        size_t clusterSize = clusters[k].size();
+        if(clusterSize > largestClusterSize)
+        {
+          largestClusterIndex = static_cast<int>(k);
+          largestClusterSize = clusterSize;
+        }
+      }
+
+      boost::optional<SE3Pose> correctTransform = largestClusterIndex != -1 ? boost::optional<SE3Pose>(GeometryUtil::blend_poses(clusters[largestClusterIndex])) : boost::none;
+
+      // Print out the individual clusters.
+      for(size_t k = 0; k < clusterCount; ++k)
       {
         SE3Pose blendedTransform = GeometryUtil::blend_poses(clusters[k]);
         Vector3f t, r;
         blendedTransform.GetParams(t, r);
-        std::cout << clusters[k].size() << "; " << t << "; " << r << '\n';
+
+        bool correct = GeometryUtil::poses_are_similar(blendedTransform, *correctTransform, 20 * M_PI / 180, 0.10f);
+
+        std::cout << (correct ? "Correct" : "Incorrect") << "; " << clusters[k].size() << "; " << t << "; " << r << '\n';
       }
     }
   }
