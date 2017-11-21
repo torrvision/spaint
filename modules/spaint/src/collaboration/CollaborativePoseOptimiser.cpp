@@ -118,6 +118,15 @@ boost::optional<std::pair<SE3Pose,size_t> > CollaborativePoseOptimiser::try_get_
   return std::make_pair(SE3Pose(it->second.GetM() * jt->second.GetInvM()), static_cast<size_t>(confidence_threshold()));
 }
 
+boost::optional<std::vector<CollaborativePoseOptimiser::SE3PoseCluster> >
+CollaborativePoseOptimiser::try_get_relative_transform_samples(const std::string& sceneI, const std::string& sceneJ) const
+{
+  boost::lock_guard<boost::mutex> lock(m_mutex);
+
+  std::map<SceneIDPair,std::vector<SE3PoseCluster> >::const_iterator it = m_relativeTransformSamples.find(std::make_pair(sceneI, sceneJ));
+  return it != m_relativeTransformSamples.end() ? boost::optional<std::vector<SE3PoseCluster> >(it->second) : boost::none;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 bool CollaborativePoseOptimiser::add_relative_transform_sample_sub(const std::string& sceneI, const std::string& sceneJ, const SE3Pose& sample, CollaborationMode mode)
