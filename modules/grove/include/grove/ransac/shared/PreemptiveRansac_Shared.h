@@ -14,11 +14,18 @@
 
 namespace grove {
 
-/** Useful constants. */
-enum { MAX_COLOUR_DELTA = 30, SAMPLE_INLIER_ITERATIONS = 50 };
+//#################### CONSTANTS ####################
+
+enum
+{
+  MAX_COLOUR_DELTA = 30,
+  SAMPLE_INLIER_ITERATIONS = 50
+};
+
+//#################### FUNCTIONS ####################
 
 /**
- * \brief Compute the energy associated to a candidate pose. The energy represents how well the selected inliers agree
+ * \brief Compute the energy associated with a candidate pose. The energy represents how well the selected inliers agree
  *        with the rigid camera transformation.
  *
  * \note  Each inlier contributes to a part of the total energy. This method can be used to compute the energy for a
@@ -35,13 +42,8 @@ enum { MAX_COLOUR_DELTA = 30, SAMPLE_INLIER_ITERATIONS = 50 };
  * \return The sum of energies contributed by the inliers.
  */
 _CPU_AND_GPU_CODE_
-inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidatePose,
-                                                        const Keypoint3DColour *keypoints,
-                                                        const ScorePrediction *predictions,
-                                                        const int *inlierIndices,
-                                                        uint32_t nbInliers,
-                                                        uint32_t inlierStartIdx = 0,
-                                                        uint32_t inlierStep = 1)
+inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
+                                                        const int *inlierIndices, uint32_t nbInliers, uint32_t inlierStartIdx = 0, uint32_t inlierStep = 1)
 {
   float localEnergy = 0.f;
 
@@ -119,18 +121,12 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidat
  * \return true if a pose candidate was successfully generated.
  */
 template <typename RNG>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline bool
-    preemptive_ransac_generate_candidate(const Keypoint3DColour *keypointsData,
-                                         const ScorePrediction *predictionsData,
-                                         const Vector2i& imgSize,
-                                         RNG& randomGenerator,
-                                         PoseCandidate& poseCandidate,
-                                         uint32_t maxCandidateGenerationIterations,
-                                         bool useAllModesPerLeafInPoseHypothesisGeneration,
-                                         bool checkMinDistanceBetweenSampledModes,
-                                         float minSqDistanceBetweenSampledModes,
-                                         bool checkRigidTransformationConstraint,
-                                         float maxTranslationErrorForCorrectPose)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline bool preemptive_ransac_generate_candidate(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
+                                                 RNG& randomGenerator, PoseCandidate& poseCandidate, uint32_t maxCandidateGenerationIterations,
+                                                 bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
+                                                 float minSqDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
+                                                 float maxTranslationErrorForCorrectPose)
 {
   int selectedPixelCount = 0;
   int selectedPixelLinearIdx[PoseCandidate::KABSCH_POINTS];
@@ -276,16 +272,9 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 }
 
 _CPU_AND_GPU_CODE_
-inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints,
-                                                        const ScorePrediction *predictions,
-                                                        const int *inlierIndices,
-                                                        uint32_t nbInliers,
-                                                        const PoseCandidate *poseCandidates,
-                                                        Vector4f *inlierCameraPoints,
-                                                        Keypoint3DColourCluster *inlierModes,
-                                                        float inlierThreshold,
-                                                        uint32_t candidateIdx,
-                                                        uint32_t inlierIdx)
+inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
+                                                               uint32_t nbInliers, const PoseCandidate *poseCandidates, Vector4f *inlierCameraPoints,
+                                                               Keypoint3DColourCluster *inlierModes, float inlierThreshold, uint32_t candidateIdx, uint32_t inlierIdx)
 {
   const int inlierLinearIdx = inlierIndices[inlierIdx];
   const PoseCandidate& poseCandidate = poseCandidates[candidateIdx];
@@ -339,11 +328,9 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
  * \return The linear index of the sample keypoint. -1 in case no keypoint was sampled.
  */
 template <bool useMask, typename RNG>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Keypoint3DColour *keypointsData,
-                                                                       const ScorePrediction *predictionsData,
-                                                                       const Vector2i& imgSize,
-                                                                       RNG& randomGenerator,
-                                                                       int *inlierMaskData = NULL)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline int preemptive_ransac_sample_inlier(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
+                                           RNG& randomGenerator, int *inlierMaskData = NULL)
 {
   int inlierLinearIdx = -1;
 

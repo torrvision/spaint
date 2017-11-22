@@ -68,7 +68,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
       m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CUDA);
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CUDA, m_settings);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
 
   // Clear internal state.
   reset();
