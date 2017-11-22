@@ -42,7 +42,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU, m_settings);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CPU);
 
   // Clear internal state.
   ScoreRelocaliser_CPU::reset();

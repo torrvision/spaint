@@ -60,7 +60,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CUDA, m_settings);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
 
   // Clear internal state (no virtual calls in the constructor).
   ScoreRelocaliser_CUDA::reset();
