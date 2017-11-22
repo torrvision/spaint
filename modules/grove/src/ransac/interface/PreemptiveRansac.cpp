@@ -27,9 +27,9 @@ using namespace itmx;
 // Enable/disable the print-out of more detailed timings (very verbose, so disabled by default).
 //#define ENABLE_TIMERS
 
-namespace grove {
+namespace {
 
-//#################### ANONYMOUS FREE FUNCTIONS ####################
+//#################### HELPER FUNCTIONS ####################
 
 /**
  * Unfortunately, we cannot make these into static member functions without including Eigen/Dense in PreemptiveRansac.h.
@@ -37,70 +37,68 @@ namespace grove {
  * we put them as free functions here instead.
  */
 
-namespace {
+/**
+ * \brief Estimates a rigid body transformation between two sets of 3D points using the Kabsch algorithm.
+ *
+ * \param P        The first set of 3D points (each point is a column in the matrix).
+ * \param Q        The second set of 3D points (each point is a column in the matrix).
+ * \param resRot   The estimated rotation matrix.
+ * \param resTrans The estimated translation vector.
+ */
+void Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q, Eigen::Matrix3f& resRot, Eigen::Vector3f& resTrans)
+{
+  /*
+   * Step 1: Compute the centroids of the two sets of points.
+   *
+   * centroid = (x1 x2 x3) * (1/3) = ((x1 + x2 + x3) / 3) = (cx)
+   *            (y1 y2 y3)   (1/3)   ((y1 + y2 + y3) / 3)   (cy)
+   *            (z1 z2 z3)   (1/3)   ((z1 + z2 + z3) / 3)   (cz)
+   */
+  const Eigen::Vector3f ones = Eigen::Vector3f::Ones();
+  const Eigen::Vector3f thirds = ones / 3;
+  const Eigen::Vector3f centroidP = P * thirds;
+  const Eigen::Vector3f centroidQ = Q * thirds;
+
+  /*
+   * Step 2: Translate the points in each set so that their centroid coincides with the origin of the coordinate system.
+   *         To do this, we subtract the centroid from each point.
+   *
+   * centred = (x1 x2 x3) - (cx) * (1 1 1) = (x1 x2 x3) - (cx cx cx) = (x1-cx x2-cx x3-cx)
+   *           (y1 y2 y3)   (cy)             (y1 y2 y3)   (cy cy cy)   (y1-cy y2-cy y3-cy)
+   *           (z1 z2 z3)   (cz)             (z1 z2 z3)   (cz cz cz)   (z1-cz z2-cz z3-cz)
+   */
+  const Eigen::RowVector3f onesT = ones.transpose();
+  const Eigen::Matrix3f centredP = P - centroidP * onesT;
+  const Eigen::Matrix3f centredQ = Q - centroidQ * onesT;
+
+  // Step 3: Compute the cross-covariance between the two matrices of centred points. We do this in the opposite order to the
+  //         Wikipedia page, which computes P^T * Q, and compute the inverse of the transformation they compute as a result.
+  const Eigen::Matrix3f A = centredP * centredQ.transpose();
+
+  // Step 4: Calculate the SVD of the cross-covariance matrix: A = V * S * W^T.
+  Eigen::JacobiSVD<Eigen::Matrix3f> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+  // Step 5: Decide whether or not we need to correct our rotation matrix, and set the I matrix accordingly.
+  const Eigen::Matrix3f V = svd.matrixU();
+  const Eigen::Matrix3f W = svd.matrixV();
+  Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+  if((V * W.transpose()).determinant() < 0)
+  {
+    I(2,2) = -1;
+  }
+
+  // Step 6: Recover the rotation and translation estimates. As before, we do this in the opposite order to the Wikipedia page,
+  //         which computes V * I * W^T.
+  resRot = W * I * V.transpose();
+  resTrans = centroidQ - resRot * centroidP;
+}
 
 /**
  * \brief Estimates a rigid body transformation between two sets of 3D points using the Kabsch algorithm.
  *
- * \param P        A set of three 3D points in camera coordinates (each point is a column in the matrix).
- * \param Q        A set of three 3D points in world coordinates (each point is a column in the matrix).
- * \param weights  The weights associated with the points.
- * \param resRot   The estimated rotation matrix.
- * \param resTrans The estimated translation vector.
- */
-void Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q, Eigen::Vector3f& weights, Eigen::Matrix3f& resRot, Eigen::Vector3f& resTrans)
-{
-  const int D = P.rows(); // dimension of the space
-  const Eigen::Vector3f normalizedWeights = weights / weights.sum();
-
-  // Centroids
-  const Eigen::Vector3f p0 = P * normalizedWeights;
-  const Eigen::Vector3f q0 = Q * normalizedWeights;
-  const Eigen::Vector3f v1 = Eigen::Vector3f::Ones();
-
-  const Eigen::Matrix3f P_centred = P - p0 * v1.transpose(); // translating P to center the origin
-  const Eigen::Matrix3f Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
-
-  // Covariance between both matrices
-  const Eigen::Matrix3f C = P_centred * normalizedWeights.asDiagonal() * Q_centred.transpose();
-
-  // SVD
-  Eigen::JacobiSVD<Eigen::Matrix3f> svd(C, Eigen::ComputeFullU | Eigen::ComputeFullV);
-
-  const Eigen::Matrix3f V = svd.matrixU();
-  const Eigen::Matrix3f W = svd.matrixV();
-  Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
-
-  if((V * W.transpose()).determinant() < 0)
-  {
-    I(D - 1, D - 1) = -1;
-  }
-
-  // Recover the rotation and translation
-  resRot = W * I * V.transpose();
-  resTrans = q0 - resRot * p0;
-}
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- * \param resRot   The resulting rotation matrix.
- * \param resTrans The resulting translation vector.
- */
-void Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q, Eigen::Matrix3f& resRot, Eigen::Vector3f& resTrans)
-{
-  // Setup unitary weights and call the function above.
-  Eigen::Vector3f weights = Eigen::Vector3f::Ones();
-  Kabsch(P, Q, weights, resRot, resTrans);
-}
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- *
- * \return The estimated transformation matrix.
+ * \param P The first set of 3D points (each point is a column in the matrix).
+ * \param Q The second set of 3D points (each point is a column in the matrix).
+ * \return  The estimated rigid body transformation.
  */
 Eigen::Matrix4f Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q)
 {
@@ -118,6 +116,8 @@ Eigen::Matrix4f Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q)
 }
 
 }
+
+namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
