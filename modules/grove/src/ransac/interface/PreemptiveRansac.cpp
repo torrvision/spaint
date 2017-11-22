@@ -4,12 +4,14 @@
  */
 
 #include "ransac/interface/PreemptiveRansac.h"
+using namespace tvgutil;
+
+#include <alglib/optimization.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <Eigen/Dense>
-#include <alglib/optimization.h>
 
 #ifdef WITH_OPENMP
 #include <omp.h>
@@ -20,24 +22,31 @@
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
-using namespace tvgutil;
+//#################### MACROS ####################
 
-// To enable more detailed timing prints (VERY VERBOSE)
+// Enable/disable the print-out of more detailed timings (very verbose, so disabled by default).
 //#define ENABLE_TIMERS
 
 namespace grove {
 
 //#################### ANONYMOUS FREE FUNCTIONS ####################
 
+/**
+ * Unfortunately, we cannot make these into static member functions without including Eigen/Dense in PreemptiveRansac.h.
+ * Since that is included indirectly in PreemptiveRansac_CUDA.cu, and Eigen doesn't compile reliably with nvcc on Windows,
+ * we put them as free functions here instead.
+ */
+
 namespace {
 
 /**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- * \param weights  A set of weights associated to the points.
- * \param resRot   The resulting rotation matrix.
- * \param resTrans The resulting translation vector.
+ * \brief Estimates a rigid body transformation between two sets of 3D points using the Kabsch algorithm.
+ *
+ * \param P        A set of three 3D points in camera coordinates (each point is a column in the matrix).
+ * \param Q        A set of three 3D points in world coordinates (each point is a column in the matrix).
+ * \param weights  The weights associated with the points.
+ * \param resRot   The estimated rotation matrix.
+ * \param resTrans The estimated translation vector.
  */
 void Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q, Eigen::Vector3f& weights, Eigen::Matrix3f& resRot, Eigen::Vector3f& resTrans)
 {
@@ -106,16 +115,6 @@ Eigen::Matrix4f Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q)
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
   return res;
-}
-
-/**
- * \brief Pretty print a timer value.
- *
- * \param timer The timer to print.
- */
-void printTimer(const PreemptiveRansac::AverageTimer& timer)
-{
-  std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
 }
 
 }
@@ -219,17 +218,17 @@ PreemptiveRansac::~PreemptiveRansac()
 {
   if(m_printTimers)
   {
-    printTimer(m_timerTotal);
-    printTimer(m_timerCandidateGeneration);
-    printTimer(m_timerFirstTrim);
-    printTimer(m_timerFirstComputeEnergy);
+    print_timer(m_timerTotal);
+    print_timer(m_timerCandidateGeneration);
+    print_timer(m_timerFirstTrim);
+    print_timer(m_timerFirstComputeEnergy);
 
     for(size_t i = 0; i < m_timerInlierSampling.size(); ++i)
     {
-      printTimer(m_timerInlierSampling[i]);
-      printTimer(m_timerComputeEnergy[i]);
-      printTimer(m_timerPrepareOptimisation[i]);
-      printTimer(m_timerOptimisation[i]);
+      print_timer(m_timerInlierSampling[i]);
+      print_timer(m_timerComputeEnergy[i]);
+      print_timer(m_timerPrepareOptimisation[i]);
+      print_timer(m_timerOptimisation[i]);
     }
   }
 }
@@ -239,13 +238,13 @@ PreemptiveRansac::~PreemptiveRansac()
 // Default implementation of the abstract function.
 void PreemptiveRansac::update_candidate_poses()
 {
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
 
 // Update every pose in parallel
 #ifdef WITH_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for(size_t i = 0; i < nbPoseCandidates; ++i)
+  for(int i = 0; i < nbPoseCandidates; ++i)
   {
     update_candidate_pose(i);
   }
@@ -433,7 +432,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 
 // Process all candidates in parallel.
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
@@ -692,6 +691,13 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 void PreemptiveRansac::update_host_pose_candidates() const
 {
   // NOP by default.
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void PreemptiveRansac::print_timer(const AverageTimer& timer)
+{
+  std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
 }
 
 }
