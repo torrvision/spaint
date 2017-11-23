@@ -92,18 +92,21 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_random_c
     const std::string sceneI = it->first;
     const std::string sceneJ = jt->first;
 
-    // Randomly pick a frame from scene j.
+    SLAMState_CPtr slamStateI = m_context->get_slam_state(sceneI);
     SLAMState_CPtr slamStateJ = m_context->get_slam_state(sceneJ);
+
+    // Randomly pick a frame from scene j.
     const int frameCountJ = static_cast<int>(jt->second.size());
     const int frameIndexJ = m_mode == CM_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
       ? m_rng.generate_int_from_uniform(0, frameCountJ - 1)
       : frameCountJ - 1;
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
+    const Vector4f& depthIntrinsicsI = slamStateI->get_intrinsics().projectionParamsSimple.all;
     const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
     const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
 
-    candidates.push_back(CollaborativeRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+    candidates.push_back(CollaborativeRelocalisation(sceneI, depthIntrinsicsI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
   }
 
   return candidates;
@@ -135,9 +138,10 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
     const int frameCountJ = static_cast<int>(trajectoryJ.size());
     if(frameIndexJ < frameCountJ)
     {
+      const Vector4f& depthIntrinsicsI = m_context->get_slam_state(sceneI)->get_intrinsics().projectionParamsSimple.all;
       const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
       const ORUtils::SE3Pose& localPoseJ = trajectoryJ[frameIndexJ];
-      candidates.push_back(CollaborativeRelocalisation(sceneI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+      candidates.push_back(CollaborativeRelocalisation(sceneI, depthIntrinsicsI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
       return candidates;
     }
   }
@@ -297,19 +301,22 @@ void CollaborativeComponent::run_relocalisation()
     std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndexJ << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
 
     // Render synthetic images of the source scene from the relevant pose and copy them across to the GPU for use by the relocaliser.
+    const SLAMState_CPtr slamStateI = m_context->get_slam_state(m_bestCandidate->m_sceneI);
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
-    ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateJ->get_depth_image_size(), true, true));
-    ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateJ->get_rgb_image_size(), true, true));
+
+    // The synthetic images have the size of the images in scene I and are generated according to I's intrinsics (hence slamStateI->get_view() is used in the later calls).
+    ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateI->get_depth_image_size(), true, true));
+    ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateI->get_rgb_image_size(), true, true));
 
     VoxelRenderState_Ptr renderStateD;
     m_context->get_visualisation_generator()->generate_depth_from_voxels(
-      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
     VoxelRenderState_Ptr renderStateRGB;
     const bool useColourIntrinsics = true;
     m_context->get_visualisation_generator()->generate_voxel_visualisation(
-      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateJ->get_view(),
+      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(),
       renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
     );
 
@@ -330,7 +337,7 @@ void CollaborativeComponent::run_relocalisation()
 
     // Attempt to relocalise the synthetic images using the relocaliser for the target scene.
     Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
-    boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsJ);
+    boost::optional<Relocaliser::Result> result = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsI);
 
     // If the relocaliser returned a result, store the initial relocalisation quality for later examination.
     if(result) m_bestCandidate->m_initialRelocalisationQuality = result->quality;
@@ -342,7 +349,6 @@ void CollaborativeComponent::run_relocalisation()
     {
 #ifdef WITH_OPENCV
       // Render synthetic images of the target scene from the relevant pose.
-      const SLAMState_CPtr slamStateI = m_context->get_slam_state(m_bestCandidate->m_sceneI);
       renderStateD.reset();
       renderStateRGB.reset();
 
