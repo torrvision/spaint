@@ -18,6 +18,12 @@ using namespace MiniSlamGraph;
 #include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;
 
+#include <tvgutil/filesystem/PathFinder.h>
+#include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
+
+namespace bf = boost::filesystem;
+
 #define DEBUGGING 0
 
 namespace spaint {
@@ -74,8 +80,9 @@ void CollaborativePoseOptimiser::add_relative_transform_sample(const std::string
 #endif
 }
 
-void CollaborativePoseOptimiser::start()
+void CollaborativePoseOptimiser::start(const std::string& experimentTag)
 {
+  m_experimentTag = experimentTag;
   m_optimisationThread.reset(new boost::thread(boost::bind(&CollaborativePoseOptimiser::run_pose_graph_optimisation, this)));
 }
 
@@ -89,6 +96,8 @@ void CollaborativePoseOptimiser::terminate()
     m_relativeTransformSamplesAdded.notify_one();
     m_optimisationThread->join();
   }
+
+  save_global_poses();
 }
 
 boost::optional<SE3Pose> CollaborativePoseOptimiser::try_get_estimated_global_pose(const std::string& sceneID) const
@@ -336,6 +345,39 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
 #endif
       }
     }
+  }
+}
+
+void CollaborativePoseOptimiser::save_global_poses() const
+{
+  // Determine the file to which to save the global poses.
+  const std::string dirName = "global_poses";
+  const std::string experimentTag = m_experimentTag != "" ? m_experimentTag : TimeUtil::get_iso_timestamp();
+  const bf::path p = find_subdir_from_executable(dirName) / (experimentTag + ".txt");
+
+  // Try to ensure that the directory into which we want to save the file exists. If we can't, early out.
+  try
+  {
+    bf::create_directories(p.parent_path());
+  }
+  catch(bf::filesystem_error&)
+  {
+    std::cerr << "Warning: Could not create the directory '" << dirName << "'\n";
+    return;
+  }
+
+  // Try to save the poses into the file. If we can't, early out.
+  std::ofstream fs(p.string().c_str());
+  if(!fs)
+  {
+    std::cerr << "Warning: Could not open the file to save the global poses\n";
+    return;
+  }
+
+  for(std::map<std::string,SE3Pose>::const_iterator it = m_estimatedGlobalPoses.begin(), iend = m_estimatedGlobalPoses.end(); it != iend; ++it)
+  {
+    DualQuatd dq = GeometryUtil::pose_to_dual_quat<double>(it->second);
+    fs << it->first << ' ' << dq << '\n';
   }
 }
 

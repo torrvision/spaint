@@ -33,6 +33,9 @@ private:
   /** Estimates of the poses of the different scenes in the global coordinate system. */
   std::map<std::string,ORUtils::SE3Pose> m_estimatedGlobalPoses;
 
+  /** The (global) experiment tag (if any), or the empty string otherwise. */
+  std::string m_experimentTag;
+
   /** The synchronisation mutex. */
   mutable boost::mutex m_mutex;
 
@@ -97,8 +100,10 @@ public:
 
   /**
    * \brief Starts the pose graph optimiser.
+   *
+   * \param experimentTag TODO
    */
-  void start();
+  void start(const std::string& experimentTag);
 
   /**
    * \brief Terminates the pose graph optimiser.
@@ -161,7 +166,12 @@ private:
    */
   void run_pose_graph_optimisation();
 
-/**
+  /**
+   * \brief Attempts to save the estimated global poses of the different scenes to disk.
+   */
+  void save_global_poses() const;
+
+  /**
    * \brief Attempts to get the largest cluster of samples of the transformation from the coordinate system of scene j to that of scene i.
    *
    * \param sceneI  The ID of scene i.
