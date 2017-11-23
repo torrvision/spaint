@@ -31,6 +31,9 @@ struct CollaborativeRelocalisation
   /** The score of this relocalisation as a candidate (used during relocalisation scheduling). */
   float m_candidateScore;
 
+  /** The intrinsics of the depth camera used to capture scene i. */
+  Vector4f m_depthIntrinsicsI;
+
   /** The intrinsics of the depth camera used to capture scene j. */
   Vector4f m_depthIntrinsicsJ;
 
@@ -62,8 +65,9 @@ struct CollaborativeRelocalisation
 
   //#################### CONSTRUCTORS ####################
 
-  CollaborativeRelocalisation(const std::string& sceneI, const std::string& sceneJ, int frameIndexJ, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
+  CollaborativeRelocalisation(const std::string& sceneI, const Vector4f& depthIntrinsicsI, const std::string& sceneJ, int frameIndexJ, const Vector4f& depthIntrinsicsJ, const ORUtils::SE3Pose& localPoseJ)
   : m_candidateScore(0.0f),
+    m_depthIntrinsicsI(depthIntrinsicsI),
     m_depthIntrinsicsJ(depthIntrinsicsJ),
     m_frameIndexJ(frameIndexJ),
     m_initialRelocalisationQuality(itmx::Relocaliser::RELOCALISATION_POOR),
