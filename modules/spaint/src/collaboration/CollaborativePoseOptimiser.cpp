@@ -351,7 +351,7 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
 void CollaborativePoseOptimiser::save_global_poses() const
 {
   // Determine the file to which to save the global poses.
-  const std::string dirName = "global_poses";
+  const std::string dirName = "scene_poses";
   const std::string experimentTag = m_experimentTag != "" ? m_experimentTag : TimeUtil::get_iso_timestamp();
   const bf::path p = find_subdir_from_executable(dirName) / (experimentTag + ".txt");
 
@@ -362,7 +362,7 @@ void CollaborativePoseOptimiser::save_global_poses() const
   }
   catch(bf::filesystem_error&)
   {
-    std::cerr << "Warning: Could not create the directory '" << dirName << "'\n";
+    std::cerr << "Warning: Could not create directory '" << dirName << "'\n";
     return;
   }
 
@@ -370,7 +370,7 @@ void CollaborativePoseOptimiser::save_global_poses() const
   std::ofstream fs(p.string().c_str());
   if(!fs)
   {
-    std::cerr << "Warning: Could not open the file to save the global poses\n";
+    std::cerr << "Warning: Could not open file to save scene poses\n";
     return;
   }
 

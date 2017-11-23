@@ -23,6 +23,7 @@ using namespace ORUtils;
 using namespace grove;
 #endif
 
+#include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
@@ -34,6 +35,7 @@ using namespace grove;
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
 
+#include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
@@ -521,6 +523,33 @@ void SLAMComponent::setup_tracker()
   m_tracker = TrackerFactory::make_tracker_from_string(
     m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker, mappingServer
   );
+
+  // If we're using existing known poses for our scenes, load them from disk and extract the relevant pose for this scene.
+  const std::string scenePosesSpecifier = settings->get_first_value<std::string>("scenePosesSpecifier", "");
+  if(scenePosesSpecifier == "") return;
+
+  // Determine the file from which to load the scene poses.
+  const std::string dirName = "scene_poses";
+  const bf::path p = find_subdir_from_executable(dirName) / (scenePosesSpecifier + ".txt");
+
+  // Try to read the poses from the file. If we can't, print a warning and early out.
+  std::ifstream fs(p.string().c_str());
+  if(!fs)
+  {
+    std::cerr << "Warning: Could not open scene poses file\n";
+    return;
+  }
+
+  std::string sceneID;
+  DualQuatd dq;
+  while(fs >> sceneID >> dq)
+  {
+    if(fs && sceneID == m_sceneID)
+    {
+      //SE3Pose pose = GeometryUtil::dual_quat_to_pose(dq);
+      std::cout << sceneID << ' ' << dq << '\n';
+    }
+  }
 }
 
 }
