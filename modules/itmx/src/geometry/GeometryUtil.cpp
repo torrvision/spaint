@@ -40,8 +40,8 @@ Eigen::Matrix4f GeometryUtil::estimate_rigid_transform(const Eigen::Matrix3f& P,
 
   // Combine them to form the final transformation matrix.
   Eigen::Matrix4f M = Eigen::Matrix4f::Identity();
-  M.block<3, 3>(0, 0) = R;
-  M.block<3, 1>(0, 3) = t;
+  M.block<3,3>(0, 0) = R;
+  M.block<3,1>(0, 3) = t;
 
   return M;
 }
@@ -72,8 +72,7 @@ void GeometryUtil::estimate_rigid_transform(const Eigen::Matrix3f& P, const Eige
   const Eigen::Matrix3f centredP = P - centroidP * onesT;
   const Eigen::Matrix3f centredQ = Q - centroidQ * onesT;
 
-  // Step 3: Compute the cross-covariance between the two matrices of centred points. We do this in the opposite order to the
-  //         Wikipedia page, which computes P^T * Q, and compute the inverse of the transformation they compute as a result.
+  // Step 3: Compute the cross-covariance between the two matrices of centred points.
   const Eigen::Matrix3f A = centredP * centredQ.transpose();
 
   // Step 4: Calculate the SVD of the cross-covariance matrix: A = V * S * W^T.
@@ -88,8 +87,7 @@ void GeometryUtil::estimate_rigid_transform(const Eigen::Matrix3f& P, const Eige
     I(2,2) = -1;
   }
 
-  // Step 6: Recover the rotation and translation estimates. As before, we do this in the opposite order to the Wikipedia page,
-  //         which computes V * I * W^T.
+  // Step 6: Recover the rotation and translation estimates.
   R = W * I * V.transpose();
   t = centroidQ - R * centroidP;
 }
