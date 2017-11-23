@@ -50,6 +50,25 @@ struct GeometryUtil
   }
 
   /**
+   * \brief Estimates the rigid body transformation between two sets of 3D points using the Kabsch algorithm.
+   *
+   * \param P The first set of 3D points (each point is a column in the matrix).
+   * \param Q The second set of 3D points (each point is a column in the matrix).
+   * \return  The estimated rigid body transformation.
+   */
+  static Eigen::Matrix4f estimate_rigid_transform(const Eigen::Matrix3f& P, const Eigen::Matrix3f& Q);
+
+  /**
+   * \brief Estimates the rigid body transformation between two sets of 3D points using the Kabsch algorithm.
+   *
+   * \param P The first set of 3D points (each point is a column in the matrix).
+   * \param Q The second set of 3D points (each point is a column in the matrix).
+   * \param R A location into which to write the estimated rotation matrix.
+   * \param t A location into which to write the estimated translation vector.
+   */
+  static void estimate_rigid_transform(const Eigen::Matrix3f& P, const Eigen::Matrix3f& Q, Eigen::Matrix3f& R, Eigen::Vector3f& t);
+
+  /**
    * \brief Finds a pose hypothesis with the greatest number of inliers from a set of such hypotheses.
    *
    * \param poseHypotheses            The set of pose hypotheses from which to choose the best hypothesis.
