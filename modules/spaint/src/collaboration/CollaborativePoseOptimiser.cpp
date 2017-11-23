@@ -350,7 +350,10 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
 
 void CollaborativePoseOptimiser::save_global_poses() const
 {
-  // Determine the file to which to save the global poses.
+  // If there aren't any poses to save, early out.
+  if(m_estimatedGlobalPoses.empty()) return;
+
+  // Determine the file to which to save the poses.
   const std::string dirName = "scene_poses";
   const std::string experimentTag = m_experimentTag != "" ? m_experimentTag : TimeUtil::get_iso_timestamp();
   const bf::path p = find_subdir_from_executable(dirName) / (experimentTag + ".txt");
