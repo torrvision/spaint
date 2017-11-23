@@ -4,12 +4,14 @@
  */
 
 #include "ransac/interface/PreemptiveRansac.h"
+using namespace tvgutil;
+
+#include <alglib/optimization.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <Eigen/Dense>
-#include <alglib/optimization.h>
 
 #ifdef WITH_OPENMP
 #include <omp.h>
@@ -18,107 +20,15 @@
 #include <ORUtils/SE3Pose.h>
 
 #include <itmx/base/MemoryBlockFactory.h>
+#include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;
 
-using namespace tvgutil;
+//#################### MACROS ####################
 
-// To enable more detailed timing prints (VERY VERBOSE)
+// Enable/disable the print-out of more detailed timings (very verbose, so disabled by default).
 //#define ENABLE_TIMERS
 
 namespace grove {
-
-//#################### ANONYMOUS FREE FUNCTIONS ####################
-
-namespace {
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- * \param weights  A set of weights associated to the points.
- * \param resRot   The resulting rotation matrix.
- * \param resTrans The resulting translation vector.
- */
-void Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q, Eigen::Vector3f& weights, Eigen::Matrix3f& resRot, Eigen::Vector3f& resTrans)
-{
-  const int D = P.rows(); // dimension of the space
-  const Eigen::Vector3f normalizedWeights = weights / weights.sum();
-
-  // Centroids
-  const Eigen::Vector3f p0 = P * normalizedWeights;
-  const Eigen::Vector3f q0 = Q * normalizedWeights;
-  const Eigen::Vector3f v1 = Eigen::Vector3f::Ones();
-
-  const Eigen::Matrix3f P_centred = P - p0 * v1.transpose(); // translating P to center the origin
-  const Eigen::Matrix3f Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
-
-  // Covariance between both matrices
-  const Eigen::Matrix3f C = P_centred * normalizedWeights.asDiagonal() * Q_centred.transpose();
-
-  // SVD
-  Eigen::JacobiSVD<Eigen::Matrix3f> svd(C, Eigen::ComputeFullU | Eigen::ComputeFullV);
-
-  const Eigen::Matrix3f V = svd.matrixU();
-  const Eigen::Matrix3f W = svd.matrixV();
-  Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
-
-  if((V * W.transpose()).determinant() < 0)
-  {
-    I(D - 1, D - 1) = -1;
-  }
-
-  // Recover the rotation and translation
-  resRot = W * I * V.transpose();
-  resTrans = q0 - resRot * p0;
-}
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- * \param resRot   The resulting rotation matrix.
- * \param resTrans The resulting translation vector.
- */
-void Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q, Eigen::Matrix3f& resRot, Eigen::Vector3f& resTrans)
-{
-  // Setup unitary weights and call the function above.
-  Eigen::Vector3f weights = Eigen::Vector3f::Ones();
-  Kabsch(P, Q, weights, resRot, resTrans);
-}
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- *
- * \return The estimated transformation matrix.
- */
-Eigen::Matrix4f Kabsch(Eigen::Matrix3f& P, Eigen::Matrix3f& Q)
-{
-  Eigen::Matrix3f resRot;
-  Eigen::Vector3f resTrans;
-
-  // Call the other function.
-  Kabsch(P, Q, resRot, resTrans);
-
-  // Decompose R + t in Rt.
-  Eigen::Matrix4f res = Eigen::Matrix4f::Identity();
-  res.block<3, 3>(0, 0) = resRot;
-  res.block<3, 1>(0, 3) = resTrans;
-  return res;
-}
-
-/**
- * \brief Pretty print a timer value.
- *
- * \param timer The timer to print.
- */
-void printTimer(const PreemptiveRansac::AverageTimer& timer)
-{
-  std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
-}
-
-}
 
 //#################### CONSTRUCTORS ####################
 
@@ -219,17 +129,17 @@ PreemptiveRansac::~PreemptiveRansac()
 {
   if(m_printTimers)
   {
-    printTimer(m_timerTotal);
-    printTimer(m_timerCandidateGeneration);
-    printTimer(m_timerFirstTrim);
-    printTimer(m_timerFirstComputeEnergy);
+    print_timer(m_timerTotal);
+    print_timer(m_timerCandidateGeneration);
+    print_timer(m_timerFirstTrim);
+    print_timer(m_timerFirstComputeEnergy);
 
     for(size_t i = 0; i < m_timerInlierSampling.size(); ++i)
     {
-      printTimer(m_timerInlierSampling[i]);
-      printTimer(m_timerComputeEnergy[i]);
-      printTimer(m_timerPrepareOptimisation[i]);
-      printTimer(m_timerOptimisation[i]);
+      print_timer(m_timerInlierSampling[i]);
+      print_timer(m_timerComputeEnergy[i]);
+      print_timer(m_timerPrepareOptimisation[i]);
+      print_timer(m_timerOptimisation[i]);
     }
   }
 }
@@ -239,13 +149,13 @@ PreemptiveRansac::~PreemptiveRansac()
 // Default implementation of the abstract function.
 void PreemptiveRansac::update_candidate_poses()
 {
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
 
 // Update every pose in parallel
 #ifdef WITH_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for(size_t i = 0; i < nbPoseCandidates; ++i)
+  for(int i = 0; i < nbPoseCandidates; ++i)
   {
     update_candidate_pose(i);
   }
@@ -433,7 +343,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 
 // Process all candidates in parallel.
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
@@ -450,7 +360,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     }
 
     // Run Kabsch and store the result in the candidate cameraPose matrix.
-    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = Kabsch(localPoints, worldPoints);
+    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = GeometryUtil::estimate_rigid_transform(localPoints, worldPoints);
   }
 }
 
@@ -692,6 +602,13 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 void PreemptiveRansac::update_host_pose_candidates() const
 {
   // NOP by default.
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void PreemptiveRansac::print_timer(const AverageTimer& timer)
+{
+  std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
 }
 
 }
