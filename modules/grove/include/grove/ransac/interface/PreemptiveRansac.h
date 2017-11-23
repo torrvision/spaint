@@ -265,6 +265,15 @@ protected:
    * \brief Make sure that the host version of the pose candidates memory block contains up to date values.
    */
   virtual void update_host_pose_candidates() const;
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Pretty prints a timer value.
+   *
+   * \param timer The timer to print.
+   */
+  static void print_timer(const AverageTimer& timer);
 };
 
 //#################### TYPEDEFS ####################
