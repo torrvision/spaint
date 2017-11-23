@@ -50,16 +50,20 @@ struct GeometryUtil
   }
 
   /**
-   * \brief Estimates the rigid body transformation between two sets of 3D points using the Kabsch algorithm.
+   * \brief Estimates the rigid body transformation from three 3D points in a set P to three corresponding 3D points in a set Q using the Kabsch algorithm.
+   *
+   * Specifically, we estimate M such that M * P.col(i).homogeneous() is as close as possible to Q.col(i).homogeneous() for every i.
    *
    * \param P The first set of 3D points (each point is a column in the matrix).
    * \param Q The second set of 3D points (each point is a column in the matrix).
-   * \return  The estimated rigid body transformation.
+   * \return  The estimated rigid body transformation from each point in P to its corresponding point in Q.
    */
   static Eigen::Matrix4f estimate_rigid_transform(const Eigen::Matrix3f& P, const Eigen::Matrix3f& Q);
 
   /**
-   * \brief Estimates the rigid body transformation between two sets of 3D points using the Kabsch algorithm.
+   * \brief Estimates the rigid body transformation from three 3D points in a set P to three corresponding 3D points in a set Q using the Kabsch algorithm.
+   *
+   * Specifically, we estimate M such that M * P.col(i).homogeneous() is as close as possible to Q.col(i).homogeneous() for every i.
    *
    * \param P The first set of 3D points (each point is a column in the matrix).
    * \param Q The second set of 3D points (each point is a column in the matrix).

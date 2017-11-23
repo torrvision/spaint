@@ -48,6 +48,26 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
   BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(pose), dq));
 }
 
+BOOST_AUTO_TEST_CASE(test_estimate_rigid_transform)
+{
+  Eigen::Matrix3f P;
+  P(0,0) = 1; P(0,1) = 0; P(0,2) = 0;
+  P(1,0) = 0; P(1,1) = 1; P(1,2) = 0;
+  P(2,0) = 0; P(2,1) = 0; P(2,2) = 1;
+
+  Eigen::Matrix3f Q;
+  Q(0,0) = 1; Q(0,1) = 1; Q(0,2) = 0;
+  Q(1,0) = 0; Q(1,1) = 1; Q(1,2) = 0;
+  Q(2,0) = 1; Q(2,1) = 0; Q(2,2) = 0;
+
+  Eigen::Matrix4f M = GeometryUtil::estimate_rigid_transform(P, Q);
+
+  for(int i = 0; i < 3; ++i)
+  {
+    BOOST_CHECK_SMALL((M * P.col(i).homogeneous() - Q.col(i).homogeneous()).norm(), 1e-4f);
+  }
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
 {
   // Generate increasingly-large clusters of rotated poses around the z axis at 0, PI/2, PI and 3*PI/2 radians.
