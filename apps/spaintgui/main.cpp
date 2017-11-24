@@ -200,12 +200,11 @@ std::map<std::string,DualQuatd> load_global_poses(const std::string& globalPoses
   std::ifstream fs(p.string().c_str());
   if(!fs) throw std::runtime_error("Error: Could not open global poses file");
 
-  // FIXME: It would be nicer to use sequence IDs here.
-  std::string sceneID;
+  std::string id;
   DualQuatd dq;
-  while(fs >> sceneID >> dq)
+  while(fs >> id >> dq)
   {
-    globalPoses.insert(std::make_pair(sceneID, dq));
+    globalPoses.insert(std::make_pair(id, dq));
   }
 
   return globalPoses;
@@ -303,17 +302,30 @@ std::string make_tracker_config(CommandLineArguments& args)
           throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
         }
 
+        // If we're using global poses for the scenes:
         if(!globalPoses.empty())
         {
-          // FIXME: It would be nicer to use sequence IDs here.
-          const std::string sceneID = i == 0 ? "World" : "Local" + boost::lexical_cast<std::string>(i);
-          std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sceneID);
-          DualQuatd dq = it != globalPoses.end() ? it->second : DualQuatd::identity();
-          result += "<tracker type='global'><params>" + boost::lexical_cast<std::string>(dq) + "</params>";
+          // Try to find the global pose based on the sequence specifier.
+          const std::string sequenceID = args.sequenceDirs[i].stem().string();
+          std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sequenceID);
+
+          // If that doesn't work, try to find the global pose based on the scene ID.
+          // FIXME: We shouldn't hard-code "Local" here - it's based on knowing how CollaborativePipeline assigns scene names.
+          if(it == globalPoses.end())
+          {
+            const std::string sceneID = i == 0 ? Model::get_world_scene_id() : "Local" + boost::lexical_cast<std::string>(i);
+            it = globalPoses.find(sceneID);
+          }
+
+          // If we now have a global pose, specify the creation of a global tracker that uses it. If not, throw.
+          if(it != globalPoses.end()) result += "<tracker type='global'><params>" + boost::lexical_cast<std::string>(it->second) + "</params>";
+          else throw std::runtime_error("Error: Global pose for sequence '" + sequenceID + "' not found");
         }
 
+        // Specify the creation of a file-based tracker that reads poses from disk.
         result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
 
+        // If we're using global poses for the scenes, add the necessary closing tag for the global tracker.
         if(!globalPoses.empty()) result += "</tracker>";
       }
       else

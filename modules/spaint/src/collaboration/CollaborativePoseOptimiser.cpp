@@ -379,7 +379,6 @@ void CollaborativePoseOptimiser::save_global_poses() const
 
   for(std::map<std::string,SE3Pose>::const_iterator it = m_estimatedGlobalPoses.begin(), iend = m_estimatedGlobalPoses.end(); it != iend; ++it)
   {
-    // FIXME: It would be nicer to save sequence IDs rather than scene IDs here.
     DualQuatd dq = GeometryUtil::pose_to_dual_quat<double>(it->second);
     fs << it->first << ' ' << dq << '\n';
   }
