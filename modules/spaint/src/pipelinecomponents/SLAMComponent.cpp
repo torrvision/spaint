@@ -23,7 +23,6 @@ using namespace ORUtils;
 using namespace grove;
 #endif
 
-#include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
@@ -273,7 +272,7 @@ bool SLAMComponent::process_frame()
 
   // If we're using a composite image source engine and the current sub-engine has run out of images, disable fusion.
   CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
-  if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
+  //if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
   // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
   // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.
@@ -523,33 +522,6 @@ void SLAMComponent::setup_tracker()
   m_tracker = TrackerFactory::make_tracker_from_string(
     m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker, mappingServer
   );
-
-  // If we're using existing known poses for our scenes, load them from disk and extract the relevant pose for this scene.
-  const std::string scenePosesSpecifier = settings->get_first_value<std::string>("scenePosesSpecifier", "");
-  if(scenePosesSpecifier == "") return;
-
-  // Determine the file from which to load the scene poses.
-  const std::string dirName = "scene_poses";
-  const bf::path p = find_subdir_from_executable(dirName) / (scenePosesSpecifier + ".txt");
-
-  // Try to read the poses from the file. If we can't, print a warning and early out.
-  std::ifstream fs(p.string().c_str());
-  if(!fs)
-  {
-    std::cerr << "Warning: Could not open scene poses file\n";
-    return;
-  }
-
-  std::string sceneID;
-  DualQuatd dq;
-  while(fs >> sceneID >> dq)
-  {
-    if(fs && sceneID == m_sceneID)
-    {
-      //SE3Pose pose = GeometryUtil::dual_quat_to_pose(dq);
-      std::cout << sceneID << ' ' << dq << '\n';
-    }
-  }
 }
 
 }

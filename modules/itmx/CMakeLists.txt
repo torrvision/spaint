@@ -137,16 +137,16 @@ include/itmx/remotemapping/RGBDFrameMessage.h
 
 ##
 SET(trackers_sources
+src/trackers/GlobalTracker.cpp
 src/trackers/RemoteTracker.cpp
 src/trackers/TrackerFactory.cpp
-src/trackers/TransformedTracker.cpp
 )
 
 SET(trackers_headers
 include/itmx/trackers/FallibleTracker.h
+include/itmx/trackers/GlobalTracker.h
 include/itmx/trackers/RemoteTracker.h
 include/itmx/trackers/TrackerFactory.h
-include/itmx/trackers/TransformedTracker.h
 )
 
 IF(WITH_OVR)

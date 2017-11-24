@@ -354,7 +354,7 @@ void CollaborativePoseOptimiser::save_global_poses() const
   if(m_estimatedGlobalPoses.empty()) return;
 
   // Determine the file to which to save the poses.
-  const std::string dirName = "scene_poses";
+  const std::string dirName = "global_poses";
   const std::string experimentTag = m_experimentTag != "" ? m_experimentTag : TimeUtil::get_iso_timestamp();
   const bf::path p = find_subdir_from_executable(dirName) / (experimentTag + ".txt");
 
@@ -373,12 +373,13 @@ void CollaborativePoseOptimiser::save_global_poses() const
   std::ofstream fs(p.string().c_str());
   if(!fs)
   {
-    std::cerr << "Warning: Could not open file to save scene poses\n";
+    std::cerr << "Warning: Could not open file to save global poses\n";
     return;
   }
 
   for(std::map<std::string,SE3Pose>::const_iterator it = m_estimatedGlobalPoses.begin(), iend = m_estimatedGlobalPoses.end(); it != iend; ++it)
   {
+    // FIXME: It would be nicer to save sequence IDs rather than scene IDs here.
     DualQuatd dq = GeometryUtil::pose_to_dual_quat<double>(it->second);
     fs << it->first << ' ' << dq << '\n';
   }

@@ -35,6 +35,7 @@
 #endif
 
 #include <itmx/base/MemoryBlockFactory.h>
+#include <itmx/geometry/GeometryUtil.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #include <itmx/imagesources/RemoteImageSourceEngine.h>
 
@@ -71,6 +72,7 @@ struct CommandLineArguments
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
+  std::string globalPosesSpecifier;
   std::string host;
   int initialFrameNumber;
   std::string leapFiducialID;
@@ -85,7 +87,6 @@ struct CommandLineArguments
   std::vector<std::string> rgbImageMasks;
   bool runServer;
   bool saveMeshOnExit;
-  std::string scenePosesSpecifier;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
   std::string subwindowConfigurationIndex;
@@ -113,6 +114,7 @@ struct CommandLineArguments
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
+      ADD_SETTING(globalPosesSpecifier);
       ADD_SETTING(host);
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
@@ -127,7 +129,6 @@ struct CommandLineArguments
       ADD_SETTINGS(rgbImageMasks);
       ADD_SETTING(runServer);
       ADD_SETTING(saveMeshOnExit);
-      ADD_SETTING(scenePosesSpecifier);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
       ADD_SETTING(subwindowConfigurationIndex);
@@ -182,6 +183,39 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
 }
 
 /**
+ * \brief Attempts to load a set of global poses from the file specified by a global poses specifier.
+ *
+ * \param globalPosesSpecifier  The global poses specifier.
+ * \return                      The global poses from the file, if possible, or an empty map otherwise.
+ */
+std::map<std::string,DualQuatd> load_global_poses(const std::string& globalPosesSpecifier)
+{
+  std::map<std::string,DualQuatd> globalPoses;
+
+  // Determine the file from which to load the global poses.
+  const std::string dirName = "global_poses";
+  const bf::path p = find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
+
+  // Try to read the poses from the file. If we can't, throw.
+  std::ifstream fs(p.string().c_str());
+  if(!fs) throw std::runtime_error("Error: Could not open global poses file");
+
+  // FIXME: It would be nicer to use sequence IDs here.
+  std::string sceneID;
+  DualQuatd dq;
+  while(fs >> sceneID >> dq)
+  {
+    globalPoses.insert(std::make_pair(sceneID, dq));
+
+#if 1
+    std::cout << sceneID << ' ' << dq << '\n';
+#endif
+  }
+
+  return globalPoses;
+}
+
+/**
  * \brief Attempts to make a camera subengine to read images from any suitable camera that is attached.
  *
  * \param args  The program's command-line arguments.
@@ -229,6 +263,10 @@ std::string make_tracker_config(CommandLineArguments& args)
 {
   std::string result;
 
+  // If we're using global poses for our scenes, load them from disk.
+  std::map<std::string,DualQuatd> globalPoses;
+  if(args.globalPosesSpecifier != "") globalPoses = load_global_poses(args.globalPosesSpecifier);
+
   // Determine the number of different trackers that will be needed.
   size_t trackerCount = args.sequenceSpecifiers.size();
   if(trackerCount == 0 || args.cameraAfterDisk) ++trackerCount;
@@ -269,7 +307,18 @@ std::string make_tracker_config(CommandLineArguments& args)
           throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
         }
 
+        if(!globalPoses.empty())
+        {
+          // FIXME: It would be nicer to use sequence IDs here.
+          const std::string sceneID = i == 0 ? "World" : "Local" + boost::lexical_cast<std::string>(i);
+          std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sceneID);
+          DualQuatd dq = it != globalPoses.end() ? it->second : DualQuatd::identity();
+          result += "<tracker type='global'><params>" + boost::lexical_cast<std::string>(dq) + "</params>";
+        }
+
         result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
+
+        if(!globalPoses.empty()) result += "</tracker>";
       }
       else
       {
@@ -296,14 +345,14 @@ std::string make_tracker_config(CommandLineArguments& args)
  */
 bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& settings)
 {
-  // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
+  // If the user specifies both sequence and explicit depth/RGB/pose masks, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth/RGB/pose masks may be specified, but not both.\n";
     return false;
   }
 
-  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth / RGB image masks appropriately.
+  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
   for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
   {
     // Determine the sequence type.
@@ -316,7 +365,7 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Set the depth / RGB image masks.
+    // Set the depth/RGB/pose masks.
     args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
     args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
     args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
@@ -425,6 +474,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
+    ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
@@ -434,7 +484,6 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
-    ("scenePosesSpecifier,g", po::value<std::string>(&args.scenePosesSpecifier)->default_value(""), "scene poses specifier")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
