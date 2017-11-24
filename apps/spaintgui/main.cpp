@@ -256,13 +256,13 @@ std::string make_tracker_config(CommandLineArguments& args)
     size_t chunkCount = chunks.size();
     if(chunkCount > 1) result += "<tracker type='composite'>";
 
-    for(size_t i = 0; i < chunkCount; ++i)
+    for(size_t j = 0; j < chunkCount; ++j)
     {
-      if(chunks[i] == "InfiniTAM")
+      if(chunks[j] == "InfiniTAM")
       {
         result += "<tracker type='infinitam'/>";
       }
-      else if(chunks[i] == "Disk")
+      else if(chunks[j] == "Disk")
       {
         if(args.poseFileMasks.size() < i)
         {
@@ -275,7 +275,7 @@ std::string make_tracker_config(CommandLineArguments& args)
       }
       else
       {
-        result += "<tracker type='import'><params>builtin:" + chunks[i] + "</params></tracker>";
+        result += "<tracker type='import'><params>builtin:" + chunks[j] + "</params></tracker>";
       }
     }
 

@@ -227,6 +227,14 @@ std::ostream& operator<<(std::ostream& os, const DualNumber<T>& rhs)
   return os;
 }
 
+template <typename T>
+std::istream& operator>>(std::istream& is, DualNumber<T>& rhs)
+{
+  char c;
+  is >> c >> rhs.r >> c >> rhs.d >> c;
+  return is;
+}
+
 //#################### TYPEDEFS ####################
 
 typedef DualNumber<double> DualNumberd;
