@@ -21,6 +21,11 @@
 
 namespace spaint {
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
+typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VoxelVisualisationEngine_CPtr;
+
 /**
  * \brief An instance of this class can be used to generate visualisations of an InfiniTAM scene.
  */
@@ -29,8 +34,6 @@ class VisualisationGenerator
   //#################### TYPEDEFS ####################
 public:
   typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
-  typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VoxelVisualisationEngine_CPtr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -84,7 +87,7 @@ public:
    * \param settings                  The settings to use for InfiniTAM.
    */
   VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
-                         const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
+                         const LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

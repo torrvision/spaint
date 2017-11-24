@@ -23,7 +23,7 @@ VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CP
                                                const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
 : m_depthVisualiser(VisualiserFactory::make_depth_visualiser(settings->deviceType)),
   m_labelManager(labelManager),
-  m_semanticVisualiser(VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType)),
+  m_semanticVisualiser(m_labelManager ? VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType) : NULL),
   m_settings(settings),
   m_surfelVisualisationEngine(surfelVisualisationEngine),
   m_voxelVisualisationEngine(voxelVisualisationEngine)

@@ -547,11 +547,13 @@ include/spaint/util/SpaintVoxelScene.h
 ##
 SET(visualisation_sources
 src/visualisation/VisualisationGenerator.cpp
+src/visualisation/VisualisationGeneratorFactory.cpp
 src/visualisation/VisualiserFactory.cpp
 )
 
 SET(visualisation_headers
 include/spaint/visualisation/VisualisationGenerator.h
+include/spaint/visualisation/VisualisationGeneratorFactory.h
 include/spaint/visualisation/VisualiserFactory.h
 )
 
