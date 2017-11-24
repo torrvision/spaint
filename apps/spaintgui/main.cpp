@@ -310,9 +310,9 @@ std::string make_tracker_config(CommandLineArguments& args)
           std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sequenceID);
 
           // If that doesn't work, try to find the global pose based on the scene ID.
-          // FIXME: We shouldn't hard-code "Local" here - it's based on knowing how CollaborativePipeline assigns scene names.
           if(it == globalPoses.end())
           {
+            // FIXME: We shouldn't hard-code "Local" here - it's based on knowing how CollaborativePipeline assigns scene names.
             const std::string sceneID = i == 0 ? Model::get_world_scene_id() : "Local" + boost::lexical_cast<std::string>(i);
             it = globalPoses.find(sceneID);
           }
