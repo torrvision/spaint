@@ -240,20 +240,20 @@ std::string make_tracker_config(CommandLineArguments& args)
     size_t chunkCount = chunks.size();
     if(chunkCount > 1) result += "<tracker type='composite'>";
 
-    for(size_t i = 0; i < chunkCount; ++i)
+    for(size_t j = 0; j < chunkCount; ++j)
     {
-      if(chunks[i] == "InfiniTAM")
+      if(chunks[j] == "InfiniTAM")
       {
         result += "<tracker type='infinitam'/>";
       }
-      else if(chunks[i] == "Disk")
+      else if(chunks[j] == "Disk")
       {
         const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
         result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + "</params></tracker>";
       }
       else
       {
-        result += "<tracker type='import'><params>builtin:" + chunks[i] + "</params></tracker>";
+        result += "<tracker type='import'><params>builtin:" + chunks[j] + "</params></tracker>";
       }
     }
 
