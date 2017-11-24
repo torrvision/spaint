@@ -16,6 +16,7 @@ using namespace ITMLib;
 #include <spaint/selectiontransformers/SelectionTransformerFactory.h>
 #include <spaint/selectors/NullSelector.h>
 #include <spaint/selectors/PickingSelector.h>
+#include <spaint/visualisation/VisualisationGeneratorFactory.h>
 using namespace spaint;
 
 #ifdef WITH_LEAP
@@ -44,7 +45,8 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
   m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, settings->deviceType);
 
   // Set up the visualisation generator.
-  m_visualisationGenerator.reset(new VisualisationGenerator(m_voxelVisualisationEngine, m_surfelVisualisationEngine, m_labelManager, settings));
+  m_visualisationGenerator = VisualisationGeneratorFactory::make_visualisation_generator(
+    m_voxelVisualisationEngine, m_surfelVisualisationEngine, m_labelManager, settings);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
