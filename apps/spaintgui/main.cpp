@@ -183,7 +183,7 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
 }
 
 /**
- * \brief Attempts to load a set of global poses from the file specified by a global poses specifier.
+ * \brief Attempts to load a set of global poses from a file specified by a global poses specifier.
  *
  * \param globalPosesSpecifier  The global poses specifier.
  * \return                      The global poses from the file, if possible, or an empty map otherwise.
@@ -206,10 +206,6 @@ std::map<std::string,DualQuatd> load_global_poses(const std::string& globalPoses
   while(fs >> sceneID >> dq)
   {
     globalPoses.insert(std::make_pair(sceneID, dq));
-
-#if 1
-    std::cout << sceneID << ' ' << dq << '\n';
-#endif
   }
 
   return globalPoses;
@@ -263,7 +259,7 @@ std::string make_tracker_config(CommandLineArguments& args)
 {
   std::string result;
 
-  // If we're using global poses for our scenes, load them from disk.
+  // If the user wants to use global poses for the scenes, load them from disk.
   std::map<std::string,DualQuatd> globalPoses;
   if(args.globalPosesSpecifier != "") globalPoses = load_global_poses(args.globalPosesSpecifier);
 
@@ -378,6 +374,16 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     if(bf::exists(defaultCalibrationFilename))
     {
       args.calibrationFilename = defaultCalibrationFilename.string();
+    }
+  }
+
+  // If the user wants to use global poses for the scenes, make sure that each disk sequence has a tracker specifier set to Disk.
+  if(args.globalPosesSpecifier != "")
+  {
+    args.trackerSpecifiers.resize(args.sequenceSpecifiers.size());
+    for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
+    {
+      args.trackerSpecifiers[i] = "Disk";
     }
   }
 
