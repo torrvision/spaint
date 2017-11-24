@@ -267,7 +267,7 @@ bool SLAMComponent::process_frame()
   if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages())
   {
     // If we're not using global poses, disable fusion.
-    if(!m_context->get_settings()->has_values("globalPosesSpecifier")) m_fusionEnabled = false;
+    if(m_context->get_settings()->get_first_value<std::string>("globalPosesSpecifier", "") == "") m_fusionEnabled = false;
 
     // Make sure the tracking state is ready for the next sub-sequence.
     trackingState->Reset();
