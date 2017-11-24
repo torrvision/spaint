@@ -97,7 +97,6 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   slamState->set_tracking_state(TrackingState_Ptr(new ITMTrackingState(trackedImageSize, memoryType)));
-  m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 
   // Set up the relocaliser.
   setup_relocaliser();
@@ -111,6 +110,9 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Set up the scene.
   reset_scene();
+
+  // Update the initial pose.
+  m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -260,6 +262,19 @@ bool SLAMComponent::process_frame()
     *trackingState->pose_d = oldPose;
   }
 
+  // If we're using a composite image source engine and the current sub-engine has run out of images:
+  CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
+  if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages())
+  {
+    // If we're not using global poses, disable fusion.
+    if(!m_context->get_settings()->has_values("globalPosesSpecifier")) m_fusionEnabled = false;
+
+    // Make sure the tracking state is ready for the next sub-sequence.
+    trackingState->Reset();
+    trackingState->trackerResult = ITMTrackingState::TRACKING_FAILED;
+    m_tracker->UpdateInitialPose(trackingState.get());
+  }
+
   // Render from the live camera position to prepare for tracking in the next frame.
   prepare_for_tracking(m_trackingMode);
 
@@ -268,10 +283,6 @@ bool SLAMComponent::process_frame()
   {
     m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib.intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
   }
-
-  // If we're using a composite image source engine and the current sub-engine has run out of images, disable fusion.
-  CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
-  //if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
   // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
   // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.

@@ -80,6 +80,17 @@ public:
     return values.empty() ? defaultValue : from_string<T>(values[0]);
   }
 
+  /**
+   * \brief Gets whether or not there are any values associated with the specified setting.
+   *
+   * \param key The name of the setting whose values are to be looked up.
+   * \return    true, if the setting has any values associated with it, or false otherwise.
+   */
+  bool has_values(const std::string& key) const
+  {
+    return m_settings.find(key) != m_settings.end();
+  }
+
   //#################### STREAM OPERATORS ####################
 public:
   /**

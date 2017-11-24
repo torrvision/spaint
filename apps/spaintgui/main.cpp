@@ -305,7 +305,7 @@ std::string make_tracker_config(CommandLineArguments& args)
         // If we're using global poses for the scenes:
         if(!globalPoses.empty())
         {
-          // Try to find the global pose based on the sequence specifier.
+          // Try to find the global pose for this scene based on the sequence specifier.
           const std::string sequenceID = args.sequenceDirs[i].stem().string();
           std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sequenceID);
 

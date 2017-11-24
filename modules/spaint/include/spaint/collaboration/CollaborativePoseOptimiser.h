@@ -101,7 +101,7 @@ public:
   /**
    * \brief Starts the pose graph optimiser.
    *
-   * \param experimentTag TODO
+   * \param experimentTag The (global) experiment tag (if any), or the empty string otherwise.
    */
   void start(const std::string& experimentTag);
 
