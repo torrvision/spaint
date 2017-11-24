@@ -34,7 +34,6 @@ using namespace grove;
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
 
-#include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
