@@ -651,8 +651,8 @@ try
 
 #if 1
   // FIXME: This is to allow large-scale scenes to work. We should do this properly.
-  settings->sceneParams.voxelSize = 0.01f;
-  settings->sceneParams.mu = 0.04f;
+  settings->sceneParams.voxelSize = 0.015f;
+  settings->sceneParams.mu = settings->sceneParams.voxelSize * 4;
 #endif
 
   // Pass the device type to the memory block factory.
