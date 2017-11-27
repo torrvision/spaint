@@ -33,8 +33,8 @@ private:
   /** Estimates of the poses of the different scenes in the global coordinate system. */
   std::map<std::string,ORUtils::SE3Pose> m_estimatedGlobalPoses;
 
-  /** The (global) experiment tag (if any), or the empty string otherwise. */
-  std::string m_experimentTag;
+  /** The global poses specifier (if any), or the empty string otherwise. */
+  std::string m_globalPosesSpecifier;
 
   /** The synchronisation mutex. */
   mutable boost::mutex m_mutex;
@@ -101,9 +101,9 @@ public:
   /**
    * \brief Starts the pose graph optimiser.
    *
-   * \param experimentTag The (global) experiment tag (if any), or the empty string otherwise.
+   * \param globalPosesSpecifier The global poses specifier (if any), or the empty string otherwise.
    */
-  void start(const std::string& experimentTag);
+  void start(const std::string& globalPosesSpecifier);
 
   /**
    * \brief Terminates the pose graph optimiser.

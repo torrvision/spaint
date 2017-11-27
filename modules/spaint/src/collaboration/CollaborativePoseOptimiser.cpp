@@ -80,9 +80,9 @@ void CollaborativePoseOptimiser::add_relative_transform_sample(const std::string
 #endif
 }
 
-void CollaborativePoseOptimiser::start(const std::string& experimentTag)
+void CollaborativePoseOptimiser::start(const std::string& globalPosesSpecifier)
 {
-  m_experimentTag = experimentTag;
+  m_globalPosesSpecifier = globalPosesSpecifier;
   m_optimisationThread.reset(new boost::thread(boost::bind(&CollaborativePoseOptimiser::run_pose_graph_optimisation, this)));
 }
 
@@ -355,8 +355,8 @@ void CollaborativePoseOptimiser::save_global_poses() const
 
   // Determine the file to which to save the poses.
   const std::string dirName = "global_poses";
-  const std::string experimentTag = m_experimentTag != "" ? m_experimentTag : TimeUtil::get_iso_timestamp();
-  const bf::path p = find_subdir_from_executable(dirName) / (experimentTag + ".txt");
+  const std::string globalPosesSpecifier = m_globalPosesSpecifier != "" ? m_globalPosesSpecifier : TimeUtil::get_iso_timestamp();
+  const bf::path p = find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
 
   // Try to ensure that the directory into which we want to save the file exists. If we can't, early out.
   try

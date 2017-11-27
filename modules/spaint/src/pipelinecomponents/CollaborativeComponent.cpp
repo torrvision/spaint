@@ -34,8 +34,8 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
 
-  const std::string experimentTag = m_context->get_settings()->get_first_value<std::string>("experimentTag", "");
-  m_context->get_collaborative_pose_optimiser()->start(experimentTag);
+  const std::string globalPosesSpecifier = m_context->get_settings()->get_first_value<std::string>("globalPosesSpecifier", "");
+  m_context->get_collaborative_pose_optimiser()->start(globalPosesSpecifier);
 }
 
 //#################### DESTRUCTOR ####################
