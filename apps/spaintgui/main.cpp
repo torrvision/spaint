@@ -377,18 +377,17 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Try to figure out the format of the sequence stored in the folder. Just check for the depth because colour might be missing.
+    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since colour might be missing).
     const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
     const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
 
+    // Set the depth/RGB/pose masks appropriately.
     if(sevenScenesNaming && spaintNaming)
     {
-      std::cout << "Error: the sequence folder specified contains both 'seven scenes' and 'spaint'-named files.\n";
+      std::cout << "Error: The directory '" << dir.string() << "' contains images that follow both the 7-Scenes and spaint naming conventions.\n";
       return false;
     }
-
-    // Set the depth/RGB/pose masks.
-    if(sevenScenesNaming)
+    else if(sevenScenesNaming)
     {
       args.depthImageMasks.push_back((dir / "frame-%06i.depth.png").string());
       args.poseFileMasks.push_back((dir / "frame-%06i.pose.txt").string());
@@ -402,7 +401,7 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     }
     else
     {
-      std::cout << "Error: the sequence folder specified does not contain validly-named depth files. Manually specify the masks using the -d and -r options.\n";
+      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. Manually specify the masks using the -d and -r options.\n";
       return false;
     }
   }
