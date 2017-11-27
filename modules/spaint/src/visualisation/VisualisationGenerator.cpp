@@ -152,21 +152,20 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
 
   const ITMIntrinsics intrinsics = compute_intrinsics(view, output->noDims, useColourIntrinsics);
 
-  const ITMIntrinsics *intrinsics = useColourIntrinsics ? &view->calib.intrinsics_rgb : &view->calib.intrinsics_d;
-  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
 
   switch(visualisationType)
   {
     case VT_SCENE_COLOUR:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case VT_SCENE_NORMAL:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_NORMAL);
       break;
     }
@@ -187,14 +186,14 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
       else if(visualisationType == VT_SCENE_SEMANTICPHONG) lightingType = LT_PHONG;
 
       float labelAlpha = visualisationType == VT_SCENE_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
+      m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
+      m_semanticVisualiser->render(scene.get(), &pose, &intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }
     case VT_SCENE_LAMBERTIAN:
     default:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
