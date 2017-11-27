@@ -34,18 +34,23 @@ VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CP
 void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                         const View_CPtr& view, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
 {
+  if(!m_voxelVisualisationEngine)
+  {
+    throw std::runtime_error("Cannot generate a voxel-based depth visualisation without a VoxelVisualizationEngine.");
+  }
+
   if(!scene || !view)
   {
     output->Clear();
     return;
   }
 
-  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
 
-  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
-  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
-  m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+  const ITMIntrinsics intrinsics = compute_intrinsics(view, output->noDims, false);
+  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
 
   const SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
   m_depthVisualiser->render_depth(
@@ -57,19 +62,25 @@ void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr&
 }
 
 void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                           const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
+                                                           const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType,
+                                                           bool useColourIntrinsics) const
 {
+  if(!m_surfelVisualisationEngine)
+  {
+    throw std::runtime_error("Cannot generate a surfel visualisation without a SurfelVisualizationEngine.");
+  }
+
   if(!scene || !view)
   {
     output->Clear();
     return;
   }
 
-  if(!renderState) renderState.reset(new ITMSurfelRenderState(view->depth->noDims, scene->GetParams().supersamplingFactor));
+  if(!renderState) renderState.reset(new ITMSurfelRenderState(output->noDims, scene->GetParams().supersamplingFactor));
 
-  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
+  const ITMIntrinsics intrinsics = compute_intrinsics(view, output->noDims, useColourIntrinsics);
   const bool useRadii = true;
-  m_surfelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, useRadii, USR_DONOTRENDER, renderState.get());
+  m_surfelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, useRadii, USR_DONOTRENDER, renderState.get());
 
   switch(visualisationType)
   {
@@ -126,16 +137,20 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
                                                           const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
                                                           const boost::optional<Postprocessor>& postprocessor, bool useColourIntrinsics) const
 {
+  if(!m_voxelVisualisationEngine)
+  {
+    throw std::runtime_error("Cannot generate a voxel visualisation without a VoxelVisualizationEngine.");
+  }
+
   if(!scene || !view)
   {
     output->Clear();
     return;
   }
 
-  if(!renderState)
-  {
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(useColourIntrinsics ? view->rgb->noDims : view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
-  }
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+
+  const ITMIntrinsics intrinsics = compute_intrinsics(view, output->noDims, useColourIntrinsics);
 
   const ITMIntrinsics *intrinsics = useColourIntrinsics ? &view->calib.intrinsics_rgb : &view->calib.intrinsics_d;
   m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
@@ -160,6 +175,11 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
     case VT_SCENE_SEMANTICLAMBERTIAN:
     case VT_SCENE_SEMANTICPHONG:
     {
+      if(!m_labelManager)
+      {
+        throw std::runtime_error("Cannot generate a semantic visualisation without a LabelManager.");
+      }
+
       const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
 
       LightingType lightingType = LT_LAMBERTIAN;
@@ -203,6 +223,30 @@ void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, con
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+ITMIntrinsics VisualisationGenerator::compute_intrinsics(const View_CPtr &view, const Vector2i &outputImageSize, bool useColourIntrinsics) const
+{
+  ITMIntrinsics intrinsics;
+
+  if(useColourIntrinsics)
+  {
+    float fx = view->calib.intrinsics_rgb.projectionParamsSimple.fx * outputImageSize.x / view->rgb->noDims.x;
+    float fy = view->calib.intrinsics_rgb.projectionParamsSimple.fy * outputImageSize.y / view->rgb->noDims.y;
+    float px = view->calib.intrinsics_rgb.projectionParamsSimple.px * outputImageSize.x / view->rgb->noDims.x;
+    float py = view->calib.intrinsics_rgb.projectionParamsSimple.py * outputImageSize.y / view->rgb->noDims.y;
+    intrinsics.SetFrom(fx, fy, px, py);
+  }
+  else
+  {
+    float fx = view->calib.intrinsics_d.projectionParamsSimple.fx * outputImageSize.x / view->depth->noDims.x;
+    float fy = view->calib.intrinsics_d.projectionParamsSimple.fy * outputImageSize.y / view->depth->noDims.y;
+    float px = view->calib.intrinsics_d.projectionParamsSimple.px * outputImageSize.x / view->depth->noDims.x;
+    float py = view->calib.intrinsics_d.projectionParamsSimple.py * outputImageSize.y / view->depth->noDims.y;
+    intrinsics.SetFrom(fx, fy, px, py);
+  }
+
+  return intrinsics;
+}
 
 void VisualisationGenerator::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor,
                                                          const ITMUChar4Image_Ptr& outputRaycast) const

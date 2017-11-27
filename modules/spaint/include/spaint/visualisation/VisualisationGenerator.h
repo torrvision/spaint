@@ -110,15 +110,17 @@ public:
   /**
    * \brief Generates a visualisation of a surfel scene from the specified pose.
    *
-   * \param output            The location into which to put the output image.
-   * \param scene             The scene to visualise.
-   * \param pose              The pose from which to visualise the scene.
-   * \param view              The current view of the scene (used only for the camera settings).
-   * \param renderState       The render state to use for intermediate storage (can be null, in which case a new one will be created).
-   * \param visualisationType The type of visualisation to generate.
+   * \param output               The location into which to put the output image.
+   * \param scene                The scene to visualise.
+   * \param pose                 The pose from which to visualise the scene.
+   * \param view                 The current view of the scene (used only for the camera settings).
+   * \param renderState          The render state to use for intermediate storage (can be null, in which case a new one will be created).
+   * \param visualisationType    The type of visualisation to generate.
+   * \param useColourIntrinsics  Whether or not to use the colour intrinsics and image size rather than the depth ones (false by default).
    */
   void generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                     const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const;
+                                     const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType,
+                                     bool useColourIntrinsics = false) const;
 
   /**
    * \brief Generates a visualisation of a voxel scene from the specified pose.
@@ -163,6 +165,17 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Computes the intrinsics to use for rendering an image of a specified size.
+   *
+   * \param view                 The view used to perform the mapping.
+   * \param outputImageSize      The size of the outut image, used to scale the intrinsics.
+   * \param useColourIntrinsics  Whether or not to use the colour intrinsics stored in the view as base (depth intrinsics are used otherwise).
+   *
+   * \return  The computed intrinsics.
+   */
+  ITMLib::ITMIntrinsics compute_intrinsics(const View_CPtr& view, const Vector2i& outputImageSize, bool useColourIntrinsics) const;
+
   /**
    * \brief Makes a copy of an input raycast, optionally post-processes it and then ensures that it is accessible on the CPU.
    *
