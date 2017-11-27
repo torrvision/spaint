@@ -42,6 +42,9 @@ private:
   /** The pose graph optimisation thread. */
   boost::shared_ptr<boost::thread> m_optimisationThread;
 
+  /** The primary scene ID. */
+  std::string m_primarySceneID;
+
   /**
    * Accumulated samples of the relative transformations between the different scenes. Each sample for (scene i, scene j)
    * expresses an estimate of the transformation from the coordinate system of scene j to that of scene i.
@@ -64,8 +67,10 @@ private:
 public:
   /**
    * \brief Constructs a collaborative pose optimiser.
+   *
+   * \param primarySceneID  The ID of the primary scene.
    */
-  CollaborativePoseOptimiser();
+  explicit CollaborativePoseOptimiser(const std::string& primarySceneID = "World"); // FIXME: The primary scene ID shouldn't be hard-coded.
 
   //#################### DESTRUCTOR ####################
 public:

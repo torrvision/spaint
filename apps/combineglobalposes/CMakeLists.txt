@@ -37,19 +37,20 @@ SOURCE_GROUP(sources FILES ${sources})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} itmx tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} spaint itmx tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 
