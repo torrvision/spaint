@@ -40,15 +40,13 @@ bool GlobalTracker::requiresPointCloudRendering() const
 void GlobalTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
   m_tracker->TrackCamera(trackingState, view);
-
   trackingState->pose_d->SetM(trackingState->pose_d->GetM() * m_initialPose.GetM());
-  trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
 }
 
 void GlobalTracker::UpdateInitialPose(ITMTrackingState *trackingState)
 {
-  trackingState->pose_d->SetM(m_initialPose.GetM());
-  trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
+  m_tracker->UpdateInitialPose(trackingState);
+  trackingState->pose_d->SetM(trackingState->pose_d->GetM() * m_initialPose.GetM());
 }
 
 }
