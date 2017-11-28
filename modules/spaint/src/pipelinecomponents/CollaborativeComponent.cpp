@@ -304,23 +304,25 @@ void CollaborativeComponent::run_relocalisation()
     std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndexJ << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
 
     // Render synthetic images of the source scene from the relevant pose and copy them across to the GPU for use by the relocaliser.
+    // The synthetic images have the size of the images in the target scene and are generated using the target scene's intrinsics.
     const SLAMState_CPtr slamStateI = m_context->get_slam_state(m_bestCandidate->m_sceneI);
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
+    const View_CPtr viewI = slamStateI->get_view();
 
-    // The synthetic images have the size of the images in scene I and are generated according to I's intrinsics (hence slamStateI->get_view() is used in the later calls).
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateI->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateI->get_rgb_image_size(), true, true));
 
     VoxelRenderState_Ptr renderStateD;
     m_visualisationGenerator->generate_depth_from_voxels(
-      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_d,
+      renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
     VoxelRenderState_Ptr renderStateRGB;
     const bool useColourIntrinsics = true;
     m_visualisationGenerator->generate_voxel_visualisation(
-      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(),
-      renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
+      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_rgb,
+      renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none
     );
 
     depth->UpdateDeviceFromHost();
@@ -356,12 +358,13 @@ void CollaborativeComponent::run_relocalisation()
       renderStateRGB.reset();
 
       m_visualisationGenerator->generate_depth_from_voxels(
-        depth, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+        depth, slamStateI->get_voxel_scene(), result->pose.GetM(), viewI->calib.intrinsics_d,
+        renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
       );
 
       m_visualisationGenerator->generate_voxel_visualisation(
-        rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(),
-        renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
+        rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), viewI->calib.intrinsics_rgb,
+        renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none
       );
 
       // Make OpenCV copies of the synthetic images of the target scene.
