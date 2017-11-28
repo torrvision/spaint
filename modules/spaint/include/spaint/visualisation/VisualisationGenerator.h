@@ -61,7 +61,7 @@ private:
   /** The label manager to use (only needed if we want to generate semantic visualisations). */
   LabelManager_CPtr m_labelManager;
 
-  /** The semantic visualiser. */
+  /** The semantic visualiser (only needed if we want to generate semantic visualisations). */
   SemanticVisualiser_CPtr m_semanticVisualiser;
 
   /** The settings to use for InfiniTAM. */
@@ -128,6 +128,8 @@ public:
    * \param renderState       The render state to use for intermediate storage (can be null, in which case a new one will be created).
    * \param visualisationType The type of visualisation to generate.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
+   *
+   * \throws std::runtime_error If supports_semantics() is false and we try to generate a semantic visualisation of the scene.
    */
   void generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                     const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
@@ -157,6 +159,13 @@ public:
    * \param view    The current view of the scene.
    */
   void get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const;
+
+  /**
+   * \brief Gets whether or not this visualisation generator can generate semantic visualisations.
+   *
+   * \return  true, if this visualisation generator can generate semantic visualisations, or false otherwise.
+   */
+  bool supports_semantics() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

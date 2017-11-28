@@ -167,7 +167,7 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
     case VT_SCENE_SEMANTICLAMBERTIAN:
     case VT_SCENE_SEMANTICPHONG:
     {
-      if(!m_labelManager) throw std::runtime_error("Error: Cannot generate semantic visualisations without a label manager");
+      if(!m_semanticVisualiser) throw std::runtime_error("Error: This visualisation generator does not support semantic visualisations");
 
       const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
 
@@ -209,6 +209,11 @@ void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, con
   prepare_to_copy_visualisation(view->rgb->noDims, output);
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
   output->SetFrom(view->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+}
+
+bool VisualisationGenerator::supports_semantics() const
+{
+  return m_semanticVisualiser.get() != NULL;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
