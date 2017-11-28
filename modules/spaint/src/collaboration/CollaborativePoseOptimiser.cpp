@@ -31,8 +31,9 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-CollaborativePoseOptimiser::CollaborativePoseOptimiser()
-: m_relativeTransformSamplesChanged(false),
+CollaborativePoseOptimiser::CollaborativePoseOptimiser(const std::string& primarySceneID)
+: m_primarySceneID(primarySceneID),
+  m_relativeTransformSamplesChanged(false),
   m_shouldTerminate(false)
 {}
 
@@ -212,8 +213,7 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
       int primarySceneID = -1;
       for(int i = 0; i < sceneCount; ++i)
       {
-        // FIXME: The primary scene name shouldn't be hard-coded.
-        if(sceneIDs[i] == "World")
+        if(sceneIDs[i] == m_primarySceneID)
         {
           primarySceneID = i;
           break;
