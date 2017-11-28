@@ -391,8 +391,10 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
     {
       if(view)
       {
-        if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
-        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view->calib.intrinsics_d, voxelRenderState, visualisationType, postprocessor);
+        const ITMIntrinsics& intrinsics = view->calib.intrinsics_d;
+
+        if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, intrinsics, surfelRenderState, visualisationType);
+        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, postprocessor);
       }
       else output->Clear();
 

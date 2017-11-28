@@ -314,7 +314,8 @@ void CollaborativeComponent::run_relocalisation()
 
     VoxelRenderState_Ptr renderStateD;
     m_visualisationGenerator->generate_depth_from_voxels(
-      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI, renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_d,
+      renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
     VoxelRenderState_Ptr renderStateRGB;
@@ -357,7 +358,8 @@ void CollaborativeComponent::run_relocalisation()
       renderStateRGB.reset();
 
       m_visualisationGenerator->generate_depth_from_voxels(
-        depth, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+        depth, slamStateI->get_voxel_scene(), result->pose.GetM(), viewI->calib.intrinsics_d,
+        renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
       );
 
       m_visualisationGenerator->generate_voxel_visualisation(
