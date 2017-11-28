@@ -319,7 +319,6 @@ void CollaborativeComponent::run_relocalisation()
     );
 
     VoxelRenderState_Ptr renderStateRGB;
-    const bool useColourIntrinsics = true;
     m_visualisationGenerator->generate_voxel_visualisation(
       rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_rgb,
       renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none
