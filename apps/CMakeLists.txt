@@ -3,6 +3,8 @@
 ##################################
 
 IF(BUILD_AUXILIARY_APPS)
+  ADD_SUBDIRECTORY(combineglobalposes)
+
   IF(BUILD_EVALUATION_MODULES)
     ADD_SUBDIRECTORY(raflperf)
 
