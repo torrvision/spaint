@@ -16,6 +16,7 @@
 #include "CollaborativeContext.h"
 #include "../collaboration/CollaborationMode.h"
 #include "../collaboration/CollaborativeRelocalisation.h"
+#include "../visualisation/VisualisationGenerator.h"
 
 namespace spaint {
 
@@ -61,6 +62,9 @@ private:
 
   /** TODO */
   std::map<std::pair<std::string,std::string>,std::set<int> > m_triedFrameIndices;
+
+  /** A visualisation generator that is specific to this collaborative component. We avoid sharing one with other components for thread-safety reasons. */
+  VisualisationGenerator_CPtr m_visualisationGenerator;
 
   //#################### CONSTRUCTORS ####################
 public:
