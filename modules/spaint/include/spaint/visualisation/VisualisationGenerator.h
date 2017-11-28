@@ -58,7 +58,7 @@ private:
   /** The depth visualiser. */
   DepthVisualiser_CPtr m_depthVisualiser;
 
-  /** The label manager. */
+  /** The label manager to use (only needed if we want to generate semantic visualisations). */
   LabelManager_CPtr m_labelManager;
 
   /** The semantic visualiser. */
@@ -67,10 +67,10 @@ private:
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
-  /** The InfiniTAM engine used for rendering a surfel scene. */
+  /** The InfiniTAM engine to use for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
 
-  /** The InfiniTAM engine used for rendering a voxel scene. */
+  /** The InfiniTAM engine to use for rendering a voxel scene. */
   VoxelVisualisationEngine_CPtr m_voxelVisualisationEngine;
 
   //#################### CONSTRUCTORS ####################
@@ -78,13 +78,14 @@ public:
   /**
    * \brief Constructs a visualisation generator.
    *
-   * \param voxelVisualisationEngine  The InfiniTAM engine used for rendering a voxel scene.
-   * \param surfelVisualisationEngine The InfinITAM engine used for rendering a surfel scene.
-   * \param labelManager              The label manager.
    * \param settings                  The settings to use for InfiniTAM.
+   * \param labelManager              The label manager to use (only needed if we want to generate semantic visualisations).
+   * \param voxelVisualisationEngine  The InfiniTAM engine to use for rendering a voxel scene (will be created internally if NULL).
+   * \param surfelVisualisationEngine The InfiniTAM engine used for rendering a surfel scene (will be created internally if NULL).
    */
-  VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
-                         const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
+  VisualisationGenerator(const Settings_CPtr& settings, const spaint::LabelManager_CPtr& labelManager = spaint::LabelManager_CPtr(),
+                         const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine = VoxelVisualisationEngine_CPtr(),
+                         const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine = SurfelVisualisationEngine_CPtr());
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
