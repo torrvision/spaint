@@ -58,19 +58,19 @@ private:
   /** The depth visualiser. */
   DepthVisualiser_CPtr m_depthVisualiser;
 
-  /** The label manager. */
+  /** The label manager to use (only needed if we want to generate semantic visualisations). */
   LabelManager_CPtr m_labelManager;
 
-  /** The semantic visualiser. */
+  /** The semantic visualiser (only needed if we want to generate semantic visualisations). */
   SemanticVisualiser_CPtr m_semanticVisualiser;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
-  /** The InfiniTAM engine used for rendering a surfel scene. */
+  /** The InfiniTAM engine to use for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
 
-  /** The InfiniTAM engine used for rendering a voxel scene. */
+  /** The InfiniTAM engine to use for rendering a voxel scene. */
   VoxelVisualisationEngine_CPtr m_voxelVisualisationEngine;
 
   //#################### CONSTRUCTORS ####################
@@ -78,13 +78,14 @@ public:
   /**
    * \brief Constructs a visualisation generator.
    *
-   * \param voxelVisualisationEngine  The InfiniTAM engine used for rendering a voxel scene.
-   * \param surfelVisualisationEngine The InfinITAM engine used for rendering a surfel scene.
-   * \param labelManager              The label manager.
    * \param settings                  The settings to use for InfiniTAM.
+   * \param labelManager              The label manager to use (only needed if we want to generate semantic visualisations).
+   * \param voxelVisualisationEngine  The InfiniTAM engine to use for rendering a voxel scene (will be created internally if NULL).
+   * \param surfelVisualisationEngine The InfiniTAM engine used for rendering a surfel scene (will be created internally if NULL).
    */
-  VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
-                         const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
+  VisualisationGenerator(const Settings_CPtr& settings, const spaint::LabelManager_CPtr& labelManager = spaint::LabelManager_CPtr(),
+                         const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine = VoxelVisualisationEngine_CPtr(),
+                         const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine = SurfelVisualisationEngine_CPtr());
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -127,6 +128,8 @@ public:
    * \param renderState       The render state to use for intermediate storage (can be null, in which case a new one will be created).
    * \param visualisationType The type of visualisation to generate.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
+   *
+   * \throws std::runtime_error If supports_semantics() is false and we try to generate a semantic visualisation of the scene.
    */
   void generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                     const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
@@ -156,6 +159,13 @@ public:
    * \param view    The current view of the scene.
    */
   void get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const;
+
+  /**
+   * \brief Gets whether or not this visualisation generator can generate semantic visualisations.
+   *
+   * \return  true, if this visualisation generator can generate semantic visualisations, or false otherwise.
+   */
+  bool supports_semantics() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

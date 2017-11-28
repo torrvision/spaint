@@ -5,6 +5,8 @@
 
 #include "visualisation/VisualisationGenerator.h"
 
+#include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace ITMLib;
 
@@ -19,15 +21,23 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
-                                               const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
-: m_depthVisualiser(VisualiserFactory::make_depth_visualiser(settings->deviceType)),
-  m_labelManager(labelManager),
-  m_semanticVisualiser(VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType)),
-  m_settings(settings),
-  m_surfelVisualisationEngine(surfelVisualisationEngine),
-  m_voxelVisualisationEngine(voxelVisualisationEngine)
-{}
+VisualisationGenerator::VisualisationGenerator(const Settings_CPtr& settings, const LabelManager_CPtr& labelManager,
+                                               const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine,
+                                               const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine)
+: m_depthVisualiser(VisualiserFactory::make_depth_visualiser(settings->deviceType)), m_settings(settings)
+{
+  if(labelManager)
+  {
+    m_labelManager = labelManager;
+    m_semanticVisualiser = VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType);
+  }
+
+  if(surfelVisualisationEngine) m_surfelVisualisationEngine = surfelVisualisationEngine;
+  else m_surfelVisualisationEngine.reset(ITMSurfelVisualisationEngineFactory<SpaintSurfel>::make_surfel_visualisation_engine(settings->deviceType));
+
+  if(voxelVisualisationEngine) m_voxelVisualisationEngine = voxelVisualisationEngine;
+  else m_voxelVisualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -157,6 +167,8 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
     case VT_SCENE_SEMANTICLAMBERTIAN:
     case VT_SCENE_SEMANTICPHONG:
     {
+      if(!m_semanticVisualiser) throw std::runtime_error("Error: This visualisation generator does not support semantic visualisations");
+
       const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
 
       LightingType lightingType = LT_LAMBERTIAN;
@@ -197,6 +209,11 @@ void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, con
   prepare_to_copy_visualisation(view->rgb->noDims, output);
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
   output->SetFrom(view->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+}
+
+bool VisualisationGenerator::supports_semantics() const
+{
+  return m_semanticVisualiser.get() != NULL;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
