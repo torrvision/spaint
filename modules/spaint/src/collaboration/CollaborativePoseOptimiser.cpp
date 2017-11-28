@@ -7,6 +7,7 @@
 using namespace ORUtils;
 
 #include <deque>
+#include <fstream>
 
 #include <MiniSlamGraphLib/GraphEdgeSE3.h>
 #include <MiniSlamGraphLib/GraphNodeSE3.h>
