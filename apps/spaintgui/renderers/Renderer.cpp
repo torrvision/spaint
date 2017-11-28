@@ -373,9 +373,9 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
-                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                                      VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
-                                      const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose,
+                                      const View_CPtr& view, const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType,
+                                      bool surfelFlag, const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
   VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
 
@@ -391,8 +391,6 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
     {
       if(view)
       {
-        const ITMIntrinsics& intrinsics = view->calib.intrinsics_d;
-
         if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, intrinsics, surfelRenderState, visualisationType);
         else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, postprocessor);
       }
@@ -504,16 +502,19 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       // If we have not yet started reconstruction for this scene, avoid rendering it.
       if(!slamState || !slamState->get_view()) continue;
 
+      const View_CPtr view = slamState->get_view();
+      const ITMIntrinsics intrinsics = view->calib.intrinsics_d;
+
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
         subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-        tempPose, slamState->get_view(), visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
+        tempPose, view, intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
       SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
 
       depthVisualiser->render_depth(
-        DepthVisualiser::DT_EUCLIDEAN,
+        DepthVisualiser::DT_ORTHOGRAPHIC,
         GeometryUtil::to_itm(camera.p()),
         GeometryUtil::to_itm(camera.n()),
         subwindow.get_voxel_render_state(viewIndex).get(),
@@ -527,10 +528,13 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 #endif
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+  const View_CPtr view = slamState->get_view();
+  const ITMIntrinsics intrinsics = view->calib.intrinsics_d;
+
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
     subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
 #if 1
