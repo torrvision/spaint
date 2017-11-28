@@ -237,13 +237,14 @@ private:
    * \param surfelRenderState The surfel render state to use for intermediate storage (if relevant).
    * \param pose              The pose from which to visualise the scene (if relevant).
    * \param view              The current view of the scene.
+   * \param intrinsics        The intrinsics to use when rendering synthetic visualisations of the scene.
    * \param visualisationType The type of visualisation to generate.
    * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
                               VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                              spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
+                              const ITMLib::ITMIntrinsics& intrinsics, spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                               const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
 
   /**
