@@ -133,35 +133,31 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
 }
 
 void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                          const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
-                                                          const boost::optional<Postprocessor>& postprocessor, bool useColourIntrinsics) const
+                                                          const ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
+                                                          const boost::optional<Postprocessor>& postprocessor) const
 {
-  if(!scene || !view)
+  if(!scene)
   {
     output->Clear();
     return;
   }
 
-  if(!renderState)
-  {
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(useColourIntrinsics ? view->rgb->noDims : view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
-  }
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
 
-  const ITMIntrinsics *intrinsics = useColourIntrinsics ? &view->calib.intrinsics_rgb : &view->calib.intrinsics_d;
-  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
 
   switch(visualisationType)
   {
     case VT_SCENE_COLOUR:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case VT_SCENE_NORMAL:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_NORMAL);
       break;
     }
@@ -179,14 +175,14 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
       else if(visualisationType == VT_SCENE_SEMANTICPHONG) lightingType = LT_PHONG;
 
       float labelAlpha = visualisationType == VT_SCENE_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
+      m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
+      m_semanticVisualiser->render(scene.get(), &pose, &intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }
     case VT_SCENE_LAMBERTIAN:
     default:
     {
-      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,
                                               ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }

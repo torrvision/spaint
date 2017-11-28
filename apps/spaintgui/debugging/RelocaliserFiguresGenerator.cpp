@@ -223,7 +223,7 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
     pose.SetInvM(candidate.cameraPose);
 
     model->get_visualisation_generator()->generate_voxel_visualisation(
-        rendered, voxelScene, pose, view, liveVoxelRenderState, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN);
+        rendered, voxelScene, pose, view->calib.intrinsics_d, liveVoxelRenderState, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN);
 
     cv::Mat raycastedPose = cv::Mat(480, 640, CV_8UC4, rendered->GetData(MEMORYDEVICE_CPU)).clone();
     cv::cvtColor(raycastedPose, raycastedPose, CV_RGBA2BGR);

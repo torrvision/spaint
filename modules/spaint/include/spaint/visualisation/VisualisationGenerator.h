@@ -124,17 +124,16 @@ public:
    * \param output              The location into which to put the output image.
    * \param scene               The scene to visualise.
    * \param pose                The pose from which to visualise the scene.
-   * \param view                The current view of the scene (used only for the camera settings).
+   * \param intrinsics          The camera intrinsics to use when visualising the scene.
    * \param renderState         The render state to use for intermediate storage (can be null, in which case a new one will be created).
    * \param visualisationType   The type of visualisation to generate.
    * \param postprocessor       An optional function with which to postprocess the visualisation before returning it.
-   * \param useColourIntrinsics Whether or not to use the colour intrinsics and image size rather than the depth ones (false by default).
    *
    * \throws std::runtime_error If supports_semantics() is false and we try to generate a semantic visualisation of the scene.
    */
   void generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                    const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
-                                    const boost::optional<Postprocessor>& postprocessor = boost::none, bool useColourIntrinsics = false) const;
+                                    const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
+                                    const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets a Lambertian raycast of a voxel scene from the default pose (the current camera pose).
