@@ -80,8 +80,8 @@ public:
    *
    * \param settings                  The settings to use for InfiniTAM.
    * \param labelManager              The label manager to use (only needed if we want to generate semantic visualisations).
-   * \param voxelVisualisationEngine  The InfiniTAM engine to use for rendering a voxel scene (will be created internally if NULL).
-   * \param surfelVisualisationEngine The InfiniTAM engine used for rendering a surfel scene (will be created internally if NULL).
+   * \param voxelVisualisationEngine  The InfiniTAM engine to use for rendering a voxel scene (will be created internally if null).
+   * \param surfelVisualisationEngine The InfiniTAM engine used for rendering a surfel scene (will be created internally if null).
    */
   VisualisationGenerator(const Settings_CPtr& settings, const spaint::LabelManager_CPtr& labelManager = spaint::LabelManager_CPtr(),
                          const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine = VoxelVisualisationEngine_CPtr(),
@@ -98,12 +98,12 @@ public:
    * \param output      The location into which to put the output image.
    * \param scene       The scene to visualise.
    * \param pose        The pose from which to visualise the scene.
-   * \param view        The current view of the scene (used only for the camera settings).
+   * \param intrinsics  The camera intrinsics to use when visualising the scene.
    * \param renderState The render state to use for intermediate storage (can be null, in which case a new one will be created).
    * \param depthType   The type of depth calculation to use.
    */
   void generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                  const View_CPtr& view, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const;
+                                  const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const;
 
   /**
    * \brief Generates a visualisation of a surfel scene from the specified pose.
@@ -111,28 +111,28 @@ public:
    * \param output            The location into which to put the output image.
    * \param scene             The scene to visualise.
    * \param pose              The pose from which to visualise the scene.
-   * \param view              The current view of the scene (used only for the camera settings).
+   * \param intrinsics        The camera intrinsics to use when visualising the scene.
    * \param renderState       The render state to use for intermediate storage (can be null, in which case a new one will be created).
    * \param visualisationType The type of visualisation to generate.
    */
   void generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                     const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const;
+                                     const ITMLib::ITMIntrinsics& intrinsics, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const;
 
   /**
    * \brief Generates a visualisation of a voxel scene from the specified pose.
    *
-   * \param output            The location into which to put the output image.
-   * \param scene             The scene to visualise.
-   * \param pose              The pose from which to visualise the scene.
-   * \param view              The current view of the scene (used only for the camera settings).
-   * \param renderState       The render state to use for intermediate storage (can be null, in which case a new one will be created).
-   * \param visualisationType The type of visualisation to generate.
-   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
+   * \param output              The location into which to put the output image.
+   * \param scene               The scene to visualise.
+   * \param pose                The pose from which to visualise the scene.
+   * \param intrinsics          The camera intrinsics to use when visualising the scene.
+   * \param renderState         The render state to use for intermediate storage (can be null, in which case a new one will be created).
+   * \param visualisationType   The type of visualisation to generate.
+   * \param postprocessor       An optional function with which to postprocess the visualisation before returning it.
    *
    * \throws std::runtime_error If supports_semantics() is false and we try to generate a semantic visualisation of the scene.
    */
   void generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                    const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
+                                    const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
                                     const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
