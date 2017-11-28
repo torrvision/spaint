@@ -211,6 +211,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
+  // If the quote key is pressed, toggle whether or not supersampling is used when rendering the scene raycast.
+  if(keysym.sym == KEYCODE_QUOTE)
+  {
+    m_renderer->set_supersampling_enabled(!m_renderer->get_supersampling_enabled());
+  }
+
   // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
   // If right shift + / is pressed, toggle video recording.
   if(keysym.sym == SDLK_SLASH)
@@ -345,6 +351,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RCtrl + Backspace = Clear Current Label\n"
               << "RCtrl + RShift + Backspace = Reset Classifier (Clear Labels and Forest)\n"
               << "; = Toggle Median Filtering\n"
+              << "' = Toggle Supersampling\n"
               << "/ = Save Screenshot\n"
               << "LShift + / = Toggle Sequence Recording\n"
               << "RShift + / = Toggle Video Recording\n";
@@ -860,8 +867,12 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
-  Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
+#if 0
+  const Vector2i& mainImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
+#else
+  const Vector2i mainImageSize(640, 480);
+#endif
+  Vector2i windowViewportSize((int)ROUND(mainImageSize.width / mainSubwindow.width()), (int)ROUND(mainImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
 }

@@ -17,12 +17,13 @@ using namespace tvgutil;
 Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
 : m_bottomRight(bottomRight),
   m_cameraMode(CM_FOLLOW),
-  m_image(new ITMUChar4Image(imgSize, true, true)),
+  m_originalImgSize(imgSize),
   m_sceneID(sceneID),
   m_surfelFlag(false),
   m_topLeft(topLeft),
   m_type(type)
 {
+  resize_image(imgSize);
   reset_camera();
 }
 
@@ -53,6 +54,11 @@ ITMUChar4Image_CPtr Subwindow::get_image() const
   return m_image;
 }
 
+const Vector2i& Subwindow::get_original_image_size() const
+{
+  return m_originalImgSize;
+}
+
 const std::string& Subwindow::get_scene_id() const
 {
   return m_sceneID;
@@ -70,7 +76,7 @@ SurfelRenderState_Ptr& Subwindow::get_surfel_render_state(int viewIndex)
 
 SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewIndex) const
 {
-  return MapUtil::lookup(m_surfelRenderStates, viewIndex);
+  return m_surfelRenderStates[viewIndex];
 }
 
 VisualisationGenerator::VisualisationType Subwindow::get_type() const
@@ -85,7 +91,7 @@ VoxelRenderState_Ptr& Subwindow::get_voxel_render_state(int viewIndex)
 
 VoxelRenderState_CPtr Subwindow::get_voxel_render_state(int viewIndex) const
 {
-  return MapUtil::lookup(m_voxelRenderStates, viewIndex);
+  return m_voxelRenderStates[viewIndex];
 }
 
 float Subwindow::height() const
@@ -96,6 +102,13 @@ float Subwindow::height() const
 void Subwindow::reset_camera()
 {
   m_camera = CameraFactory::make_default_camera<CompositeCamera>();
+}
+
+void Subwindow::resize_image(const Vector2i& newImgSize)
+{
+  m_image.reset(new ITMUChar4Image(newImgSize, true, true));
+  m_voxelRenderStates.clear();
+  m_surfelRenderStates.clear();
 }
 
 void Subwindow::set_camera_mode(CameraMode cameraMode)

@@ -44,6 +44,9 @@ private:
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
 
+  /** The original size of the image in which to store the scene visualisation for the sub-window. */
+  Vector2i m_originalImgSize;
+
   /** The ID of the scene to render in the sub-window. */
   std::string m_sceneID;
 
@@ -51,7 +54,7 @@ private:
   bool m_surfelFlag;
 
   /** The surfel render state(s) for the free camera view(s). */
-  std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
+  mutable std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
 
   /** The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_topLeft;
@@ -60,7 +63,7 @@ private:
   spaint::VisualisationGenerator::VisualisationType m_type;
 
   /** The voxel render state(s) for the free camera view(s). */
-  std::map<int,VoxelRenderState_Ptr> m_voxelRenderStates;
+  mutable std::map<int,VoxelRenderState_Ptr> m_voxelRenderStates;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -111,6 +114,13 @@ public:
    * \return  The image in which to store the scene visualisation for the sub-window.
    */
   ITMUChar4Image_CPtr get_image() const;
+
+  /**
+   * \brief Gets the original size of the image in which to store the scene visualisation for the sub-window.
+   *
+   * \return  The original size of the image in which to store the scene visualisation for the sub-window.
+   */
+  const Vector2i& get_original_image_size() const;
 
   /**
    * \brief Gets the ID of the scene to render in the sub-window.
@@ -174,6 +184,13 @@ public:
    * \param camera  The camera from which to render the scene.
    */
   void reset_camera();
+
+  /**
+   * \brief Resizes the image in which to store the scene visualisation for the sub-window.
+   *
+   * \param newImgSize  The new size of image needed to store the scene visualisation for the sub-window.
+   */
+  void resize_image(const Vector2i& newImgSize);
 
   /**
    * \brief Sets the current camera mode.
