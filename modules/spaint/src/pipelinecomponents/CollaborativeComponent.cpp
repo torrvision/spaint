@@ -30,7 +30,8 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
   m_frameIndex(0),
   m_mode(mode),
   m_rng(12345),
-  m_stopRelocalisationThread(false)
+  m_stopRelocalisationThread(false),
+  m_visualisationGenerator(new VisualisationGenerator(context->get_settings()))
 {
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
 
@@ -311,13 +312,13 @@ void CollaborativeComponent::run_relocalisation()
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateI->get_rgb_image_size(), true, true));
 
     VoxelRenderState_Ptr renderStateD;
-    m_context->get_visualisation_generator()->generate_depth_from_voxels(
+    m_visualisationGenerator->generate_depth_from_voxels(
       depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
     VoxelRenderState_Ptr renderStateRGB;
     const bool useColourIntrinsics = true;
-    m_context->get_visualisation_generator()->generate_voxel_visualisation(
+    m_visualisationGenerator->generate_voxel_visualisation(
       rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(),
       renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
     );
@@ -354,11 +355,11 @@ void CollaborativeComponent::run_relocalisation()
       renderStateD.reset();
       renderStateRGB.reset();
 
-      m_context->get_visualisation_generator()->generate_depth_from_voxels(
+      m_visualisationGenerator->generate_depth_from_voxels(
         depth, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
       );
 
-      m_context->get_visualisation_generator()->generate_voxel_visualisation(
+      m_visualisationGenerator->generate_voxel_visualisation(
         rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(),
         renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
       );
