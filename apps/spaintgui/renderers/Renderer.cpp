@@ -318,7 +318,8 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
 
     // If we have not yet started reconstruction for this sub-window's scene, skip rendering it.
     const std::string& sceneID = subwindow.get_scene_id();
-    if(!m_model->get_slam_state(sceneID)->get_view()) continue;
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+    if(!slamState || !slamState->get_view()) continue;
 
     // Set the viewport for the sub-window.
     int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
@@ -330,7 +331,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     // If the sub-window is in follow mode, update its camera.
     if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
     {
-      ORUtils::SE3Pose livePose = m_model->get_slam_state(subwindow.get_scene_id())->get_pose();
+      ORUtils::SE3Pose livePose = slamState->get_pose();
       subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
     }
 
@@ -384,9 +385,18 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
       visualisationGenerator->get_depth_input(output, view);
       break;
     default:
-      if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
-      else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
+    {
+      if(view)
+      {
+        const ITMIntrinsics& intrinsics = view->calib.intrinsics_d;
+
+        if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, intrinsics, surfelRenderState, visualisationType);
+        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, postprocessor);
+      }
+      else output->Clear();
+
       break;
+    }
   }
 }
 
@@ -397,6 +407,8 @@ void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, overlay->noDims.x, overlay->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, overlay->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   // Enable blending.
   glEnable(GL_BLEND);
@@ -462,6 +474,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   // Render a quad textured with the subwindow image.
   begin_2d();
