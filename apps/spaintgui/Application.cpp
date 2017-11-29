@@ -211,10 +211,15 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
-  // If the quote key is pressed, toggle whether or not supersampling is used when rendering the scene raycast.
+  // If the quote key is pressed:
   if(keysym.sym == KEYCODE_QUOTE)
   {
+    // Toggle whether or not supersampling is used when rendering the scene raycast.
     m_renderer->set_supersampling_enabled(!m_renderer->get_supersampling_enabled());
+
+    // Let the pipeline know that the raycast result size may have changed.
+    const Vector2i& imgSize = get_active_subwindow().get_image()->noDims;
+    m_pipeline->update_raycast_result_size(imgSize.x * imgSize.y);
   }
 
   // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.

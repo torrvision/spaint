@@ -146,3 +146,11 @@ void MultiScenePipeline::toggle_segmentation_output()
 {
   MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::toggle_output, _1));
 }
+
+void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
+{
+  for(std::map<std::string,SemanticSegmentationComponent_Ptr>::const_iterator it = m_semanticSegmentationComponents.begin(), iend = m_semanticSegmentationComponents.end(); it != iend; ++it)
+  {
+    it->second->reset_voxel_samplers(raycastResultSize);
+  }
+}

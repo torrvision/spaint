@@ -209,6 +209,15 @@ public:
    * \brief Toggles whether or not the world scene's object segmentation component (if any) should write to its output pipe.
    */
   void toggle_segmentation_output();
+
+  /**
+   * \brief Alerts semantic segmentation components to the fact that the raycast result size has changed (e.g. because supersampling has been toggled).
+   *
+   * This is needed to allow them to reset their voxel samplers to work with the new image size.
+   *
+   * \param raycastResultSize The new raycast result size.
+   */
+  void update_raycast_result_size(int raycastResultSize);
 };
 
 //#################### TYPEDEFS ####################
