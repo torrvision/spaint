@@ -138,10 +138,14 @@ bool SLAMComponent::process_frame()
   else
   {
     const SLAMState::InputStatus inputStatus = m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED;
-    slamState->set_input_status(inputStatus);
 
     // If no more images are expected, let the relocaliser know that no more calls will be made to its train or update functions.
-    if(inputStatus == SLAMState::IS_TERMINATED) m_context->get_relocaliser(m_sceneID)->finish_training();
+    if(inputStatus == SLAMState::IS_TERMINATED && slamState->get_input_status() != SLAMState::IS_TERMINATED)
+    {
+      m_context->get_relocaliser(m_sceneID)->finish_training();
+    }
+
+    slamState->set_input_status(inputStatus);
 
     return false;
   }
