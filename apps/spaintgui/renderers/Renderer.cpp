@@ -258,6 +258,12 @@ void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 void Renderer::set_supersampling_enabled(bool supersamplingEnabled)
 {
   m_supersamplingEnabled = supersamplingEnabled;
+
+  for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    Subwindow& subwindow = m_subwindowConfiguration->subwindow(i);
+    subwindow.resize_image(supersamplingEnabled ? Vector2i(1280, 960) : subwindow.get_original_image_size());
+  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -474,26 +480,19 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-  static Vector2i initialImgSize = image->noDims;
-  const Vector2i supersampledImgSize(1280,960);
 
 #if 1
   // FIXME: This is a disgusting hack.
   static std::vector<ITMUChar4Image_Ptr> images;
   static std::vector<ITMFloatImage_Ptr> depthImages;
   static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
+  static bool supersamplingEnabled = m_supersamplingEnabled;
   std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
 
-  if(m_supersamplingEnabled && image->noDims != supersampledImgSize)
+  if(supersamplingEnabled != m_supersamplingEnabled)
   {
-    image->ChangeDims(supersampledImgSize);
-    images.clear();
-    depthImages.clear();
-  }
-  else if(!m_supersamplingEnabled && image->noDims != initialImgSize)
-  {
-    image->ChangeDims(initialImgSize);
+    supersamplingEnabled = m_supersamplingEnabled;
     images.clear();
     depthImages.clear();
   }
@@ -529,15 +528,12 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       // If we have not yet started reconstruction for this scene, avoid rendering it.
       if(!slamState || !slamState->get_view()) continue;
 
-      VoxelRenderState_Ptr renderState;
-      subwindow.get_voxel_render_state(viewIndex); // FIXME: This shouldn't be necessary.
-
       const View_CPtr view = slamState->get_view();
-      const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(initialImgSize, image->noDims);
+      const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
 
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-        m_supersamplingEnabled ? renderState : subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+        subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
         tempPose, view, intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
@@ -547,7 +543,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
         DepthVisualiser::DT_ORTHOGRAPHIC,
         GeometryUtil::to_itm(camera.p()),
         GeometryUtil::to_itm(camera.n()),
-        m_supersamplingEnabled ? renderState.get() : subwindow.get_voxel_render_state(viewIndex).get(),
+        subwindow.get_voxel_render_state(viewIndex).get(),
         m_model->get_settings()->sceneParams.voxelSize, -1.0f,
         depthImages[i]
       );
@@ -558,16 +554,12 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 #endif
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
-
-  VoxelRenderState_Ptr renderState;
-  subwindow.get_voxel_render_state(viewIndex); // FIXME: This shouldn't be necessary.
-
   const View_CPtr view = slamState->get_view();
-  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(initialImgSize, image->noDims);
+  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
 
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    m_supersamplingEnabled ? renderState : subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
     pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 

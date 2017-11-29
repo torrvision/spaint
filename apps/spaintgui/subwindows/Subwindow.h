@@ -44,6 +44,9 @@ private:
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
 
+  /** The original size of the image in which to store the scene visualisation for the sub-window. */
+  Vector2i m_originalImgSize;
+
   /** The ID of the scene to render in the sub-window. */
   std::string m_sceneID;
 
@@ -113,6 +116,13 @@ public:
   ITMUChar4Image_CPtr get_image() const;
 
   /**
+   * \brief Gets the original size of the image in which to store the scene visualisation for the sub-window.
+   *
+   * \return  The original size of the image in which to store the scene visualisation for the sub-window.
+   */
+  const Vector2i& get_original_image_size() const;
+
+  /**
    * \brief Gets the ID of the scene to render in the sub-window.
    *
    * \return  The ID of the scene to render in the sub-window.
@@ -174,6 +184,13 @@ public:
    * \param camera  The camera from which to render the scene.
    */
   void reset_camera();
+
+  /**
+   * \brief Resizes the image in which to store the scene visualisation for the sub-window.
+   *
+   * \param newImgSize  The new size of image needed to store the scene visualisation for the sub-window.
+   */
+  void resize_image(const Vector2i& newImgSize);
 
   /**
    * \brief Sets the current camera mode.

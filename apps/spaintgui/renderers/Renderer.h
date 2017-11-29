@@ -159,8 +159,6 @@ public:
   /**
    * \brief Sets whether or not to use supersampling when rendering the scene raycast.
    *
-   * Supersampling slows down the rendering considerably, but makes everything look a lot nicer.
-   *
    * \param supersamplingEnabled  A flag indicating whether or not to use supersampling when rendering the scene raycast.
    */
   void set_supersampling_enabled(bool supersamplingEnabled);
