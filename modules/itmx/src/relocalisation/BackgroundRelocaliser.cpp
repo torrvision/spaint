@@ -19,9 +19,13 @@ BackgroundRelocaliser::BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser,
 
 void BackgroundRelocaliser::finish_training()
 {
-  // TODO: check threading.
+  // Set the current GPU to the one on which calls to the decorated relocaliser should be performed.
   to_relocalisation_gpu();
+
+  // Signal to the decorated relocaliser that no more calls will be made to its train or update functions.
   m_relocaliser->finish_training();
+
+  // Reset the current GPU to the one on which calls were previously being performed.
   to_old_gpu();
 }
 
