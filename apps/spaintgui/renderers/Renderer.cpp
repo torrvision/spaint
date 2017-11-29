@@ -187,6 +187,7 @@ Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& su
 : m_medianFilteringEnabled(false),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
+  m_supersamplingEnabled(false),
   m_windowViewportSize(windowViewportSize)
 {
   // Reset the camera for each sub-window.
@@ -244,9 +245,25 @@ SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
   return m_subwindowConfiguration;
 }
 
+bool Renderer::get_supersampling_enabled() const
+{
+  return m_supersamplingEnabled;
+}
+
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
+}
+
+void Renderer::set_supersampling_enabled(bool supersamplingEnabled)
+{
+  m_supersamplingEnabled = supersamplingEnabled;
+
+  for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    Subwindow& subwindow = m_subwindowConfiguration->subwindow(i);
+    subwindow.resize_image(supersamplingEnabled ? Vector2i(1280, 960) : subwindow.get_original_image_size());
+  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -529,7 +546,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   const View_CPtr view = slamState->get_view();
-  const ITMIntrinsics intrinsics = view->calib.intrinsics_d;
+  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
 
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),

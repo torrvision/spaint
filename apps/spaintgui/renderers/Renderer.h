@@ -46,6 +46,9 @@ private:
   /** The sub-window configuration to use for visualising the scene. */
   SubwindowConfiguration_Ptr m_subwindowConfiguration;
 
+  /** A flag indicating whether or not to use supersampling when rendering the scene raycast. */
+  bool m_supersamplingEnabled;
+
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
 
@@ -140,11 +143,25 @@ public:
   SubwindowConfiguration_CPtr get_subwindow_configuration() const;
 
   /**
+   * \brief Gets whether or not to use supersampling when rendering the scene raycast.
+   *
+   * \return  A flag indicating whether or not to use supersampling when rendering the scene raycast.
+   */
+  bool get_supersampling_enabled() const;
+
+  /**
    * \brief Sets whether or not to use median filtering when rendering the scene raycast.
    *
    * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.
    */
   void set_median_filtering_enabled(bool medianFilteringEnabled);
+
+  /**
+   * \brief Sets whether or not to use supersampling when rendering the scene raycast.
+   *
+   * \param supersamplingEnabled  A flag indicating whether or not to use supersampling when rendering the scene raycast.
+   */
+  void set_supersampling_enabled(bool supersamplingEnabled);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
