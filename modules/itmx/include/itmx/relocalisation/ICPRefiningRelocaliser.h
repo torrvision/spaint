@@ -121,6 +121,9 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
+  virtual void finish_training();
+
+  /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                              const Vector4f& depthIntrinsics) const;
 

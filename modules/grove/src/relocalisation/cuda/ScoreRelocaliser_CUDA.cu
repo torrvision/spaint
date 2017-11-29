@@ -58,10 +58,6 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
 
   // These variables have to be set here, since they depend on the forest that has just been loaded.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
-  m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
-
-  // Reservoirs.
-  m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CUDA, m_rngSeed);
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
@@ -70,8 +66,8 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
   // P-RANSAC.
   m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
 
-  // Clear internal state.
-  reset();
+  // Clear internal state (no virtual calls in the constructor).
+  ScoreRelocaliser_CUDA::reset();
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
@@ -109,6 +105,19 @@ std::vector<Keypoint3DColour> ScoreRelocaliser_CUDA::get_reservoir_contents(uint
   }
 
   return reservoirContents;
+}
+
+void ScoreRelocaliser_CUDA::reset()
+{
+  // Setup the reservoirs if they haven't been allocated yet.
+  if(!m_relocaliserState->exampleReservoirs)
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CUDA, m_rngSeed);
+
+  // Setup the predictions block.
+  if(!m_relocaliserState->predictionsBlock)
+    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+
+  ScoreRelocaliser::reset();
 }
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
