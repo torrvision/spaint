@@ -211,9 +211,7 @@ public:
   void toggle_segmentation_output();
 
   /**
-   * \brief Alerts semantic segmentation components to the fact that the raycast result size has changed (e.g. because supersampling has been toggled).
-   *
-   * This is needed to allow them to reset their voxel samplers to work with the new image size.
+   * \brief Alerts relevant components to the fact that the raycast result size has changed (e.g. because supersampling has been toggled).
    *
    * \param raycastResultSize The new raycast result size.
    */

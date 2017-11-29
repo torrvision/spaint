@@ -98,7 +98,7 @@ public:
   /**
    * \brief Resets the voxel samplers to work with the specified raycast result size.
    *
-   * \param depthImageSize  The raycast result size to use when sampling voxels.
+   * \param raycastResultSize The new raycast result size to use.
    */
   void reset_voxel_samplers(int raycastResultSize);
 

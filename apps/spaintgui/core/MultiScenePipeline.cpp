@@ -149,6 +149,11 @@ void MultiScenePipeline::toggle_segmentation_output()
 
 void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
 {
+  for(std::map<std::string,PropagationComponent_Ptr>::const_iterator it = m_propagationComponents.begin(), iend = m_propagationComponents.end(); it != iend; ++it)
+  {
+    it->second->reset_label_propagator(raycastResultSize);
+  }
+
   for(std::map<std::string,SemanticSegmentationComponent_Ptr>::const_iterator it = m_semanticSegmentationComponents.begin(), iend = m_semanticSegmentationComponents.end(); it != iend; ++it)
   {
     it->second->reset_voxel_samplers(raycastResultSize);
