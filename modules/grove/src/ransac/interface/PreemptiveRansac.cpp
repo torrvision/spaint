@@ -42,64 +42,31 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
   const std::string settingsNamespace = "PreemptiveRansac.";
 
   // By default, we set all parameters as in scoreforests.
-
-  // Whether or not to force sampled modes to have a minimum distance between them.
-  m_checkMinDistanceBetweenSampledModes = m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);
-
-  // Setting it to false speeds up a lot, at the expense of quality.
-  m_checkRigidTransformationConstraint = m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);
-
-  // The maximum number of times we sample three pixel-mode pairs in the attempt to generate a pose candidate.
-  m_maxCandidateGenerationIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);
-
-  // Number of initial pose candidates.
-  m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);
-
-  // Aggressively cull hypotheses to this number.
-  m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
-
-  // In m.
-  m_maxTranslationErrorForCorrectPose = m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);
-
-  // In m.
-  m_minSquaredDistanceBetweenSampledModes = m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
+  m_checkMinDistanceBetweenSampledModes = m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);                   // Whether or not to force sampled modes to have a minimum distance between them.
+  m_checkRigidTransformationConstraint = m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);                     // Setting this to false speeds up a lot, at the expense of quality.
+  m_maxCandidateGenerationIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);                     // The maximum number of times we sample three pixel-mode pairs in the attempt to generate a pose candidate.
+  m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);                                                   // Number of initial pose candidates.
+  m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);                                   // Aggressively cull hypotheses to this number.
+  m_maxTranslationErrorForCorrectPose = m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);                     // In m.
+  m_minSquaredDistanceBetweenSampledModes = m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);       // In m.
 
   // Optimisation parameters defaulted as in Valentin's paper.
-
   m_poseOptimisationEnergyThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);
-
-  // Sets the termination condition for the pose optimisation.
-  m_poseOptimisationGradientThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);
-
-  // In m.
-  m_poseOptimisationInlierThreshold = m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);
-
-  // Maximum number of LM iterations.
-  m_poseOptimisationMaxIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);
-
+  m_poseOptimisationGradientThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);                     // Sets the termination condition for the pose optimisation.
+  m_poseOptimisationInlierThreshold = m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);                          // In m.
+  m_poseOptimisationMaxIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);                            // Maximum number of LM iterations.
   m_poseOptimisationStepThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);
-
-  // Whether or not to optimise the poses with LM.
-  m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "poseUpdate", true);
-
-  // Whether or not to print the timers for each phase.
-  m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);
-
-  // The number of inliers sampled in each P-RANSAC iteration.
-  m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
-
-  // If false use the first mode only (representing the largest cluster).
-  m_useAllModesPerLeafInPoseHypothesisGeneration = m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true);
-
-  // If false use L2.
-  m_usePredictionCovarianceForPoseOptimization = m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);
+  m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "poseUpdate", true);                                                                     // Whether or not to optimise the poses with LM.
+  m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);                                                                  // Whether or not to print the timers for each phase.
+  m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);                                    // The number of inliers sampled in each P-RANSAC iteration.
+  m_useAllModesPerLeafInPoseHypothesisGeneration = m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true); // If false use the first mode only (representing the largest cluster).
+  m_usePredictionCovarianceForPoseOptimization = m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);     // If false use L2.
 
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space for all.
   m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
 
-  const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-
   // Allocate memory.
+  const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   m_inliersIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_maxPoseCandidates);
