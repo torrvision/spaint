@@ -184,6 +184,7 @@ Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& su
 : m_medianFilteringEnabled(true),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
+  m_supersamplingEnabled(false),
   m_windowViewportSize(windowViewportSize)
 {
   // Reset the camera for each sub-window.
@@ -241,9 +242,25 @@ SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
   return m_subwindowConfiguration;
 }
 
+bool Renderer::get_supersampling_enabled() const
+{
+  return m_supersamplingEnabled;
+}
+
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
+}
+
+void Renderer::set_supersampling_enabled(bool supersamplingEnabled)
+{
+  m_supersamplingEnabled = supersamplingEnabled;
+
+  for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    Subwindow& subwindow = m_subwindowConfiguration->subwindow(i);
+    subwindow.resize_image(supersamplingEnabled ? Vector2i(1280, 960) : subwindow.get_original_image_size());
+  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -370,9 +387,9 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
-                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                                      VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
-                                      const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose,
+                                      const View_CPtr& view, const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType,
+                                      bool surfelFlag, const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
   VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
 
@@ -388,8 +405,6 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
     {
       if(view)
       {
-        const ITMIntrinsics& intrinsics = view->calib.intrinsics_d;
-
         if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, intrinsics, surfelRenderState, visualisationType);
         else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, postprocessor);
       }
@@ -463,10 +478,13 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+  const View_CPtr view = slamState->get_view();
+  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
     subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
   // Copy the raycasted scene to a texture.
