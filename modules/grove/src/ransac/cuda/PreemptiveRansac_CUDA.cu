@@ -47,7 +47,7 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
     return;
   }
 
-  PoseCandidate &currentCandidate = poseCandidates[candidateIdx];
+  PoseCandidate& currentCandidate = poseCandidates[candidateIdx];
 
   // Compute the energy for a strided subset of inliers.
   float localEnergy = preemptive_ransac_compute_candidate_energy(
@@ -117,7 +117,7 @@ __global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keyp
                                                                       const PoseCandidate *poseCandidates,
                                                                       int nbPoseCandidates,
                                                                       Vector4f *inlierCameraPoints,
-                                                                      Mode3DColour *inlierModes,
+                                                                      Keypoint3DColourCluster *inlierModes,
                                                                       float inlierThreshold)
 {
   const int candidateIdx = blockIdx.y;
@@ -178,9 +178,10 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
+PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& settings)
+: PreemptiveRansac(settings)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Allocate memory blocks.
   m_nbPoseCandidates_device =
@@ -290,7 +291,7 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
 
   // Grap pointers to the output storage.
   Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
-  Mode3DColour *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(256);
   dim3 gridSize((nbInliers + blockSize.x - 1) / blockSize.x, nbPoseCandidates);
@@ -393,6 +394,7 @@ void PreemptiveRansac_CUDA::init_random()
   dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
   ck_reinit_rngs<<<gridSize, blockSize>>>(randomGenerators, m_maxPoseCandidates, m_rngSeed);
+  ORcudaKernelCheck;
 }
 
 }

@@ -101,7 +101,7 @@ void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr &re
 void ScoreRelocaliser::update_all_clusters()
 {
   // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
-  while (m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
+  while(m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
   {
     update();
   }
@@ -123,7 +123,7 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
                                                                   const Vector4f &depthIntrinsics) const
 {
   // Try to estimate a pose only if we have enough valid depth values.
-  if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
+  if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
     // First: select keypoints and compute descriptors.
     m_featureCalculator->compute_keypoints_and_features(
@@ -140,7 +140,7 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
         m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
 
     // If we succeeded, grab the transformation matrix, fill the SE3Pose and return a GOOD relocalisation result.
-    if (poseCandidate)
+    if(poseCandidate)
     {
       Result result;
       result.pose.SetInvM(poseCandidate->cameraPose);
@@ -213,7 +213,7 @@ void ScoreRelocaliser::update()
   // No need to perform further updates, we would get the same modes.
   // This check works only if the m_maxReservoirsToUpdate quantity
   // remains constant throughout the whole program.
-  if (m_relocaliserState->reservoirUpdateStartIdx == m_relocaliserState->lastFeaturesAddedStartIdx) return;
+  if(m_relocaliserState->reservoirUpdateStartIdx == m_relocaliserState->lastFeaturesAddedStartIdx) return;
 
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
   m_exampleClusterer->cluster_examples(m_relocaliserState->exampleReservoirs->get_reservoirs(),
@@ -238,7 +238,7 @@ void ScoreRelocaliser::update_reservoir_start_idx()
   m_relocaliserState->reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
 
   // Restart from the first reservoir.
-  if (m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirsCount) m_relocaliserState->reservoirUpdateStartIdx = 0;
+  if(m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirsCount) m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
-} // namespace grove
+}

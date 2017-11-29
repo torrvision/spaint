@@ -11,20 +11,20 @@
 namespace grove {
 
 /**
- * \brief An instance of this class can find clusters from a set of examples using CUDA.
+ * \brief An instance of this class can be used to cluster sets of examples using CUDA.
  *
  * See the base class template for additional documentation.
  *
  * \param ExampleType  The type of example to cluster.
  * \param ClusterType  The type of cluster being generated.
- * \param MAX_CLUSTERS The maximum number of clusters being generated for each set of examples.
+ * \param MaxClusters  The maximum number of clusters being generated for each set of examples.
  */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-class ExampleClusterer_CUDA : public ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS>
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+class ExampleClusterer_CUDA : public ExampleClusterer<ExampleType,ClusterType,MaxClusters>
 {
   //#################### TYPEDEFS AND USINGS ####################
 public:
-  typedef ExampleClusterer<ExampleType,ClusterType,MAX_CLUSTERS> Base;
+  typedef ExampleClusterer<ExampleType,ClusterType,MaxClusters> Base;
   using typename Base::ClusterContainer;
   using typename Base::ClusterContainers;
   using typename Base::ClusterContainers_Ptr;
@@ -39,10 +39,10 @@ public:
    * \param sigma            The sigma of the Gaussian used when computing the example densities.
    * \param tau              The maximum distance there can be between two examples that are part of the same cluster.
    * \param maxClusterCount  The maximum number of clusters retained for each set of examples (all clusters are estimated
-   *                         but only the maxClusterCount largest ones are returned). Must be <= MAX_CLUSTERS.
+   *                         but only the maxClusterCount largest ones are returned). Must be <= MaxClusters.
    * \param minClusterSize   The minimum size of cluster to keep.
    *
-   * \throws std::invalid_argument If maxClusterCount > MAX_CLUSTERS.
+   * \throws std::invalid_argument If maxClusterCount > MaxClusters.
    */
   ExampleClusterer_CUDA(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 
@@ -69,10 +69,10 @@ private:
   virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const;
 
   /** Override */
-  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t setIdx) const;
+  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t exampleSetIdx) const;
 
   /** Override */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t setIdx) const;
+  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t exampleSetIdx) const;
 
   /** Override */
   virtual void reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const;

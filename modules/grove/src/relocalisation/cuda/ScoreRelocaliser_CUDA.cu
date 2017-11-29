@@ -35,7 +35,7 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (x >= imgSize.x || y >= imgSize.y) return;
+  if(x >= imgSize.x || y >= imgSize.y) return;
 
   get_prediction_for_leaf_shared(leafPredictions, leafIndices, outPredictions, imgSize, nbMaxPredictions, x, y);
 }
@@ -61,10 +61,10 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-      ITMLibSettings::DEVICE_CUDA, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
+      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CUDA);
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CUDA, m_settings);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
 
   // Clear internal state (no virtual calls in the constructor).
   ScoreRelocaliser_CUDA::reset();
@@ -74,7 +74,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
 
 ScorePrediction ScoreRelocaliser_CUDA::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
   {
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
@@ -84,7 +84,7 @@ ScorePrediction ScoreRelocaliser_CUDA::get_raw_prediction(uint32_t treeIdx, uint
 
 std::vector<Keypoint3DColour> ScoreRelocaliser_CUDA::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
   {
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
@@ -122,9 +122,9 @@ void ScoreRelocaliser_CUDA::reset()
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                                       const ScorePredictionsBlock_CPtr &leafPredictions,
-                                                       ScorePredictionsImage_Ptr &outputPredictions) const
+void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                                       const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                                       ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
@@ -144,4 +144,4 @@ void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CP
   ORcudaKernelCheck;
 }
 
-} // namespace grove
+}

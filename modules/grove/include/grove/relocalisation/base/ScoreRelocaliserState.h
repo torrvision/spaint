@@ -36,7 +36,7 @@ struct ScoreRelocaliserState
   Reservoirs_Ptr exampleReservoirs;
 
   /** A block of memory storing the 3D modal clusters associated to each leaf in the forest. */
-  ScorePredictionsBlock_Ptr predictionsBlock;
+  ScorePredictionsMemoryBlock_Ptr predictionsBlock;
 
   // Update-related data
   /** The index of the reservoir that had been updated when the integration function has been called. */
@@ -52,4 +52,4 @@ typedef boost::shared_ptr<const ScoreRelocaliserState> ScoreRelocaliserState_CPt
 
 }
 
-#endif // H_GROVE_SCORERELOCALISERSTATE
+#endif

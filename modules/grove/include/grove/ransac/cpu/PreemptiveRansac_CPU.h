@@ -7,7 +7,6 @@
 #define H_GROVE_PREEMPTIVERANSACCPU
 
 #include "../interface/PreemptiveRansac.h"
-
 #include "../../numbers/CPURNG.h"
 
 namespace grove {
@@ -20,10 +19,17 @@ namespace grove {
  *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
  *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
  *        Luigi Di Stefano and Philip H. S. Torr
- *
  */
 class PreemptiveRansac_CPU : public PreemptiveRansac
 {
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The random number generators used during the P-RANSAC process. */
+  CPURNGMemoryBlock_Ptr m_randomGenerators;
+
+  /** The seed used to initialise the random number generators. */
+  uint32_t m_rngSeed;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -33,7 +39,7 @@ public:
    */
   PreemptiveRansac_CPU(const tvgutil::SettingsContainer_CPtr& settings);
 
-  //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
    * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
@@ -45,7 +51,7 @@ protected:
    */
   virtual void generate_pose_candidates();
 
-  /** Override. */
+  /** Override */
   virtual void prepare_inliers_for_optimisation();
 
   /**
@@ -61,14 +67,6 @@ protected:
    */
   virtual void update_candidate_poses();
 
-  //#################### PRIVATE MEMBER VARIABLES ####################
-private:
-  /** The random number generators used during the P-RANSAC process. */
-  CPURNGMemoryBlock_Ptr m_randomGenerators;
-
-  /** The seed used to initialise the random number generators. */
-  uint32_t m_rngSeed;
-
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
@@ -76,7 +74,7 @@ private:
    *
    * \param candidate The pose hypothesis to evaluate.
    */
-  void compute_pose_energy(PoseCandidate &candidate) const;
+  void compute_pose_energy(PoseCandidate& candidate) const;
 
   /**
    * \brief Initialises the random number generators in a deterministic manner.

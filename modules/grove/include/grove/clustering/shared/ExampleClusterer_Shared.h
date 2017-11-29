@@ -212,7 +212,7 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
   // Write the parent of the specified example to global memory.
   parents[exampleOffset] = parentIdx;
 
-  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root).
+  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root.)
   clusterIndices[exampleOffset] = clusterIdx;
 }
 
@@ -235,10 +235,10 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
  * \param maxSelectedClusters The maximum number of clusters to extract from each example set.
  * \param clusterContainers   The output containers in which to store the clusters created for each example set.
  */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+template <typename ExampleType, typename ClusterType, int MaxClusters>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, const ExampleType *exampleSets, const int *exampleSetSizes, int exampleSetCapacity,
-                                    const int *clusterIndices, const int *selectedClusters, int maxSelectedClusters, Array<ClusterType,MAX_CLUSTERS> *clusterContainers)
+                                    const int *clusterIndices, const int *selectedClusters, int maxSelectedClusters, Array<ClusterType,MaxClusters> *clusterContainers)
 {
   // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
   const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
@@ -255,7 +255,7 @@ inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, c
     const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
     // Get a reference to the output clusters array for the specified example set.
-    Array<ClusterType,MAX_CLUSTERS>& outputClusters = clusterContainers[exampleSetIdx];
+    Array<ClusterType,MaxClusters>& outputClusters = clusterContainers[exampleSetIdx];
 
     // Compute the index in the output clusters array at which to store the selected cluster once it has been created.
     int outputClusterIdx = -1;
@@ -283,12 +283,12 @@ inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, c
 /**
  * \brief Resets a cluster container.
  *
- * \param clusterContainers A pointer to the cluster containers.
  * \param exampleSetIdx     The index of the example set whose cluster container we want to reset.
+ * \param clusterContainers A pointer to the cluster containers.
  */
-template <typename ClusterType, int MAX_CLUSTERS>
+template <typename ClusterType, int MaxClusters>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void reset_cluster_container(Array<ClusterType,MAX_CLUSTERS> *clusterContainers, int exampleSetIdx)
+inline void reset_cluster_container(int exampleSetIdx, Array<ClusterType,MaxClusters> *clusterContainers)
 {
   // It is sufficient to just reset the size of the container (i.e. the number of clusters) to zero.
   // There is no need to modify the actual clusters, since they will be overwritten later.

@@ -19,8 +19,7 @@
 #include "reservoirs/cpu/ExampleReservoirs_CPU.tpp"
 #include "reservoirs/interface/ExampleReservoirs.tpp"
 
-#include "scoreforests/Keypoint3DColourClusteringUtils.h"
-#include "scoreforests/Mode3DColour.h"
+#include "scoreforests/Keypoint3DColourCluster.h"
 #include "scoreforests/ScorePrediction.h"
 
 namespace grove {
@@ -31,9 +30,9 @@ namespace {
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
-template class ExampleClusterer<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
-template class ExampleClusterer_CPU<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
-template class ExampleClustererFactory<Keypoint3DColour, Mode3DColour, ScorePrediction::Capacity>;
+template class ExampleClusterer<Keypoint3DColour, Keypoint3DColourCluster, ScorePrediction::Capacity>;
+template class ExampleClusterer_CPU<Keypoint3DColour, Keypoint3DColourCluster, ScorePrediction::Capacity>;
+template struct ExampleClustererFactory<Keypoint3DColour, Keypoint3DColourCluster, ScorePrediction::Capacity>;
 
 template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescriptor> >
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint2D,RGBDPatchDescriptor>(

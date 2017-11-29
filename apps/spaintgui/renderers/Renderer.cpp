@@ -184,6 +184,7 @@ Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& su
 : m_medianFilteringEnabled(true),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
+  m_supersamplingEnabled(false),
   m_windowViewportSize(windowViewportSize)
 {
   // Reset the camera for each sub-window.
@@ -241,9 +242,25 @@ SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
   return m_subwindowConfiguration;
 }
 
+bool Renderer::get_supersampling_enabled() const
+{
+  return m_supersamplingEnabled;
+}
+
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
+}
+
+void Renderer::set_supersampling_enabled(bool supersamplingEnabled)
+{
+  m_supersamplingEnabled = supersamplingEnabled;
+
+  for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    Subwindow& subwindow = m_subwindowConfiguration->subwindow(i);
+    subwindow.resize_image(supersamplingEnabled ? Vector2i(1280, 960) : subwindow.get_original_image_size());
+  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -318,7 +335,8 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
 
     // If we have not yet started reconstruction for this sub-window's scene, skip rendering it.
     const std::string& sceneID = subwindow.get_scene_id();
-    if(!m_model->get_slam_state(sceneID)->get_view()) continue;
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+    if(!slamState || !slamState->get_view()) continue;
 
     // Set the viewport for the sub-window.
     int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
@@ -330,7 +348,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     // If the sub-window is in follow mode, update its camera.
     if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
     {
-      ORUtils::SE3Pose livePose = m_model->get_slam_state(subwindow.get_scene_id())->get_pose();
+      ORUtils::SE3Pose livePose = slamState->get_pose();
       subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
     }
 
@@ -369,9 +387,9 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
-                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                                      VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
-                                      const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose,
+                                      const View_CPtr& view, const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType,
+                                      bool surfelFlag, const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
   VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
 
@@ -384,9 +402,16 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
       visualisationGenerator->get_depth_input(output, view);
       break;
     default:
-      if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
-      else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
+    {
+      if(view)
+      {
+        if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, intrinsics, surfelRenderState, visualisationType);
+        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, postprocessor);
+      }
+      else output->Clear();
+
       break;
+    }
   }
 }
 
@@ -397,6 +422,8 @@ void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, overlay->noDims.x, overlay->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, overlay->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   // Enable blending.
   glEnable(GL_BLEND);
@@ -451,10 +478,13 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+  const View_CPtr view = slamState->get_view();
+  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
     subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
   // Copy the raycasted scene to a texture.
@@ -462,6 +492,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   // Render a quad textured with the subwindow image.
   begin_2d();

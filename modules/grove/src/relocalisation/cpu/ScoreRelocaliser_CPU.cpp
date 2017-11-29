@@ -44,10 +44,10 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-      ITMLibSettings::DEVICE_CPU, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
+      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CPU);
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU, m_settings);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CPU);
 
   // Clear internal state.
   ScoreRelocaliser_CPU::reset();
@@ -57,7 +57,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
 
 ScorePrediction ScoreRelocaliser_CPU::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
   {
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
@@ -67,7 +67,7 @@ ScorePrediction ScoreRelocaliser_CPU::get_raw_prediction(uint32_t treeIdx, uint3
 
 std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
   {
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
@@ -104,9 +104,9 @@ void ScoreRelocaliser_CPU::reset()
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                                      const ScorePredictionsBlock_CPtr &leafPredictions,
-                                                      ScorePredictionsImage_Ptr &outputPredictions) const
+void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                                      const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                                      ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
@@ -118,16 +118,15 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPt
   ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
-  for (int y = 0; y < imgSize.y; ++y)
+  for(int y = 0; y < imgSize.y; ++y)
   {
-    for (int x = 0; x < imgSize.x; ++x)
+    for(int x = 0; x < imgSize.x; ++x)
     {
-      get_prediction_for_leaf_shared(
-          leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);
+      get_prediction_for_leaf_shared(leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);
     }
   }
 }
 
-} // namespace grove
+}

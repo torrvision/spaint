@@ -27,7 +27,7 @@
 #include "../../forests/interface/DecisionForest.h"
 #include "../../ransac/interface/PreemptiveRansac.h"
 #include "../../reservoirs/interface/ExampleReservoirs.h"
-#include "../../scoreforests/Mode3DColour.h"
+#include "../../scoreforests/Keypoint3DColourCluster.h"
 #include "../../scoreforests/ScorePrediction.h"
 
 namespace grove {
@@ -42,14 +42,14 @@ namespace grove {
  */
 class ScoreRelocaliser : public itmx::Relocaliser
 {
-  //#################### ENUMS ####################
+  //#################### CONSTANTS ####################
 public:
   enum { FOREST_TREE_COUNT = 5 };
 
   //#################### TYPEDEFS ####################
 public:
   typedef Keypoint3DColour ExampleType;
-  typedef Mode3DColour ClusterType;
+  typedef Keypoint3DColourCluster ClusterType;
   typedef RGBDPatchDescriptor DescriptorType;
   typedef ScorePrediction PredictionType;
 
@@ -67,133 +67,21 @@ public:
   typedef DecisionForest<DescriptorType, FOREST_TREE_COUNT> ScoreForest;
   typedef boost::shared_ptr<ScoreForest> ScoreForest_Ptr;
 
-  //#################### CONSTRUCTORS ####################
-protected:
-  /**
-   * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
-   *
-   * \param settings       Pointer to an instance of SettingsContainer used to configure the relocaliser.
-   * \param forestFilename The path to the pretrained forest file.
-   *
-   * \throws std::runtime_error if the forest cannot be loaded.
-   */
-  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
+//#################### PRIVATE VARIABLES ####################
+private:
+  /** An image storing the indices of the forest leaves associated to the keypoint/descriptor pairs. */
+  mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destroys an instance of ScoreRelocaliser.
-   */
-  virtual ~ScoreRelocaliser();
+  /** An image storing the predictions associated to the keypoint/descriptor pairs. */
+  mutable ScorePredictionsImage_Ptr m_predictionsImage;
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Returns the best poses estimated by the last run of the P-RANSAC algorithm.
-   *
-   * \note  Should be called AFTER calling estimate_pose.
-   *
-   * \param poseCandidates Output array that will be filled with the best poses estimated by the relocaliser.
-   *                       Poses are sorted in descending quality order.
-   */
-  void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
+  /** An image that will store the descriptors extracted from an RGB-D image pair. */
+  RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
 
-  /**
-   * \brief Returns a pointer to an image containing the keypoints used to perform the relocalisation.
-   *
-   * \return A pointer to an image containing the keypoints used to perform the relocalisation.
-   */
-  Keypoint3DColourImage_CPtr get_keypoints_image() const;
+  /** An image that will store the keypoints extracted from an RGB-D image pair. */
+  Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
 
-  /**
-   * \brief Returns a pointer to an image containing the forest predictions for each pixel in the keypoint image.
-   *
-   * \return A pointer to an image containing the forest predictions for each pixel in the keypoint image.
-   */
-  ScorePredictionsImage_CPtr get_predictions_image() const;
-
-  /**
-   * \brief Returns a pointer to the relocaliser state.
-   *
-   * \return A pointer to the relocaliser state.
-   */
-  ScoreRelocaliserState_CPtr get_relocaliser_state() const;
-
-  /**
-   * \brief Returns a pointer to the relocaliser state (non-const variant).
-   *
-   * \return A pointer to the relocaliser state.
-   */
-  ScoreRelocaliserState_Ptr get_relocaliser_state();
-
-  /**
-   * \brief Sets the relocaliser state.
-   *
-   * \note Has to be initialised beforehand, with the right variable sizes.
-   *
-   * \param relocaliserState The relocaliser state.
-   */
-  void set_relocaliser_state(const ScoreRelocaliserState_Ptr &relocaliserState);
-
-  /**
-   * \brief Updates the contents of each cluster.
-   *
-   * \note This function is meant to be called once to update every leaf cluster.
-   *       It's computationally intensive and requires a few hundred milliseconds to terminate.
-   */
-  void update_all_clusters();
-
-  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
-public:
-  /** Override */
-  virtual void finish_training();
-
-  /**
-   * \brief Returns a specific prediction from the forest.
-   *
-   * \param treeIdx The index of the tree containing the prediciton of interest.
-   * \param leafIdx The index of the required leaf prediction.
-   *
-   * \return The ScorePrediction of interest.
-   *
-   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
-   */
-  virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const = 0;
-
-  virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const = 0;
-
-  /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
-                                             const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics) const;
-
-  /** Override */
-  virtual void reset();
-
-  /** Override */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
-
-  /** Override */
-  virtual void update();
-
-  //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
-protected:
-  /**
-   * \brief Each keypoint/descriptor pair extracted from the input RGB-D image pairs determines a leaf in a tree of the
-   *        forest. This function merges the 3D modal clusters associated to multiple leaves coming from different trees
-   *        in the forest in a single prediction for each keypoint/descriptor pair.
-   *
-   * \param leafIndices       Indices of the forest leafs predicted from a keypoint/descriptor pair.
-   * \param leafPredictions   A memory block containing all the 3D modal clusters associated to the forest.
-   * \param outputPredictions An image wherein each element represent the modal clsters associated to the predicted
-   *                          leaves.
-   */
-  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                          const ScorePredictionsBlock_CPtr &leafPredictions,
-                                          ScorePredictionsImage_Ptr &outputPredictions) const = 0;
-
-  //#################### PROTECTED MEMBER VARIABLES ####################
+  //#################### PROTECTED VARIABLES ####################
 protected:
   /** Sigma used to cluster examples in 3D modal clusters(width of the gaussian used to compute the example density). */
   float m_clustererSigma;
@@ -247,19 +135,128 @@ protected:
   /** The total number of example reservoirs in the relocaliser. */
   uint32_t m_reservoirsCount;
 
-  //#################### PRIVATE MEMBER VARIABLES ####################
-private:
-  /** An image storing the indices of the forest leaves associated to the keypoint/descriptor pairs. */
-  mutable LeafIndicesImage_Ptr m_leafIndicesImage;
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
+   *
+   * \param settings       Pointer to an instance of SettingsContainer used to configure the relocaliser.
+   * \param forestFilename The path to the pretrained forest file.
+   *
+   * \throws std::runtime_error if the forest cannot be loaded.
+   */
+  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
 
-  /** An image storing the predictions associated to the keypoint/descriptor pairs. */
-  mutable ScorePredictionsImage_Ptr m_predictionsImage;
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys an instance of ScoreRelocaliser.
+   */
+  virtual ~ScoreRelocaliser();
 
-  /** An image that will store the descriptors extracted from an RGB-D image pair. */
-  RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Returns the best poses estimated by the last run of the P-RANSAC algorithm.
+   *
+   * \note  Should be called AFTER calling estimate_pose.
+   *
+   * \param poseCandidates Output array that will be filled with the best poses estimated by the relocaliser.
+   *                       Poses are sorted in descending quality order.
+   */
+  void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
-  /** An image that will store the keypoints extracted from an RGB-D image pair. */
-  Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
+  /**
+   * \brief Returns a pointer to an image containing the keypoints used to perform the relocalisation.
+   *
+   * \return A pointer to an image containing the keypoints used to perform the relocalisation.
+   */
+  Keypoint3DColourImage_CPtr get_keypoints_image() const;
+
+  /**
+   * \brief Returns a pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   *
+   * \return A pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   */
+  ScorePredictionsImage_CPtr get_predictions_image() const;
+
+  /**
+   * \brief Returns a pointer to the relocaliser state.
+   *
+   * \return A pointer to the relocaliser state.
+   */
+  ScoreRelocaliserState_CPtr get_relocaliser_state() const;
+
+  /**
+   * \brief Returns a pointer to the relocaliser state (non-const variant).
+   *
+   * \return A pointer to the relocaliser state.
+   */
+  ScoreRelocaliserState_Ptr get_relocaliser_state();
+
+  /**
+   * \brief Sets the relocaliser state.
+   *
+   * \note Has to be initialised beforehand, with the right variable sizes.
+   *
+   * \param relocaliserState The relocaliser state.
+   */
+  void set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState);
+
+  /**
+   * \brief Updates the contents of each cluster.
+   *
+   * \note This function is meant to be called once to update every leaf cluster.
+   *       It's computationally intensive and requires a few hundred milliseconds to terminate.
+   */
+  void update_all_clusters();
+
+  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual void finish_training();
+
+  /**
+   * \brief Returns a specific prediction from the forest.
+   *
+   * \param treeIdx The index of the tree containing the prediciton of interest.
+   * \param leafIdx The index of the required leaf prediction.
+   *
+   * \return The ScorePrediction of interest.
+   *
+   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
+   */
+  virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const = 0;
+
+  virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const = 0;
+
+  /** Override */
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
+
+  /** Override */
+  virtual void reset();
+
+  /** Override */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
+
+  /** Override */
+  virtual void update();
+
+  //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Each keypoint/descriptor pair extracted from the input RGB-D image pairs determines a leaf in a tree of the
+   *        forest. This function merges the 3D modal clusters associated to multiple leaves coming from different trees
+   *        in the forest in a single prediction for each keypoint/descriptor pair.
+   *
+   * \param leafIndices       Indices of the forest leafs predicted from a keypoint/descriptor pair.
+   * \param leafPredictions   A memory block containing all the 3D modal clusters associated to the forest.
+   * \param outputPredictions An image wherein each element represent the modal clsters associated to the predicted
+   *                          leaves.
+   */
+  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                          const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                          ScorePredictionsImage_Ptr& outputPredictions) const = 0;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -277,9 +274,10 @@ private:
 };
 
 //#################### TYPEDEFS ####################
+
 typedef boost::shared_ptr<ScoreRelocaliser> ScoreRelocaliser_Ptr;
 typedef boost::shared_ptr<const ScoreRelocaliser> ScoreRelocaliser_CPtr;
 
-} // namespace grove
+}
 
-#endif // H_GROVE_SCORERELOCALISER
+#endif

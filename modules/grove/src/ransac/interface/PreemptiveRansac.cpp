@@ -4,12 +4,14 @@
  */
 
 #include "ransac/interface/PreemptiveRansac.h"
+using namespace tvgutil;
+
+#include <alglib/optimization.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <Eigen/Dense>
-#include <alglib/optimization.h>
 
 #ifdef WITH_OPENMP
 #include <omp.h>
@@ -18,170 +20,64 @@
 #include <ORUtils/SE3Pose.h>
 
 #include <itmx/base/MemoryBlockFactory.h>
+#include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;
 
-using namespace tvgutil;
+//#################### MACROS ####################
 
-// To enable more detailed timing prints (VERY VERBOSE)
+// Enable/disable the print-out of more detailed timings (very verbose, so disabled by default).
 //#define ENABLE_TIMERS
 
 namespace grove {
 
-//#################### ANONYMOUS FREE FUNCTIONS ####################
-
-namespace {
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- * \param weights  A set of weights associated to the points.
- * \param resRot   The resulting rotation matrix.
- * \param resTrans The resulting translation vector.
- */
-void Kabsch(Eigen::Matrix3f &P,
-            Eigen::Matrix3f &Q,
-            Eigen::Vector3f &weights,
-            Eigen::Matrix3f &resRot,
-            Eigen::Vector3f &resTrans)
-{
-  const int D = P.rows(); // dimension of the space
-  const Eigen::Vector3f normalizedWeights = weights / weights.sum();
-
-  // Centroids
-  const Eigen::Vector3f p0 = P * normalizedWeights;
-  const Eigen::Vector3f q0 = Q * normalizedWeights;
-  const Eigen::Vector3f v1 = Eigen::Vector3f::Ones();
-
-  const Eigen::Matrix3f P_centred = P - p0 * v1.transpose(); // translating P to center the origin
-  const Eigen::Matrix3f Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
-
-  // Covariance between both matrices
-  const Eigen::Matrix3f C = P_centred * normalizedWeights.asDiagonal() * Q_centred.transpose();
-
-  // SVD
-  Eigen::JacobiSVD<Eigen::Matrix3f> svd(C, Eigen::ComputeFullU | Eigen::ComputeFullV);
-
-  const Eigen::Matrix3f V = svd.matrixU();
-  const Eigen::Matrix3f W = svd.matrixV();
-  Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
-
-  if((V * W.transpose()).determinant() < 0)
-  {
-    I(D - 1, D - 1) = -1;
-  }
-
-  // Recover the rotation and translation
-  resRot = W * I * V.transpose();
-  resTrans = q0 - resRot * p0;
-}
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- * \param resRot   The resulting rotation matrix.
- * \param resTrans The resulting translation vector.
- */
-void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q, Eigen::Matrix3f &resRot, Eigen::Vector3f &resTrans)
-{
-  // Setup unitary weights and call the function above.
-  Eigen::Vector3f weights = Eigen::Vector3f::Ones();
-  Kabsch(P, Q, weights, resRot, resTrans);
-}
-
-/**
- * \brief Estimate a rigid transformation between two sets of 3D points using the Kabsch algorithm.
- * \param P        A set of 3 3D points in camera coordinates.
- * \param Q        A set of 3 3D points in world coordinates.
- *
- * \return The estimated transformation matrix.
- */
-Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q)
-{
-  Eigen::Matrix3f resRot;
-  Eigen::Vector3f resTrans;
-
-  // Call the other function.
-  Kabsch(P, Q, resRot, resTrans);
-
-  // Decompose R + t in Rt.
-  Eigen::Matrix4f res = Eigen::Matrix4f::Identity();
-  res.block<3, 3>(0, 0) = resRot;
-  res.block<3, 1>(0, 3) = resTrans;
-  return res;
-}
-
-/**
- * \brief Pretty print a timer value.
- *
- * \param timer The timer to print.
- */
-void printTimer(const PreemptiveRansac::AverageTimer &timer)
-{
-  std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
-}
-}
-
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
-  : m_settings(settings)
-  , m_timerCandidateGeneration("Candidate Generation")
-  , m_timerFirstComputeEnergy("First Energy Computation")
-  , m_timerFirstTrim("First Trim")
-  , m_timerTotal("P-RANSAC Total")
+PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
+: m_timerCandidateGeneration("Candidate Generation"),
+  m_timerFirstComputeEnergy("First Energy Computation"),
+  m_timerFirstTrim("First Trim"),
+  m_timerTotal("P-RANSAC Total"),
+  m_settings(settings)
 {
   const std::string settingsNamespace = "PreemptiveRansac.";
 
   // By default, we set all parameters as in scoreforests.
 
   // Whether or not to force sampled modes to have a minimum distance between them.
-  m_checkMinDistanceBetweenSampledModes =
-      m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);
+  m_checkMinDistanceBetweenSampledModes = m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);
 
   // Setting it to false speeds up a lot, at the expense of quality.
-  m_checkRigidTransformationConstraint =
-      m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);
+  m_checkRigidTransformationConstraint = m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);
 
   // The maximum number of times we sample three pixel-mode pairs in the attempt to generate a pose candidate.
-  m_maxCandidateGenerationIterations =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);
+  m_maxCandidateGenerationIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);
 
   // Number of initial pose candidates.
   m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);
 
   // Aggressively cull hypotheses to this number.
-  m_maxPoseCandidatesAfterCull =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
+  m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
 
   // In m.
-  m_maxTranslationErrorForCorrectPose =
-      m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);
+  m_maxTranslationErrorForCorrectPose = m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);
 
   // In m.
-  m_minSquaredDistanceBetweenSampledModes =
-      m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
+  m_minSquaredDistanceBetweenSampledModes = m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
 
   // Optimisation parameters defaulted as in Valentin's paper.
 
-  m_poseOptimisationEnergyThreshold =
-      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);
+  m_poseOptimisationEnergyThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);
 
   // Sets the termination condition for the pose optimisation.
-  m_poseOptimisationGradientThreshold =
-      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);
+  m_poseOptimisationGradientThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);
 
   // In m.
-  m_poseOptimisationInlierThreshold =
-      m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);
+  m_poseOptimisationInlierThreshold = m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);
 
   // Maximum number of LM iterations.
-  m_poseOptimisationMaxIterations =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);
+  m_poseOptimisationMaxIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);
 
-  m_poseOptimisationStepThreshold =
-      m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);
+  m_poseOptimisationStepThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);
 
   // Whether or not to optimise the poses with LM.
   m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "poseUpdate", true);
@@ -190,23 +86,18 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);
 
   // The number of inliers sampled in each P-RANSAC iteration.
-  m_ransacInliersPerIteration =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
+  m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
 
   // If false use the first mode only (representing the largest cluster).
-  m_useAllModesPerLeafInPoseHypothesisGeneration =
-      m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true);
+  m_useAllModesPerLeafInPoseHypothesisGeneration = m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true);
 
   // If false use L2.
-  m_usePredictionCovarianceForPoseOptimization =
-      m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);
+  m_usePredictionCovarianceForPoseOptimization = m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);
 
-  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
-  // for all.
-  m_nbMaxInliers =
-      m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
+  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space for all.
+  m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
 
-  const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Allocate memory.
   m_inliersIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
@@ -215,7 +106,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
 
   const uint32_t poseOptimisationBufferSize = m_nbMaxInliers * m_maxPoseCandidates;
   m_poseOptimisationCameraPoints = mbf.make_block<Vector4f>(poseOptimisationBufferSize);
-  m_poseOptimisationPredictedModes = mbf.make_block<Mode3DColour>(poseOptimisationBufferSize);
+  m_poseOptimisationPredictedModes = mbf.make_block<Keypoint3DColourCluster>(poseOptimisationBufferSize);
 
 #ifdef ENABLE_TIMERS
   // Force the average timers to on as well if we want verbose printing.
@@ -238,25 +129,41 @@ PreemptiveRansac::~PreemptiveRansac()
 {
   if(m_printTimers)
   {
-    printTimer(m_timerTotal);
-    printTimer(m_timerCandidateGeneration);
-    printTimer(m_timerFirstTrim);
-    printTimer(m_timerFirstComputeEnergy);
+    print_timer(m_timerTotal);
+    print_timer(m_timerCandidateGeneration);
+    print_timer(m_timerFirstTrim);
+    print_timer(m_timerFirstComputeEnergy);
 
     for(size_t i = 0; i < m_timerInlierSampling.size(); ++i)
     {
-      printTimer(m_timerInlierSampling[i]);
-      printTimer(m_timerComputeEnergy[i]);
-      printTimer(m_timerPrepareOptimisation[i]);
-      printTimer(m_timerOptimisation[i]);
+      print_timer(m_timerInlierSampling[i]);
+      print_timer(m_timerComputeEnergy[i]);
+      print_timer(m_timerPrepareOptimisation[i]);
+      print_timer(m_timerOptimisation[i]);
     }
+  }
+}
+
+//#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
+
+// Default implementation of the abstract function.
+void PreemptiveRansac::update_candidate_poses()
+{
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
+
+// Update every pose in parallel
+#ifdef WITH_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+#endif
+  for(int i = 0; i < nbPoseCandidates; ++i)
+  {
+    update_candidate_pose(i);
   }
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DColourImage_CPtr &keypoints,
-                                                               const ScorePredictionsImage_CPtr &forestPredictions)
+boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DColourImage_CPtr& keypoints, const ScorePredictionsImage_CPtr& forestPredictions)
 {
   // NOTE: In this function and in the virtual functions of the CPU and CUDA subclasses we directly access and write
   // onto the dataSize of several MemoryBlock variables instead of keeping a separate "valid size" variable.
@@ -273,8 +180,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   // 1. Generate the pose hypotheses.
   {
 #ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-                                   "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+    boost::timer::auto_cpu_timer t(6, "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     m_timerCandidateGeneration.start();
     generate_pose_candidates();
@@ -398,7 +304,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   return m_poseCandidates->dataSize > 0 ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
-void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates) const
+void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates) const
 {
   // No need to check dataSize since it will likely be 1 after running estimate_pose. If estimate_pose has never run
   // this will probably return garbage.
@@ -424,30 +330,6 @@ int PreemptiveRansac::get_min_nb_required_points() const
   return m_ransacInliersPerIteration;
 }
 
-//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
-
-void PreemptiveRansac::update_host_pose_candidates() const
-{
-  // NOP by default.
-}
-
-//#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
-
-// Default implementation of the abstract function.
-void PreemptiveRansac::update_candidate_poses()
-{
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
-
-// Update every pose in parallel
-#ifdef WITH_OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-  for(size_t i = 0; i < nbPoseCandidates; ++i)
-  {
-    update_candidate_pose(i);
-  }
-}
-
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 void PreemptiveRansac::compute_candidate_poses_kabsch()
@@ -461,13 +343,13 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 
 // Process all candidates in parallel.
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
-    PoseCandidate &candidate = poseCandidates[candidateIdx];
+    PoseCandidate& candidate = poseCandidates[candidateIdx];
 
-    // We haev to copy the points from the ORUtil Vector types to Eigen Matrices.
+    // We have to copy the points from the ORUtil Vector types to Eigen Matrices.
     Eigen::Matrix3f localPoints;
     Eigen::Matrix3f worldPoints;
 
@@ -478,7 +360,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     }
 
     // Run Kabsch and store the result in the candidate cameraPose matrix.
-    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = Kabsch(localPoints, worldPoints);
+    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = GeometryUtil::estimate_rigid_transform(localPoints, worldPoints);
   }
 }
 
@@ -490,16 +372,14 @@ namespace {
 struct PointsForLM
 {
   const Vector4f *cameraPoints;
-  const Mode3DColour *predictedModes;
+  const Keypoint3DColourCluster *predictedModes;
   uint32_t nbPoints; // Comes last to avoid padding.
 };
 
 /**
  * \brief Compute the energy using the Mahalanobis distance.
  */
-static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM &pts,
-                                                                   const ORUtils::SE3Pose &candidateCameraPose,
-                                                                   double *jac = NULL)
+static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL)
 {
   double res = 0.0;
 
@@ -547,8 +427,7 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
 /**
  * \brief Function that will be called by alglib's optimiser.
  */
-static void
-    Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array &ksi, alglib::real_1d_array &fi, void *ptr)
+static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
@@ -561,10 +440,7 @@ static void
 /**
  * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
  */
-static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array &ksi,
-                                                           alglib::real_1d_array &fi,
-                                                           alglib::real_2d_array &jac,
-                                                           void *ptr)
+static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
@@ -581,9 +457,7 @@ static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d
 /**
  * \brief Compute the energy using the L2 distance between the points.
  */
-static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM &pts,
-                                                       const ORUtils::SE3Pose &candidateCameraPose,
-                                                       double *jac = NULL)
+static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL)
 {
   double res = 0.0;
 
@@ -630,7 +504,7 @@ static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM &pts,
 /**
  * \brief Function that will be called by alglib's optimiser.
  */
-static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &ksi, alglib::real_1d_array &fi, void *ptr)
+static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
@@ -643,10 +517,7 @@ static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &ksi, al
 /**
  * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
  */
-static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array &ksi,
-                                               alglib::real_1d_array &fi,
-                                               alglib::real_2d_array &jac,
-                                               void *ptr)
+static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
@@ -657,7 +528,7 @@ static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array &ksi,
 }
 
 /** Alglib's diagnostic function. Currently does nothing, but could print stuff. */
-static void call_after_each_step(const alglib::real_1d_array &x, double func, void *ptr) { return; }
+static void call_after_each_step(const alglib::real_1d_array& x, double func, void *ptr) { return; }
 
 } // anonymous namespace
 
@@ -678,7 +549,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 
   // Assumption is that they have been already copied onto the CPU memory, the CUDA subclass should make sure of that.
   // In the long term we will move the whole optimisation step on the GPU (as proper shared code).
-  PoseCandidate &poseCandidate = m_poseCandidates->GetData(MEMORYDEVICE_CPU)[candidateIdx];
+  PoseCandidate& poseCandidate = m_poseCandidates->GetData(MEMORYDEVICE_CPU)[candidateIdx];
 
   // Construct an SE3 pose to optimise from the raw matrix.
   ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
@@ -693,39 +564,29 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   const double differentiationStep = 0.0001;
   alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
 //  alglib::minlmcreatevj(6, 1, ksi_, state);
-  alglib::minlmsetcond(state,
-                       m_poseOptimisationGradientThreshold,
-                       m_poseOptimisationEnergyThreshold,
-                       m_poseOptimisationStepThreshold,
-                       m_poseOptimisationMaxIterations);
+  alglib::minlmsetcond(state, m_poseOptimisationGradientThreshold, m_poseOptimisationEnergyThreshold, m_poseOptimisationStepThreshold, m_poseOptimisationMaxIterations);
 
   // Run the optimiser.
   if(m_usePredictionCovarianceForPoseOptimization)
   {
-    alglib::minlmoptimize(state,
-                          Continuous3DOptimizationUsingFullCovariance,
-                          Continuous3DOptimizationUsingFullCovarianceJac,
-                          call_after_each_step,
-                          &ptsForLM);
+    alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance, Continuous3DOptimizationUsingFullCovarianceJac, call_after_each_step, &ptsForLM);
   }
   else
   {
-    alglib::minlmoptimize(state,
-                          Continuous3DOptimizationUsingL2,
-                          Continuous3DOptimizationUsingL2Jac,
-                          call_after_each_step,
-                          &ptsForLM);
+    alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, Continuous3DOptimizationUsingL2Jac, call_after_each_step, &ptsForLM);
   }
 
   // Extract the results and update the SE3Pose accordingly.
   alglib::minlmreport rep;
   alglib::minlmresults(state, ksi_, rep);
-  candidateCameraPose.SetFrom(static_cast<float>(ksi_[0]),
-                              static_cast<float>(ksi_[1]),
-                              static_cast<float>(ksi_[2]),
-                              static_cast<float>(ksi_[3]),
-                              static_cast<float>(ksi_[4]),
-                              static_cast<float>(ksi_[5]));
+  candidateCameraPose.SetFrom(
+    static_cast<float>(ksi_[0]),
+    static_cast<float>(ksi_[1]),
+    static_cast<float>(ksi_[2]),
+    static_cast<float>(ksi_[3]),
+    static_cast<float>(ksi_[4]),
+    static_cast<float>(ksi_[5])
+  );
 
   // Store the updated pose iff the optimisation succeeded.
   if(rep.terminationtype >= 0)
@@ -736,6 +597,18 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 
   // Optimisation failed.
   return false;
+}
+
+void PreemptiveRansac::update_host_pose_candidates() const
+{
+  // NOP by default.
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void PreemptiveRansac::print_timer(const AverageTimer& timer)
+{
+  std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
 }
 
 }
