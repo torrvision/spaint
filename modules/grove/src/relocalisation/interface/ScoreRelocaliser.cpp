@@ -111,6 +111,8 @@ void ScoreRelocaliser::update_all_clusters()
 
 void ScoreRelocaliser::finish_training()
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   // First, update all clusters.
   update_all_clusters();
 
@@ -118,6 +120,9 @@ void ScoreRelocaliser::finish_training()
   m_relocaliserState->exampleReservoirs.reset();
   m_relocaliserState->lastFeaturesAddedStartIdx = 0;
   m_relocaliserState->reservoirUpdateStartIdx = 0;
+
+  // Release the clusterer as well.
+  m_exampleClusterer.reset();
 }
 
 boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
