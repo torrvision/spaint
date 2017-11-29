@@ -116,7 +116,7 @@ void ScoreRelocaliser::finish_training()
   // First, update all clusters.
   update_all_clusters();
 
-  // Now kill the contents of the reservoirs sicne we won't need them anymore.
+  // Now kill the contents of the reservoirs since we won't need them anymore.
   m_relocaliserState->exampleReservoirs.reset();
   m_relocaliserState->lastFeaturesAddedStartIdx = 0;
   m_relocaliserState->reservoirUpdateStartIdx = 0;
