@@ -211,10 +211,15 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
-  // If the quote key is pressed, toggle whether or not supersampling is used when rendering the scene raycast.
+  // If the quote key is pressed:
   if(keysym.sym == KEYCODE_QUOTE)
   {
+    // Toggle whether or not supersampling is used when rendering the scene raycast.
     m_renderer->set_supersampling_enabled(!m_renderer->get_supersampling_enabled());
+
+    // Let the pipeline know that the raycast result size may have changed.
+    const Vector2i& imgSize = get_active_subwindow().get_image()->noDims;
+    m_pipeline->update_raycast_result_size(imgSize.x * imgSize.y);
   }
 
   // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
@@ -924,11 +929,11 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
 #if 0
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
+  const Vector2i& mainImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
 #else
-  const Vector2i depthImageSize(640, 480);
+  const Vector2i mainImageSize(640, 480);
 #endif
-  Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
+  Vector2i windowViewportSize((int)ROUND(mainImageSize.width / mainSubwindow.width()), (int)ROUND(mainImageSize.height / mainSubwindow.height()));
 
   const std::string title = m_pipeline->get_model()->get_mapping_server() ? "SemanticPaint - Server" : "SemanticPaint";
   m_renderer.reset(new WindowedRenderer(title, m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));

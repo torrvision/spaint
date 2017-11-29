@@ -40,6 +40,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Resets the label propagator to work with the specified raycast result size.
+   *
+   * \param raycastResultSize The new raycast result size to use.
+   */
+  void reset_label_propagator(int raycastResultSize);
+
+  /**
    * \brief Runs the propagation component, propagating a semantic label over the surfaces of the target scene.
    *
    * \param renderState The render state associated with the camera position from which to propagate.
