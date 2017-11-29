@@ -76,7 +76,7 @@ SurfelRenderState_Ptr& Subwindow::get_surfel_render_state(int viewIndex)
 
 SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewIndex) const
 {
-  return m_surfelRenderStates[viewIndex];
+  return MapUtil::lookup(m_surfelRenderStates, viewIndex, SurfelRenderState_Ptr());
 }
 
 VisualisationGenerator::VisualisationType Subwindow::get_type() const
@@ -91,7 +91,7 @@ VoxelRenderState_Ptr& Subwindow::get_voxel_render_state(int viewIndex)
 
 VoxelRenderState_CPtr Subwindow::get_voxel_render_state(int viewIndex) const
 {
-  return m_voxelRenderStates[viewIndex];
+  return MapUtil::lookup(m_voxelRenderStates, viewIndex, VoxelRenderState_Ptr());
 }
 
 float Subwindow::height() const
