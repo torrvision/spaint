@@ -537,15 +537,9 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
         tempPose, view, intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
-      SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
-
-      depthVisualiser->render_depth(
-        DepthVisualiser::DT_ORTHOGRAPHIC,
-        GeometryUtil::to_itm(camera.p()),
-        GeometryUtil::to_itm(camera.n()),
-        subwindow.get_voxel_render_state(viewIndex).get(),
-        m_model->get_settings()->sceneParams.voxelSize, -1.0f,
-        depthImages[i]
+      m_model->get_visualisation_generator()->generate_depth_from_voxels(
+        depthImages[i], slamState->get_voxel_scene(), tempPose, intrinsics,
+        subwindow.get_voxel_render_state(viewIndex), DepthVisualiser::DT_ORTHOGRAPHIC
       );
 
       depthImages[i]->UpdateHostFromDevice();
