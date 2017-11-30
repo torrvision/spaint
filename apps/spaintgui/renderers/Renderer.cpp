@@ -485,7 +485,6 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   // FIXME: This is a disgusting hack.
   static std::vector<ITMUChar4Image_Ptr> images;
   static std::vector<ITMFloatImage_Ptr> depthImages;
-  static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
   static bool supersamplingEnabled = m_supersamplingEnabled;
   std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
