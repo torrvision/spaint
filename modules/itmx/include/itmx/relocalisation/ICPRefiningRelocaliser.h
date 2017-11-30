@@ -97,13 +97,11 @@ public:
    * \param scene               The scene being viewed from the camera.
    * \param denseVoxelMapper    The dense mapper used to find visible blocks in the voxel scene.
    * \param settings            The settings to use for InfiniTAM.
-   * \param visualisationEngine The visualisation engine used to perform the raycasting.
    */
   ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                          const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
-                         const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
-                         const VisualisationEngine_CPtr& visualisationEngine);
+                         const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings);
 
   //#################### DESTRUCTOR ####################
 public:
