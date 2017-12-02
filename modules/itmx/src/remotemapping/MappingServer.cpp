@@ -222,7 +222,7 @@ MappingServer::Client_Ptr MappingServer::get_client(int clientID) const
 {
   boost::unique_lock<boost::mutex> lock(m_mutex);
 
-  // Wait until the client is either active and ready to accept frame messages, or has terminated.
+  // Wait until the client is either active or has terminated.
   std::map<int,Client_Ptr>::const_iterator it;
   while((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
   {
@@ -271,11 +271,16 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
     connectionOk = write_message(sock, AckMessage());
   }
 
+  // Add the client to the map of active clients.
+  {
+    boost::lock_guard<boost::mutex> lock(m_mutex);
+    m_clients.insert(std::make_pair(clientID, client));
+  }
+
   // Signal to other threads that we're ready to start reading frame messages from the client.
 #if DEBUGGING
   std::cout << "Client ready: " << clientID << '\n';
 #endif
-  m_clients.insert(std::make_pair(clientID, client));
   m_clientReady.notify_one();
 
   // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
