@@ -504,6 +504,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
     }
 
+    const ITMIntrinsics intrinsics = m_model->get_slam_state(sceneID)->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+
     for(size_t i = 0; i < sceneIDs.size(); ++i)
     {
       images[i]->Clear();
@@ -527,13 +529,10 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       // If we have not yet started reconstruction for this scene, avoid rendering it.
       if(!slamState || !slamState->get_view()) continue;
 
-      const View_CPtr view = slamState->get_view();
-      const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
-
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
         subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-        tempPose, view, intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
+        tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
       m_model->get_visualisation_generator()->generate_depth_from_voxels(
