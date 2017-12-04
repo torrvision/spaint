@@ -435,6 +435,11 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
+#if 1
+
+  return 0;
+#endif
+
   // Construct the settings object for the application. This is used to store both the
   // settings for InfiniTAM and our own extended settings. Note that we do not use the
   // tracker configuration string in the InfiniTAM settings, and so we set it to NULL.
