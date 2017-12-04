@@ -43,7 +43,7 @@ public:
    *
    * \param layoutEngine  The layout engine to use.
    */
-  explicit GraphVisualiser(LayoutEngine layoutEngine);
+  explicit GraphVisualiser(LayoutEngine layoutEngine = LE_NEATO);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

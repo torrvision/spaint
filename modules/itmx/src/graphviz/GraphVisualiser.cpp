@@ -18,6 +18,7 @@ GraphVisualiser::GraphVisualiser(LayoutEngine layoutEngine)
 
 void GraphVisualiser::visualise(const std::string& graphDesc) const
 {
+  boost::shared_ptr<Agraph_t> g(agmemread(graphDesc.c_str()), agclose);
 
 }
 

@@ -37,6 +37,10 @@
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 
+#ifdef WITH_GRAPHVIZ
+#include <itmx/graphviz/GraphVisualiser.h>
+#endif
+
 #include <tvgutil/filesystem/PathFinder.h>
 
 #include "core/ObjectivePipeline.h"
@@ -436,7 +440,8 @@ int main(int argc, char *argv[])
 try
 {
 #if 1
-
+  GraphVisualiser gv;
+  gv.visualise("graph { node [shape=circle]; a -- b; }");
   return 0;
 #endif
 
