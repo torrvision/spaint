@@ -6,9 +6,7 @@
 #ifndef H_ITMX_GRAPHVISUALISER
 #define H_ITMX_GRAPHVISUALISER
 
-#include <boost/shared_ptr.hpp>
-
-#include <graphviz/gvc.h>
+#include <boost/filesystem.hpp>
 
 namespace itmx {
 
@@ -20,30 +18,27 @@ class GraphVisualiser
   //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief The values of this enumeration denote the different layout engines that can be used.
+   * \brief The values of this enumeration denote the different Graphviz executables we can use.
    */
-  enum LayoutEngine
+  enum GraphvizExe
   {
-    LE_DOT,
-    LE_NEATO
+    GV_DOT,
+    GV_NEATO
   };
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The Graphviz context. */
-  boost::shared_ptr<GVC_t> m_context;
-
-  /** The layout engine to use. */
-  LayoutEngine m_layoutEngine;
+  /** The executable to use. */
+  boost::filesystem::path m_exe;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a graph visualiser.
    *
-   * \param layoutEngine  The layout engine to use.
+   * \param exeName The Graphviz executable to use.
    */
-  explicit GraphVisualiser(LayoutEngine layoutEngine = LE_NEATO);
+  explicit GraphVisualiser(GraphvizExe exe = GV_NEATO);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

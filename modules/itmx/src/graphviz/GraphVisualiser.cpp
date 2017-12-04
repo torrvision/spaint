@@ -5,20 +5,34 @@
 
 #include "graphviz/GraphVisualiser.h"
 
+namespace bf = boost::filesystem;
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-GraphVisualiser::GraphVisualiser(LayoutEngine layoutEngine)
-: m_context(gvContext(), gvFreeContext),
-  m_layoutEngine(layoutEngine)
-{}
+GraphVisualiser::GraphVisualiser(GraphvizExe exe)
+{
+  switch(exe)
+  {
+    case GV_DOT:
+      m_exe = bf::path("GRAPHVIZ_DOT");
+      break;
+    default:
+      m_exe = bf::path("GRAPHVIZ_NEATO");
+      break;
+  }
+
+  if(!bf::exists(m_exe))
+  {
+    throw std::runtime_error("Error: Graphviz executable '" + m_exe.string() + "' is missing");
+  }
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void GraphVisualiser::visualise(const std::string& graphDesc) const
 {
-  boost::shared_ptr<Agraph_t> g(agmemread(graphDesc.c_str()), agclose);
 
 }
 
