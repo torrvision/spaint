@@ -15,7 +15,7 @@
 namespace itmx {
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to generate graph visualisations using Graphviz.
  */
 class GraphVisualiser
 {
@@ -41,9 +41,9 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Generates a graph visualisation by running a Graphviz executable on the specified graph description.
    *
-   * \param graphDesc   TODO
+   * \param graphDesc   The graph description (i.e. the contents of the Graphviz source file).
    * \param graphvizExe The Graphviz executable to use.
    */
   ITMUChar4Image_Ptr generate_visualisation(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO);
@@ -51,14 +51,17 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Gets the path to the specified Graphviz executable.
+   *
+   * \param graphvizExe The Graphviz executable whose path we want to get.
+   * \return            The path to the specified Graphviz executable.
    */
-  boost::filesystem::path find_path(GraphvizExe graphvizExe) const;
+  boost::filesystem::path get_path(GraphvizExe graphvizExe) const;
 
   /**
    * \brief Makes a UUID.
    *
-   * \return  The UUID.
+   * \return  The UUID (in string form).
    */
   std::string make_uuid();
 };

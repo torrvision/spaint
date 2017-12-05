@@ -5,8 +5,6 @@
 
 #include "graphviz/GraphVisualiser.h"
 
-#include <iostream>
-
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -55,7 +53,7 @@ ITMUChar4Image_Ptr GraphVisualiser::generate_visualisation(const std::string& gr
   }
 
   // Run the chosen Graphviz executable to generate the graph image.
-  bf::path graphvizExePath = find_path(graphvizExe);
+  bf::path graphvizExePath = get_path(graphvizExe);
   std::string command = "\"\"" + graphvizExePath.string() + "\" \"" + bf::absolute(sourceFile).string() + "\" -Tpng -O\"";
   int result = system(command.c_str());
   if(result != 0) throw std::runtime_error("Error: Graphviz execution failed");
@@ -73,7 +71,7 @@ ITMUChar4Image_Ptr GraphVisualiser::generate_visualisation(const std::string& gr
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-bf::path GraphVisualiser::find_path(GraphvizExe graphvizExe) const
+bf::path GraphVisualiser::get_path(GraphvizExe graphvizExe) const
 {
   bf::path result;
 
