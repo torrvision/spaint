@@ -7,9 +7,11 @@
 #define H_TVGUTIL_POOLEDQUEUE
 
 #include <deque>
+#include <iostream>
 #include <list>
 #include <stdexcept>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/functional/value_factory.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
@@ -37,6 +39,44 @@ enum PoolEmptyStrategy
   /** Wait for another thread to pop an element from the queue, thereby making space for the new element. */
   PES_WAIT
 };
+
+//#################### STREAM OPERATORS ####################
+
+inline std::ostream& operator<<(std::ostream& os, PoolEmptyStrategy rhs)
+{
+  switch(rhs)
+  {
+    case PES_DISCARD:         os << "discard"; break;
+    case PES_GROW:            os << "grow"; break;
+    case PES_REPLACE_RANDOM:  os << "replacerandom"; break;
+    case PES_WAIT:            os << "wait"; break;
+    default:
+    {
+      // This should never happen.
+      throw std::runtime_error("Error: Unknown pool empty strategy");
+    }
+  }
+
+  return os;
+}
+
+inline std::istream& operator>>(std::istream& is, PoolEmptyStrategy& rhs)
+{
+  std::string temp;
+  is >> temp;
+  if(!is) return is;
+
+  boost::trim(temp);
+  boost::to_lower(temp);
+
+  if(temp == "discard") rhs = PES_DISCARD;
+  else if(temp == "grow") rhs = PES_GROW;
+  else if(temp == "replacerandom") rhs = PES_REPLACE_RANDOM;
+  else if(temp == "wait") rhs = PES_WAIT;
+  else throw std::runtime_error("Error: Unknown pool empty strategy '" + temp + "'");
+
+  return is;
+}
 
 }
 
