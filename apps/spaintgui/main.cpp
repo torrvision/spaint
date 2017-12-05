@@ -441,6 +441,18 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     args.runServer = true;
   }
 
+  // If the user tries to run the application in both batch mode and server mode, print an error message.
+  // It doesn't make sense to combine the two modes: server mode is intended to make sure that fusion
+  // starts as soon as frames arrive from a client; batch mode is intended to make sure that the user
+  // cannot quit the application during experiments, and that the application quits automatically once
+  // an experiment is finished. Both modes initially unpause the fusion process, but they are otherwise
+  // intended for completely different use cases and should not be combined (indeed, they conflict).
+  if(args.batch && args.runServer)
+  {
+    std::cout << "Error: Cannot enable both batch mode and server mode at the same time.\n";
+    return false;
+  }
+
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
 
@@ -826,8 +838,8 @@ try
 
   // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
-  app.set_batch_mode_enabled(args.batch);
-  app.set_server_mode_enabled(pipeline->get_model()->get_mapping_server().get() != NULL);
+  if(args.batch) app.set_batch_mode_enabled(true);
+  if(args.runServer) app.set_server_mode_enabled(true);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
 
