@@ -753,10 +753,6 @@ void Application::save_mesh() const
   // Get all scene IDs.
   std::vector<std::string> sceneIDs = model->get_scene_ids();
 
-  // Find the meshes directory and make sure that it exists.
-  boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
-  boost::filesystem::create_directories(meshesSubdir);
-
   // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
   std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "");
   if(meshBaseName == "")
@@ -765,6 +761,11 @@ void Application::save_mesh() const
     // experimentTag is a registered program option in main.cpp, with a default value of "".
     meshBaseName = "spaint-" + TimeUtil::get_iso_timestamp();
   }
+
+  // Determine the directory into which to save the meshes, and make sure that it exists.
+  boost::filesystem::path dir = find_subdir_from_executable("meshes");
+  if(sceneIDs.size() > 1) dir = dir / meshBaseName;
+  boost::filesystem::create_directories(dir);
 
   // Mesh each scene independently.
   for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
@@ -819,7 +820,7 @@ void Application::save_mesh() const
       mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
     }
 
-    const boost::filesystem::path meshPath = meshesSubdir / (meshBaseName + "_" + sceneID + ".obj");
+    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".obj");
 
     // Save the mesh to disk.
     std::cout << "Saving mesh to: " << meshPath << '\n';
