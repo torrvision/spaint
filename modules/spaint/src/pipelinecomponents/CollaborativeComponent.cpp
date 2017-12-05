@@ -489,51 +489,48 @@ void CollaborativeComponent::score_candidates(std::list<CollaborativeRelocalisat
 
 void CollaborativeComponent::try_schedule_relocalisation()
 {
-#if 1
-  // Randomly generate a list of candidate relocalisations.
-  const size_t desiredCandidateCount = 10;
-  std::list<CollaborativeRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
-#else
-  // Generate the frames from the source scene in order, for evaluation purposes.
-  std::list<CollaborativeRelocalisation> candidates = generate_sequential_candidate();
-#endif
-  if(candidates.empty()) return;
-
-  // Score all of the candidates.
-  score_candidates(candidates);
-
-  // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
-  candidates.sort(bind(&CollaborativeRelocalisation::m_candidateScore, _1) < bind(&CollaborativeRelocalisation::m_candidateScore, _2));
-
-#if 0
-  // Print out all of the candidates for debugging purposes.
-  std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
-  for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
-  {
-    const SubmapRelocalisation& candidate = *it;
-    std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
-  }
-  std::cout << "END CANDIDATES\n";
-#endif
-
-  bool canRelocalise = false;
-
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
-    if(!m_bestCandidate)
-    {
-      // Schedule the best candidate for relocalisation.
-      m_bestCandidate.reset(new CollaborativeRelocalisation(candidates.back()));
-      candidates.pop_back();
-      canRelocalise = true;
 
-      // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
-      std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
-      triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
+    // If an existing relocalisation attempt is in progress, early out.
+    if(m_bestCandidate) return;
+
+#if 1
+    // Randomly generate a list of candidate relocalisations.
+    const size_t desiredCandidateCount = 10;
+    std::list<CollaborativeRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
+#else
+    // Generate the frames from the source scene in order, for evaluation purposes.
+    std::list<CollaborativeRelocalisation> candidates = generate_sequential_candidate();
+#endif
+    if(candidates.empty()) return;
+
+    // Score all of the candidates.
+    score_candidates(candidates);
+
+    // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
+    candidates.sort(bind(&CollaborativeRelocalisation::m_candidateScore, _1) < bind(&CollaborativeRelocalisation::m_candidateScore, _2));
+
+#if 0
+    // Print out all of the candidates for debugging purposes.
+    std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
+    for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+    {
+      const SubmapRelocalisation& candidate = *it;
+      std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
     }
+    std::cout << "END CANDIDATES\n";
+#endif
+
+    // Schedule the best candidate for relocalisation.
+    m_bestCandidate.reset(new CollaborativeRelocalisation(candidates.back()));
+
+    // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
+    std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+    triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
   }
 
-  if(canRelocalise) m_readyToRelocalise.notify_one();
+  m_readyToRelocalise.notify_one();
 }
 
 bool CollaborativeComponent::update_trajectories()
