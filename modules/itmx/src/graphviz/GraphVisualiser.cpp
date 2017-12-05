@@ -5,6 +5,8 @@
 
 #include "graphviz/GraphVisualiser.h"
 
+#include <fstream>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
