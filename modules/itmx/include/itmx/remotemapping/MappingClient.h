@@ -40,10 +40,11 @@ public:
   /**
    * \brief Constructs a mapping client.
    *
-   * \param host  The mapping host to which to connect.
-   * \param port  The port on the mapping host to which to connect.
+   * \param host              The mapping host to which to connect.
+   * \param port              The port on the mapping host to which to connect.
+   * \param poolEmptyStrategy A strategy specifying what should happen when a push is attempted while the frame message queue's pool is empty.
    */
-  explicit MappingClient(const std::string& host = "localhost", const std::string& port = "7851", tvgutil::pooled_queue::PoolEmptyStrategy pooledQueueStrategy = tvgutil::pooled_queue::PES_DISCARD);
+  explicit MappingClient(const std::string& host = "localhost", const std::string& port = "7851", tvgutil::pooled_queue::PoolEmptyStrategy poolEmptyStrategy = tvgutil::pooled_queue::PES_DISCARD);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
