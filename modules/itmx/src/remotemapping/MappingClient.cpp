@@ -17,8 +17,8 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-MappingClient::MappingClient(const std::string& host, const std::string& port)
-: m_frameMessageQueue(pooled_queue::PES_DISCARD), m_stream(host, port)
+MappingClient::MappingClient(const std::string& host, const std::string& port, pooled_queue::PoolEmptyStrategy poolEmptyStrategy)
+: m_frameMessageQueue(poolEmptyStrategy), m_stream(host, port)
 {
   if(!m_stream) throw std::runtime_error("Error: Could not connect to server");
 }
