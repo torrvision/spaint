@@ -37,10 +37,6 @@
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 
-#ifdef WITH_GRAPHVIZ
-#include <itmx/graphviz/GraphVisualiser.h>
-#endif
-
 #include <tvgutil/filesystem/PathFinder.h>
 
 #include "core/ObjectivePipeline.h"
@@ -439,12 +435,6 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
-#if 1
-  GraphVisualiser gv;
-  gv.generate_visualisation("graph { node [shape=circle]; a -- b; }");
-  return 0;
-#endif
-
   // Construct the settings object for the application. This is used to store both the
   // settings for InfiniTAM and our own extended settings. Note that we do not use the
   // tracker configuration string in the InfiniTAM settings, and so we set it to NULL.
