@@ -492,7 +492,7 @@ void CollaborativeComponent::try_schedule_relocalisation()
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
-    // First, make sure that no relocalisation attempts are currently running, otherwise early out.
+    // If an existing relocalisation attempt is in progress, early out.
     if(m_bestCandidate) return;
 
 #if 1
@@ -522,16 +522,14 @@ void CollaborativeComponent::try_schedule_relocalisation()
     std::cout << "END CANDIDATES\n";
 #endif
 
-    // Setup the best candidate.
+    // Schedule the best candidate for relocalisation.
     m_bestCandidate.reset(new CollaborativeRelocalisation(candidates.back()));
-    candidates.pop_back();
 
     // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
     std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
     triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
   }
 
-  // Notify waiting thread.
   m_readyToRelocalise.notify_one();
 }
 
