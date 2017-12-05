@@ -56,7 +56,11 @@ ITMUChar4Image_Ptr GraphVisualiser::generate_visualisation(const std::string& gr
 
   // Run the chosen Graphviz executable to generate the graph image.
   bf::path graphvizExePath = get_path(graphvizExe);
+#ifdef _WIN32
   std::string command = "\"\"" + graphvizExePath.string() + "\" \"" + bf::absolute(sourceFile).string() + "\" -Tpng -O\"";
+#else
+  std::string command = graphvizExePath.string() + " \"" + bf::absolute(sourceFile).string() + "\" -Tpng -O";
+#endif
   int result = system(command.c_str());
   if(result != 0) throw std::runtime_error("Error: Graphviz execution failed");
 
