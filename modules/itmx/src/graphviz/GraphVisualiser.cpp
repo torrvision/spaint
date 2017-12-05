@@ -10,7 +10,7 @@
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
-namespace bf = boost::filesystem;
+#include "persistence/ImagePersister.h"
 
 //#################### MACROS ####################
 
@@ -18,30 +18,32 @@ namespace bf = boost::filesystem;
 #define QUOTE(x) #x
 #define STRINGIZE(x) QUOTE(x)
 
+//#################### NAMESPACE ALIASES ####################
+
+namespace bf = boost::filesystem;
+
 namespace itmx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void GraphVisualiser::visualise(const std::string& graphDesc, GraphvizExe graphvizExe) const
+void GraphVisualiser::visualise_graph(const std::string& graphDesc, GraphvizExe graphvizExe) const
 {
   // Find the graphs directory and make sure it exists.
   bf::path graphsDir = find_subdir_from_executable("graphs");
   bf::create_directories(graphsDir);
 
   // Write the graph description to a Graphviz source file.
-  bf::path tempFile = graphsDir / "temp.gv";
+  bf::path sourceFile = graphsDir / "temp.gv";
 
   {
-    std::ofstream fs(tempFile.string().c_str());
+    std::ofstream fs(sourceFile.string().c_str());
     fs << graphDesc;
   }
 
   // Run the chosen Graphviz executable.
   bf::path graphvizExePath = find_path(graphvizExe);
-  std::string command = "\"\"" + graphvizExePath.string() + "\" \"" + bf::absolute(tempFile).string() + "\" -Tpng -O\"";
-  std::cout << command << '\n';
+  std::string command = "\"\"" + graphvizExePath.string() + "\" \"" + bf::absolute(sourceFile).string() + "\" -Tpng -O\"";
   int result = system(command.c_str());
-  std::cout << result << '\n';
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

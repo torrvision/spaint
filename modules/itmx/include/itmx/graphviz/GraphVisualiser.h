@@ -34,7 +34,7 @@ public:
    * \param graphDesc   TODO
    * \param graphvizExe The Graphviz executable to use.
    */
-  void visualise(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO) const;
+  void visualise_graph(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

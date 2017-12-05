@@ -441,7 +441,7 @@ try
 {
 #if 1
   GraphVisualiser gv;
-  gv.visualise("graph { node [shape=circle]; a -- b; }");
+  gv.visualise_graph("graph { node [shape=circle]; a -- b; }");
   return 0;
 #endif
 
