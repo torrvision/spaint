@@ -44,10 +44,20 @@ protected:
   FeatureBasedDecisionFunctionGenerator(const boost::optional<std::pair<int,int> >& featureIndexRange = boost::none)
   : m_featureIndexRange(featureIndexRange)
   {
+#ifdef __GNUC__
+    // Disable an erroneous warning.
+    #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
+
     if(featureIndexRange && (featureIndexRange->first < 0 || featureIndexRange->first > featureIndexRange->second))
     {
       throw std::runtime_error("Invalid feature index range");
     }
+
+#ifdef __GNUC__
+    // Re-enable the warning.
+    #pragma GCC diagnostic pop
+#endif
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
