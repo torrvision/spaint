@@ -7,6 +7,10 @@
 #define H_ITMX_GRAPHVISUALISER
 
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+
+#include "../base/ITMImagePtrTypes.h"
 
 namespace itmx {
 
@@ -26,6 +30,14 @@ public:
     GV_NEATO
   };
 
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The random number generator needed for creating UUIDs. */
+  boost::uuids::random_generator m_gen;
+
+  /** The synchronisation mutex. */
+  boost::mutex m_mutex;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -34,7 +46,7 @@ public:
    * \param graphDesc   TODO
    * \param graphvizExe The Graphviz executable to use.
    */
-  void visualise_graph(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO) const;
+  ITMUChar4Image_Ptr generate_visualisation(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -42,6 +54,13 @@ private:
    * \brief TODO
    */
   boost::filesystem::path find_path(GraphvizExe graphvizExe) const;
+
+  /**
+   * \brief Makes a UUID.
+   *
+   * \return  The UUID.
+   */
+  std::string make_uuid();
 };
 
 }

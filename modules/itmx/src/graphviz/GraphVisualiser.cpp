@@ -7,6 +7,9 @@
 
 #include <iostream>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
@@ -26,24 +29,46 @@ namespace itmx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void GraphVisualiser::visualise_graph(const std::string& graphDesc, GraphvizExe graphvizExe) const
+ITMUChar4Image_Ptr GraphVisualiser::generate_visualisation(const std::string& graphDesc, GraphvizExe graphvizExe)
 {
-  // Find the graphs directory and make sure it exists.
-  bf::path graphsDir = find_subdir_from_executable("graphs");
-  bf::create_directories(graphsDir);
+  std::string stem;
 
-  // Write the graph description to a Graphviz source file.
-  bf::path sourceFile = graphsDir / "temp.gv";
+  // Find the graphs directory.
+  const bf::path graphsDir = find_subdir_from_executable("graphs");
+
+  {
+    boost::lock_guard<boost::mutex> lock(m_mutex);
+
+    // Make sure the graphs directory exists.
+    bf::create_directories(graphsDir);
+
+    // Generate a unique stem.
+    stem = make_uuid();
+  }
+
+  // Write the graph description to a Graphviz source file whose name is based on the generated stem.
+  const bf::path sourceFile = graphsDir / (stem + ".gv");
 
   {
     std::ofstream fs(sourceFile.string().c_str());
     fs << graphDesc;
   }
 
-  // Run the chosen Graphviz executable.
+  // Run the chosen Graphviz executable to generate the graph image.
   bf::path graphvizExePath = find_path(graphvizExe);
   std::string command = "\"\"" + graphvizExePath.string() + "\" \"" + bf::absolute(sourceFile).string() + "\" -Tpng -O\"";
   int result = system(command.c_str());
+  if(result != 0) throw std::runtime_error("Error: Graphviz execution failed");
+
+  // Read the graph image back in.
+  const bf::path graphImageFile = graphsDir / (stem + ".gv.png");
+  ITMUChar4Image_Ptr graphImage = ImagePersister::load_rgba_image(graphImageFile.string());
+
+  // Finally, delete the source and graph image files to keep things tidy.
+  bf::remove(sourceFile);
+  bf::remove(graphImageFile);
+
+  return graphImage;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -64,6 +89,11 @@ bf::path GraphVisualiser::find_path(GraphvizExe graphvizExe) const
 
   if(bf::exists(result)) return result;
   else throw std::runtime_error("Error: Cannot find " + result.string());
+}
+
+std::string GraphVisualiser::make_uuid()
+{
+  return boost::lexical_cast<std::string>(m_gen());
 }
 
 }
