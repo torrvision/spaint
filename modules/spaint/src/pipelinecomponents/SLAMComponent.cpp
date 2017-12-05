@@ -513,8 +513,7 @@ void SLAMComponent::setup_relocaliser()
   Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-    innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-    voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
+    innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
   ));
 
   // Finally, set the number of frames to skip betwenn calls to the train method.

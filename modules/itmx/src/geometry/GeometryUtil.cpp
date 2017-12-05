@@ -22,7 +22,7 @@ ORUtils::SE3Pose GeometryUtil::blend_poses(const std::vector<ORUtils::SE3Pose>& 
 
   // Compute a uniformly-weighted linear blend of all of the poses and return it.
   const double weight = 1.0 / count;
-  for(size_t i = 0; i < count; ++i)
+  for(int i = 0; i < count; ++i)
   {
     dqs.push_back(pose_to_dual_quat<double>(poses[i]));
     weights.push_back(weight);

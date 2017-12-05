@@ -485,7 +485,6 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   // FIXME: This is a disgusting hack.
   static std::vector<ITMUChar4Image_Ptr> images;
   static std::vector<ITMFloatImage_Ptr> depthImages;
-  static DepthVisualiser_CPtr depthVisualiser(VisualiserFactory::make_depth_visualiser(m_model->get_settings()->deviceType));
   static bool supersamplingEnabled = m_supersamplingEnabled;
   std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
@@ -504,6 +503,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       images.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
       depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
     }
+
+    const ITMIntrinsics intrinsics = m_model->get_slam_state(sceneID)->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
 
     for(size_t i = 0; i < sceneIDs.size(); ++i)
     {
@@ -528,24 +529,15 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       // If we have not yet started reconstruction for this scene, avoid rendering it.
       if(!slamState || !slamState->get_view()) continue;
 
-      const View_CPtr view = slamState->get_view();
-      const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
-
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
         subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-        tempPose, view, intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
+        tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
       );
 
-      SimpleCamera camera = CameraPoseConverter::pose_to_camera(tempPose);
-
-      depthVisualiser->render_depth(
-        DepthVisualiser::DT_ORTHOGRAPHIC,
-        GeometryUtil::to_itm(camera.p()),
-        GeometryUtil::to_itm(camera.n()),
-        subwindow.get_voxel_render_state(viewIndex).get(),
-        m_model->get_settings()->sceneParams.voxelSize, -1.0f,
-        depthImages[i]
+      m_model->get_visualisation_generator()->generate_depth_from_voxels(
+        depthImages[i], slamState->get_voxel_scene(), tempPose, intrinsics,
+        subwindow.get_voxel_render_state(viewIndex), DepthVisualiser::DT_ORTHOGRAPHIC
       );
 
       depthImages[i]->UpdateHostFromDevice();
