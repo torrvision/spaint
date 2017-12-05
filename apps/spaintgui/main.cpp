@@ -825,17 +825,8 @@ try
   if(args.host != "")
   {
     std::cout << "Setting mapping client for host '" << args.host << "' and port '" << args.port << "'\n";
-
-    // Determine the pool empty strategy to use.
-    pooled_queue::PoolEmptyStrategy defaultPoolEmptyStrategy;
-    if((args.host == "localhost" || args.host == "127.0.0.1") && args.collaborationMode == "batch") defaultPoolEmptyStrategy = pooled_queue::PES_WAIT;
-    else defaultPoolEmptyStrategy = pooled_queue::PES_DISCARD;
-
-    const std::string settingsNamespace = "MappingClient.";
-    pooled_queue::PoolEmptyStrategy poolEmptyStrategy = settings->get_first_value<pooled_queue::PoolEmptyStrategy>(settingsNamespace + "poolEmptyStrategy", defaultPoolEmptyStrategy);
-
-    // Set up the mapping client.
-    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host, args.port, defaultPoolEmptyStrategy)));
+    const pooled_queue::PoolEmptyStrategy poolEmptyStrategy = settings->get_first_value<pooled_queue::PoolEmptyStrategy>("MappingClient.poolEmptyStrategy", pooled_queue::PES_DISCARD);
+    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host, args.port, poolEmptyStrategy)));
   }
 
 #ifdef WITH_LEAP
