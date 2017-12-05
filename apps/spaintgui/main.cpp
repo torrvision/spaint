@@ -80,6 +80,7 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::string port;
   std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
   std::string relocaliserType;
@@ -122,6 +123,7 @@ struct CommandLineArguments
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
+      ADD_SETTING(port);
       ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
       ADD_SETTING(relocaliserType);
@@ -521,6 +523,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("port", po::value<std::string>(&args.port)->default_value("7851"), "remote mapping port")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
@@ -811,8 +814,9 @@ try
   // If a remote host was specified, set up a mapping client for the world scene.
   if(args.host != "")
   {
-    std::cout << "Setting mapping client for host '" << args.host << "'\n";
-    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host)));
+    std::cout << "Setting mapping client for host '" << args.host << "' and port '" << args.port << "'\n";
+    const pooled_queue::PoolEmptyStrategy poolEmptyStrategy = settings->get_first_value<pooled_queue::PoolEmptyStrategy>("MappingClient.poolEmptyStrategy", pooled_queue::PES_DISCARD);
+    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host, args.port, poolEmptyStrategy)));
   }
 
 #ifdef WITH_LEAP
