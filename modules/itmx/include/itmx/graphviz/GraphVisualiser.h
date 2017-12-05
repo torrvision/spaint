@@ -26,26 +26,22 @@ public:
     GV_NEATO
   };
 
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** The executable to use. */
-  boost::filesystem::path m_exe;
-
-  //#################### CONSTRUCTORS ####################
-public:
-  /**
-   * \brief Constructs a graph visualiser.
-   *
-   * \param exeName The Graphviz executable to use.
-   */
-  explicit GraphVisualiser(GraphvizExe exe = GV_NEATO);
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief TODO
+   *
+   * \param graphDesc   TODO
+   * \param graphvizExe The Graphviz executable to use.
    */
-  void visualise(const std::string& graphDesc) const;
+  void visualise(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO) const;
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  boost::filesystem::path find_path(GraphvizExe graphvizExe) const;
 };
 
 }
