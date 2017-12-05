@@ -112,7 +112,7 @@ public:
 #endif
 
     // Generate the split candidates.
-    if(m_splitCandidates.size() != candidateCount) m_splitCandidates.resize(candidateCount);
+    if(static_cast<int>(m_splitCandidates.size()) != candidateCount) m_splitCandidates.resize(candidateCount);
     for(int i = 0; i < candidateCount; ++i)
     {
       m_splitCandidates[i].m_decisionFunction = generate_candidate_decision_function(examples, randomNumberGenerator);

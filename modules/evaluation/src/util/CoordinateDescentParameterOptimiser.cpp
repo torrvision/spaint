@@ -106,7 +106,7 @@ std::pair<std::vector<size_t>,float> CoordinateDescentParameterOptimiser::perfor
     size_t paramIndex = (startingParamIndex + k) % paramCount;
 
     // Check how many possible values the parameter can take. If there's only one possibility, the parameter can be skipped.
-    int valueCount = static_cast<int>(m_paramValues[paramIndex].second.size());
+    size_t valueCount = m_paramValues[paramIndex].second.size();
     if(valueCount == 1) continue;
 
     // Record the parameter value for which we already have the corresponding cost so that we can avoid re-evaluating it.
