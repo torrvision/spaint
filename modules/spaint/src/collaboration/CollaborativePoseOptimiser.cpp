@@ -154,7 +154,7 @@ bool CollaborativePoseOptimiser::add_relative_transform_sample_sub(const std::st
   {
     for(size_t j = 0, size = clusters[i].size(); j < size; ++j)
     {
-      if(GeometryUtil::poses_are_similar(sample, clusters[i][j]))
+      if(GeometryUtil::poses_are_similar(sample, clusters[i][j], 20 * M_PI / 180, 0.1f))
       {
         clusters[i].push_back(sample);
 
