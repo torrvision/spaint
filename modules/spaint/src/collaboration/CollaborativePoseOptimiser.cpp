@@ -17,10 +17,19 @@ using namespace ORUtils;
 using namespace MiniSlamGraph;
 
 #include <itmx/geometry/GeometryUtil.h>
-using namespace itmx;
+
+#ifdef WITH_GRAPHVIZ
+#include <itmx/graphviz/GraphVisualiser.h>
+#endif
+
+#ifdef WITH_OPENCV
+#include <itmx/ocv/OpenCVUtil.h>
+#endif
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
+
+using namespace itmx;
 using namespace tvgutil;
 
 namespace bf = boost::filesystem;
@@ -275,15 +284,27 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
 
       // Add any edge with at least one endpoint that is confidently connected to the primary scene to the pose graph.
       bool graphHasEdges = false;
+      std::string edgeDesc;
       for(int i = 0; i < sceneCount; ++i)
       {
         for(int j = 0; j < sceneCount; ++j)
         {
           if(j == i) continue;
-          if(!confidentlyConnected[i][primarySceneID] && !confidentlyConnected[j][primarySceneID]) continue;
+
+          edgeDesc += sceneIDs[j] + " -> " + sceneIDs[i];
+
+          if(!confidentlyConnected[i][primarySceneID] && !confidentlyConnected[j][primarySceneID])
+          {
+            edgeDesc += ";\n";
+            continue;
+          }
 
           boost::optional<std::pair<SE3Pose,size_t> > relativeTransform = try_get_relative_transform_sub(sceneIDs[i], sceneIDs[j]);
-          if(!relativeTransform || relativeTransform->second < confidence_threshold()) continue;
+          if(!relativeTransform || relativeTransform->second < confidence_threshold())
+          {
+            edgeDesc += ";\n";
+            continue;
+          }
 
 #if DEBUGGING
           std::cout << "Relative Transform (" << i << '/' << sceneIDs[i] << " <- " << j << '/' << sceneIDs[j] << "): " << relativeTransform->second << '\n'
@@ -296,6 +317,8 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
           edge->setMeasurementSE3(relativeTransform->first);
           graph.addEdge(edge);
 
+          edgeDesc += " [color=red];\n";
+
           graphHasEdges = true;
         }
       }
@@ -304,9 +327,16 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
       if(!graphHasEdges) continue;
 
       // Add a node for each scene that is confidently connected to the primary scene to the pose graph.
+      std::string nodeDesc;
       for(int i = 0; i < sceneCount; ++i)
       {
-        if(!confidentlyConnected[i][primarySceneID]) continue;
+        nodeDesc += sceneIDs[i];
+
+        if(!confidentlyConnected[i][primarySceneID])
+        {
+          nodeDesc += ";\n";
+          continue;
+        }
 
         /*std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = m_estimatedGlobalPoses.find(sceneIDs[i]);*/
 
@@ -315,10 +345,20 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
         node->setPose(/*jt != m_estimatedGlobalPoses.end() ? jt->second : */ORUtils::SE3Pose());
         node->setFixed(i == primarySceneID);
         graph.addNode(node);
+
+        nodeDesc += " [fillcolor=cyan];\n";
       }
 
 #if 1
       std::cout << "Finished creating pose graph for optimisation" << std::endl;
+#endif
+
+#if defined(WITH_GRAPHVIZ) && defined(WITH_OPENCV) && DEBUGGING
+      static GraphVisualiser gv;
+      ITMUChar4Image_Ptr img = gv.generate_visualisation("digraph { node [ shape=rectangle, style=filled, fillcolor=white];\n" + nodeDesc + edgeDesc + " }");
+      cv::Mat3b cvImg = OpenCVUtil::make_rgb_image(img->GetData(MEMORYDEVICE_CPU), img->noDims.x, img->noDims.y);
+      cv::imshow("Pose Graph", cvImg);
+      cv::waitKey(1);
 #endif
     }
 
