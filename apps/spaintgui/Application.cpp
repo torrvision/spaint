@@ -75,6 +75,9 @@ bool Application::run()
     if(m_batchModeEnabled) { if(eventQuit) return false; }
     else                   { if(eventQuit || escQuit) break; }
 
+    // If desired, save the memory usage for later analysis.
+    if(m_memoryUsageOutputStream) save_current_memory_usage();
+
     // Take action as relevant based on the current input state.
     process_input();
 
@@ -132,6 +135,46 @@ void Application::set_server_mode_enabled(bool serverModeEnabled)
 void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
   m_frameDebugHook = frameDebugHook;
+}
+
+void Application::set_save_memory_usage(bool saveMemoryUsage)
+{
+  // If we're trying to turn off memory usage saving, reset the output stream and early out.
+  if(!saveMemoryUsage)
+  {
+    m_memoryUsageOutputStream.reset();
+    return;
+  }
+
+  // Otherwise, prepare the output stream:
+
+  // Step 1: Find the profiling subdirectory and make sure that it exists.
+  const boost::filesystem::path profilingSubdir = find_subdir_from_executable("profiling");
+  boost::filesystem::create_directories(profilingSubdir);
+
+  // Step 2: Determine the name of the file to which to save the memory usage. We base this on the
+  //         (global) experiment tag, if available, and the current timestamp if not.
+  std::string profilingFileName = m_pipeline->get_model()->get_settings()->get_first_value<std::string>("experimentTag", "");
+  if(profilingFileName == "") profilingFileName = "spaint-" + TimeUtil::get_iso_timestamp();
+  profilingFileName += ".csv";
+
+  // Step 3: Open the file and write a header row for the table. The table has three columns for each available GPU
+  //         (denoting the free, used and total memory on that GPU in MB at each frame).
+  const boost::filesystem::path profilingFile = profilingSubdir / profilingFileName;
+  m_memoryUsageOutputStream.reset(new std::ofstream(profilingFile.string().c_str()));
+  std::cout << "Saving memory usage information in: " << profilingFile << '\n';
+
+  int gpuCount = 0;
+  ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+  for(int i = 0; i < gpuCount; ++i)
+  {
+    cudaDeviceProp props;
+    ORcudaSafeCall(cudaGetDeviceProperties(&props, i));
+
+    *m_memoryUsageOutputStream << '(' << i << ')' << props.name << " - Free;" << '(' << i << ')' << props.name << " - Used;" << '(' << i << ')' << props.name << " - Total;";
+  }
+
+  *m_memoryUsageOutputStream << '\n';
 }
 
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
@@ -741,6 +784,49 @@ void Application::process_voice_input()
     if(command == "switch to correction mode") m_pipeline->set_mode(MultiScenePipeline::MODE_TRAIN_AND_PREDICT);
     if(command == "switch to smoothing mode") m_pipeline->set_mode(MultiScenePipeline::MODE_SMOOTHING);
   }
+}
+
+void Application::save_current_memory_usage()
+{
+  // Make sure that the memory usage output stream has been initialised, and throw if not.
+  if(!m_memoryUsageOutputStream)
+  {
+    throw std::runtime_error("Error: Memory usage output stream has not been initialised");
+  }
+
+  // Find how many GPUs are available.
+  int gpuCount = 0;
+  ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+
+  // Save the currently active GPU (we have to change the active GPU to query the memory usage
+  // of the other GPUs, and we want to restore the original GPU once we're done).
+  int originalGpu = -1;
+  ORcudaSafeCall(cudaGetDevice(&originalGpu));
+
+  // For each available GPU:
+  for(int i = 0; i < gpuCount; ++i)
+  {
+    // Set the GPU as active.
+    ORcudaSafeCall(cudaSetDevice(i));
+
+    // Look up its memory usage.
+    size_t freeMemory, totalMemory;
+    ORcudaSafeCall(cudaMemGetInfo(&freeMemory, &totalMemory));
+
+    // Convert the memory usage to MB.
+    const size_t bytesPerMb = 1024 * 1024;
+    const size_t freeMb = freeMemory / bytesPerMb;
+    const size_t usedMb = (totalMemory - freeMemory) / bytesPerMb;
+    const size_t totalMb = totalMemory / bytesPerMb;
+
+    // Save the memory usage to the output stream.
+    *m_memoryUsageOutputStream << freeMb << ";" << usedMb << ";" << totalMb << ";";
+  }
+
+  *m_memoryUsageOutputStream << '\n';
+
+  // Restore the GPU that was originally active.
+  ORcudaSafeCall(cudaSetDevice(originalGpu));
 }
 
 void Application::save_mesh() const
