@@ -83,6 +83,7 @@ struct CommandLineArguments
   std::string port;
   std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
+  bool profileMemory;
   std::string relocaliserType;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
@@ -126,6 +127,7 @@ struct CommandLineArguments
       ADD_SETTING(port);
       ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
+      ADD_SETTING(profileMemory);
       ADD_SETTING(relocaliserType);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
@@ -536,6 +538,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("port", po::value<std::string>(&args.port)->default_value("7851"), "remote mapping port")
+    ("profileMemory", po::bool_switch(&args.profileMemory)->default_value(false), "whether or not to profile the memory usage")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
@@ -840,6 +843,7 @@ try
   Application app(pipeline, args.renderFiducials);
   if(args.batch) app.set_batch_mode_enabled(true);
   if(args.runServer) app.set_server_mode_enabled(true);
+  app.set_save_memory_usage(args.profileMemory);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
 
