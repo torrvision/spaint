@@ -353,7 +353,7 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
       std::cout << "Finished creating pose graph for optimisation" << std::endl;
 #endif
 
-#if defined(WITH_GRAPHVIZ) && defined(WITH_OPENCV)
+#if defined(WITH_GRAPHVIZ) && defined(WITH_OPENCV) && DEBUGGING
       static GraphVisualiser gv;
       ITMUChar4Image_Ptr img = gv.generate_visualisation("digraph { node [ shape=rectangle, style=filled, fillcolor=white];\n" + nodeDesc + edgeDesc + " }");
       cv::Mat3b cvImg = OpenCVUtil::make_rgb_image(img->GetData(MEMORYDEVICE_CPU), img->noDims.x, img->noDims.y);
