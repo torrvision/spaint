@@ -49,7 +49,7 @@ private:
   /** TODO */
   boost::condition_variable m_readyToRelocalise;
 
-  /** Whether or not the current reconstruction is already consistent (i.e. all scenes are connected to the primary one). */
+  /** Whether or not the current reconstruction is consistent (i.e. all scenes are connected to the primary one). */
   bool m_reconstructionIsConsistent;
 
   /** TODO */
@@ -61,13 +61,13 @@ private:
   /** A random number generator. */
   mutable tvgutil::RandomNumberGenerator m_rng;
 
-  /** Whether or not to stop the collaborative component at the first full reconstruction. */
+  /** Whether or not to stop at the first consistent reconstruction. */
   bool m_stopAtFirstConsistentReconstruction;
 
   /** TODO */
   boost::atomic<bool> m_stopRelocalisationThread;
 
-  /** Whether or not to time the time spent collaborating. */
+  /** Whether or not to compute the time spent collaborating. */
   bool m_timeCollaboration;
 
   /** TODO */

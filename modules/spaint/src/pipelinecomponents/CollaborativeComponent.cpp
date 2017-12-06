@@ -18,7 +18,6 @@ using boost::bind;
 #endif
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
-using namespace tvgutil;
 
 #define DEBUGGING 0
 
@@ -32,21 +31,17 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
   m_mode(mode),
   m_reconstructionIsConsistent(false),
   m_rng(12345),
-  m_stopAtFirstConsistentReconstruction(false),
   m_stopRelocalisationThread(false),
-  m_timeCollaboration(false),
   m_visualisationGenerator(new VisualisationGenerator(context->get_settings()))
 {
-  static const std::string settingsNamespace = "CollaborativeComponent.";
-
-  // Handle settings.
-  const Settings_CPtr settings = context->get_settings();
+  const Settings_CPtr& settings = context->get_settings();
+  const std::string settingsNamespace = "CollaborativeComponent.";
   m_stopAtFirstConsistentReconstruction = settings->get_first_value<bool>(settingsNamespace + "stopAtFirstConsistentReconstruction", false);
   m_timeCollaboration = settings->get_first_value<bool>(settingsNamespace + "timeCollaboration", false);
 
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
 
-  const std::string globalPosesSpecifier = m_context->get_settings()->get_first_value<std::string>("globalPosesSpecifier", "");
+  const std::string globalPosesSpecifier = settings->get_first_value<std::string>("globalPosesSpecifier", "");
   m_context->get_collaborative_pose_optimiser()->start(globalPosesSpecifier);
 }
 
@@ -58,10 +53,13 @@ CollaborativeComponent::~CollaborativeComponent()
   m_readyToRelocalise.notify_one();
   m_relocalisationThread.join();
 
+  // If we're computing the time spent collaborating:
   if(m_collaborationTimer)
   {
-    // We stop the timer after all the other threads have terminated, in case it hadn't been stopped yet (i.e. m_stopAtFirstConsistentReconstruction is false).
+    // Stop the collaboration timer if it is still running (e.g. if we didn't stop at the first consistent reconstruction).
     m_collaborationTimer->stop();
+
+    // Output the time spent collaborating.
     std::cout << "Time spent collaborating: " << m_collaborationTimer->format(3) << '\n';
   }
 
@@ -86,38 +84,34 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
       m_collaborationTimer.reset(boost::timer::cpu_timer());
     }
 
-    // Check whether we have a consistent reconstruction.
+    // Check to see whether the reconstruction has just become consistent.
     if(!m_reconstructionIsConsistent)
     {
       const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
-      bool consistentReconstruction = true;
-
+      m_reconstructionIsConsistent = true;
       for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
       {
         if(!m_context->get_collaborative_pose_optimiser()->try_get_estimated_global_pose(sceneIDs[sceneIdx]))
         {
-          consistentReconstruction = false;
+          m_reconstructionIsConsistent = false;
           break;
         }
       }
 
-      if(consistentReconstruction)
-      {
-        std::cout << "The reconstruction became consistent at frame: " << m_frameIndex << '\n';
-        m_reconstructionIsConsistent = true;
-      }
+      if(m_reconstructionIsConsistent) std::cout << "The reconstruction became consistent at frame: " << m_frameIndex << '\n';
     }
 
+    // If the reconstruction is consistent and we're stopping at the first consistent reconstruction:
     if(m_reconstructionIsConsistent && m_stopAtFirstConsistentReconstruction)
     {
-      if(m_collaborationTimer)
-      {
-        m_collaborationTimer->stop();
-      }
+      // Stop the collaboration timer if necessary.
+      if(m_collaborationTimer) m_collaborationTimer->stop();
 
+      // Early out to prevent any more relocalisation attempts being scheduled.
       return;
     }
 
+    // Otherwise, try to schedule a relocalisation attempt.
     try_schedule_relocalisation();
   }
 
