@@ -496,11 +496,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
     depthImages.clear();
   }
 
-#if 0
-  if(sceneID == "World")
-#else
   if(&subwindow == &m_subwindowConfiguration->subwindow(0))
-#endif
   {
     while(images.size() < sceneIDs.size())
     {
@@ -522,7 +518,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       {
         boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform("World", sceneIDs[i]);
         SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-        if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN;
+        if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
 
         // ciTwi * wiTwj = ciTwj
         tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
@@ -561,11 +557,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
 #if 1
   // FIXME: This is also a disgusting hack.
-#if 0
-  if(sceneID == "World")
-#else
   if(&subwindow == &m_subwindowConfiguration->subwindow(0))
-#endif
   {
     for(size_t k = 0; k < image->noDims.width * image->noDims.height; ++k)
     {
@@ -574,7 +566,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       {
         const float arbitrarilyLargeDepth = 100.0f;
         float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
-        if(depth != -1.0f && visualisationTypes[i] == VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN) depth = arbitrarilyLargeDepth;
+        if(depth != -1.0f && visualisationTypes[i] == VisualisationGenerator::VT_SCENE_SEMANTICPHONG) depth = arbitrarilyLargeDepth;
         if(depth != -1.0f && depth < smallestDepth)
         {
           smallestDepth = depth;
