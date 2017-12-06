@@ -184,7 +184,7 @@ RefiningRelocaliser_CPtr Model::get_relocaliser(const std::string& sceneID) cons
   return SLAMContext::get_relocaliser(sceneID);
 }
 
-std::vector<std::string> Model::get_scene_ids() const
+const std::vector<std::string>& Model::get_scene_ids() const
 {
   return SLAMContext::get_scene_ids();
 }

@@ -33,6 +33,9 @@ private:
   /** The relocalisers used to estimate the camera pose in the various scenes. */
   std::map<std::string,itmx::RefiningRelocaliser_Ptr> m_relocalisers;
 
+  /** The IDs of all existing scenes. */
+  std::vector<std::string> m_sceneIDs;
+
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
 
@@ -54,6 +57,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Adds the specified scene ID to the list of existing scene IDs.
+   *
+   * \param sceneID The scene ID to add.
+   */
+  void add_scene_id(const std::string& sceneID);
+
+  /**
    * \brief Gets the relocaliser for the specified scene.
    *
    * \param sceneID The scene ID.
@@ -72,9 +82,9 @@ public:
   /**
    * \brief Gets the IDs of all existing scenes.
    *
-   * \return  A vector containing the IDs of all existing scenes.
+   * \return  The IDs of all existing scenes.
    */
-  virtual std::vector<std::string> get_scene_ids() const;
+  virtual const std::vector<std::string>& get_scene_ids() const;
 
   /**
    * \brief Gets the SLAM state for the specified scene.

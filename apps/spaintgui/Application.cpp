@@ -837,7 +837,7 @@ void Application::save_mesh() const
   const Settings_CPtr& settings = model->get_settings();
 
   // Get all scene IDs.
-  std::vector<std::string> sceneIDs = model->get_scene_ids();
+  const std::vector<std::string> sceneIDs = model->get_scene_ids();
 
   // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
   std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "");
