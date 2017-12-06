@@ -78,6 +78,7 @@ struct CommandLineArguments
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
   bool saveMeshOnExit;
+  bool saveModelOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
   std::string subwindowConfigurationIndex;
@@ -114,6 +115,7 @@ struct CommandLineArguments
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
       ADD_SETTING(saveMeshOnExit);
+      ADD_SETTING(saveModelOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
       ADD_SETTING(subwindowConfigurationIndex);
@@ -354,6 +356,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
+    ("saveModelOnExit", po::bool_switch(&args.saveModelOnExit), "save a model of each voxel scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
@@ -565,6 +568,7 @@ try
   Application app(pipeline, args.renderFiducials);
   app.set_batch_mode_enabled(args.batch);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
+  app.set_save_model_on_exit(args.saveModelOnExit);
   bool runSucceeded = app.run();
 
 #ifdef WITH_OVR
