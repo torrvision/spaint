@@ -10,7 +10,6 @@
 
 #include "../collaboration/CollaborativePoseOptimiser.h"
 #include "../slamstate/SLAMState.h"
-#include "../visualisation/VisualisationGenerator.h"
 
 namespace spaint {
 
@@ -35,8 +34,8 @@ public:
 public:
   virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const = 0;
   virtual std::vector<std::string> get_scene_ids() const = 0;
+  virtual const Settings_CPtr& get_settings() const = 0;
   virtual SLAMState_CPtr get_slam_state(const std::string& sceneID) const = 0;
-  virtual VisualisationGenerator_CPtr get_visualisation_generator() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -63,6 +63,9 @@ private:
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
 
+  /** The stream on which to output the memory usage (if memory usage saving is enabled). */
+  boost::shared_ptr<std::ofstream> m_memoryUsageOutputStream;
+
   /** The meshing engine. */
   MeshingEngine_Ptr m_meshingEngine;
 
@@ -131,6 +134,13 @@ public:
    * \param frameDebugHook  The debug hook function (if any) to call after processing each frame.
    */
   void set_frame_debug_hook(const FrameDebugHook& frameDebugHook);
+
+  /**
+   * \brief Sets whether or not to profile the memory usage of the application and save it before processing each frame.
+   *
+   * \param saveMemoryUsage Whether or not to save the memory usage before processing each frame.
+   */
+  void set_save_memory_usage(bool saveMemoryUsage);
 
   /**
    * \brief Sets whether or not to save a mesh of the scene on exiting the application.
@@ -269,6 +279,11 @@ private:
    * \brief Processes voice input from the user.
    */
   void process_voice_input();
+
+  /**
+   * \brief Saves the current memory usage.
+   */
+  void save_current_memory_usage();
 
   /**
    * \brief Saves a mesh of the scene to disk.

@@ -97,7 +97,6 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   slamState->set_tracking_state(TrackingState_Ptr(new ITMTrackingState(trackedImageSize, memoryType)));
-  m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 
   // Set up the relocaliser.
   setup_relocaliser();
@@ -111,6 +110,9 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Set up the scene.
   reset_scene();
+
+  // Update the initial pose.
+  m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -135,7 +137,16 @@ bool SLAMComponent::process_frame()
   }
   else
   {
-    slamState->set_input_status(m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED);
+    const SLAMState::InputStatus inputStatus = m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED;
+
+    // If no more images are expected, let the relocaliser know that no more calls will be made to its train or update functions.
+    if(inputStatus == SLAMState::IS_TERMINATED && slamState->get_input_status() != SLAMState::IS_TERMINATED)
+    {
+      m_context->get_relocaliser(m_sceneID)->finish_training();
+    }
+
+    slamState->set_input_status(inputStatus);
+
     return false;
   }
 
@@ -269,9 +280,10 @@ bool SLAMComponent::process_frame()
     m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib.intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
   }
 
-  // If we're using a composite image source engine and the current sub-engine has run out of images, disable fusion.
+  // If we're using a composite image source engine, the current sub-engine has run out of images and we're not using global poses, disable fusion.
   CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
-  if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
+  const bool usingGlobalPoses = m_context->get_settings()->get_first_value<std::string>("globalPosesSpecifier", "") != "";
+  if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages() && !usingGlobalPoses) m_fusionEnabled = false;
 
   // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
   // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.
@@ -501,8 +513,7 @@ void SLAMComponent::setup_relocaliser()
   Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-    innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-    voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
+    innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
   ));
 
   // Finally, set the number of frames to skip betwenn calls to the train method.

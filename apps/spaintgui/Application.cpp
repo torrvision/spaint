@@ -75,6 +75,9 @@ bool Application::run()
     if(m_batchModeEnabled) { if(eventQuit) return false; }
     else                   { if(eventQuit || escQuit) break; }
 
+    // If desired, save the memory usage for later analysis.
+    if(m_memoryUsageOutputStream) save_current_memory_usage();
+
     // Take action as relevant based on the current input state.
     process_input();
 
@@ -132,6 +135,46 @@ void Application::set_server_mode_enabled(bool serverModeEnabled)
 void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
   m_frameDebugHook = frameDebugHook;
+}
+
+void Application::set_save_memory_usage(bool saveMemoryUsage)
+{
+  // If we're trying to turn off memory usage saving, reset the output stream and early out.
+  if(!saveMemoryUsage)
+  {
+    m_memoryUsageOutputStream.reset();
+    return;
+  }
+
+  // Otherwise, prepare the output stream:
+
+  // Step 1: Find the profiling subdirectory and make sure that it exists.
+  const boost::filesystem::path profilingSubdir = find_subdir_from_executable("profiling");
+  boost::filesystem::create_directories(profilingSubdir);
+
+  // Step 2: Determine the name of the file to which to save the memory usage. We base this on the
+  //         (global) experiment tag, if available, and the current timestamp if not.
+  std::string profilingFileName = m_pipeline->get_model()->get_settings()->get_first_value<std::string>("experimentTag", "");
+  if(profilingFileName == "") profilingFileName = "spaint-" + TimeUtil::get_iso_timestamp();
+  profilingFileName += ".csv";
+
+  // Step 3: Open the file and write a header row for the table. The table has three columns for each available GPU
+  //         (denoting the free, used and total memory on that GPU in MB at each frame).
+  const boost::filesystem::path profilingFile = profilingSubdir / profilingFileName;
+  m_memoryUsageOutputStream.reset(new std::ofstream(profilingFile.string().c_str()));
+  std::cout << "Saving memory usage information in: " << profilingFile << '\n';
+
+  int gpuCount = 0;
+  ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+  for(int i = 0; i < gpuCount; ++i)
+  {
+    cudaDeviceProp props;
+    ORcudaSafeCall(cudaGetDeviceProperties(&props, i));
+
+    *m_memoryUsageOutputStream << '(' << i << ')' << props.name << " - Free;" << '(' << i << ')' << props.name << " - Used;" << '(' << i << ')' << props.name << " - Total;";
+  }
+
+  *m_memoryUsageOutputStream << '\n';
 }
 
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
@@ -211,10 +254,15 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
-  // If the quote key is pressed, toggle whether or not supersampling is used when rendering the scene raycast.
+  // If the quote key is pressed:
   if(keysym.sym == KEYCODE_QUOTE)
   {
+    // Toggle whether or not supersampling is used when rendering the scene raycast.
     m_renderer->set_supersampling_enabled(!m_renderer->get_supersampling_enabled());
+
+    // Let the pipeline know that the raycast result size may have changed.
+    const Vector2i& imgSize = get_active_subwindow().get_image()->noDims;
+    m_pipeline->update_raycast_result_size(imgSize.x * imgSize.y);
   }
 
   // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
@@ -738,6 +786,49 @@ void Application::process_voice_input()
   }
 }
 
+void Application::save_current_memory_usage()
+{
+  // Make sure that the memory usage output stream has been initialised, and throw if not.
+  if(!m_memoryUsageOutputStream)
+  {
+    throw std::runtime_error("Error: Memory usage output stream has not been initialised");
+  }
+
+  // Find how many GPUs are available.
+  int gpuCount = 0;
+  ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+
+  // Save the currently active GPU (we have to change the active GPU to query the memory usage
+  // of the other GPUs, and we want to restore the original GPU once we're done).
+  int originalGpu = -1;
+  ORcudaSafeCall(cudaGetDevice(&originalGpu));
+
+  // For each available GPU:
+  for(int i = 0; i < gpuCount; ++i)
+  {
+    // Set the GPU as active.
+    ORcudaSafeCall(cudaSetDevice(i));
+
+    // Look up its memory usage.
+    size_t freeMemory, totalMemory;
+    ORcudaSafeCall(cudaMemGetInfo(&freeMemory, &totalMemory));
+
+    // Convert the memory usage to MB.
+    const size_t bytesPerMb = 1024 * 1024;
+    const size_t freeMb = freeMemory / bytesPerMb;
+    const size_t usedMb = (totalMemory - freeMemory) / bytesPerMb;
+    const size_t totalMb = totalMemory / bytesPerMb;
+
+    // Save the memory usage to the output stream.
+    *m_memoryUsageOutputStream << freeMb << ";" << usedMb << ";" << totalMb << ";";
+  }
+
+  *m_memoryUsageOutputStream << '\n';
+
+  // Restore the GPU that was originally active.
+  ORcudaSafeCall(cudaSetDevice(originalGpu));
+}
+
 void Application::save_mesh() const
 {
   if(!m_meshingEngine) return;
@@ -748,10 +839,6 @@ void Application::save_mesh() const
   // Get all scene IDs.
   std::vector<std::string> sceneIDs = model->get_scene_ids();
 
-  // Find the meshes directory and make sure that it exists.
-  boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
-  boost::filesystem::create_directories(meshesSubdir);
-
   // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
   std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "");
   if(meshBaseName == "")
@@ -760,6 +847,11 @@ void Application::save_mesh() const
     // experimentTag is a registered program option in main.cpp, with a default value of "".
     meshBaseName = "spaint-" + TimeUtil::get_iso_timestamp();
   }
+
+  // Determine the directory into which to save the meshes, and make sure that it exists.
+  boost::filesystem::path dir = find_subdir_from_executable("meshes");
+  if(sceneIDs.size() > 1) dir = dir / meshBaseName;
+  boost::filesystem::create_directories(dir);
 
   // Mesh each scene independently.
   for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
@@ -814,7 +906,7 @@ void Application::save_mesh() const
       mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
     }
 
-    const boost::filesystem::path meshPath = meshesSubdir / (meshBaseName + "_" + sceneID + ".obj");
+    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".obj");
 
     // Save the mesh to disk.
     std::cout << "Saving mesh to: " << meshPath << '\n';
@@ -924,11 +1016,11 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
 #if 0
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
+  const Vector2i& mainImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
 #else
-  const Vector2i depthImageSize(640, 480);
+  const Vector2i mainImageSize(640, 480);
 #endif
-  Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
+  Vector2i windowViewportSize((int)ROUND(mainImageSize.width / mainSubwindow.width()), (int)ROUND(mainImageSize.height / mainSubwindow.height()));
 
   const std::string title = m_pipeline->get_model()->get_mapping_server() ? "SemanticPaint - Server" : "SemanticPaint";
   m_renderer.reset(new WindowedRenderer(title, m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));

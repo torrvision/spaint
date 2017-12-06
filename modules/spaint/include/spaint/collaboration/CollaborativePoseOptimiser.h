@@ -33,11 +33,17 @@ private:
   /** Estimates of the poses of the different scenes in the global coordinate system. */
   std::map<std::string,ORUtils::SE3Pose> m_estimatedGlobalPoses;
 
+  /** The global poses specifier (if any), or the empty string otherwise. */
+  std::string m_globalPosesSpecifier;
+
   /** The synchronisation mutex. */
   mutable boost::mutex m_mutex;
 
   /** The pose graph optimisation thread. */
   boost::shared_ptr<boost::thread> m_optimisationThread;
+
+  /** The primary scene ID. */
+  std::string m_primarySceneID;
 
   /**
    * Accumulated samples of the relative transformations between the different scenes. Each sample for (scene i, scene j)
@@ -61,8 +67,10 @@ private:
 public:
   /**
    * \brief Constructs a collaborative pose optimiser.
+   *
+   * \param primarySceneID  The ID of the primary scene.
    */
-  CollaborativePoseOptimiser();
+  explicit CollaborativePoseOptimiser(const std::string& primarySceneID = "World"); // FIXME: The primary scene ID shouldn't be hard-coded.
 
   //#################### DESTRUCTOR ####################
 public:
@@ -97,8 +105,10 @@ public:
 
   /**
    * \brief Starts the pose graph optimiser.
+   *
+   * \param globalPosesSpecifier The global poses specifier (if any), or the empty string otherwise.
    */
-  void start();
+  void start(const std::string& globalPosesSpecifier);
 
   /**
    * \brief Terminates the pose graph optimiser.
@@ -161,7 +171,12 @@ private:
    */
   void run_pose_graph_optimisation();
 
-/**
+  /**
+   * \brief Attempts to save the estimated global poses of the different scenes to disk.
+   */
+  void save_global_poses() const;
+
+  /**
    * \brief Attempts to get the largest cluster of samples of the transformation from the coordinate system of scene j to that of scene i.
    *
    * \param sceneI  The ID of scene i.

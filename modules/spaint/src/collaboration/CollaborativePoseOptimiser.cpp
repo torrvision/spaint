@@ -7,6 +7,7 @@
 using namespace ORUtils;
 
 #include <deque>
+#include <fstream>
 
 #include <MiniSlamGraphLib/GraphEdgeSE3.h>
 #include <MiniSlamGraphLib/GraphNodeSE3.h>
@@ -18,14 +19,21 @@ using namespace MiniSlamGraph;
 #include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;
 
+#include <tvgutil/filesystem/PathFinder.h>
+#include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
+
+namespace bf = boost::filesystem;
+
 #define DEBUGGING 0
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-CollaborativePoseOptimiser::CollaborativePoseOptimiser()
-: m_relativeTransformSamplesChanged(false),
+CollaborativePoseOptimiser::CollaborativePoseOptimiser(const std::string& primarySceneID)
+: m_primarySceneID(primarySceneID),
+  m_relativeTransformSamplesChanged(false),
   m_shouldTerminate(false)
 {}
 
@@ -74,8 +82,9 @@ void CollaborativePoseOptimiser::add_relative_transform_sample(const std::string
 #endif
 }
 
-void CollaborativePoseOptimiser::start()
+void CollaborativePoseOptimiser::start(const std::string& globalPosesSpecifier)
 {
+  m_globalPosesSpecifier = globalPosesSpecifier;
   m_optimisationThread.reset(new boost::thread(boost::bind(&CollaborativePoseOptimiser::run_pose_graph_optimisation, this)));
 }
 
@@ -89,6 +98,8 @@ void CollaborativePoseOptimiser::terminate()
     m_relativeTransformSamplesAdded.notify_one();
     m_optimisationThread->join();
   }
+
+  save_global_poses();
 }
 
 boost::optional<SE3Pose> CollaborativePoseOptimiser::try_get_estimated_global_pose(const std::string& sceneID) const
@@ -143,7 +154,7 @@ bool CollaborativePoseOptimiser::add_relative_transform_sample_sub(const std::st
   {
     for(size_t j = 0, size = clusters[i].size(); j < size; ++j)
     {
-      if(GeometryUtil::poses_are_similar(sample, clusters[i][j]))
+      if(GeometryUtil::poses_are_similar(sample, clusters[i][j], 20 * M_PI / 180, 0.1f))
       {
         clusters[i].push_back(sample);
 
@@ -202,8 +213,7 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
       int primarySceneID = -1;
       for(int i = 0; i < sceneCount; ++i)
       {
-        // FIXME: The primary scene name shouldn't be hard-coded.
-        if(sceneIDs[i] == "World")
+        if(sceneIDs[i] == m_primarySceneID)
         {
           primarySceneID = i;
           break;
@@ -336,6 +346,42 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
 #endif
       }
     }
+  }
+}
+
+void CollaborativePoseOptimiser::save_global_poses() const
+{
+  // If there aren't any poses to save, early out.
+  if(m_estimatedGlobalPoses.empty()) return;
+
+  // Determine the file to which to save the poses.
+  const std::string dirName = "global_poses";
+  const std::string globalPosesSpecifier = m_globalPosesSpecifier != "" ? m_globalPosesSpecifier : TimeUtil::get_iso_timestamp();
+  const bf::path p = find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
+
+  // Try to ensure that the directory into which we want to save the file exists. If we can't, early out.
+  try
+  {
+    bf::create_directories(p.parent_path());
+  }
+  catch(bf::filesystem_error&)
+  {
+    std::cerr << "Warning: Could not create directory '" << dirName << "'\n";
+    return;
+  }
+
+  // Try to save the poses into the file. If we can't, early out.
+  std::ofstream fs(p.string().c_str());
+  if(!fs)
+  {
+    std::cerr << "Warning: Could not open file to save global poses\n";
+    return;
+  }
+
+  for(std::map<std::string,SE3Pose>::const_iterator it = m_estimatedGlobalPoses.begin(), iend = m_estimatedGlobalPoses.end(); it != iend; ++it)
+  {
+    DualQuatd dq = GeometryUtil::pose_to_dual_quat<double>(it->second);
+    fs << it->first << ' ' << dq << '\n';
   }
 }
 

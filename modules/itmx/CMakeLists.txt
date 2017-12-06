@@ -15,6 +15,7 @@ SET(targetname itmx)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGraphviz.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
@@ -50,6 +51,15 @@ include/itmx/geometry/DualQuaternion.h
 include/itmx/geometry/GeometryUtil.h
 include/itmx/geometry/Screw.h
 )
+
+##
+SET(graphviz_sources)
+SET(graphviz_headers)
+
+IF(WITH_GRAPHVIZ)
+  SET(graphviz_sources ${graphviz_sources} src/graphviz/GraphVisualiser.cpp)
+  SET(graphviz_headers ${graphviz_headers} include/itmx/graphviz/GraphVisualiser.h)
+ENDIF()
 
 ##
 SET(imagesources_sources
@@ -137,12 +147,14 @@ include/itmx/remotemapping/RGBDFrameMessage.h
 
 ##
 SET(trackers_sources
+src/trackers/GlobalTracker.cpp
 src/trackers/RemoteTracker.cpp
 src/trackers/TrackerFactory.cpp
 )
 
 SET(trackers_headers
 include/itmx/trackers/FallibleTracker.h
+include/itmx/trackers/GlobalTracker.h
 include/itmx/trackers/RemoteTracker.h
 include/itmx/trackers/TrackerFactory.h
 )
@@ -183,6 +195,7 @@ include/itmx/util/RGBDUtil.h
 SET(sources
 ${base_sources}
 ${geometry_sources}
+${graphviz_sources}
 ${imagesources_sources}
 ${persistence_sources}
 ${relocalisation_sources}
@@ -194,6 +207,7 @@ ${util_sources}
 SET(headers
 ${base_headers}
 ${geometry_headers}
+${graphviz_headers}
 ${imagesources_headers}
 ${persistence_headers}
 ${relocalisation_headers}
@@ -217,6 +231,7 @@ ENDIF()
 
 SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
 SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
+SOURCE_GROUP(graphviz FILES ${graphviz_sources} ${graphviz_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})

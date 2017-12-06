@@ -5,6 +5,8 @@
 
 #include "visualisation/VisualisationGenerator.h"
 
+#include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace ITMLib;
 
@@ -19,33 +21,40 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
-                                               const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
-: m_depthVisualiser(VisualiserFactory::make_depth_visualiser(settings->deviceType)),
-  m_labelManager(labelManager),
-  m_semanticVisualiser(VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType)),
-  m_settings(settings),
-  m_surfelVisualisationEngine(surfelVisualisationEngine),
-  m_voxelVisualisationEngine(voxelVisualisationEngine)
-{}
+VisualisationGenerator::VisualisationGenerator(const Settings_CPtr& settings, const LabelManager_CPtr& labelManager,
+                                               const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine,
+                                               const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine)
+: m_depthVisualiser(VisualiserFactory::make_depth_visualiser(settings->deviceType)), m_settings(settings)
+{
+  if(labelManager)
+  {
+    m_labelManager = labelManager;
+    m_semanticVisualiser = VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType);
+  }
+
+  if(surfelVisualisationEngine) m_surfelVisualisationEngine = surfelVisualisationEngine;
+  else m_surfelVisualisationEngine.reset(ITMSurfelVisualisationEngineFactory<SpaintSurfel>::make_surfel_visualisation_engine(settings->deviceType));
+
+  if(voxelVisualisationEngine) m_voxelVisualisationEngine = voxelVisualisationEngine;
+  else m_voxelVisualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                        const View_CPtr& view, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
+                                                        const ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
 {
-  if(!scene || !view)
+  if(!scene)
   {
     output->Clear();
     return;
   }
 
-  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
 
-  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
-  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
-  m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
 
   const SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
   m_depthVisualiser->render_depth(
@@ -57,19 +66,18 @@ void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr&
 }
 
 void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                           const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
+                                                           const ITMIntrinsics& intrinsics, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
 {
-  if(!scene || !view)
+  if(!scene)
   {
     output->Clear();
     return;
   }
 
-  if(!renderState) renderState.reset(new ITMSurfelRenderState(view->depth->noDims, scene->GetParams().supersamplingFactor));
+  if(!renderState) renderState.reset(new ITMSurfelRenderState(output->noDims, scene->GetParams().supersamplingFactor));
 
-  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
   const bool useRadii = true;
-  m_surfelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, useRadii, USR_DONOTRENDER, renderState.get());
+  m_surfelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, useRadii, USR_DONOTRENDER, renderState.get());
 
   switch(visualisationType)
   {
@@ -123,34 +131,16 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
 }
 
 void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                          const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
-                                                          const boost::optional<Postprocessor>& postprocessor, bool useColourIntrinsics) const
+                                                          const ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
+                                                          const boost::optional<Postprocessor>& postprocessor) const
 {
-  if(!scene || !view)
+  if(!scene)
   {
     output->Clear();
     return;
   }
 
   if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
-
-  ITMIntrinsics intrinsics;
-  if(useColourIntrinsics)
-  {
-    float fx = view->calib.intrinsics_rgb.projectionParamsSimple.fx * output->noDims.x / view->rgb->noDims.x;
-    float fy = view->calib.intrinsics_rgb.projectionParamsSimple.fy * output->noDims.y / view->rgb->noDims.y;
-    float px = view->calib.intrinsics_rgb.projectionParamsSimple.px * output->noDims.x / view->rgb->noDims.x;
-    float py = view->calib.intrinsics_rgb.projectionParamsSimple.py * output->noDims.y / view->rgb->noDims.y;
-    intrinsics.SetFrom(fx, fy, px, py);
-  }
-  else
-  {
-    float fx = view->calib.intrinsics_d.projectionParamsSimple.fx * output->noDims.x / view->depth->noDims.x;
-    float fy = view->calib.intrinsics_d.projectionParamsSimple.fy * output->noDims.y / view->depth->noDims.y;
-    float px = view->calib.intrinsics_d.projectionParamsSimple.px * output->noDims.x / view->depth->noDims.x;
-    float py = view->calib.intrinsics_d.projectionParamsSimple.py * output->noDims.y / view->depth->noDims.y;
-    intrinsics.SetFrom(fx, fy, px, py);
-  }
 
   m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
   m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
@@ -174,6 +164,8 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
     case VT_SCENE_SEMANTICLAMBERTIAN:
     case VT_SCENE_SEMANTICPHONG:
     {
+      if(!m_semanticVisualiser) throw std::runtime_error("Error: This visualisation generator does not support semantic visualisations");
+
       const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
 
       LightingType lightingType = LT_LAMBERTIAN;
@@ -214,6 +206,11 @@ void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, con
   prepare_to_copy_visualisation(view->rgb->noDims, output);
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
   output->SetFrom(view->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+}
+
+bool VisualisationGenerator::supports_semantics() const
+{
+  return m_semanticVisualiser.get() != NULL;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

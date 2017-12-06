@@ -466,6 +466,14 @@ std::ostream& operator<<(std::ostream& os, const DualQuaternion<T>& rhs)
   return os;
 }
 
+template <typename T>
+std::istream& operator>>(std::istream& is, DualQuaternion<T>& rhs)
+{
+  char c;
+  is >> c >> rhs.w >> c >> rhs.x >> c >> rhs.y >> c >> rhs.z >> c;
+  return is;
+}
+
 //#################### TYPEDEFS ####################
 
 typedef DualQuaternion<double> DualQuatd;

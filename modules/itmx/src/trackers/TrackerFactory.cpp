@@ -16,6 +16,8 @@ using namespace ITMLib;
 #include <tvgutil/persistence/PropertyUtil.h>
 using namespace tvgutil;
 
+#include "geometry/GeometryUtil.h"
+#include "trackers/GlobalTracker.h"
 #include "trackers/RemoteTracker.h"
 
 #ifdef WITH_OVR
@@ -171,6 +173,23 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
 
     // Return the composite tracker, making sure to prevent double deletion if it will itself be added to another composite.
     return nestingFlag == NESTED ? Tracker_Ptr(compositeTracker, boost::serialization::null_deleter()) : Tracker_Ptr(compositeTracker);
+  }
+  else if(trackerType == "global")
+  {
+    // Construct the nested tracker.
+    Tree nestedTrackerTree = trackerTree.get_child("tracker");
+    Tracker_Ptr nestedTracker = make_tracker(
+      nestedTrackerTree, trackSurfels, rgbImageSize, depthImageSize,
+      lowLevelEngine, imuCalibrator, settings, fallibleTracker,
+      mappingServer, NESTED
+    );
+
+    // Construct the global tracker.
+    ORUtils::SE3Pose initialPose = GeometryUtil::dual_quat_to_pose(boost::lexical_cast<DualQuatd>(trackerParams));
+    GlobalTracker *globalTracker = new GlobalTracker(nestedTracker, initialPose);
+
+    // Return the global tracker, making sure to prevent double deletion if it will be added to a composite.
+    return nestingFlag == NESTED ? Tracker_Ptr(globalTracker, boost::serialization::null_deleter()) : Tracker_Ptr(globalTracker);
   }
   else if(trackerType == "import")
   {

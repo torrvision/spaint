@@ -35,6 +35,7 @@
 #endif
 
 #include <itmx/base/MemoryBlockFactory.h>
+#include <itmx/geometry/GeometryUtil.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #include <itmx/imagesources/RemoteImageSourceEngine.h>
 
@@ -71,6 +72,7 @@ struct CommandLineArguments
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
+  std::string globalPosesSpecifier;
   std::string host;
   int initialFrameNumber;
   std::string leapFiducialID;
@@ -78,8 +80,10 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::string port;
   std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
+  bool profileMemory;
   std::string relocaliserType;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
@@ -112,6 +116,7 @@ struct CommandLineArguments
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
+      ADD_SETTING(globalPosesSpecifier);
       ADD_SETTING(host);
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
@@ -119,8 +124,10 @@ struct CommandLineArguments
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
+      ADD_SETTING(port);
       ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
+      ADD_SETTING(profileMemory);
       ADD_SETTING(relocaliserType);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
@@ -180,6 +187,34 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
 }
 
 /**
+ * \brief Attempts to load a set of global poses from a file specified by a global poses specifier.
+ *
+ * \param globalPosesSpecifier  The global poses specifier.
+ * \return                      The global poses from the file, if possible, or an empty map otherwise.
+ */
+std::map<std::string,DualQuatd> load_global_poses(const std::string& globalPosesSpecifier)
+{
+  std::map<std::string,DualQuatd> globalPoses;
+
+  // Determine the file from which to load the global poses.
+  const std::string dirName = "global_poses";
+  const bf::path p = find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
+
+  // Try to read the poses from the file. If we can't, throw.
+  std::ifstream fs(p.string().c_str());
+  if(!fs) throw std::runtime_error("Error: Could not open global poses file");
+
+  std::string id;
+  DualQuatd dq;
+  while(fs >> id >> dq)
+  {
+    globalPoses.insert(std::make_pair(id, dq));
+  }
+
+  return globalPoses;
+}
+
+/**
  * \brief Attempts to make a camera subengine to read images from any suitable camera that is attached.
  *
  * \param args  The program's command-line arguments.
@@ -227,6 +262,10 @@ std::string make_tracker_config(CommandLineArguments& args)
 {
   std::string result;
 
+  // If the user wants to use global poses for the scenes, load them from disk.
+  std::map<std::string,DualQuatd> globalPoses;
+  if(args.globalPosesSpecifier != "") globalPoses = load_global_poses(args.globalPosesSpecifier);
+
   // Determine the number of different trackers that will be needed.
   size_t trackerCount = args.sequenceSpecifiers.size();
   if(trackerCount == 0 || args.cameraAfterDisk) ++trackerCount;
@@ -252,13 +291,13 @@ std::string make_tracker_config(CommandLineArguments& args)
     size_t chunkCount = chunks.size();
     if(chunkCount > 1) result += "<tracker type='composite'>";
 
-    for(size_t i = 0; i < chunkCount; ++i)
+    for(size_t j = 0; j < chunkCount; ++j)
     {
-      if(chunks[i] == "InfiniTAM")
+      if(chunks[j] == "InfiniTAM")
       {
         result += "<tracker type='infinitam'/>";
       }
-      else if(chunks[i] == "Disk")
+      else if(chunks[j] == "Disk")
       {
         if(args.poseFileMasks.size() < i)
         {
@@ -267,11 +306,35 @@ std::string make_tracker_config(CommandLineArguments& args)
           throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
         }
 
+        // If we're using global poses for the scenes:
+        if(!globalPoses.empty())
+        {
+          // Try to find the global pose for this scene based on the sequence specifier.
+          const std::string sequenceID = args.sequenceDirs[i].stem().string();
+          std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sequenceID);
+
+          // If that doesn't work, try to find the global pose based on the scene ID.
+          if(it == globalPoses.end())
+          {
+            // FIXME: We shouldn't hard-code "Local" here - it's based on knowing how CollaborativePipeline assigns scene names.
+            const std::string sceneID = i == 0 ? Model::get_world_scene_id() : "Local" + boost::lexical_cast<std::string>(i);
+            it = globalPoses.find(sceneID);
+          }
+
+          // If we now have a global pose, specify the creation of a global tracker that uses it. If not, throw.
+          if(it != globalPoses.end()) result += "<tracker type='global'><params>" + boost::lexical_cast<std::string>(it->second) + "</params>";
+          else throw std::runtime_error("Error: Global pose for sequence '" + sequenceID + "' not found");
+        }
+
+        // Specify the creation of a file-based tracker that reads poses from disk.
         result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
+
+        // If we're using global poses for the scenes, add the necessary closing tag for the global tracker.
+        if(!globalPoses.empty()) result += "</tracker>";
       }
       else
       {
-        result += "<tracker type='import'><params>builtin:" + chunks[i] + "</params></tracker>";
+        result += "<tracker type='import'><params>builtin:" + chunks[j] + "</params></tracker>";
       }
     }
 
@@ -294,14 +357,14 @@ std::string make_tracker_config(CommandLineArguments& args)
  */
 bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& settings)
 {
-  // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
+  // If the user specifies both sequence and explicit depth/RGB/pose masks, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth/RGB/pose masks may be specified, but not both.\n";
     return false;
   }
 
-  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth / RGB image masks appropriately.
+  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
   for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
   {
     // Determine the sequence type.
@@ -314,10 +377,33 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Set the depth / RGB image masks.
-    args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
-    args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
-    args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since colour might be missing).
+    const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
+    const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
+
+    // Set the depth/RGB/pose masks appropriately.
+    if(sevenScenesNaming && spaintNaming)
+    {
+      std::cout << "Error: The directory '" << dir.string() << "' contains images that follow both the 7-Scenes and spaint naming conventions.\n";
+      return false;
+    }
+    else if(sevenScenesNaming)
+    {
+      args.depthImageMasks.push_back((dir / "frame-%06i.depth.png").string());
+      args.poseFileMasks.push_back((dir / "frame-%06i.pose.txt").string());
+      args.rgbImageMasks.push_back((dir / "frame-%06i.color.png").string());
+    }
+    else if(spaintNaming)
+    {
+      args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+      args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
+      args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    }
+    else
+    {
+      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. Manually specify the masks using the -d and -r options.\n";
+      return false;
+    }
   }
 
   // If the user hasn't explicitly specified a calibration file, try to find one in the first sequence directory (if it exists).
@@ -327,6 +413,16 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     if(bf::exists(defaultCalibrationFilename))
     {
       args.calibrationFilename = defaultCalibrationFilename.string();
+    }
+  }
+
+  // If the user wants to use global poses for the scenes, make sure that each disk sequence has a tracker specifier set to Disk.
+  if(args.globalPosesSpecifier != "")
+  {
+    args.trackerSpecifiers.resize(args.sequenceSpecifiers.size());
+    for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
+    {
+      args.trackerSpecifiers[i] = "Disk";
     }
   }
 
@@ -345,6 +441,18 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
   if(args.pipelineType == "collaborative" && args.sequenceSpecifiers.empty())
   {
     args.runServer = true;
+  }
+
+  // If the user tries to run the application in both batch mode and server mode, print an error message.
+  // It doesn't make sense to combine the two modes: server mode is intended to make sure that fusion
+  // starts as soon as frames arrive from a client; batch mode is intended to make sure that the user
+  // cannot quit the application during experiments, and that the application quits automatically once
+  // an experiment is finished. Both modes initially unpause the fusion process, but they are otherwise
+  // intended for completely different use cases and should not be combined (indeed, they conflict).
+  if(args.batch && args.runServer)
+  {
+    std::cout << "Error: Cannot enable both batch mode and server mode at the same time.\n";
+    return false;
   }
 
   // Add the post-processed arguments to the application settings.
@@ -423,11 +531,14 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
+    ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("port", po::value<std::string>(&args.port)->default_value("7851"), "remote mapping port")
+    ("profileMemory", po::bool_switch(&args.profileMemory)->default_value(false), "whether or not to profile the memory usage")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
@@ -558,8 +669,8 @@ try
 
 #if 1
   // FIXME: This is to allow large-scale scenes to work. We should do this properly.
-  settings->sceneParams.voxelSize = 0.01f;
-  settings->sceneParams.mu = 0.04f;
+  settings->sceneParams.voxelSize = 0.015f;
+  settings->sceneParams.mu = settings->sceneParams.voxelSize * 4;
 #endif
 
   // Pass the device type to the memory block factory.
@@ -718,8 +829,9 @@ try
   // If a remote host was specified, set up a mapping client for the world scene.
   if(args.host != "")
   {
-    std::cout << "Setting mapping client for host '" << args.host << "'\n";
-    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host)));
+    std::cout << "Setting mapping client for host '" << args.host << "' and port '" << args.port << "'\n";
+    const pooled_queue::PoolEmptyStrategy poolEmptyStrategy = settings->get_first_value<pooled_queue::PoolEmptyStrategy>("MappingClient.poolEmptyStrategy", pooled_queue::PES_DISCARD);
+    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host, args.port, poolEmptyStrategy)));
   }
 
 #ifdef WITH_LEAP
@@ -729,8 +841,9 @@ try
 
   // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
-  app.set_batch_mode_enabled(args.batch);
-  app.set_server_mode_enabled(pipeline->get_model()->get_mapping_server().get() != NULL);
+  if(args.batch) app.set_batch_mode_enabled(true);
+  if(args.runServer) app.set_server_mode_enabled(true);
+  app.set_save_memory_usage(args.profileMemory);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
 

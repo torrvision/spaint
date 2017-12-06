@@ -87,6 +87,15 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Signals to the relocaliser that no more calls will be made to its train or update functions
+   *        (unless and until the relocaliser is reset).
+   *
+   * \note This allows the relocaliser to release memory that is only used during training.
+   * \note Later calls to train or update prior to a reset will result in undefined behaviour.
+   */
+  virtual void finish_training();
+
+  /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.
    *
    * This is intended to be overridden by derived relocalisers that need to perform bookkeeping operations.

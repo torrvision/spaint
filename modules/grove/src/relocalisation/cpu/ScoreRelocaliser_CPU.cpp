@@ -40,20 +40,12 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
 
   // These variables have to be set here, since they depend on the forest.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
-  m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
-
-  // Reservoirs.
-  m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CPU, m_rngSeed);
-
-  // Clustering.
-  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CPU);
 
   // P-RANSAC.
   m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CPU);
 
   // Clear internal state.
-  reset();
+  ScoreRelocaliser_CPU::reset();
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
@@ -90,6 +82,26 @@ std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint3
   }
 
   return reservoirContents;
+}
+
+void ScoreRelocaliser_CPU::reset()
+{
+  // Setup the clusterer if it has not been allocated yet.
+  if(!m_exampleClusterer)
+  {
+    m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
+        m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CPU);
+  }
+
+  // Setup the reservoirs if they haven't been allocated yet.
+  if(!m_relocaliserState->exampleReservoirs)
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CPU, m_rngSeed);
+
+  // Setup the predictions block.
+  if(!m_relocaliserState->predictionsBlock)
+    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+
+  ScoreRelocaliser::reset();
 }
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################

@@ -19,7 +19,7 @@ using boost::bind;
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
-#define DEBUGGING 1
+#define DEBUGGING 0
 
 namespace spaint {
 
@@ -29,11 +29,20 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
 : m_context(context),
   m_frameIndex(0),
   m_mode(mode),
+  m_reconstructionIsConsistent(false),
   m_rng(12345),
-  m_stopRelocalisationThread(false)
+  m_stopRelocalisationThread(false),
+  m_visualisationGenerator(new VisualisationGenerator(context->get_settings()))
 {
+  const Settings_CPtr& settings = context->get_settings();
+  const std::string settingsNamespace = "CollaborativeComponent.";
+  m_stopAtFirstConsistentReconstruction = settings->get_first_value<bool>(settingsNamespace + "stopAtFirstConsistentReconstruction", false);
+  m_timeCollaboration = settings->get_first_value<bool>(settingsNamespace + "timeCollaboration", false);
+
   m_relocalisationThread = boost::thread(boost::bind(&CollaborativeComponent::run_relocalisation, this));
-  m_context->get_collaborative_pose_optimiser()->start();
+
+  const std::string globalPosesSpecifier = settings->get_first_value<std::string>("globalPosesSpecifier", "");
+  m_context->get_collaborative_pose_optimiser()->start(globalPosesSpecifier);
 }
 
 //#################### DESTRUCTOR ####################
@@ -43,6 +52,16 @@ CollaborativeComponent::~CollaborativeComponent()
   m_stopRelocalisationThread = true;
   m_readyToRelocalise.notify_one();
   m_relocalisationThread.join();
+
+  // If we're computing the time spent collaborating:
+  if(m_collaborationTimer)
+  {
+    // Stop the collaboration timer if it is still running (e.g. if we didn't stop at the first consistent reconstruction).
+    m_collaborationTimer->stop();
+
+    // Output the time spent collaborating.
+    std::cout << "Time spent collaborating: " << m_collaborationTimer->format(3) << '\n';
+  }
 
 #if DEBUGGING
   output_results();
@@ -58,6 +77,41 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
   if(m_frameIndex > 0 && (!fusionMayStillRun || (m_mode == CM_LIVE && m_frameIndex % 20 == 0)))
   {
+    // Start the collaboration timer if required.
+    if(m_timeCollaboration && !m_collaborationTimer)
+    {
+      std::cout << "Collaboration starting at frame: " << m_frameIndex << '\n';
+      m_collaborationTimer.reset(boost::timer::cpu_timer());
+    }
+
+    // Check to see whether the reconstruction has just become consistent.
+    if(!m_reconstructionIsConsistent)
+    {
+      const std::vector<std::string> sceneIDs = m_context->get_scene_ids();
+      m_reconstructionIsConsistent = true;
+      for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
+      {
+        if(!m_context->get_collaborative_pose_optimiser()->try_get_estimated_global_pose(sceneIDs[sceneIdx]))
+        {
+          m_reconstructionIsConsistent = false;
+          break;
+        }
+      }
+
+      if(m_reconstructionIsConsistent) std::cout << "The reconstruction became consistent at frame: " << m_frameIndex << '\n';
+    }
+
+    // If the reconstruction is consistent and we're stopping at the first consistent reconstruction:
+    if(m_reconstructionIsConsistent && m_stopAtFirstConsistentReconstruction)
+    {
+      // Stop the collaboration timer if necessary.
+      if(m_collaborationTimer) m_collaborationTimer->stop();
+
+      // Early out to prevent any more relocalisation attempts being scheduled.
+      return;
+    }
+
+    // Otherwise, try to schedule a relocalisation attempt.
     try_schedule_relocalisation();
   }
 
@@ -301,23 +355,24 @@ void CollaborativeComponent::run_relocalisation()
     std::cout << "Attempting to relocalise frame " << m_bestCandidate->m_frameIndexJ << " of " << m_bestCandidate->m_sceneJ << " against " << m_bestCandidate->m_sceneI << "...";
 
     // Render synthetic images of the source scene from the relevant pose and copy them across to the GPU for use by the relocaliser.
+    // The synthetic images have the size of the images in the target scene and are generated using the target scene's intrinsics.
     const SLAMState_CPtr slamStateI = m_context->get_slam_state(m_bestCandidate->m_sceneI);
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
+    const View_CPtr viewI = slamStateI->get_view();
 
-    // The synthetic images have the size of the images in scene I and are generated according to I's intrinsics (hence slamStateI->get_view() is used in the later calls).
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateI->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateI->get_rgb_image_size(), true, true));
 
     VoxelRenderState_Ptr renderStateD;
-    m_context->get_visualisation_generator()->generate_depth_from_voxels(
-      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+    m_visualisationGenerator->generate_depth_from_voxels(
+      depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_d,
+      renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
     VoxelRenderState_Ptr renderStateRGB;
-    const bool useColourIntrinsics = true;
-    m_context->get_visualisation_generator()->generate_voxel_visualisation(
-      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, slamStateI->get_view(),
-      renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
+    m_visualisationGenerator->generate_voxel_visualisation(
+      rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_rgb,
+      renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none
     );
 
     depth->UpdateDeviceFromHost();
@@ -352,13 +407,14 @@ void CollaborativeComponent::run_relocalisation()
       renderStateD.reset();
       renderStateRGB.reset();
 
-      m_context->get_visualisation_generator()->generate_depth_from_voxels(
-        depth, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(), renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
+      m_visualisationGenerator->generate_depth_from_voxels(
+        depth, slamStateI->get_voxel_scene(), result->pose.GetM(), viewI->calib.intrinsics_d,
+        renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
       );
 
-      m_context->get_visualisation_generator()->generate_voxel_visualisation(
-        rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), slamStateI->get_view(),
-        renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none, useColourIntrinsics
+      m_visualisationGenerator->generate_voxel_visualisation(
+        rgb, slamStateI->get_voxel_scene(), result->pose.GetM(), viewI->calib.intrinsics_rgb,
+        renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none
       );
 
       // Make OpenCV copies of the synthetic images of the target scene.
@@ -484,51 +540,48 @@ void CollaborativeComponent::score_candidates(std::list<CollaborativeRelocalisat
 
 void CollaborativeComponent::try_schedule_relocalisation()
 {
-#if 1
-  // Randomly generate a list of candidate relocalisations.
-  const size_t desiredCandidateCount = 10;
-  std::list<CollaborativeRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
-#else
-  // Generate the frames from the source scene in order, for evaluation purposes.
-  std::list<CollaborativeRelocalisation> candidates = generate_sequential_candidate();
-#endif
-  if(candidates.empty()) return;
-
-  // Score all of the candidates.
-  score_candidates(candidates);
-
-  // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
-  candidates.sort(bind(&CollaborativeRelocalisation::m_candidateScore, _1) < bind(&CollaborativeRelocalisation::m_candidateScore, _2));
-
-#if 0
-  // Print out all of the candidates for debugging purposes.
-  std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
-  for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
-  {
-    const SubmapRelocalisation& candidate = *it;
-    std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
-  }
-  std::cout << "END CANDIDATES\n";
-#endif
-
-  bool canRelocalise = false;
-
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
-    if(!m_bestCandidate)
-    {
-      // Schedule the best candidate for relocalisation.
-      m_bestCandidate.reset(new CollaborativeRelocalisation(candidates.back()));
-      candidates.pop_back();
-      canRelocalise = true;
 
-      // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
-      std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
-      triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
+    // If an existing relocalisation attempt is in progress, early out.
+    if(m_bestCandidate) return;
+
+#if 1
+    // Randomly generate a list of candidate relocalisations.
+    const size_t desiredCandidateCount = 10;
+    std::list<CollaborativeRelocalisation> candidates = generate_random_candidates(desiredCandidateCount);
+#else
+    // Generate the frames from the source scene in order, for evaluation purposes.
+    std::list<CollaborativeRelocalisation> candidates = generate_sequential_candidate();
+#endif
+    if(candidates.empty()) return;
+
+    // Score all of the candidates.
+    score_candidates(candidates);
+
+    // Sort the candidates in ascending order of score (this isn't strictly necessary, but makes debugging easier).
+    candidates.sort(bind(&CollaborativeRelocalisation::m_candidateScore, _1) < bind(&CollaborativeRelocalisation::m_candidateScore, _2));
+
+#if 0
+    // Print out all of the candidates for debugging purposes.
+    std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
+    for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+    {
+      const SubmapRelocalisation& candidate = *it;
+      std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
     }
+    std::cout << "END CANDIDATES\n";
+#endif
+
+    // Schedule the best candidate for relocalisation.
+    m_bestCandidate.reset(new CollaborativeRelocalisation(candidates.back()));
+
+    // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
+    std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+    triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
   }
 
-  if(canRelocalise) m_readyToRelocalise.notify_one();
+  m_readyToRelocalise.notify_one();
 }
 
 bool CollaborativeComponent::update_trajectories()

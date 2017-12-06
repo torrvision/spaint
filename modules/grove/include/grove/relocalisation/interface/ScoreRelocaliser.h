@@ -74,7 +74,7 @@ private:
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
   /** The mutex used to synchronise access to the relocaliser in a multithreaded environment. */
-  mutable boost::mutex m_mutex;
+  mutable boost::recursive_mutex m_mutex;
 
   /** An image storing the predictions associated to the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;
@@ -217,6 +217,9 @@ public:
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
+  /** Override */
+  virtual void finish_training();
+
   /**
    * \brief Returns a specific prediction from the forest.
    *
