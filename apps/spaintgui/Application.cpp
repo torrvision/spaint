@@ -51,6 +51,7 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
   m_paused(true),
   m_pipeline(pipeline),
   m_renderFiducials(renderFiducials),
+  m_saveModelOnExit(false),
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
@@ -115,6 +116,9 @@ bool Application::run()
   // If desired, save a mesh of the scene before the application terminates.
   if(m_saveMeshOnExit) save_mesh();
 
+  // If desired, save the voxel model of each scene to disk.
+  if(m_saveModelOnExit) save_model();
+
   return true;
 }
 
@@ -137,6 +141,11 @@ void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
 {
   m_saveMeshOnExit = saveMeshOnExit;
+}
+
+void Application::set_save_model_on_exit(bool saveModelOnExit)
+{
+  m_saveModelOnExit = saveModelOnExit;
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -769,6 +778,26 @@ void Application::save_mesh() const
   // Save the mesh to disk.
   std::cout << "Saving mesh to: " << meshPath << '\n';
   mesh->WriteSTL(meshPath.string().c_str());
+}
+
+void Application::save_model() const
+{
+  // Find the models directory and make sure it exists.
+  boost::filesystem::path modelsSubdir = find_subdir_from_executable("models");
+  boost::filesystem::create_directories(modelsSubdir);
+
+  // Determine the folder to use for saving the models, using either the experiment tag or the current timestamp.
+  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
+  std::string modelName = settings->get_first_value<std::string>("experimentTag", "");
+  if(modelName == "")
+  {
+    modelName = TimeUtil::get_iso_timestamp();
+  }
+
+  boost::filesystem::path modelPath = modelsSubdir / modelName;
+
+  // Save all the models.
+  m_pipeline->save_all_scenes(modelPath.string());
 }
 
 void Application::save_screenshot() const

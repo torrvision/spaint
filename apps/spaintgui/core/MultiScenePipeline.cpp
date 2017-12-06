@@ -10,6 +10,8 @@ using namespace itmx;
 using namespace spaint;
 
 #include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
 
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
@@ -62,6 +64,12 @@ Model_CPtr MultiScenePipeline::get_model() const
 const std::string& MultiScenePipeline::get_type() const
 {
   return m_type;
+}
+
+void MultiScenePipeline::load_scene(const std::string& inputDirectory, const std::string& sceneID)
+{
+  std::cout << "Loading voxel scene " << sceneID << " from: " << inputDirectory << std::endl;
+  MapUtil::lookup(m_slamComponents, sceneID)->load_scene(inputDirectory);
 }
 
 void MultiScenePipeline::reset_forest(const std::string& sceneID)
@@ -125,6 +133,29 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
     default:
       break;
   }
+}
+
+void MultiScenePipeline::save_all_scenes(const std::string& outputDirectory) const
+{
+  const bf::path parentPath(outputDirectory);
+
+  // Make sure the parent folder exists.
+  bf::create_directories(outputDirectory);
+
+  // Save each scene in its own folder.
+  for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
+  {
+    const bf::path scenePath = parentPath / it->first;
+
+    std::cout << "Saving model for " << it->first << " in: " << scenePath << '\n';
+
+    it->second->save_scene(scenePath.string());
+  }
+}
+
+void MultiScenePipeline::save_scene(const std::string& outputDirectory, const std::string& sceneID) const
+{
+  MapUtil::lookup(m_slamComponents, sceneID)->save_scene(outputDirectory);
 }
 
 void MultiScenePipeline::set_detect_fiducials(const std::string& sceneID, bool detectFiducials)

@@ -148,6 +148,16 @@ public:
   const std::string& get_type() const;
 
   /**
+   * \brief Loads a voxel scene from a directory on disk.
+   *
+   * \param inputDirectory  The folder containing the voxel scene data.
+   * \param sceneID         The scene ID.
+   *
+   * \throws std::runtime_error if the specified scene ID does not exist or the inputDirectory does not contain voxel data.
+   */
+  void load_scene(const std::string& inputDirectory, const std::string& sceneID);
+
+  /**
    * \brief Resets the random forest for the specified scene.
    *
    * \param sceneID The scene ID.
@@ -177,6 +187,21 @@ public:
    * \param renderState The render state to be used by the mode-specific section of the pipeline.
    */
   void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
+
+  /**
+   * \brief Saves all voxel scenes into a directory on disk.
+   *
+   * \param outputDirectory  The directory into which to save all scenes.
+   */
+  void save_all_scenes(const std::string& outputDirectory) const;
+
+  /**
+   * \brief Saves a voxel scene into a directory on disk.
+   *
+   * \param outputDirectory  The directory into which to save the scene.
+   * \param sceneID          The scene ID.
+   */
+  void save_scene(const std::string& outputDirectory, const std::string& sceneID) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected in the specified scene.
