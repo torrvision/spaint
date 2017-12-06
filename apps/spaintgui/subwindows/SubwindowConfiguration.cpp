@@ -74,6 +74,19 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
       config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), worldSceneID, VisualisationGenerator::VT_INPUT_DEPTH, imgSize));
       break;
     }
+    case 7:
+    {
+      const float x = 0.2f;
+      const float y = 0.333f;
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1 - x, 1), worldSceneID, VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y), worldSceneID, VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, y), Vector2f(x, 1 - y), "Local1", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, 1 - y), Vector2f(x, 1), "Local2", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(1 - x, 0), Vector2f(1, y), "Local3", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(1 - x, y), Vector2f(1, 1 - y), "Local4", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(1 - x, 1 - y), Vector2f(1, 1), "Local5", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      break;
+    }
     default:
       break;
   }
