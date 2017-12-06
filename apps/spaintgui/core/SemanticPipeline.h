@@ -26,6 +26,7 @@ public:
    * \param imageSourceEngine The engine used to provide input images to the SLAM component for the scene.
    * \param seed              The seed to use for the random number generators used by the voxel samplers.
    * \param trackerConfig     The tracker configuration to use when reconstructing the scene.
+   * \param modelSpecifier    The model specifier used to load a pre-reconstructed scene.
    * \param mappingMode       The mapping mode that the scene's SLAM component should use.
    * \param trackingMode      The tracking mode that the scene's SLAM component should use.
    * \param fiducialDetector  The fiducial detector to use (if any).
@@ -34,7 +35,7 @@ public:
    */
   SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
-                   spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
+                   const std::string& modelSpecifier = "", spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                    spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS,
                    const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),
                    bool detectFiducials = false, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr());
