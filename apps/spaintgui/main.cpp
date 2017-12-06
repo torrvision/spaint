@@ -71,6 +71,7 @@ struct CommandLineArguments
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
+  std::string modelSpecifier;
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
@@ -108,6 +109,7 @@ struct CommandLineArguments
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
+      ADD_SETTING(modelSpecifier);
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
@@ -371,6 +373,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("modelSpecifier,m", po::value<std::string>(&args.modelSpecifier)->default_value(""), "model specifier")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
@@ -520,6 +523,7 @@ try
       Application::resources_dir().string(),
       imageSourceEngine,
       make_tracker_config(args),
+      args.modelSpecifier,
       mappingMode,
       trackingMode,
       fiducialDetector,
@@ -536,6 +540,7 @@ try
       imageSourceEngine,
       seed,
       make_tracker_config(args),
+      args.modelSpecifier,
       mappingMode,
       trackingMode,
       fiducialDetector,
