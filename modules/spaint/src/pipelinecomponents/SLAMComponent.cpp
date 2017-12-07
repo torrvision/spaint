@@ -115,6 +115,9 @@ void SLAMComponent::load_scene(const std::string& inputDirectory)
   // Note that we have to add the '/' to the folder in order to force the loading function to load the files from INSIDE the specified folder.
   m_context->get_slam_state(m_sceneID)->get_voxel_scene()->LoadFromDirectory(inputDirectory + "/");
 
+  // Load the relocaliser.
+  m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDirectory);
+
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
@@ -321,6 +324,9 @@ void SLAMComponent::save_scene(const std::string& outputDirectory) const
   // Save the model.
   // Note that we have to add the '/' to the folder in order to force the saving function to save the files INSIDE the specified folder.
   m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDirectory + "/");
+
+  // Save the relocaliser.
+  m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDirectory);
 }
 
 void SLAMComponent::set_detect_fiducials(bool detectFiducials)
