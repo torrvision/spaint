@@ -59,6 +59,9 @@ private:
   /** The ID of the scene on which the component should operate. */
   std::string m_sceneID;
 
+  /** The seed to use for the random number generators used by the voxel samplers. */
+  unsigned int m_seed;
+
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 
@@ -81,7 +84,7 @@ public:
    *
    * \param context The shared context needed for semantic segmentation.
    * \param sceneID The ID of the scene on which the component should operate.
-   * \param seed    A seed for the random number generators used by the voxel samplers.
+   * \param seed    The seed to use for the random number generators used by the voxel samplers.
    */
   SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, const std::string& sceneID, unsigned int seed);
 
@@ -91,6 +94,13 @@ public:
    * \brief Resets the random forest.
    */
   void reset_forest();
+
+  /**
+   * \brief Resets the voxel samplers to work with the specified raycast result size.
+   *
+   * \param raycastResultSize The new raycast result size to use.
+   */
+  void reset_voxel_samplers(int raycastResultSize);
 
   /**
    * \brief Runs the feature inspection section of the component.

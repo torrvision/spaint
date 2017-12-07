@@ -26,7 +26,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, const std::string& sceneID, unsigned int seed)
-: m_context(context), m_sceneID(sceneID)
+: m_context(context), m_sceneID(sceneID), m_seed(seed)
 {
   // Set the maximum numbers of voxels to use for training and prediction.
   // FIXME: These values shouldn't be hard-coded here ultimately.
@@ -42,11 +42,11 @@ SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegme
   // Set up the voxel samplers.
   const Vector2i& depthImageSize = context->get_slam_state(sceneID)->get_depth_image_size();
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  const Settings_CPtr& settings = context->get_settings();
-  m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
-  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+  reset_voxel_samplers(raycastResultSize);
 
   // Set up the feature calculator.
+  const Settings_CPtr& settings = context->get_settings();
+
   // FIXME: These values shouldn't be hard-coded here ultimately.
   m_patchSize = 13;
   const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
@@ -85,6 +85,14 @@ void SemanticSegmentationComponent::reset_forest()
   const size_t treeCount = 5;
   DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_context->get_resources_dir() + "/RaflSettings.xml");
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
+}
+
+void SemanticSegmentationComponent::reset_voxel_samplers(int raycastResultSize)
+{
+  const size_t maxLabelCount = m_context->get_label_manager()->get_max_label_count();
+  const Settings_CPtr& settings = m_context->get_settings();
+  m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, m_seed, settings->deviceType);
+  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, m_seed, settings->deviceType);
 }
 
 void SemanticSegmentationComponent::run_feature_inspection(const VoxelRenderState_CPtr& renderState)

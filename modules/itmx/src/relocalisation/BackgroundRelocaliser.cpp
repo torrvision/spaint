@@ -17,6 +17,18 @@ BackgroundRelocaliser::BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser,
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void BackgroundRelocaliser::finish_training()
+{
+  // Set the current GPU to the one on which calls to the decorated relocaliser should be performed.
+  to_relocalisation_gpu();
+
+  // Signal to the decorated relocaliser that no more calls will be made to its train or update functions.
+  m_relocaliser->finish_training();
+
+  // Reset the current GPU to the one on which calls were previously being performed.
+  to_old_gpu();
+}
+
 boost::optional<Relocaliser::Result>
 BackgroundRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {

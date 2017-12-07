@@ -209,6 +209,13 @@ public:
    * \brief Toggles whether or not the world scene's object segmentation component (if any) should write to its output pipe.
    */
   void toggle_segmentation_output();
+
+  /**
+   * \brief Alerts relevant components to the fact that the raycast result size has changed (e.g. because supersampling has been toggled).
+   *
+   * \param raycastResultSize The new raycast result size.
+   */
+  void update_raycast_result_size(int raycastResultSize);
 };
 
 //#################### TYPEDEFS ####################
