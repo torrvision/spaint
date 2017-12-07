@@ -38,6 +38,9 @@ private:
   CollaborativeContext_Ptr m_context;
 
   /** TODO */
+  std::map<std::string, VoxelRenderState_Ptr> m_depthRenderStates;
+
+  /** TODO */
   int m_frameIndex;
 
   /** TODO */
@@ -57,6 +60,9 @@ private:
 
   /** TODO */
   std::deque<CollaborativeRelocalisation> m_results;
+
+  /** TODO */
+  std::map<std::string, VoxelRenderState_Ptr> m_rgbRenderStates;
 
   /** A random number generator. */
   mutable tvgutil::RandomNumberGenerator m_rng;

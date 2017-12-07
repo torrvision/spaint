@@ -363,13 +363,13 @@ void CollaborativeComponent::run_relocalisation()
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateI->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateI->get_rgb_image_size(), true, true));
 
-    VoxelRenderState_Ptr renderStateD;
+    VoxelRenderState_Ptr& renderStateD = m_depthRenderStates[m_bestCandidate->m_sceneI];
     m_visualisationGenerator->generate_depth_from_voxels(
       depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_d,
       renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
-    VoxelRenderState_Ptr renderStateRGB;
+    VoxelRenderState_Ptr& renderStateRGB = m_rgbRenderStates[m_bestCandidate->m_sceneI];
     m_visualisationGenerator->generate_voxel_visualisation(
       rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_rgb,
       renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none
@@ -404,9 +404,6 @@ void CollaborativeComponent::run_relocalisation()
     {
 #ifdef WITH_OPENCV
       // Render synthetic images of the target scene from the relevant pose.
-      renderStateD.reset();
-      renderStateRGB.reset();
-
       m_visualisationGenerator->generate_depth_from_voxels(
         depth, slamStateI->get_voxel_scene(), result->pose.GetM(), viewI->calib.intrinsics_d,
         renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
