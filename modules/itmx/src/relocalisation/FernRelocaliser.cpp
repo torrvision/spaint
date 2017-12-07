@@ -5,6 +5,9 @@
 
 #include "relocalisation/FernRelocaliser.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -23,6 +26,13 @@ FernRelocaliser::FernRelocaliser(const Vector2i& depthImageSize, float viewFrust
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+
+void FernRelocaliser::load_from_disk(const std::string& inputFolder)
+{
+  // Load data from disk.
+  // Note that we need to add a "/" to the end of the folder to force the loading to happen from INSIDE the folder.
+  m_relocaliser->LoadFromDirectory(inputFolder + "/");
+}
 
 boost::optional<Relocaliser::Result>
 FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
@@ -64,7 +74,17 @@ void FernRelocaliser::reset()
 
   m_relocaliser.reset(new WrappedRelocaliser(
     m_depthImageSize, m_rangeParameters, m_harvestingThreshold, m_numFerns, m_decisionsPerFern
-  ));
+                        ));
+}
+
+void FernRelocaliser::save_to_disk(const std::string& outputFolder) const
+{
+  // First, make sure the output folder exists.
+  bf::create_directories(outputFolder);
+
+  // Then save the data.
+  // Note that we have to add the "/" to the folder to force the writing to happen INSIDE that folder.
+  m_relocaliser->SaveToDirectory(outputFolder + "/");
 }
 
 void FernRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,

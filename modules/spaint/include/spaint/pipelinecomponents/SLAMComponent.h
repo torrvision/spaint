@@ -162,6 +162,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Loads the reconstructed scene from a directory.
+   *
+   * \param inputDirectory  The location of the reconstructed scene.
+   */
+  void load_scene(const std::string& inputDirectory);
+
+  /**
    * \brief Gets whether or not the user wants fusion to be run.
    *
    * \return  true, if the user wants fusion to be run, or false otherwise.
@@ -186,6 +193,13 @@ public:
    * \brief Resets the reconstructed scene.
    */
   void reset_scene();
+
+  /**
+   * \brief Saves the reconstructed scene to disk.
+   *
+   * \param outputDirectory  The folder where to save the scene.
+   */
+  void save_scene(const std::string& outputDirectory) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected.

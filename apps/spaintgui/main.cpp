@@ -38,6 +38,7 @@
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
+#include <tvgutil/filesystem/SequentialPathGenerator.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
@@ -71,6 +72,7 @@ struct CommandLineArguments
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
+  std::string modelSpecifier;
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
@@ -80,6 +82,7 @@ struct CommandLineArguments
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
   bool saveMeshOnExit;
+  bool saveModelOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
   std::string subwindowConfigurationIndex;
@@ -109,6 +112,7 @@ struct CommandLineArguments
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
+      ADD_SETTING(modelSpecifier);
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
@@ -118,6 +122,7 @@ struct CommandLineArguments
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
       ADD_SETTING(saveMeshOnExit);
+      ADD_SETTING(saveModelOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
       ADD_SETTING(subwindowConfigurationIndex);
@@ -169,6 +174,24 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
     return NULL;
   }
   else return cameraSubengine;
+}
+
+size_t find_last_frame_in_sequence(const std::string& sequenceSpecifier)
+{
+  const bf::path sequenceSpecifierPath(sequenceSpecifier);
+  const std::string sequenceMask = sequenceSpecifierPath.filename().string();
+
+  SequentialPathGenerator pg(sequenceSpecifierPath.parent_path());
+
+  while(bf::is_regular_file(pg.make_path(sequenceMask)))
+  {
+    pg.increment_index();
+  }
+
+  size_t lastValidFrame = pg.get_index() - 1;
+  std::cout << "Last valid frame in " << sequenceSpecifier << " is: " << lastValidFrame << '\n';
+
+  return lastValidFrame;
 }
 
 /**
@@ -229,6 +252,15 @@ std::string make_tracker_config(CommandLineArguments& args)
   // For each tracker that is needed:
   for(size_t i = 0; i < trackerCount; ++i)
   {
+    // If a model specifier was set, this overrides whatever tracker was set for the first sequence with a disk tracker starting from the last frame.
+    if(i == 0 && args.modelSpecifier != "")
+    {
+      const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
+      const size_t lastFrameNo = find_last_frame_in_sequence(args.depthImageMasks[i]);
+      result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + ",initialFrameNo=" + boost::lexical_cast<std::string>(lastFrameNo) + "</params></tracker>";
+      continue;
+    }
+
     // Look to see if the user specified an explicit tracker specifier for it on the command line; if not, use a default tracker specifier.
     const std::string trackerSpecifier = i < args.trackerSpecifiers.size() ? args.trackerSpecifiers[i] : "InfiniTAM";
 
@@ -290,6 +322,15 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
     std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
+    return false;
+  }
+
+  // If the user specified a model to load, make sure there is at least one sequence specified, ideally the same used to create the model.
+  // We need that to set camera parameters and image size for the views.
+  // We only support sequences specified by -s at the moment.
+  if(args.modelSpecifier != "" && args.sequenceSpecifiers.empty())
+  {
+    std::cout << "Error: a model specifier is present without an associated sequence.\n";
     return false;
   }
 
@@ -414,6 +455,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
+    ("saveModelOnExit", po::bool_switch(&args.saveModelOnExit), "save a model of each voxel scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
@@ -428,6 +470,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("modelSpecifier,m", po::value<std::string>(&args.modelSpecifier)->default_value(""), "model specifier")
     ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
@@ -550,10 +593,15 @@ try
     const std::string& depthImageMask = args.depthImageMasks[i];
     const std::string& rgbImageMask = args.rgbImageMasks[i];
 
+    // If a model specifier was set and this is the first sequence, we set the initial frame number to the last frame in the sequence
+    // (we need a valid frame otherwise the view builder and a bunch of other cuda kernels fail due to having images of size 0,0).
+//    const size_t initialFrameNumber = (args.modelSpecifier != "" && i == 0) ? std::numeric_limits<size_t>::max() : args.initialFrameNumber;
+    const size_t initialFrameNumber = (args.modelSpecifier != "" && i == 0) ? find_last_frame_in_sequence(depthImageMask) : args.initialFrameNumber;
+
     std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
     imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, initialFrameNumber),
       args.prefetchBufferCapacity
     ));
   }
@@ -584,6 +632,7 @@ try
       Application::resources_dir().string(),
       imageSourceEngine,
       make_tracker_config(args),
+      args.modelSpecifier,
       mappingMode,
       trackingMode,
       fiducialDetector,
@@ -600,6 +649,7 @@ try
       imageSourceEngine,
       seed,
       make_tracker_config(args),
+      args.modelSpecifier,
       mappingMode,
       trackingMode,
       fiducialDetector,
@@ -632,6 +682,7 @@ try
   Application app(pipeline, args.renderFiducials);
   app.set_batch_mode_enabled(args.batch);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
+  app.set_save_model_on_exit(args.saveModelOnExit);
   bool runSucceeded = app.run();
 
 #ifdef WITH_OVR

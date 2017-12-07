@@ -10,7 +10,7 @@ using namespace spaint;
 
 SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings, const std::string& resourcesDir,
                            const CompositeImageSourceEngine_Ptr& imageSourceEngine, const std::string& trackerConfig,
-                           SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
+                           const std::string& modelSpecifier, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
                            const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials,
                            const itmx::MappingServer_Ptr& mappingServer)
   // Note: A minimum of 2 labels is required (background and foreground).
@@ -18,6 +18,12 @@ SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings, const std::string& reso
 {
   const std::string sceneID = Model::get_world_scene_id();
   m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));
+
+  // Load the scene if a model specifier is set.
+  if(modelSpecifier != "")
+  {
+    MultiScenePipeline::load_scene(modelSpecifier, sceneID);
+  }
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -96,6 +96,24 @@ public:
   virtual void finish_training();
 
   /**
+   * \brief Loads the relocaliser from disk.
+   *
+   * \param inputFolder  The folder containing the relocaliser data.
+   *
+   * \throws std::runtime_error  if loading the relocaliser failed.
+   */
+  virtual void load_from_disk(const std::string& inputFolder);
+
+  /**
+   * \brief Saves the relocaliser to disk.
+   *
+   * \param outputFolder  The folder wherein to save the relocaliser data.
+   *
+   * \throws std::runtime_error  if saving the relocaliser failed.
+   */
+  virtual void save_to_disk(const std::string& outputFolder) const;
+
+  /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.
    *
    * This is intended to be overridden by derived relocalisers that need to perform bookkeeping operations.

@@ -114,6 +114,35 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void SLAMComponent::load_scene(const std::string& inputDirectory)
+{
+  // Reset the scene.
+  reset_scene();
+
+  // Load the model.
+  // Note that we have to add the '/' to the folder in order to force the loading function to load the files from INSIDE the specified folder.
+  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->LoadFromDirectory(inputDirectory + "/");
+
+  // Load the relocaliser.
+  m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDirectory);
+
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const View_Ptr& view = slamState->get_view();
+
+  // Setup a dummy view, to allow rendering even if the processing has not started yet. Hack that needs to be fixed.
+  ITMView *newView = view.get();
+  ITMUChar4Image_Ptr dummyRgb(new ITMUChar4Image(m_imageSourceEngine->getRGBImageSize(), true, true));
+  ITMShortImage_Ptr dummyDepth(new ITMShortImage(m_imageSourceEngine->getDepthImageSize(), true, true));
+  dummyRgb->Clear();
+  dummyDepth->Clear();
+
+  const bool useBilateralFilter = false;
+  m_viewBuilder->UpdateView(&newView, dummyRgb.get(), dummyDepth.get(), useBilateralFilter);
+  slamState->set_view(newView);
+}
+
 bool SLAMComponent::get_fusion_enabled() const
 {
   return m_fusionEnabled;
@@ -294,6 +323,19 @@ void SLAMComponent::reset_scene()
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
   m_fusionEnabled = true;
+}
+
+void SLAMComponent::save_scene(const std::string& outputDirectory) const
+{
+  // Make sure that the output directory exists.
+  bf::create_directories(outputDirectory);
+
+  // Save the model.
+  // Note that we have to add the '/' to the folder in order to force the saving function to save the files INSIDE the specified folder.
+  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDirectory + "/");
+
+  // Save the relocaliser.
+  m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDirectory);
 }
 
 void SLAMComponent::set_detect_fiducials(bool detectFiducials)

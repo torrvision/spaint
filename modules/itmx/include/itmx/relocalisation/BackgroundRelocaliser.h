@@ -65,10 +65,16 @@ public:
   virtual void finish_training();
 
   /** Override */
+  virtual void load_from_disk(const std::string& inputFolder);
+
+  /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual void reset();
+
+  /** Override */
+  virtual void save_to_disk(const std::string& outputFolder) const;
 
   /** Override */
   virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,

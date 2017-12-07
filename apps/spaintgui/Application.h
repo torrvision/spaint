@@ -84,6 +84,9 @@ private:
   /** Whether or not to save a mesh of the scene on exiting the application. */
   bool m_saveMeshOnExit;
 
+  /** Whether or not to save the reconstructed voxel model on exiting the application. */
+  bool m_saveModelOnExit;
+
   /** The path generator for the current sequence recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_sequencePathGenerator;
 
@@ -138,6 +141,13 @@ public:
    * \param saveMeshOnExit  Whether or not to save a mesh of the scene on exiting the application.
    */
   void set_save_mesh_on_exit(bool saveMeshOnExit);
+
+  /**
+   * \brief Sets whether or not to save a model of the voxel scene on exiting the application.
+   *
+   * \param saveModelOnExit  Whether or not to save a model of the voxel scene on exiting the application.
+   */
+  void set_save_model_on_exit(bool saveModelOnExit);
 
   /**
    * \brief Sets whether or not server mode is enabled.
@@ -274,6 +284,11 @@ private:
    * \brief Saves a mesh of the scene to disk.
    */
   void save_mesh() const;
+
+  /**
+   * \brief Saved the reconstructed voxel scene to disk.
+   */
+  void save_model() const;
 
   /**
    * \brief Saves a screenshot to disk.
