@@ -306,10 +306,10 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "D = Strafe Right\n"
               << "Q = Move Up\n"
               << "E = Move Down\n"
-              << "Shift + Q = Rotate Camera Left\n"
-              << "Shift + E = Rotate Camera Right\n"
-              << "G = Sets Camera UP Vector to the Current Rotation\n"
+              << "Shift + Q = Rotate Left\n"
+              << "Shift + E = Rotate Right\n"
               << "F = Toggle Fusion\n"
+              << "G = Set Up Vector\n"
               << "O = Toggle Segmentation Output\n"
               << "P = Toggle Pose Mirroring\n"
               << "Up = Look Down\n"
@@ -363,14 +363,15 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "/ = Save Screenshot\n"
               << "LShift + / = Toggle Sequence Recording\n"
               << "RShift + / = Toggle Video Recording\n"
-              << "\nJoystick Controls:\n\n"
+              << '\n'
+              << "Joystick Controls:\n\n"
               << "Left Analog Stick = Move Camera\n"
               << "Right Analog Stick = Look Up/Down/Left/Right\n"
               << "L1 = Move Up\n"
               << "R1 = Move Down\n"
-              << "L2 = Rotate Camera Left\n"
-              << "R2 = Rotate Camera Right\n"
-              << "Triangle = Sets Camera UP Vector to the Current Rotation\n";
+              << "L2 = Rotate Left\n"
+              << "R2 = Rotate Right\n"
+              << "Triangle = Set Up Vector\n";
   }
 }
 
