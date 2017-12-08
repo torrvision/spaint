@@ -41,7 +41,7 @@ private:
   /** The current camera mode. */
   CameraMode m_cameraMode;
 
-  /** The up vector used when rotating the camera instead of its "top" direction. */
+  /** The up vector to use when rotating the camera. */
   Eigen::Vector3f m_cameraUpVector;
 
   /** The image in which to store the scene visualisation for the sub-window. */
@@ -105,11 +105,11 @@ public:
   CameraMode get_camera_mode() const;
 
   /**
-   * \brief Gets the current camera UP vector.
+   * \brief Gets the up vector to use when rotating the camera.
    *
-   * \return The current UP vector.
+   * \return  The up vector to use when rotating the camera.
    */
-  Eigen::Vector3f get_camera_up_vector() const;
+  const Eigen::Vector3f& get_camera_up_vector() const;
 
   /**
    * \brief Gets the image in which to store the scene visualisation for the sub-window.
@@ -210,11 +210,11 @@ public:
   void set_camera_mode(CameraMode cameraMode);
 
   /**
-   * \brief Sets the current camera UP vector.
+   * \brief Sets the up vector to use when rotating the camera.
    *
-   * \param up The new UP vector.
+   * \param cameraUpVector  The up vector to use when rotating the camera.
    */
-  void set_camera_up_vector(const Eigen::Vector3f &up);
+  void set_camera_up_vector(const Eigen::Vector3f& cameraUpVector);
 
   /**
    * \brief Sets a flag indicating whether or not to render a surfel visualisation rather than a voxel one.

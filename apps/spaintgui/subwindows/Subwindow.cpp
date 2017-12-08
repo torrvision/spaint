@@ -44,7 +44,7 @@ Subwindow::CameraMode Subwindow::get_camera_mode() const
   return m_cameraMode;
 }
 
-Eigen::Vector3f Subwindow::get_camera_up_vector() const
+const Eigen::Vector3f& Subwindow::get_camera_up_vector() const
 {
   return m_cameraUpVector;
 }
@@ -122,9 +122,9 @@ void Subwindow::set_camera_mode(CameraMode cameraMode)
   m_cameraMode = cameraMode;
 }
 
-void Subwindow::set_camera_up_vector(const Eigen::Vector3f &up)
+void Subwindow::set_camera_up_vector(const Eigen::Vector3f& cameraUpVector)
 {
-  m_cameraUpVector = up;
+  m_cameraUpVector = cameraUpVector;
 }
 
 void Subwindow::set_surfel_flag(bool surfelFlag)
