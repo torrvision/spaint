@@ -202,7 +202,11 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
 
 bool CollaborativeComponent::is_verified(const CollaborativeRelocalisation& candidate) const
 {
+#ifdef WITH_OPENCV
   return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
+#else
+  return true;
+#endif
 }
 
 void CollaborativeComponent::output_results() const
@@ -212,7 +216,12 @@ void CollaborativeComponent::output_results() const
   size_t firstVerification = 0;
 
   // First, output the results themselves.
-  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\tGoodStatus\n\n";
+  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\t"
+#ifdef WITH_OPENCV
+            << "MeanDepthDiff\tTargetValidFraction\t"
+#endif
+            << "FinalStatus\tGoodStatus\n\n";
+
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
     const CollaborativeRelocalisation& result = m_results[i];
@@ -265,8 +274,11 @@ void CollaborativeComponent::output_results() const
 
     std::cout << std::fixed << std::setprecision(2);
     std::cout << result.m_sceneI << '\t' << result.m_sceneJ << '\t' << result.m_frameIndexJ << '\t'
-              << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor")
-              << '\t' << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t' << finalStatus << '\t' << goodStatus << '\n';
+              << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor") << '\t'
+#ifdef WITH_OPENCV
+              << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t'
+#endif
+              << finalStatus << '\t' << goodStatus << '\n';
   }
 
   // Then, output the overall statistics.
@@ -360,13 +372,13 @@ void CollaborativeComponent::run_relocalisation()
     ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateI->get_depth_image_size(), true, true));
     ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateI->get_rgb_image_size(), true, true));
 
-    VoxelRenderState_Ptr renderStateD;
+    VoxelRenderState_Ptr& renderStateD = m_depthRenderStates[m_bestCandidate->m_sceneI];
     m_visualisationGenerator->generate_depth_from_voxels(
       depth, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_d,
       renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
-    VoxelRenderState_Ptr renderStateRGB;
+    VoxelRenderState_Ptr& renderStateRGB = m_rgbRenderStates[m_bestCandidate->m_sceneI];
     m_visualisationGenerator->generate_voxel_visualisation(
       rgb, slamStateJ->get_voxel_scene(), m_bestCandidate->m_localPoseJ, viewI->calib.intrinsics_rgb,
       renderStateRGB, VisualisationGenerator::VT_SCENE_COLOUR, boost::none
@@ -401,9 +413,6 @@ void CollaborativeComponent::run_relocalisation()
     {
 #ifdef WITH_OPENCV
       // Render synthetic images of the target scene from the relevant pose.
-      renderStateD.reset();
-      renderStateRGB.reset();
-
       m_visualisationGenerator->generate_depth_from_voxels(
         depth, slamStateI->get_voxel_scene(), result->pose.GetM(), viewI->calib.intrinsics_d,
         renderStateD, DepthVisualiser::DT_ORTHOGRAPHIC
@@ -473,7 +482,7 @@ void CollaborativeComponent::run_relocalisation()
       m_context->get_collaborative_pose_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
       std::cout << "succeeded!" << std::endl;
 
-#ifdef WITH_OPENCV
+#if defined(WITH_OPENCV) && DEBUGGING
       cv::waitKey(1);
 #endif
     }
@@ -481,7 +490,7 @@ void CollaborativeComponent::run_relocalisation()
     {
       std::cout << "failed :(" << std::endl;
 
-#ifdef WITH_OPENCV
+#if defined(WITH_OPENCV) && DEBUGGING
       cv::waitKey(1);
 #endif
     }
