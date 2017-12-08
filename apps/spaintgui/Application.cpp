@@ -559,7 +559,6 @@ bool Application::process_events()
         break;
       }
       case SDL_JOYAXISMOTION:
-        // We don't care from which joystick the event came from.
         m_inputState.set_joystick_axis_state(static_cast<JoystickAxis>(event.jaxis.axis), event.jaxis.value);
         break;
       case SDL_JOYBUTTONDOWN:

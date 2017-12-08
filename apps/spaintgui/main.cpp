@@ -454,26 +454,26 @@ try
     quit("Error: Failed to initialise SDL.");
   }
 
-#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
-  // Tell ArrayFire to run on the primary GPU.
-  afcu::setNativeId(0);
-#endif
+  // Find all available joysticks and report the number found to the user.
+  const int availableJoysticks = SDL_NumJoysticks();
+  std::cout << "[spaint] Found " << availableJoysticks << " joysticks.\n";
 
   // Open all available joysticks.
   typedef boost::shared_ptr<SDL_Joystick> SDL_Joystick_Ptr;
   std::vector<SDL_Joystick_Ptr> joysticks;
-
-  const int availableJoysticks = SDL_NumJoysticks();
-  std::cout << "[spaint] Found " << availableJoysticks << " joysticks.\n";
-
   for(int i = 0; i < availableJoysticks; ++i)
   {
-    SDL_Joystick *joy = SDL_JoystickOpen(i);
-    if(!joy) throw std::runtime_error("Couldn't open joystick " + boost::lexical_cast<std::string>(i));
+    SDL_Joystick *joystick = SDL_JoystickOpen(i);
+    if(!joystick) throw std::runtime_error("Couldn't open joystick " + boost::lexical_cast<std::string>(i));
 
-    std::cout << "[spaint] Opened joystick " << i << ": " << SDL_JoystickName(joy) << '\n';
-    joysticks.push_back(SDL_Joystick_Ptr(joy, &SDL_JoystickClose));
+    std::cout << "[spaint] Opened joystick " << i << ": " << SDL_JoystickName(joystick) << '\n';
+    joysticks.push_back(SDL_Joystick_Ptr(joystick, &SDL_JoystickClose));
   }
+
+#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
+  // Tell ArrayFire to run on the primary GPU.
+  afcu::setNativeId(0);
+#endif
 
 #ifdef WITH_GLUT
   // Initialise GLUT (used for text rendering only).
