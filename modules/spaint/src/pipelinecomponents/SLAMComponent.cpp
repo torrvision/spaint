@@ -113,6 +113,9 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Update the initial pose.
   m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
+
+  // Add the scene to the list of existing scenes.
+  context->add_scene_id(sceneID);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

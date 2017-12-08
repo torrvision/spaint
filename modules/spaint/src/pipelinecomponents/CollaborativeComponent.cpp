@@ -157,10 +157,8 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_random_c
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
     const Vector4f& depthIntrinsicsI = slamStateI->get_intrinsics().projectionParamsSimple.all;
-    const Vector4f& depthIntrinsicsJ = slamStateJ->get_intrinsics().projectionParamsSimple.all;
     const ORUtils::SE3Pose& localPoseJ = jt->second[frameIndexJ];
-
-    candidates.push_back(CollaborativeRelocalisation(sceneI, depthIntrinsicsI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+    candidates.push_back(CollaborativeRelocalisation(sceneI, depthIntrinsicsI, sceneJ, frameIndexJ, localPoseJ));
   }
 
   return candidates;
@@ -193,9 +191,8 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
     if(frameIndexJ < frameCountJ)
     {
       const Vector4f& depthIntrinsicsI = m_context->get_slam_state(sceneI)->get_intrinsics().projectionParamsSimple.all;
-      const Vector4f& depthIntrinsicsJ = m_context->get_slam_state(sceneJ)->get_intrinsics().projectionParamsSimple.all;
       const ORUtils::SE3Pose& localPoseJ = trajectoryJ[frameIndexJ];
-      candidates.push_back(CollaborativeRelocalisation(sceneI, depthIntrinsicsI, sceneJ, frameIndexJ, depthIntrinsicsJ, localPoseJ));
+      candidates.push_back(CollaborativeRelocalisation(sceneI, depthIntrinsicsI, sceneJ, frameIndexJ, localPoseJ));
       return candidates;
     }
   }
@@ -593,8 +590,6 @@ bool CollaborativeComponent::update_trajectories()
 
     SLAMState::InputStatus inputStatus = slamState->get_input_status();
     TrackingState_CPtr trackingState = slamState->get_tracking_state();
-    const ITMUChar4Image *rgbImage = slamState->get_view()->rgb;
-    rgbImage->UpdateHostFromDevice();
     if(inputStatus == SLAMState::IS_ACTIVE && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
     {
       m_trajectories[sceneIDs[i]].push_back(*trackingState->pose_d);

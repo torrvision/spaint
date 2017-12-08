@@ -486,7 +486,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   static std::vector<ITMUChar4Image_Ptr> images;
   static std::vector<ITMFloatImage_Ptr> depthImages;
   static bool supersamplingEnabled = m_supersamplingEnabled;
-  std::vector<std::string> sceneIDs = m_model->get_scene_ids();
+  const std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
 
   if(supersamplingEnabled != m_supersamplingEnabled)
