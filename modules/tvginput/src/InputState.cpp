@@ -5,6 +5,7 @@
 
 #include "InputState.h"
 
+#include <limits>
 #include <stdexcept>
 
 namespace tvginput {
@@ -126,6 +127,20 @@ void InputState::set_mouse_position(float x, float y)
 {
   m_mousePositionX = x;
   m_mousePositionY = y;
+}
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+float InputState::normalise_joystick_axis_state(short state)
+{
+  return static_cast<float>(static_cast<int>(state) + 32768) / std::numeric_limits<unsigned short>::max();
+}
+
+float InputState::normalise_joystick_axis_state_signed(short state)
+{
+  return state < 0
+      ? -static_cast<float>(state) / std::numeric_limits<short>::min()
+      :  static_cast<float>(state) / std::numeric_limits<short>::max();
 }
 
 }

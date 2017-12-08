@@ -463,28 +463,28 @@ void Application::process_camera_input()
     // Handle joystick.
     const float JOYSTICK_THRESHOLD = 0.1f; // To avoid analog jitter.
 
-    const float translationX = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_X));
+    const float translationX = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_X));
     if(std::abs(translationX) > JOYSTICK_THRESHOLD) camera->move_u(-translationX * SPEED);
 
-    const float translationY = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_Y));
+    const float translationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_Y));
     if(std::abs(translationY) > JOYSTICK_THRESHOLD) camera->move_n(-translationY * SPEED);
 
-    const float rotationX = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_X));
+    const float rotationX = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_X));
     if(std::abs(rotationX) > JOYSTICK_THRESHOLD) camera->rotate(UP, -rotationX * ANGULAR_SPEED);
 
-    const float rotationY = joystick_normalise_signed_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_Y));
+    const float rotationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_Y));
     if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * ANGULAR_SPEED);
 
-    const float rotationZ_Left = joystick_normalise_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L2));
+    const float rotationZ_Left = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L2));
     if(rotationZ_Left > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
 
-    const float rotationZ_Right = joystick_normalise_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R2));
+    const float rotationZ_Right = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R2));
     if(rotationZ_Right > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * ANGULAR_SPEED);
 
-    const float moveUp = joystick_normalise_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L1));
+    const float moveUp = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L1));
     if(moveUp > JOYSTICK_THRESHOLD) camera->move(UP, moveUp * SPEED);
 
-    const float moveDown = joystick_normalise_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R1));
+    const float moveDown = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R1));
     if(moveDown > JOYSTICK_THRESHOLD) camera->move(UP, -moveDown * SPEED);
 
     // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene

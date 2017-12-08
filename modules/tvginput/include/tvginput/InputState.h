@@ -59,6 +59,24 @@ public:
   void reset();
   void set_joystick_axis_state(JoystickAxis axis, int16_t value);
   void set_mouse_position(float x, float y);
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Normalises an axis state into the [0..1] range.
+   *
+   * \param state The axis state (a short with range [-32768..32767]).
+   * \return      The normalised value of the axis state (in the [0..1] range).
+   */
+  static float normalise_joystick_axis_state(short state);
+
+  /**
+   * \brief Normalises an axis state into the [-1..1] range.
+   *
+   * \param state The axis state (a short with range [-32768..32767]).
+   * \return      The normalised value of the axis state (in the [-1..1] range).
+   */
+  static float normalise_joystick_axis_state_signed(short state);
 };
 
 }
