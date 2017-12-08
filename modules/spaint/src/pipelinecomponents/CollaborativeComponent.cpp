@@ -482,7 +482,7 @@ void CollaborativeComponent::run_relocalisation()
       m_context->get_collaborative_pose_optimiser()->add_relative_transform_sample(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ, *m_bestCandidate->m_relativePose, m_mode);
       std::cout << "succeeded!" << std::endl;
 
-#if DEBUGGING && defined(WITH_OPENCV)
+#if defined(WITH_OPENCV) && DEBUGGING
       cv::waitKey(1);
 #endif
     }
@@ -490,7 +490,7 @@ void CollaborativeComponent::run_relocalisation()
     {
       std::cout << "failed :(" << std::endl;
 
-#if DEBUGGING && defined(WITH_OPENCV)
+#if defined(WITH_OPENCV) && DEBUGGING
       cv::waitKey(1);
 #endif
     }
