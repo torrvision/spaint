@@ -18,9 +18,9 @@ InputState::InputState()
 
 //#################### PUBLIC METHODS ####################
 
-int16_t InputState::joystick_axis_state(JoystickAxis axis) const
+short InputState::joystick_axis_state(JoystickAxis axis) const
 {
-  std::map<JoystickAxis, int16_t>::const_iterator it = m_joystickAxisState.find(axis);
+  std::map<JoystickAxis,short>::const_iterator it = m_joystickAxisState.find(axis);
   return it != m_joystickAxisState.end() ? it->second : 0;
 }
 
@@ -111,10 +111,10 @@ void InputState::reset()
 
   m_joystickAxisState.clear();
   // Triggers need special handling since they are initialised to 0 but should be initialised to -32768.
-  m_joystickAxisState[JOYSTICK_AXIS_TRIGGER_L1] = -32768;
-  m_joystickAxisState[JOYSTICK_AXIS_TRIGGER_L2] = -32768;
-  m_joystickAxisState[JOYSTICK_AXIS_TRIGGER_R1] = -32768;
-  m_joystickAxisState[JOYSTICK_AXIS_TRIGGER_R2] = -32768;
+  m_joystickAxisState[PS3_AXIS_TRIGGER_L1] = -32768;
+  m_joystickAxisState[PS3_AXIS_TRIGGER_L2] = -32768;
+  m_joystickAxisState[PS3_AXIS_TRIGGER_R1] = -32768;
+  m_joystickAxisState[PS3_AXIS_TRIGGER_R2] = -32768;
 }
 
 void InputState::set_joystick_axis_state(JoystickAxis axis, int16_t value)

@@ -9,7 +9,8 @@
 #include <map>
 #include <vector>
 
-#include "Joystick.h"
+#include "JoystickAxis.h"
+#include "JoystickButton.h"
 #include "Keycode.h"
 #include "MouseButton.h"
 
@@ -22,7 +23,7 @@ class InputState
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  std::map<JoystickAxis,int16_t> m_joystickAxisState;
+  std::map<JoystickAxis,short> m_joystickAxisState;
   std::map<JoystickButton,bool> m_joystickButtonDown;
   std::map<Keycode,bool> m_keyDown;
   std::map<MouseButton,bool> m_mouseButtonDown;
@@ -40,7 +41,7 @@ private:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  int16_t joystick_axis_state(JoystickAxis axis) const;
+  short joystick_axis_state(JoystickAxis axis) const;
   bool joystick_button_down(JoystickButton button) const;
   bool key_down(Keycode key) const;
   bool mouse_button_down(MouseButton button) const;
