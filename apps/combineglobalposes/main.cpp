@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
       for(int j = 0; j < CollaborativePoseOptimiser::confidence_threshold(); ++j)
       {
         poseOptimiser->add_relative_transform_sample(
-          fileRelativePoses[i].first, filePrimarySceneID, GeometryUtil::dual_quat_to_pose(fileRelativePoses[i].second), CollaborationMode::CM_BATCH
+          fileRelativePoses[i].first, filePrimarySceneID, GeometryUtil::dual_quat_to_pose(fileRelativePoses[i].second), CM_BATCH
         );
       }
     }
