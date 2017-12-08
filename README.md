@@ -119,7 +119,7 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_OPENNI
 
-  - SDL (version 2-2.0.3)
+  - SDL (version 2-2.0.7)
     Status: Required
 
   - Vicon SDK
