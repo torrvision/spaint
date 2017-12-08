@@ -202,7 +202,11 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
 
 bool CollaborativeComponent::is_verified(const CollaborativeRelocalisation& candidate) const
 {
+#ifdef WITH_OPENCV
   return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
+#else
+  return true;
+#endif
 }
 
 void CollaborativeComponent::output_results() const
@@ -212,7 +216,12 @@ void CollaborativeComponent::output_results() const
   size_t firstVerification = 0;
 
   // First, output the results themselves.
-  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\tMeanDepthDiff\tTargetValidFraction\tFinalStatus\tGoodStatus\n\n";
+  std::cout << "SceneI\tSceneJ\tFrameIndexJ\tInitialQuality\t"
+#ifdef WITH_OPENCV
+            << "MeanDepthDiff\tTargetValidFraction\t"
+#endif
+            << "FinalStatus\tGoodStatus\n\n";
+
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
     const CollaborativeRelocalisation& result = m_results[i];
@@ -265,8 +274,11 @@ void CollaborativeComponent::output_results() const
 
     std::cout << std::fixed << std::setprecision(2);
     std::cout << result.m_sceneI << '\t' << result.m_sceneJ << '\t' << result.m_frameIndexJ << '\t'
-              << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor")
-              << '\t' << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t' << finalStatus << '\t' << goodStatus << '\n';
+              << (result.m_initialRelocalisationQuality == Relocaliser::RELOCALISATION_GOOD ? "Good" : "Poor") << '\t'
+#ifdef WITH_OPENCV
+              << result.m_meanDepthDiff(0) << '\t' << result.m_targetValidFraction << '\t'
+#endif
+              << finalStatus << '\t' << goodStatus << '\n';
   }
 
   // Then, output the overall statistics.

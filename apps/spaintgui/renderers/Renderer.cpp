@@ -559,7 +559,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   // FIXME: This is also a disgusting hack.
   if(&subwindow == &m_subwindowConfiguration->subwindow(0))
   {
-    for(size_t k = 0; k < image->noDims.width * image->noDims.height; ++k)
+    for(int k = 0; k < image->noDims.width * image->noDims.height; ++k)
     {
       float smallestDepth = static_cast<float>(INT_MAX);
       for(size_t i = 0, size = images.size(); i < size; ++i)
