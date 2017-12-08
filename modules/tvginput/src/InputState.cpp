@@ -111,14 +111,19 @@ void InputState::reset()
   m_mousePressedX = m_mousePressedY = std::vector<float>(MOUSE_BUTTON_LAST, -1.0f);
 
   m_joystickAxisState.clear();
-  // Triggers need special handling since they are initialised to 0 but should be initialised to -32768.
+
+  // Triggers need special handling. The values that would initially be returned by the
+  // joystick for them (if we queried it) are 0, but after pressing and releasing a
+  // trigger once, the joystick returns -32768 for it. We therefore want the resting
+  // state for triggers to be -32768 rather than 0. Since the default value for shorts
+  // in C++ is 0, we have to set the values to -32768 manually.
   m_joystickAxisState[PS3_AXIS_TRIGGER_L1] = -32768;
   m_joystickAxisState[PS3_AXIS_TRIGGER_L2] = -32768;
   m_joystickAxisState[PS3_AXIS_TRIGGER_R1] = -32768;
   m_joystickAxisState[PS3_AXIS_TRIGGER_R2] = -32768;
 }
 
-void InputState::set_joystick_axis_state(JoystickAxis axis, int16_t value)
+void InputState::set_joystick_axis_state(JoystickAxis axis, short value)
 {
   m_joystickAxisState[axis] = value;
 }

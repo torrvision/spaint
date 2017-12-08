@@ -57,7 +57,7 @@ public:
   void release_key(Keycode key);
   void release_mouse_button(MouseButton button);
   void reset();
-  void set_joystick_axis_state(JoystickAxis axis, int16_t value);
+  void set_joystick_axis_state(JoystickAxis axis, short value);
   void set_mouse_position(float x, float y);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
