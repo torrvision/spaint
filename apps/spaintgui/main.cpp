@@ -641,9 +641,25 @@ try
   }
 
   // Initialise SDL.
-  if(SDL_Init(SDL_INIT_VIDEO) < 0)
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
   {
     quit("Error: Failed to initialise SDL.");
+  }
+
+  // Find all available joysticks and report the number found to the user.
+  const int availableJoysticks = SDL_NumJoysticks();
+  std::cout << "[spaint] Found " << availableJoysticks << " joysticks.\n";
+
+  // Open all available joysticks.
+  typedef boost::shared_ptr<SDL_Joystick> SDL_Joystick_Ptr;
+  std::vector<SDL_Joystick_Ptr> joysticks;
+  for(int i = 0; i < availableJoysticks; ++i)
+  {
+    SDL_Joystick *joystick = SDL_JoystickOpen(i);
+    if(!joystick) throw std::runtime_error("Couldn't open joystick " + boost::lexical_cast<std::string>(i));
+
+    std::cout << "[spaint] Opened joystick " << i << ": " << SDL_JoystickName(joystick) << '\n';
+    joysticks.push_back(SDL_Joystick_Ptr(joystick, &SDL_JoystickClose));
   }
 
 #if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
@@ -851,6 +867,9 @@ try
   // If we built with Rift support, shut down the Rift SDK.
   ovr_Shutdown();
 #endif
+
+  // Close all open joysticks.
+  joysticks.clear();
 
   // Shut down SDL.
   SDL_Quit();
