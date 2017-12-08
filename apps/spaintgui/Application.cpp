@@ -309,7 +309,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Shift + Q = Rotate Left\n"
               << "Shift + E = Rotate Right\n"
               << "F = Toggle Fusion\n"
-              << "G = Set Up Vector\n"
+              << "G = Set Up Vector For Active Subwindow\n"
               << "O = Toggle Segmentation Output\n"
               << "P = Toggle Pose Mirroring\n"
               << "Up = Look Down\n"
@@ -371,7 +371,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "R1 = Move Down\n"
               << "L2 = Rotate Left\n"
               << "R2 = Rotate Right\n"
-              << "Triangle = Set Up Vector\n";
+              << "Triangle = Set Up Vector For Active Subwindow\n";
   }
 }
 
@@ -439,53 +439,51 @@ void Application::process_camera_input()
 
     MoveableCamera_Ptr camera = activeSubwindow.get_camera();
 
-    // Set the UP vector according to the current state of the camera.
-    if(m_inputState.key_down(KEYCODE_g) || m_inputState.joystick_button_down(PS3_BUTTON_TRIANGLE)) activeSubwindow.set_camera_up_vector(camera->v());
+    // If the G key (or the triangle button on a connected PS3 controller) is pressed, set the
+    // up vector for the active subwindow based on the current orientation of the camera.
+    if(m_inputState.key_down(KEYCODE_g) || m_inputState.joystick_button_down(PS3_BUTTON_TRIANGLE))
+    {
+        activeSubwindow.set_camera_up_vector(camera->v());
+    }
 
-    // Get the subwindow's specific UP vector.
-    const Eigen::Vector3f UP = activeSubwindow.get_camera_up_vector();
+    // Get the up vector for the active subwindow.
+    const Eigen::Vector3f& up = activeSubwindow.get_camera_up_vector();
 
-    // Handle keyboard.
+    // Allow the user to move the camera around using the keyboard.
     if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
     if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);
     if(m_inputState.key_down(KEYCODE_d)) camera->move_u(-SPEED);
     if(m_inputState.key_down(KEYCODE_a)) camera->move_u(SPEED);
-    if(m_inputState.key_down(KEYCODE_q) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(UP, SPEED);
-    if(m_inputState.key_down(KEYCODE_e) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(UP, -SPEED);
+    if(m_inputState.key_down(KEYCODE_q) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, SPEED);
+    if(m_inputState.key_down(KEYCODE_e) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, -SPEED);
 
-    if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(UP, -ANGULAR_SPEED);
-    if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(up, -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(up, ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_q) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), -ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_e) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), ANGULAR_SPEED);
 
-    // Handle joystick.
-    const float JOYSTICK_THRESHOLD = 0.1f; // To avoid analog jitter.
+    // Allow the user to move the camera around using a connected PS3 controller.
+    const float JOYSTICK_THRESHOLD = 0.1f; // to avoid analog jitter
 
     const float translationX = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_X));
-    if(std::abs(translationX) > JOYSTICK_THRESHOLD) camera->move_u(-translationX * SPEED);
-
     const float translationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_Y));
+    const float moveUp = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L1));
+    const float moveDown = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R1));
+    if(std::abs(translationX) > JOYSTICK_THRESHOLD) camera->move_u(-translationX * SPEED);
     if(std::abs(translationY) > JOYSTICK_THRESHOLD) camera->move_n(-translationY * SPEED);
+    if(moveUp > JOYSTICK_THRESHOLD) camera->move(up, moveUp * SPEED);
+    if(moveDown > JOYSTICK_THRESHOLD) camera->move(up, -moveDown * SPEED);
 
     const float rotationX = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_X));
-    if(std::abs(rotationX) > JOYSTICK_THRESHOLD) camera->rotate(UP, -rotationX * ANGULAR_SPEED);
-
     const float rotationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_Y));
-    if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * ANGULAR_SPEED);
-
     const float rotationZ_Left = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L2));
-    if(rotationZ_Left > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
-
     const float rotationZ_Right = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R2));
+    if(std::abs(rotationX) > JOYSTICK_THRESHOLD) camera->rotate(up, -rotationX * ANGULAR_SPEED);
+    if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * ANGULAR_SPEED);
+    if(rotationZ_Left > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
     if(rotationZ_Right > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * ANGULAR_SPEED);
-
-    const float moveUp = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L1));
-    if(moveUp > JOYSTICK_THRESHOLD) camera->move(UP, moveUp * SPEED);
-
-    const float moveDown = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R1));
-    if(moveDown > JOYSTICK_THRESHOLD) camera->move(UP, -moveDown * SPEED);
 
     // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
     // and are in free camera mode to have the same pose as this one.
