@@ -8,7 +8,11 @@
 
 #include <vector>
 
+#include <alglib/optimization.h>
+
 #include <boost/optional.hpp>
+
+#include <ORUtils/SE3Pose.h>
 
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
@@ -37,6 +41,18 @@ class PreemptiveRansac
   //#################### TYPEDEFS ####################
 public:
   typedef tvgutil::AverageTimer<boost::chrono::nanoseconds> AverageTimer;
+
+  //#################### NESTED TYPES ####################
+private:
+  /**
+   * \brief This struct is used to hold pointers to the data used when computing the residual energy.
+   */
+  struct PointsForLM
+  {
+    const Vector4f *cameraPoints;
+    const Keypoint3DColourCluster *predictedModes;
+    uint32_t nbPoints; // Comes last to avoid padding.
+  };
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -268,6 +284,41 @@ protected:
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Alglib's diagnostic function. Currently does nothing, but could print stuff.
+   */
+  static void call_after_each_step(const alglib::real_1d_array& x, double func, void *ptr);
+
+  /**
+   * \brief Function that will be called by alglib's optimiser.
+   */
+  static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr);
+
+  /**
+   * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
+   */
+  static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr);
+
+  /**
+   * \brief Function that will be called by alglib's optimiser.
+   */
+  static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr);
+
+  /**
+   * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
+   */
+  static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr);
+
+  /**
+   * \brief Compute the energy using the Mahalanobis distance.
+   */
+  static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL);
+
+  /**
+   * \brief Compute the energy using the L2 distance between the points.
+   */
+  static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL);
+
   /**
    * \brief Pretty prints a timer value.
    *
