@@ -6,8 +6,6 @@
 #include "ransac/interface/PreemptiveRansac.h"
 using namespace tvgutil;
 
-#include <alglib/optimization.h>
-
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
@@ -16,8 +14,6 @@ using namespace tvgutil;
 #ifdef WITH_OPENMP
 #include <omp.h>
 #endif
-
-#include <ORUtils/SE3Pose.h>
 
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/geometry/GeometryUtil.h>
@@ -331,174 +327,6 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
   }
 }
 
-namespace {
-
-/**
- * \brief This struct is used to hold pointers to the data used when computing the residual energy.
- */
-struct PointsForLM
-{
-  const Vector4f *cameraPoints;
-  const Keypoint3DColourCluster *predictedModes;
-  uint32_t nbPoints; // Comes last to avoid padding.
-};
-
-/**
- * \brief Compute the energy using the Mahalanobis distance.
- */
-static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL)
-{
-  double res = 0.0;
-
-  if(jac)
-  {
-    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
-  }
-
-  for(uint32_t i = 0; i < pts.nbPoints; ++i)
-  {
-    if(pts.cameraPoints[i].w == 0.f) continue;
-
-    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
-    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-    const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
-//    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // Mahalanobis distance
-    const float err = dot(diff, invCovarianceTimesDiff); // sqr Mahalanobis distance
-
-    res += err;
-
-    if(jac)
-    {
-      const Vector3f normGradient = 2 * invCovarianceTimesDiff;
-//      const Vector3f normGradient = invCovarianceTimesDiff / err;
-
-      const Vector3f poseGradient[6] = {
-          Vector3f(1, 0, 0),
-          Vector3f(0, 1, 0),
-          Vector3f(0, 0, 1),
-          -Vector3f(0, transformedPt.z, -transformedPt.y),
-          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-          -Vector3f(transformedPt.y, -transformedPt.x, 0),
-      };
-
-      for(uint32_t i = 0; i < 6; ++i)
-      {
-        jac[i] += dot(normGradient, poseGradient[i]);
-      }
-    }
-  }
-
-  return res;
-}
-
-/**
- * \brief Function that will be called by alglib's optimiser.
- */
-static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
-}
-
-/**
- * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
- */
-static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
-}
-
-/***************************************************/
-/* Routines to optimize the sum of 3D L2 distances */
-/***************************************************/
-
-/**
- * \brief Compute the energy using the L2 distance between the points.
- */
-static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL)
-{
-  double res = 0.0;
-
-  if(jac)
-  {
-    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
-  }
-
-  for(uint32_t i = 0; i < pts.nbPoints; ++i)
-  {
-    if(pts.cameraPoints[i].w == 0.f) continue;
-
-    const Vector3f cameraPoint = pts.cameraPoints[i].toVector3();
-    const Vector3f transformedPt = candidateCameraPose.GetM() * cameraPoint;
-    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-//    const double err = length(diff); // distance
-    const double err = dot(diff, diff); // sqr distance
-    res += err;
-
-    if(jac)
-    {
-      const Vector3f normGradient = 2 * diff;
-//      const Vector3f normGradient = diff / err;
-
-      const Vector3f poseGradient[6] = {
-          Vector3f(1, 0, 0),
-          Vector3f(0, 1, 0),
-          Vector3f(0, 0, 1),
-          -Vector3f(0, transformedPt.z, -transformedPt.y),
-          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-          -Vector3f(transformedPt.y, -transformedPt.x, 0),
-      };
-
-      for(uint32_t i = 0; i < 6; ++i)
-      {
-        jac[i] += dot(normGradient, poseGradient[i]);
-      }
-    }
-  }
-
-  return res;
-}
-
-/**
- * \brief Function that will be called by alglib's optimiser.
- */
-static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
-}
-
-/**
- * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
- */
-static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
-}
-
-/** Alglib's diagnostic function. Currently does nothing, but could print stuff. */
-static void call_after_each_step(const alglib::real_1d_array& x, double func, void *ptr) { return; }
-
-} // anonymous namespace
-
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
   // Fill the struct that will be passed to the optimiser.
@@ -572,6 +400,140 @@ void PreemptiveRansac::update_host_pose_candidates() const
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void PreemptiveRansac::call_after_each_step(const alglib::real_1d_array& x, double func, void *ptr)
+{
+  return;
+}
+
+void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
+{
+  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+
+  // Compute the current energy.
+  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
+}
+
+void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
+{
+  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+
+  // Compute the current energy.
+  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
+}
+
+void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
+{
+  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+
+  // Compute the current energy.
+  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
+}
+
+void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
+{
+  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+
+  // Compute the current energy.
+  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
+}
+
+double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
+{
+  double res = 0.0;
+
+  if(jac)
+  {
+    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
+  }
+
+  for(uint32_t i = 0; i < pts.nbPoints; ++i)
+  {
+    if(pts.cameraPoints[i].w == 0.f) continue;
+
+    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
+    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
+    const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
+//    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // Mahalanobis distance
+    const float err = dot(diff, invCovarianceTimesDiff); // sqr Mahalanobis distance
+
+    res += err;
+
+    if(jac)
+    {
+      const Vector3f normGradient = 2 * invCovarianceTimesDiff;
+//      const Vector3f normGradient = invCovarianceTimesDiff / err;
+
+      const Vector3f poseGradient[6] = {
+          Vector3f(1, 0, 0),
+          Vector3f(0, 1, 0),
+          Vector3f(0, 0, 1),
+          -Vector3f(0, transformedPt.z, -transformedPt.y),
+          -Vector3f(-transformedPt.z, 0, transformedPt.x),
+          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+      };
+
+      for(uint32_t i = 0; i < 6; ++i)
+      {
+        jac[i] += dot(normGradient, poseGradient[i]);
+      }
+    }
+  }
+
+  return res;
+}
+
+double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
+{
+  double res = 0.0;
+
+  if(jac)
+  {
+    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
+  }
+
+  for(uint32_t i = 0; i < pts.nbPoints; ++i)
+  {
+    if(pts.cameraPoints[i].w == 0.f) continue;
+
+    const Vector3f cameraPoint = pts.cameraPoints[i].toVector3();
+    const Vector3f transformedPt = candidateCameraPose.GetM() * cameraPoint;
+    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
+//    const double err = length(diff); // distance
+    const double err = dot(diff, diff); // sqr distance
+    res += err;
+
+    if(jac)
+    {
+      const Vector3f normGradient = 2 * diff;
+//      const Vector3f normGradient = diff / err;
+
+      const Vector3f poseGradient[6] = {
+          Vector3f(1, 0, 0),
+          Vector3f(0, 1, 0),
+          Vector3f(0, 0, 1),
+          -Vector3f(0, transformedPt.z, -transformedPt.y),
+          -Vector3f(-transformedPt.z, 0, transformedPt.x),
+          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+      };
+
+      for(uint32_t i = 0; i < 6; ++i)
+      {
+        jac[i] += dot(normGradient, poseGradient[i]);
+      }
+    }
+  }
+
+  return res;
+}
 
 void PreemptiveRansac::print_timer(const AverageTimer& timer)
 {
