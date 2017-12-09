@@ -140,7 +140,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 
   m_timerTotal.start();
 
-  // Copy keypoints and predictions in the local variables, to avoid explicitely passing them to every function.
+  // Copy keypoints and predictions in the local variables, to avoid explicitly passing them to every function.
   m_keypointsImage = keypoints;
   m_predictionsImage = forestPredictions;
 
@@ -282,7 +282,7 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates
   poseCandidates.reserve(m_maxPoseCandidatesAfterCull);
 
   // Copy the all the poses that survived after the initial cull. They are "ordered in blocks":
-  // the first one is the one returned by estimate_pose, the second is the one removed after the last ransac iteration,
+  // the first one is the one returned by estimate_pose, the second is the one removed after the last RANSAC iteration,
   // the third and fourth are removed in the iteration before (whilst they are not in a specific order, they are worse
   // than those in position 0 and 1), and so on...
   for(uint32_t poseIdx = 0; poseIdx < m_maxPoseCandidatesAfterCull; ++poseIdx)
