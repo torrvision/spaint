@@ -44,6 +44,11 @@ Subwindow::CameraMode Subwindow::get_camera_mode() const
   return m_cameraMode;
 }
 
+const Eigen::Vector3f& Subwindow::get_camera_up_vector() const
+{
+  return m_cameraUpVector;
+}
+
 const ITMUChar4Image_Ptr& Subwindow::get_image()
 {
   return m_image;
@@ -102,6 +107,7 @@ float Subwindow::height() const
 void Subwindow::reset_camera()
 {
   m_camera = CameraFactory::make_default_camera<CompositeCamera>();
+  m_cameraUpVector = Eigen::Vector3f(0.0f, -1.0f, 0.0f);
 }
 
 void Subwindow::resize_image(const Vector2i& newImgSize)
@@ -114,6 +120,11 @@ void Subwindow::resize_image(const Vector2i& newImgSize)
 void Subwindow::set_camera_mode(CameraMode cameraMode)
 {
   m_cameraMode = cameraMode;
+}
+
+void Subwindow::set_camera_up_vector(const Eigen::Vector3f& cameraUpVector)
+{
+  m_cameraUpVector = cameraUpVector;
 }
 
 void Subwindow::set_surfel_flag(bool surfelFlag)
