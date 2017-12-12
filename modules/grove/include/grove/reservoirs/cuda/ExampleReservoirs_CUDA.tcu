@@ -42,6 +42,10 @@ template <typename ExampleType>
 ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
+  // Allocate variable that will store the RNGs.
+  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  m_rngs = mbf.make_block<CUDARNG>();
+
   reset();
 }
 
@@ -53,19 +57,9 @@ void ExampleReservoirs_CUDA<ExampleType>::load_from_disk(const std::string& inpu
   // Call the base function.
   ExampleReservoirs<ExampleType>::load_from_disk(inputFolder);
 
-  // Make sure there is enough space for the RNGs.
-  bf::path inputPath(inputFolder);
-  std::string rngsFile = (inputPath / "reservoirRngs.bin").string();
-  size_t rngsSize = MemoryBlockPersister::ReadBlockSize(rngsFile);
-
-  if(!m_rngs || m_rngs->dataSize != rngsSize)
-  {
-    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-    m_rngs = mbf.make_block<CUDARNG>(rngsSize);
-  }
-
   // Load the RNG states.
-  MemoryBlockPersister::LoadMemoryBlock(rngsFile, *m_rngs, MEMORYDEVICE_CPU);
+  bf::path inputPath(inputFolder);
+  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 
   // Update them on the GPU.
   m_rngs->UpdateDeviceFromHost();
@@ -134,13 +128,6 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CP
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 {
-  // If the memory block that will hold the random number generators hasn't yet been created, create it.
-  if(!m_rngs)
-  {
-    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-    m_rngs = mbf.make_block<CUDARNG>();
-  }
-
   // If there aren't currently any random number generators to reinitialise, early out.
   // We need to check this because CUDA kernels can't be called with zero threads.
   const int rngCount = static_cast<int>(m_rngs->dataSize);

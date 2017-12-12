@@ -23,6 +23,10 @@ template <typename ExampleType>
 ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
+  // Allocate variable that will store the RNGs.
+  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  m_rngs = mbf.make_block<CPURNG>();
+
   reset();
 }
 
@@ -34,19 +38,9 @@ void ExampleReservoirs_CPU<ExampleType>::load_from_disk(const std::string& input
   // Call the base function.
   ExampleReservoirs<ExampleType>::load_from_disk(inputFolder);
 
-  // Make sure there is enough space for the RNGs.
-  bf::path inputPath(inputFolder);
-  std::string rngsFile = (inputPath / "reservoirRngs.bin").string();
-  size_t rngsSize = MemoryBlockPersister::ReadBlockSize(rngsFile);
-
-  if(!m_rngs || m_rngs->dataSize != rngsSize)
-  {
-    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-    m_rngs = mbf.make_block<CPURNG>(rngsSize);
-  }
-
   // Load the RNG states.
-  MemoryBlockPersister::LoadMemoryBlock(rngsFile, *m_rngs, MEMORYDEVICE_CPU);
+  bf::path inputPath(inputFolder);
+  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 template <typename ExampleType>
@@ -117,13 +111,6 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
 {
-  // If the memory block that will hold the random number generators hasn't yet been created, create it.
-  if(!m_rngs)
-  {
-    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-    m_rngs = mbf.make_block<CPURNG>();
-  }
-
   // Reinitialise each random number generator based on the specified seed.
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
   const uint32_t rngCount = static_cast<uint32_t>(m_rngs->dataSize);
