@@ -41,10 +41,16 @@ public:
    */
   ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed = 42);
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
+  /** Override. */
+  virtual void load_from_disk(const std::string& inputFolder);
+
   /** Override */
   virtual void reset();
+
+  /** Override. */
+  virtual void save_to_disk(const std::string& outputFolder);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

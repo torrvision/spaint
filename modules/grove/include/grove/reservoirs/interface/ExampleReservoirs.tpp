@@ -5,7 +5,13 @@
 
 #include "ExampleReservoirs.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
+
 #include <itmx/base/MemoryBlockFactory.h>
+
+#include <ORUtils/MemoryBlockPersister.h>
+using namespace ORUtils;
 
 namespace grove {
 
@@ -28,6 +34,40 @@ ExampleReservoirs<ExampleType>::ExampleReservoirs(uint32_t reservoirCount, uint3
 template <typename ExampleType>
 ExampleReservoirs<ExampleType>::~ExampleReservoirs()
 {}
+
+//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+
+template<typename ExampleType>
+void ExampleReservoirs<ExampleType>::load_from_disk(const std::string& inputFolder)
+{
+  bf::path inputPath(inputFolder);
+
+  // Load the data on the CPU.
+  MemoryBlockPersister::LoadImage((inputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
+  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
+  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
+
+  // Update everything on the GPU, NOP in case we are using the CPU version of the class.
+  m_reservoirs->UpdateDeviceFromHost();
+  m_reservoirAddCalls->UpdateDeviceFromHost();
+  m_reservoirSizes->UpdateDeviceFromHost();
+}
+
+template<typename ExampleType>
+void ExampleReservoirs<ExampleType>::save_to_disk(const std::string& outputFolder)
+{
+  bf::path outputPath(outputFolder);
+
+  // Update everything on the CPU, NOP in case we are using the CPU version of the class.
+  m_reservoirs->UpdateHostFromDevice();
+  m_reservoirAddCalls->UpdateHostFromDevice();
+  m_reservoirSizes->UpdateHostFromDevice();
+
+  // Save the data.
+  MemoryBlockPersister::SaveImage((outputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
+  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
+  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 

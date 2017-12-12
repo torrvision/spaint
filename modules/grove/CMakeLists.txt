@@ -139,6 +139,7 @@ SET(relocalisation_sources src/relocalisation/ScoreRelocaliserFactory.cpp)
 
 ##
 SET(relocalisation_base_headers include/grove/relocalisation/base/ScoreRelocaliserState.h)
+SET(relocalisation_base_sources src/relocalisation/base/ScoreRelocaliserState.cpp)
 
 ##
 SET(relocalisation_cpu_headers include/grove/relocalisation/cpu/ScoreRelocaliser_CPU.h)
@@ -194,6 +195,7 @@ ${ransac_sources}
 ${ransac_cpu_sources}
 ${ransac_interface_sources}
 ${relocalisation_sources}
+${relocalisation_base_sources}
 ${relocalisation_cpu_sources}
 ${relocalisation_interface_sources}
 ${toplevel_sources}
@@ -302,7 +304,7 @@ SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_headers} ${ransac_cuda_sources})
 SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_headers} ${ransac_interface_sources})
 SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_headers} ${relocalisation_sources})
-SOURCE_GROUP(relocalisation\\base FILES ${relocalisation_base_headers})
+SOURCE_GROUP(relocalisation\\base FILES ${relocalisation_base_headers} ${relocalisation_base_sources})
 SOURCE_GROUP(relocalisation\\cpu FILES ${relocalisation_cpu_headers} ${relocalisation_cpu_sources})
 SOURCE_GROUP(relocalisation\\cuda FILES ${relocalisation_cuda_headers} ${relocalisation_cuda_sources})
 SOURCE_GROUP(relocalisation\\interface FILES ${relocalisation_interface_headers} ${relocalisation_interface_sources})

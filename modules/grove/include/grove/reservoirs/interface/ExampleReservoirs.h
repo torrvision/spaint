@@ -111,6 +111,26 @@ private:
    */
   virtual void accept(const Visitor& visitor) = 0;
 
+  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Loads the reservoir state from a folder on disk.
+   *
+   * \param inputFolder  The folder containing the reservoir state.
+   *
+   * \throws std::runtime_error  If the loading failed.
+   */
+  virtual void load_from_disk(const std::string& inputFolder);
+
+  /**
+   * \brief Saves the reservoir state to a folder on disk.
+   *
+   * \param outputFolder  The folder wherein to save the reservoir state.
+   *
+   * \throws std::runtime_error  If the saving failed.
+   */
+  virtual void save_to_disk(const std::string& outputFolder);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
