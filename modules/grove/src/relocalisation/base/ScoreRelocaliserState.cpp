@@ -54,7 +54,7 @@ void ScoreRelocaliserState::save_to_disk(const std::string& outputFolder) const
   // Save the rest of the data.
   const std::string dataFile = (outputPath / "scoreState.txt").string();
   std::ofstream outFile(dataFile.c_str());
-  outFile << lastFeaturesAddedStartIdx << reservoirUpdateStartIdx;
+  outFile << lastFeaturesAddedStartIdx << ' ' << reservoirUpdateStartIdx;
 
   if(!outFile) throw std::runtime_error("Couldn't save relocaliser data in " + dataFile);
 }
