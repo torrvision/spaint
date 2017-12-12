@@ -34,9 +34,19 @@ void ExampleReservoirs_CPU<ExampleType>::load_from_disk(const std::string& input
   // Call the base function.
   ExampleReservoirs<ExampleType>::load_from_disk(inputFolder);
 
-  // Load the RNG states.
+  // Make sure there is enough space for the RNGs.
   bf::path inputPath(inputFolder);
-  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+  std::string rngsFile = (inputPath / "reservoirRngs.bin").string();
+  size_t rngsSize = MemoryBlockPersister::ReadBlockSize(rngsFile);
+
+  if(!m_rngs || m_rngs->dataSize != rngsSize)
+  {
+    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+    m_rngs = mbf.make_block<CPURNG>(rngsSize);
+  }
+
+  // Load the RNG states.
+  MemoryBlockPersister::LoadMemoryBlock(rngsFile, *m_rngs, MEMORYDEVICE_CPU);
 }
 
 template <typename ExampleType>
