@@ -9,6 +9,11 @@ namespace itmx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void NullRelocaliser::load_from_disk(const std::string& inputFolder)
+{
+  // No-op
+}
+
 boost::optional<NullRelocaliser::Result>
 NullRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
@@ -17,6 +22,11 @@ NullRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatIma
 }
 
 void NullRelocaliser::reset()
+{
+  // No-op
+}
+
+void NullRelocaliser::save_to_disk(const std::string& outputFolder) const
 {
   // No-op
 }
