@@ -28,9 +28,6 @@ struct ScoreRelocaliserState
   typedef ExampleReservoirs<ExampleType> Reservoirs;
   typedef boost::shared_ptr<Reservoirs> Reservoirs_Ptr;
 
-  //#################### CONSTRUCTORS ####################
-  ScoreRelocaliserState() : lastFeaturesAddedStartIdx(0), reservoirUpdateStartIdx(0) {}
-
   //#################### MEMBER VARIABLES ####################
   /** The example reservoirs associated to every leaf in the forest. */
   Reservoirs_Ptr exampleReservoirs;
@@ -44,6 +41,28 @@ struct ScoreRelocaliserState
 
   /** The index of the reservoir to cluster when the idle_update will be called. */
   uint32_t reservoirUpdateStartIdx;
+
+  //#################### CONSTRUCTORS ####################
+  ScoreRelocaliserState() : lastFeaturesAddedStartIdx(0), reservoirUpdateStartIdx(0) {}
+
+  //#################### MEMBER FUNCTIONS ####################
+  /**
+   * \brief Loads the relocaliser state from a folder on disk.
+   *
+   * \param inputFolder  The folder containing the state data.
+   *
+   * \throws std::runtime_error  If loading the state failed.
+   */
+  void load_from_disk(const std::string& inputFolder);
+
+  /**
+   * \brief Saves the relocaliser state to a folder on disk.
+   *
+   * \param outputFolder  The folder wherein to save the relocaliser state.
+   *
+   * \throws std::runtime_error  If saving the state failed.
+   */
+  void save_to_disk(const std::string& outputFolder) const;
 };
 
 //#################### TYPEDEFS ####################

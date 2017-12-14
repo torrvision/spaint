@@ -5,6 +5,9 @@
 
 #include "relocalisation/interface/ScoreRelocaliser.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
+
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
@@ -125,6 +128,12 @@ void ScoreRelocaliser::finish_training()
   m_exampleClusterer.reset();
 }
 
+void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
+{
+  // Load the relocaliser state from disk.
+  m_relocaliserState->load_from_disk(inputFolder);
+}
+
 boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
                                                                   const ITMFloatImage *depthImage,
                                                                   const Vector4f &depthIntrinsics) const
@@ -171,6 +180,15 @@ void ScoreRelocaliser::reset()
 
   m_relocaliserState->lastFeaturesAddedStartIdx = 0;
   m_relocaliserState->reservoirUpdateStartIdx = 0;
+}
+
+void ScoreRelocaliser::save_to_disk(const std::string& outputFolder) const
+{
+  // First, make sure the output folder exists.
+  bf::create_directories(outputFolder);
+
+  // The serialise the data. Everything is contained in the relocaliser state, so that's the only thing we have to serialise.
+  m_relocaliserState->save_to_disk(outputFolder);
 }
 
 void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,

@@ -77,10 +77,16 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::~ICPRefiningRelocaliser()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-template<typename VoxelType, typename IndexType>
+template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::finish_training()
 {
   m_innerRelocaliser->finish_training();
+}
+
+template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::load_from_disk(const std::string& inputFolder)
+{
+  m_innerRelocaliser->load_from_disk(inputFolder);
 }
 
 template <typename VoxelType, typename IndexType>
@@ -169,6 +175,12 @@ template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::reset()
 {
   m_innerRelocaliser->reset();
+}
+
+template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::save_to_disk(const std::string& outputFolder) const
+{
+  m_innerRelocaliser->save_to_disk(outputFolder);
 }
 
 template <typename VoxelType, typename IndexType>

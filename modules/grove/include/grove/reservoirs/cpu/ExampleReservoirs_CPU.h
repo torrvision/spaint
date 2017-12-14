@@ -55,10 +55,16 @@ private:
   template <int ReservoirIndexCount>
   void add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
+  /** Override */
+  virtual void load_from_disk_sub(const std::string& inputFolder);
+
   /**
    * \brief Reinitialises the random number generators using known seeds.
    */
   void reinit_rngs();
+
+  /** Override */
+  virtual void save_to_disk_sub(const std::string& outputFolder);
 
   //#################### FRIENDS ####################
 
