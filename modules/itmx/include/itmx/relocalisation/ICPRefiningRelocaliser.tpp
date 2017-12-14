@@ -90,85 +90,92 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::load_from_disk(const std::stri
 }
 
 template <typename VoxelType, typename IndexType>
-boost::optional<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType,IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                                         const Vector4f& depthIntrinsics) const
 {
-  boost::optional<ORUtils::SE3Pose> initialPose;
-  return relocalise(colourImage, depthImage, depthIntrinsics, initialPose);
+  std::vector<ORUtils::SE3Pose> initialPoses;
+  return relocalise(colourImage, depthImage, depthIntrinsics, initialPoses);
 }
 
 template <typename VoxelType, typename IndexType>
-boost::optional<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType,IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                                        const Vector4f& depthIntrinsics, boost::optional<ORUtils::SE3Pose>& initialPose) const
+std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                                        const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
   start_timer(m_timerRelocalisation);
 
-  // Reset the initial pose.
-  initialPose.reset();
+  // Reset the initial poses.
+  initialPoses.clear();
+
+  // Prepare output container.
+  std::vector<Relocaliser::Result> refinementResults;
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
-  boost::optional<Result> relocalisationResult = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
-  if(!relocalisationResult)
+  std::vector<Result> relocalisationResult = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
+  if(!relocalisationResult.empty())
   {
     Matrix4f invalidPose;
     invalidPose.setValues(std::numeric_limits<float>::quiet_NaN());
     save_poses(invalidPose, invalidPose);
     stop_timer(m_timerRelocalisation);
-    return boost::none;
+    return results;
   }
 
-  // Since the inner relocaliser succeeded, copy its result into the initial pose.
-  initialPose = relocalisationResult->pose;
-
-  // Copy the depth and RGB images into the view.
-  m_view->depth->SetFrom(depthImage, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
-  m_view->rgb->SetFrom(colourImage, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
-
-  // Create a fresh render state ready for raycasting.
-  // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
-  //        to the program randomly crashing after a while. The crash may be occurring because we don't use this render
-  //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
-  //        currently create a fresh render state each time as a workaround. A mildly less costly alternative might
-  //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
-  m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
-    m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
-    m_scene->sceneParams,
-    m_settings->GetMemoryType()
-  ));
-
-  // Set up the tracking state using the initial pose.
-  m_trackingState->pose_d->SetFrom(initialPose.get_ptr());
-
-  // Update the list of visible blocks.
-  const bool resetVisibleList = true;
-  m_denseVoxelMapper->UpdateVisibleList(m_view.get(), m_trackingState.get(), m_scene.get(), m_voxelRenderState.get(), resetVisibleList);
-
-  // Raycast from the initial pose to prepare for tracking.
-  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), m_view.get(), m_visualisationEngine.get(), m_voxelRenderState.get());
-
-  // Run the tracker to refine the initial pose.
-  m_trackingController->Track(m_trackingState.get(), m_view.get());
-
-  // Save the poses.
-  save_poses(initialPose->GetInvM(), m_trackingState->pose_d->GetInvM());
-
-  // Set up the result.
-  boost::optional<Result> refinementResult;
-  if(m_trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
+  // Iterate over all results from the inner relocaliser.
+  for(size_t resultIdx = 0; resultIdx < relocalisationResult.size(); ++resultIdx)
   {
-    refinementResult.reset(Result());
-    refinementResult->pose.SetFrom(m_trackingState->pose_d);
-    refinementResult->quality = m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
+    const ORUtils::SE3Pose initialPose = relocalisationResult[resultIdx].pose;
 
-    // If we are in evaluation mode (we are saving the poses), force the quality to POOR to prevent fusion whilst evaluating the testing sequence.
-    if(m_savePoses) refinementResult->quality = RELOCALISATION_POOR;
+    // Copy the depth and RGB images into the view.
+    m_view->depth->SetFrom(depthImage, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
+    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
+
+    // Create a fresh render state ready for raycasting.
+    // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
+    //        to the program randomly crashing after a while. The crash may be occurring because we don't use this render
+    //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
+    //        currently create a fresh render state each time as a workaround. A mildly less costly alternative might
+    //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
+    m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
+                               m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
+                               m_scene->sceneParams,
+                               m_settings->GetMemoryType()
+                               ));
+
+    // Set up the tracking state using the initial pose.
+    m_trackingState->pose_d->SetFrom(&initialPose);
+
+    // Update the list of visible blocks.
+    const bool resetVisibleList = true;
+    m_denseVoxelMapper->UpdateVisibleList(m_view.get(), m_trackingState.get(), m_scene.get(), m_voxelRenderState.get(), resetVisibleList);
+
+    // Raycast from the initial pose to prepare for tracking.
+    m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), m_view.get(), m_visualisationEngine.get(), m_voxelRenderState.get());
+
+    // Run the tracker to refine the initial pose.
+    m_trackingController->Track(m_trackingState.get(), m_view.get());
+
+    // Save the poses.
+    save_poses(initialPose.GetInvM(), m_trackingState->pose_d->GetInvM());
+
+    // Set up the result.
+    if(m_trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
+    {
+      Result refinementResult;
+      refinementResult.pose.SetFrom(m_trackingState->pose_d);
+      refinementResult.quality = m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
+
+      // If we are in evaluation mode (we are saving the poses), force the quality to POOR to prevent fusion whilst evaluating the testing sequence.
+      if(m_savePoses) refinementResult.quality = RELOCALISATION_POOR;
+
+      // Since the inner relocaliser succeeded, copy its result into the initial pose.
+      initialPoses.push_back(initialPose);
+      refinementResults.push_back(refinementResult);
+    }
   }
 
   stop_timer(m_timerRelocalisation);
 
-  return refinementResult;
+  return refinementResults;
 }
 
 template <typename VoxelType, typename IndexType>

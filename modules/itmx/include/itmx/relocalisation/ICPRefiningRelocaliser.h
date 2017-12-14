@@ -127,12 +127,12 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                              const Vector4f& depthIntrinsics) const;
 
   /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics, boost::optional<ORUtils::SE3Pose>& initialPose) const;
+  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                         const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const;
 
   /** Override */
   virtual void reset();
