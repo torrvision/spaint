@@ -58,6 +58,15 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Loads the relocaliser from disk.
+   *
+   * \param inputFolder The folder containing the relocaliser data.
+   *
+   * \throws std::runtime_error If loading the relocaliser fails.
+   */
+  virtual void load_from_disk(const std::string& inputFolder) = 0;
+
+  /**
    * \brief Attempts to determine the location from which an RGB-D image pair was acquired,
    *        thereby relocalising the camera with respect to the 3D scene.
    *
@@ -72,6 +81,15 @@ public:
    * \brief Resets the relocaliser, allowing the integration of information for a new area.
    */
   virtual void reset() = 0;
+
+  /**
+   * \brief Saves the relocaliser to disk.
+   *
+   * \param outputFolder  The folder into which to save the relocaliser data.
+   *
+   * \throws std::runtime_error If saving the relocaliser fails.
+   */
+  virtual void save_to_disk(const std::string& outputFolder) const = 0;
 
   /**
    * \brief Trains the relocaliser using information from an RGB-D image pair captured from a known pose in the world.
@@ -94,24 +112,6 @@ public:
    * \note Later calls to train or update prior to a reset will result in undefined behaviour.
    */
   virtual void finish_training();
-
-  /**
-   * \brief Loads the relocaliser from disk.
-   *
-   * \param inputFolder The folder containing the relocaliser data.
-   *
-   * \throws std::runtime_error If loading the relocaliser fails.
-   */
-  virtual void load_from_disk(const std::string& inputFolder);
-
-  /**
-   * \brief Saves the relocaliser to disk.
-   *
-   * \param outputFolder  The folder into which to save the relocaliser data.
-   *
-   * \throws std::runtime_error If saving the relocaliser fails.
-   */
-  virtual void save_to_disk(const std::string& outputFolder) const;
 
   /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.
