@@ -43,7 +43,7 @@ void ExampleReservoirs<ExampleType>::load_from_disk(const std::string& inputFold
   bf::path inputPath(inputFolder);
 
   // Load the data on the CPU.
-  MemoryBlockPersister::LoadImage((inputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
+  MemoryBlockPersister::LoadImageFrom((inputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
   MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
   MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
 
