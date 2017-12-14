@@ -111,13 +111,13 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
   std::vector<Result> relocalisationResult = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
-  if(!relocalisationResult.empty())
+  if(relocalisationResult.empty())
   {
     Matrix4f invalidPose;
     invalidPose.setValues(std::numeric_limits<float>::quiet_NaN());
     save_poses(invalidPose, invalidPose);
     stop_timer(m_timerRelocalisation);
-    return results;
+    return refinementResults;
   }
 
   // Iterate over all results from the inner relocaliser.
@@ -136,10 +136,10 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
     //        currently create a fresh render state each time as a workaround. A mildly less costly alternative might
     //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
     m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
-                               m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
-                               m_scene->sceneParams,
-                               m_settings->GetMemoryType()
-                               ));
+                             m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
+                             m_scene->sceneParams,
+                             m_settings->GetMemoryType()
+                             ));
 
     // Set up the tracking state using the initial pose.
     m_trackingState->pose_d->SetFrom(&initialPose);

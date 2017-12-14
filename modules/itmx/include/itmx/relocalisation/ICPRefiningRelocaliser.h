@@ -6,6 +6,8 @@
 #ifndef H_ITMX_ICPREFININGRELOCALISER
 #define H_ITMX_ICPREFININGRELOCALISER
 
+#include <boost/optional.hpp>
+
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
@@ -128,7 +130,7 @@ public:
 
   /** Override */
   virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics) const;
+                                         const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,

@@ -127,10 +127,12 @@ void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliserState->load_from_disk(inputFolder);
 }
 
-boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
-                                                                  const ITMFloatImage *depthImage,
-                                                                  const Vector4f &depthIntrinsics) const
+std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
+                                                              const ITMFloatImage *depthImage,
+                                                              const Vector4f &depthIntrinsics) const
 {
+  std::vector<Result> results;
+
   // Try to estimate a pose only if we have enough valid depth values.
   if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
@@ -155,11 +157,11 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
       result.pose.SetInvM(poseCandidate->cameraPose);
       result.quality = RELOCALISATION_GOOD;
 
-      return result;
+      results.push_back(result);
     }
   }
 
-  return boost::none;
+  return results;
 }
 
 void ScoreRelocaliser::reset()
