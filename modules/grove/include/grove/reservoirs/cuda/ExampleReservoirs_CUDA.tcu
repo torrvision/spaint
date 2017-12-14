@@ -49,41 +49,13 @@ ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCo
   reset();
 }
 
-//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
-
-template<typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::load_from_disk(const std::string& inputFolder)
-{
-  // Call the base function.
-  ExampleReservoirs<ExampleType>::load_from_disk(inputFolder);
-
-  // Load the RNG states.
-  bf::path inputPath(inputFolder);
-  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
-
-  // Update them on the GPU.
-  m_rngs->UpdateDeviceFromHost();
-}
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reset()
 {
   ExampleReservoirs<ExampleType>::reset();
   reinit_rngs();
-}
-
-template<typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::save_to_disk(const std::string& outputFolder)
-{
-  // Call the base function.
-  ExampleReservoirs<ExampleType>::save_to_disk(outputFolder);
-
-  // Update the RNG states on the CPU.
-  m_rngs->UpdateHostFromDevice();
-
-  // Save the RNG states.
-  bf::path outputPath(outputFolder);
-  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -125,6 +97,17 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CP
   ORcudaKernelCheck;
 }
 
+template<typename ExampleType>
+void ExampleReservoirs_CUDA<ExampleType>::load_from_disk_sub(const std::string& inputFolder)
+{
+  // Load the RNG states.
+  bf::path inputPath(inputFolder);
+  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+
+  // Update them on the GPU.
+  m_rngs->UpdateDeviceFromHost();
+}
+
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 {
@@ -143,6 +126,17 @@ void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
     this->m_rngSeed
   );
   ORcudaKernelCheck;
+}
+
+template<typename ExampleType>
+void ExampleReservoirs_CUDA<ExampleType>::save_to_disk_sub(const std::string& outputFolder)
+{
+  // Update the RNG states on the CPU.
+  m_rngs->UpdateHostFromDevice();
+
+  // Save the RNG states.
+  bf::path outputPath(outputFolder);
+  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 }

@@ -30,35 +30,13 @@ ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCoun
   reset();
 }
 
-//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
-
-template<typename ExampleType>
-void ExampleReservoirs_CPU<ExampleType>::load_from_disk(const std::string& inputFolder)
-{
-  // Call the base function.
-  ExampleReservoirs<ExampleType>::load_from_disk(inputFolder);
-
-  // Load the RNG states.
-  bf::path inputPath(inputFolder);
-  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
-}
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reset()
 {
   ExampleReservoirs<ExampleType>::reset();
   reinit_rngs();
-}
-
-template<typename ExampleType>
-void ExampleReservoirs_CPU<ExampleType>::save_to_disk(const std::string& outputFolder)
-{
-  // Call the base function.
-  ExampleReservoirs<ExampleType>::save_to_disk(outputFolder);
-
-  // Save the RNG states.
-  bf::path outputPath(outputFolder);
-  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -108,6 +86,14 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
   }
 }
 
+template<typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::load_from_disk_sub(const std::string& inputFolder)
+{
+  // Load the RNG states.
+  bf::path inputPath(inputFolder);
+  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+}
+
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
 {
@@ -118,6 +104,14 @@ void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
   {
     rngs[i].reset(this->m_rngSeed + i);
   }
+}
+
+template<typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::save_to_disk_sub(const std::string& outputFolder)
+{
+  // Save the RNG states.
+  bf::path outputPath(outputFolder);
+  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 }

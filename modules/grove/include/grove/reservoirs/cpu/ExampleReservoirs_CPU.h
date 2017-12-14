@@ -41,16 +41,10 @@ public:
    */
   ExampleReservoirs_CPU(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed = 42);
 
-  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override. */
-  virtual void load_from_disk(const std::string& inputFolder);
-
   /** Override */
   virtual void reset();
-
-  /** Override. */
-  virtual void save_to_disk(const std::string& outputFolder);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -61,10 +55,16 @@ private:
   template <int ReservoirIndexCount>
   void add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
+  /** Override */
+  virtual void load_from_disk_sub(const std::string& inputFolder);
+
   /**
    * \brief Reinitialises the random number generators using known seeds.
    */
   void reinit_rngs();
+
+  /** Override */
+  virtual void save_to_disk_sub(const std::string& outputFolder);
 
   //#################### FRIENDS ####################
 

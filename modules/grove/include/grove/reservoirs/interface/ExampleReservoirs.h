@@ -111,25 +111,23 @@ private:
    */
   virtual void accept(const Visitor& visitor) = 0;
 
-  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
-public:
   /**
-   * \brief Loads the reservoir state from a folder on disk.
+   * \brief An overridable hook function that is called at the end of load_from_disk to allow subclasses to perform additional loading steps.
    *
-   * \param inputFolder  The folder containing the reservoir state.
+   * \param inputFolder The folder containing the reservoir state.
    *
-   * \throws std::runtime_error  If the loading failed.
+   * \throws std::runtime_error If the loading fails.
    */
-  virtual void load_from_disk(const std::string& inputFolder);
+  virtual void load_from_disk_sub(const std::string& inputFolder) = 0;
 
   /**
-   * \brief Saves the reservoir state to a folder on disk.
+   * \brief An overridable hook function that is called at the end of save_to_disk to allow subclasses to perform additional saving steps.
    *
-   * \param outputFolder  The folder wherein to save the reservoir state.
+   * \param outputFolder  The folder into which to save the reservoir state.
    *
-   * \throws std::runtime_error  If the saving failed.
+   * \throws std::runtime_error If the saving fails.
    */
-  virtual void save_to_disk(const std::string& outputFolder);
+  virtual void save_to_disk_sub(const std::string& outputFolder) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -190,9 +188,27 @@ public:
   ITMIntMemoryBlock_CPtr get_reservoir_sizes() const;
 
   /**
+   * \brief Loads the reservoir state from a folder on disk.
+   *
+   * \param inputFolder The folder containing the reservoir state.
+   *
+   * \throws std::runtime_error If the loading fails.
+   */
+  void load_from_disk(const std::string& inputFolder);
+
+  /**
    * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
    */
   virtual void reset();
+
+  /**
+   * \brief Saves the reservoir state to a folder on disk.
+   *
+   * \param outputFolder  The folder into which to save the reservoir state.
+   *
+   * \throws std::runtime_error If the saving fails.
+   */
+  void save_to_disk(const std::string& outputFolder);
 };
 
 }
