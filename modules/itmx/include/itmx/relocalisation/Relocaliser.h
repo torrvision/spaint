@@ -98,18 +98,18 @@ public:
   /**
    * \brief Loads the relocaliser from disk.
    *
-   * \param inputFolder  The folder containing the relocaliser data.
+   * \param inputFolder The folder containing the relocaliser data.
    *
-   * \throws std::runtime_error  if loading the relocaliser failed.
+   * \throws std::runtime_error If loading the relocaliser fails.
    */
   virtual void load_from_disk(const std::string& inputFolder);
 
   /**
    * \brief Saves the relocaliser to disk.
    *
-   * \param outputFolder  The folder wherein to save the relocaliser data.
+   * \param outputFolder  The folder into which to save the relocaliser data.
    *
-   * \throws std::runtime_error  if saving the relocaliser failed.
+   * \throws std::runtime_error If saving the relocaliser fails.
    */
   virtual void save_to_disk(const std::string& outputFolder) const;
 
