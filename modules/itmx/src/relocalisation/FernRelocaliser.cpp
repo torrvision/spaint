@@ -29,8 +29,8 @@ FernRelocaliser::FernRelocaliser(const Vector2i& depthImageSize, float viewFrust
 
 void FernRelocaliser::load_from_disk(const std::string& inputFolder)
 {
-  // Load data from disk.
-  // Note that we need to add a "/" to the end of the folder to force the loading to happen from INSIDE the folder.
+  // Load the relocaliser data from the input folder. Note that we need to add a "/" to
+  // the end of the folder path to force the loading to happen from *inside* the folder.
   m_relocaliser->LoadFromDirectory(inputFolder + "/");
 }
 
@@ -74,16 +74,16 @@ void FernRelocaliser::reset()
 
   m_relocaliser.reset(new WrappedRelocaliser(
     m_depthImageSize, m_rangeParameters, m_harvestingThreshold, m_numFerns, m_decisionsPerFern
-                        ));
+  ));
 }
 
 void FernRelocaliser::save_to_disk(const std::string& outputFolder) const
 {
-  // First, make sure the output folder exists.
+  // Ensure that the output folder exists.
   bf::create_directories(outputFolder);
 
-  // Then save the data.
-  // Note that we have to add the "/" to the folder to force the writing to happen INSIDE that folder.
+  // Save the relocaliser data to the output folder. Note that we need to add a "/" to
+  // the end of the folder path to force the writing to happen *inside* the folder.
   m_relocaliser->SaveToDirectory(outputFolder + "/");
 }
 

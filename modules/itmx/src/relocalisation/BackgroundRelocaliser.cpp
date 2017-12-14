@@ -34,7 +34,7 @@ void BackgroundRelocaliser::load_from_disk(const std::string& inputFolder)
   // Set the current GPU to the one on which calls to the decorated relocaliser should be performed.
   to_relocalisation_gpu();
 
-  // Load data from disk.
+  // Load the decorated relocaliser from disk.
   m_relocaliser->load_from_disk(inputFolder);
 
   // Reset the current GPU to the one on which calls were previously being performed.
@@ -86,7 +86,7 @@ void BackgroundRelocaliser::save_to_disk(const std::string& outputFolder) const
   // Set the current GPU to the one on which calls to the decorated relocaliser should be performed.
   to_relocalisation_gpu();
 
-  // Save data to disk.
+  // Save the decorated relocaliser to disk.
   m_relocaliser->save_to_disk(outputFolder);
 
   // Reset the current GPU to the one on which calls were previously being performed.
