@@ -6,6 +6,8 @@
 #ifndef H_ITMX_RELOCALISER
 #define H_ITMX_RELOCALISER
 
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Utils/ITMImageTypes.h>
