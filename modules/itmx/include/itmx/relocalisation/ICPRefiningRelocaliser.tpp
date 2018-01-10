@@ -110,8 +110,8 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
   std::vector<Relocaliser::Result> refinementResults;
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
-  std::vector<Result> relocalisationResult = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
-  if(relocalisationResult.empty())
+  std::vector<Result> relocalisationResults = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
+  if(relocalisationResults.empty())
   {
     Matrix4f invalidPose;
     invalidPose.setValues(std::numeric_limits<float>::quiet_NaN());
@@ -121,9 +121,9 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
   }
 
   // Iterate over all results from the inner relocaliser.
-  for(size_t resultIdx = 0; resultIdx < relocalisationResult.size(); ++resultIdx)
+  for(size_t resultIdx = 0; resultIdx < relocalisationResults.size(); ++resultIdx)
   {
-    const ORUtils::SE3Pose initialPose = relocalisationResult[resultIdx].pose;
+    const ORUtils::SE3Pose initialPose = relocalisationResults[resultIdx].pose;
 
     // Copy the depth and RGB images into the view.
     m_view->depth->SetFrom(depthImage, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
@@ -154,9 +154,6 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
     // Run the tracker to refine the initial pose.
     m_trackingController->Track(m_trackingState.get(), m_view.get());
 
-    // Save the poses.
-    save_poses(initialPose.GetInvM(), m_trackingState->pose_d->GetInvM());
-
     // Set up the result.
     if(m_trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
     {
@@ -164,12 +161,38 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
       refinementResult.pose.SetFrom(m_trackingState->pose_d);
       refinementResult.quality = m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
 
-      // If we are in evaluation mode (we are saving the poses), force the quality to POOR to prevent fusion whilst evaluating the testing sequence.
-      if(m_savePoses) refinementResult.quality = RELOCALISATION_POOR;
-
       // Since the inner relocaliser succeeded, copy its result into the initial pose.
       initialPoses.push_back(initialPose);
       refinementResults.push_back(refinementResult);
+    }
+  }
+
+  // Save the poses if needed.
+  if(m_savePoses)
+  {
+    // The initial pose is the best one returned by the relocaliser.
+    const Matrix4f initialPose = relocalisationResults[0].pose.GetInvM();
+
+    // Note that the refined pose might have been refined from a different pose than the initialPose.
+    // The refined pose is set to NaNs if the refiner never succeeded.
+    Matrix4f refinedPose;
+    if(!refinementResults.empty())
+    {
+      refinedPose = refinementResults[0].pose.GetInvM();
+    }
+    else
+    {
+      refinedPose.setValues(std::numeric_limits<float>::quiet_NaN());
+    }
+
+    // Actually save the poses.
+    save_poses(initialPose, refinedPose);
+
+    // Since we are saving the poses (i.e. we are running in evaluation mode),
+    // we set the quality of every relocalisation to POOR to prevent fusion whilst evaluating the testing sequence.
+    for(size_t i = 0; i < refinementResults.size(); ++i)
+    {
+      refinementResults[i].quality = RELOCALISATION_POOR;
     }
   }
 
