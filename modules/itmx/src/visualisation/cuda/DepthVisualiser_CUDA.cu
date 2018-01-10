@@ -1,5 +1,5 @@
 /**
- * spaint: DepthVisualiser_CUDA.cu
+ * itmx: DepthVisualiser_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -7,7 +7,7 @@
 
 #include "visualisation/shared/DepthVisualiser_Shared.h"
 
-namespace spaint {
+namespace itmx {
 
 //#################### CUDA KERNELS ####################
 

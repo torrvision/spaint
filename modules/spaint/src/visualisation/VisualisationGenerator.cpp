@@ -12,10 +12,11 @@ using namespace ITMLib;
 
 #include <itmx/geometry/GeometryUtil.h>
 #include <itmx/util/CameraPoseConverter.h>
+#include <itmx/visualisation/DepthVisualiserFactory.h>
 using namespace itmx;
 using namespace rigging;
 
-#include "visualisation/VisualiserFactory.h"
+#include "visualisation/SemanticVisualiserFactory.h"
 
 namespace spaint {
 
@@ -24,12 +25,12 @@ namespace spaint {
 VisualisationGenerator::VisualisationGenerator(const Settings_CPtr& settings, const LabelManager_CPtr& labelManager,
                                                const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine,
                                                const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine)
-: m_depthVisualiser(VisualiserFactory::make_depth_visualiser(settings->deviceType)), m_settings(settings)
+: m_depthVisualiser(DepthVisualiserFactory::make_depth_visualiser(settings->deviceType)), m_settings(settings)
 {
   if(labelManager)
   {
     m_labelManager = labelManager;
-    m_semanticVisualiser = VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType);
+    m_semanticVisualiser = SemanticVisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType);
   }
 
   if(surfelVisualisationEngine) m_surfelVisualisationEngine = surfelVisualisationEngine;
