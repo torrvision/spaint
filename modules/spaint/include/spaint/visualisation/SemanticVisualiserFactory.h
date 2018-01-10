@@ -1,33 +1,23 @@
 /**
- * spaint: VisualiserFactory.h
+ * spaint: SemanticVisualiserFactory.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_VISUALISERFACTORY
-#define H_SPAINT_VISUALISERFACTORY
+#ifndef H_SPAINT_SEMANTICVISUALISERFACTORY
+#define H_SPAINT_SEMANTICVISUALISERFACTORY
 
 #include <ITMLib/Utils/ITMLibSettings.h>
-
-#include <itmx/visualisation/interface/DepthVisualiser.h>
 
 #include "interface/SemanticVisualiser.h"
 
 namespace spaint {
 
 /**
- * \brief This struct can be used to construct visualisers.
+ * \brief This struct can be used to construct semantic visualisers.
  */
-struct VisualiserFactory
+struct SemanticVisualiserFactory
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
-  /**
-   * \brief Makes a depth visualiser.
-   *
-   * \param deviceType  The device on which the visualiser should operate.
-   * \return            The visualiser.
-   */
-  static itmx::DepthVisualiser_CPtr make_depth_visualiser(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   /**
    * \brief Makes a semantic visualiser.

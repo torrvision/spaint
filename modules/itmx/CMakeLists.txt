@@ -187,14 +187,12 @@ include/itmx/util/RGBDUtil.h
 )
 
 ##
-#src/visualisation/VisualiserFactory.cpp
 SET(visualisation_sources
-
+src/visualisation/DepthVisualiserFactory.cpp
 )
 
-#include/itmx/visualisation/VisualiserFactory.h
 SET(visualisation_headers
-
+include/itmx/visualisation/DepthVisualiserFactory.h
 )
 
 ##
