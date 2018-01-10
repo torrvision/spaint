@@ -542,23 +542,19 @@ include/spaint/visualisation/VisualiserFactory.h
 
 ##
 SET(visualisation_cpu_sources
-src/visualisation/cpu/DepthVisualiser_CPU.cpp
 src/visualisation/cpu/SemanticVisualiser_CPU.cpp
 )
 
 SET(visualisation_cpu_headers
-include/spaint/visualisation/cpu/DepthVisualiser_CPU.h
 include/spaint/visualisation/cpu/SemanticVisualiser_CPU.h
 )
 
 ##
 SET(visualisation_cuda_sources
-src/visualisation/cuda/DepthVisualiser_CUDA.cu
 src/visualisation/cuda/SemanticVisualiser_CUDA.cu
 )
 
 SET(visualisation_cuda_headers
-include/spaint/visualisation/cuda/DepthVisualiser_CUDA.h
 include/spaint/visualisation/cuda/SemanticVisualiser_CUDA.h
 )
 
@@ -568,13 +564,11 @@ src/visualisation/interface/SemanticVisualiser.cpp
 )
 
 SET(visualisation_interface_headers
-include/spaint/visualisation/interface/DepthVisualiser.h
 include/spaint/visualisation/interface/SemanticVisualiser.h
 )
 
 ##
 SET(visualisation_shared_headers
-include/spaint/visualisation/shared/DepthVisualiser_Shared.h
 include/spaint/visualisation/shared/SemanticVisualiser_Settings.h
 include/spaint/visualisation/shared/SemanticVisualiser_Shared.h
 )

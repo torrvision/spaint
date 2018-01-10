@@ -6,11 +6,14 @@
 #include "visualisation/VisualiserFactory.h"
 using namespace ITMLib;
 
-#include "visualisation/cpu/DepthVisualiser_CPU.h"
-#include "visualisation/cpu/SemanticVisualiser_CPU.h"
-
+#include <itmx/visualisation/cpu/DepthVisualiser_CPU.h>
 #ifdef WITH_CUDA
-#include "visualisation/cuda/DepthVisualiser_CUDA.h"
+#include <itmx/visualisation/cuda/DepthVisualiser_CUDA.h>
+#endif
+using namespace itmx;
+
+#include "visualisation/cpu/SemanticVisualiser_CPU.h"
+#ifdef WITH_CUDA
 #include "visualisation/cuda/SemanticVisualiser_CUDA.h"
 #endif
 

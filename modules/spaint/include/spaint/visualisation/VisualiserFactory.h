@@ -8,7 +8,8 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include "interface/DepthVisualiser.h"
+#include <itmx/visualisation/interface/DepthVisualiser.h>
+
 #include "interface/SemanticVisualiser.h"
 
 namespace spaint {
@@ -26,7 +27,7 @@ struct VisualiserFactory
    * \param deviceType  The device on which the visualiser should operate.
    * \return            The visualiser.
    */
-  static DepthVisualiser_CPtr make_depth_visualiser(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static itmx::DepthVisualiser_CPtr make_depth_visualiser(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   /**
    * \brief Makes a semantic visualiser.

@@ -1,19 +1,19 @@
 /**
- * spaint: DepthVisualiser_CPU.h
+ * itmx: DepthVisualiser_CUDA.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_DEPTHVISUALISER_CPU
-#define H_SPAINT_DEPTHVISUALISER_CPU
+#ifndef H_ITMX_DEPTHVISUALISER_CUDA
+#define H_ITMX_DEPTHVISUALISER_CUDA
 
 #include "../interface/DepthVisualiser.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
- * \brief An instance of this class can be used to render a depth visualisation of an InfiniTAM scene using the CPU.
+ * \brief An instance of this class can be used to render a depth visualisation of an InfiniTAM scene using CUDA.
  */
-class DepthVisualiser_CPU : public DepthVisualiser
+class DepthVisualiser_CUDA : public DepthVisualiser
 {
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
