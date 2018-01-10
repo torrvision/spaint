@@ -16,7 +16,15 @@
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 
+#include "../base/ITMImagePtrTypes.h"
+#include "../geometry/GeometryUtil.h"
 #include "../persistence/PosePersister.h"
+#include "../util/CameraPoseConverter.h"
+#include "../visualisation/DepthVisualiserFactory.h"
+
+#ifdef WITH_OPENCV
+#include "../ocv/OpenCVUtil.h"
+#endif
 
 namespace itmx {
 
@@ -30,6 +38,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
                                                                     const VisualisationEngine_CPtr& visualisationEngine)
 : RefiningRelocaliser(innerRelocaliser),
   m_denseVoxelMapper(denseVoxelMapper),
+  m_depthVisualiser(DepthVisualiserFactory::make_depth_visualiser(settings->deviceType)),
   m_scene(scene),
   m_settings(settings),
   m_timerRelocalisation("Relocalisation"),
@@ -45,6 +54,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
 
   // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
+  m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", true);
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
@@ -90,16 +100,18 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::load_from_disk(const std::stri
 }
 
 template <typename VoxelType, typename IndexType>
-std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                                        const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result>
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                                         const Vector4f& depthIntrinsics) const
 {
   std::vector<ORUtils::SE3Pose> initialPoses;
   return relocalise(colourImage, depthImage, depthIntrinsics, initialPoses);
 }
 
 template <typename VoxelType, typename IndexType>
-std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                                        const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
+std::vector<Relocaliser::Result>
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                                         const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
   start_timer(m_timerRelocalisation);
 
@@ -121,6 +133,7 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
   }
 
   // Iterate over all results from the inner relocaliser.
+  float bestScore = static_cast<float>(INT_MAX);
   for(size_t resultIdx = 0; resultIdx < relocalisationResults.size(); ++resultIdx)
   {
     const ORUtils::SE3Pose initialPose = relocalisationResults[resultIdx].pose;
@@ -136,10 +149,10 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
     //        currently create a fresh render state each time as a workaround. A mildly less costly alternative might
     //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
     m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
-                             m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
-                             m_scene->sceneParams,
-                             m_settings->GetMemoryType()
-                             ));
+      m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
+      m_scene->sceneParams,
+      m_settings->GetMemoryType()
+    ));
 
     // Set up the tracking state using the initial pose.
     m_trackingState->pose_d->SetFrom(&initialPose);
@@ -161,11 +174,28 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
       refinementResult.pose.SetFrom(m_trackingState->pose_d);
       refinementResult.quality = m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
 
-      // Since the inner relocaliser succeeded, copy its result into the initial pose.
-      initialPoses.push_back(initialPose);
-      refinementResults.push_back(refinementResult);
+      if(m_chooseBestResult)
+      {
+        float score = score_result(refinementResult);
+        if(score < bestScore && score < 5.0f) // TEMPORARY
+        {
+          bestScore = score;
+          initialPoses.clear();
+          initialPoses.push_back(initialPose);
+          refinementResults.clear();
+          refinementResults.push_back(refinementResult);
+        }
+      }
+      else
+      {
+        // Since the inner relocaliser succeeded, copy its result into the initial pose.
+        initialPoses.push_back(initialPose);
+        refinementResults.push_back(refinementResult);
+      }
     }
   }
+
+  stop_timer(m_timerRelocalisation);
 
   // Save the poses if needed.
   if(m_savePoses)
@@ -195,8 +225,6 @@ std::vector<Relocaliser::Result> ICPRefiningRelocaliser<VoxelType, IndexType>::r
       refinementResults[i].quality = RELOCALISATION_POOR;
     }
   }
-
-  stop_timer(m_timerRelocalisation);
 
   return refinementResults;
 }
@@ -233,6 +261,31 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::update()
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                                                             const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
+{
+  if(!scene)
+  {
+    output->Clear();
+    return;
+  }
+
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+
+  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
+  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
+  m_visualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
+
+  const rigging::SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
+  m_depthVisualiser->render_depth(
+    depthType, GeometryUtil::to_itm(camera.p()), GeometryUtil::to_itm(camera.n()),
+    renderState.get(), m_settings->sceneParams.voxelSize, -1.0f, output
+  );
+
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
+}
+
+template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const
 {
   if(!m_savePoses) return;
@@ -240,6 +293,66 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& rel
   PosePersister::save_pose_on_thread(relocalisedPose, m_posePathGenerator->make_path("pose-%06i.reloc.txt"));
   PosePersister::save_pose_on_thread(refinedPose, m_posePathGenerator->make_path("pose-%06i.icp.txt"));
   m_posePathGenerator->increment_index();
+}
+
+template <typename VoxelType, typename IndexType>
+float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& result) const
+{
+#ifdef WITH_OPENCV
+  // Make an OpenCV copy of the current depth image.
+  const float scaleFactor = 100.0f;
+  m_view->depth->UpdateHostFromDevice();
+  cv::Mat1b cvRealDepth = OpenCVUtil::make_greyscale_image(m_view->depth->GetData(MEMORYDEVICE_CPU), m_view->depth->noDims.x, m_view->depth->noDims.y, OpenCVUtil::ROW_MAJOR, scaleFactor);
+
+  // Render a synthetic depth image of the scene from the suggested pose.
+  ITMFloatImage_Ptr synthDepth(new ITMFloatImage(m_view->depth->noDims, true, true));
+  generate_depth_from_voxels(synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState, DepthVisualiser::DT_ORTHOGRAPHIC);
+
+  // Make an OpenCV copy of the synthetic depth image.
+  cv::Mat1b cvSynthDepth = OpenCVUtil::make_greyscale_image(synthDepth->GetData(MEMORYDEVICE_CPU), synthDepth->noDims.x, synthDepth->noDims.y, OpenCVUtil::ROW_MAJOR, scaleFactor);
+
+#if DEBUGGING
+  // If we're debugging, show the real and synthetic depth images to the user.
+  cv::imshow("Real Depth", cvRealDepth);
+  cv::imshow("Synthetic Depth", cvSynthDepth);
+  cv::waitKey(1);
+#endif
+
+  // Compute a binary mask showing which pixels are valid in both the real and synthetic depth images.
+  cv::Mat cvRealMask, cvSynthMask;
+  cv::inRange(cvRealDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvRealMask);
+  cv::inRange(cvSynthDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvSynthMask);
+  cv::bitwise_not(cvRealMask, cvRealMask);
+  cv::bitwise_not(cvSynthMask, cvSynthMask);
+
+  cv::Mat cvCombinedMask;
+  cv::bitwise_and(cvRealMask, cvSynthMask, cvCombinedMask);
+
+  // Compute the difference between the real and synthetic depth images, and mask it using the combined mask.
+  cv::Mat cvDepthDiff, cvMaskedDepthDiff;
+  cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
+  cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
+#if DEBUGGING
+  cv::imshow("Masked Depth Difference", cvMaskedDepthDiff);
+#endif
+
+  // Determine the average depth difference for valid pixels in the real and synthetic depth images.
+  // FIXME: Ignore pixels with invalid depth.
+  cv::Scalar meanDepthDiff = cv::mean(cvMaskedDepthDiff);
+#if DEBUGGING
+  std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
+#endif
+
+  // Compute the fraction of the synthetic depth image that is valid.
+  float targetValidFraction = static_cast<float>(cv::countNonZero(cvSynthMask == 255)) / (cvSynthMask.size().width * cvSynthMask.size().height);
+#if DEBUGGING
+  std::cout << "Valid Target Pixels: " << cv::countNonZero(cvSynthMask == 255) << std::endl;
+#endif
+
+  return targetValidFraction >= 0.5f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
+#else
+  return 0.0f;
+#endif
 }
 
 template <typename VoxelType, typename IndexType>

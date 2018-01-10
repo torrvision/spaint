@@ -16,6 +16,7 @@
 #include <tvgutil/timing/AverageTimer.h>
 
 #include "../base/ITMObjectPtrTypes.h"
+#include "../visualisation/interface/DepthVisualiser.h"
 #include "RefiningRelocaliser.h"
 
 namespace itmx {
@@ -36,13 +37,20 @@ private:
   typedef boost::shared_ptr<DenseMapper> DenseMapper_Ptr;
   typedef ITMLib::ITMScene<VoxelType,IndexType> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef ITMLib::ITMVisualisationEngine<VoxelType,IndexType> VisualisationEngine;
   typedef boost::shared_ptr<const VisualisationEngine> VisualisationEngine_CPtr;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  /** Whether or not to choose the best result. */
+  bool m_chooseBestResult;
+
   /** The dense mapper used to find visible blocks in the voxel scene. */
   DenseMapper_Ptr m_denseVoxelMapper;
+
+  /** The depth visualiser. */
+  DepthVisualiser_CPtr m_depthVisualiser;
 
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
@@ -152,6 +160,22 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Generates a synthetic depth image of a voxel scene from the specified pose.
+   *
+   * \note  This produces a floating-point depth image whose format matches that used by InfiniTAM,
+   *        as opposed to a colourised depth image that is suitable for showing to the user.
+   *
+   * \param output      The location into which to put the output image.
+   * \param scene       The scene to visualise.
+   * \param pose        The pose from which to visualise the scene.
+   * \param intrinsics  The camera intrinsics to use when visualising the scene.
+   * \param renderState The render state to use for intermediate storage (can be null, in which case a new one will be created).
+   * \param depthType   The type of depth calculation to use.
+   */
+  void generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                  const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const;
+
+  /**
    * \brief Saves the relocalised and refined poses in text files so that they can be used later (e.g. for evaluation).
    *
    * \note Saving happens only if m_savePoses is true.
@@ -160,6 +184,11 @@ private:
    * \param refinedPose     The result of refining the relocalised pose.
    */
   void save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const;
+
+  /**
+   * \brief TODO
+   */
+  float score_result(const Result& result) const;
 
   /**
    * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
