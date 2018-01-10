@@ -1,16 +1,16 @@
 /**
- * spaint: DepthVisualiser.h
+ * itmx: DepthVisualiser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_DEPTHVISUALISER
-#define H_SPAINT_DEPTHVISUALISER
+#ifndef H_ITMX_DEPTHVISUALISER
+#define H_ITMX_DEPTHVISUALISER
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
+#include "../../base/ITMImagePtrTypes.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of a class deriving from this one can be used to render a depth visualisation of an InfiniTAM scene.

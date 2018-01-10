@@ -188,6 +188,43 @@ include/itmx/util/ColourConversion_Shared.h
 include/itmx/util/RGBDUtil.h
 )
 
+##
+SET(visualisation_sources
+src/visualisation/DepthVisualiserFactory.cpp
+)
+
+SET(visualisation_headers
+include/itmx/visualisation/DepthVisualiserFactory.h
+)
+
+##
+SET(visualisation_cpu_sources
+src/visualisation/cpu/DepthVisualiser_CPU.cpp
+)
+
+SET(visualisation_cpu_headers
+include/itmx/visualisation/cpu/DepthVisualiser_CPU.h
+)
+
+##
+SET(visualisation_cuda_sources
+src/visualisation/cuda/DepthVisualiser_CUDA.cu
+)
+
+SET(visualisation_cuda_headers
+include/itmx/visualisation/cuda/DepthVisualiser_CUDA.h
+)
+
+##
+SET(visualisation_interface_headers
+include/itmx/visualisation/interface/DepthVisualiser.h
+)
+
+##
+SET(visualisation_shared_headers
+include/itmx/visualisation/shared/DepthVisualiser_Shared.h
+)
+
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
@@ -202,6 +239,8 @@ ${relocalisation_sources}
 ${remotemapping_sources}
 ${trackers_sources}
 ${util_sources}
+${visualisation_sources}
+${visualisation_cpu_sources}
 )
 
 SET(headers
@@ -214,11 +253,20 @@ ${relocalisation_headers}
 ${remotemapping_headers}
 ${trackers_headers}
 ${util_headers}
+${visualisation_headers}
+${visualisation_cpu_headers}
+${visualisation_interface_headers}
+${visualisation_shared_headers}
 )
 
 SET(templates
 ${relocalisation_templates}
 )
+
+IF(WITH_CUDA)
+  SET(sources ${sources} ${visualisation_cuda_sources})
+  SET(headers ${headers} ${visualisation_cuda_headers})
+ENDIF()
 
 IF(WITH_OPENCV)
   SET(sources ${sources} ${ocv_sources})
@@ -239,6 +287,11 @@ SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_hea
 SOURCE_GROUP(remotemapping FILES ${remotemapping_sources} ${remotemapping_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
+SOURCE_GROUP(visualisation FILES ${visualisation_sources} ${visualisation_headers})
+SOURCE_GROUP(visualisation\\cpu FILES ${visualisation_cpu_sources} ${visualisation_cpu_headers})
+SOURCE_GROUP(visualisation\\cuda FILES ${visualisation_cuda_sources} ${visualisation_cuda_headers})
+SOURCE_GROUP(visualisation\\interface FILES ${visualisation_interface_sources} ${visualisation_interface_headers})
+SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 
 ##########################################
 # Specify additional include directories #
