@@ -28,8 +28,6 @@ using namespace spaint;
 #include <spaint/selectors/LeapSelector.h>
 #endif
 
-#include <spaint/visualisation/VisualiserFactory.h>
-
 //#################### LOCAL TYPES ####################
 
 /**
