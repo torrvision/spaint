@@ -107,6 +107,9 @@ protected:
   /** The minimum size of cluster to be considered valid. */
   uint32_t m_minClusterSize;
 
+  /** The (maximum) number of relocalisations to output for each call to the relocalise method. */
+  uint32_t m_outputRelocalisationsCount;
+
   /**
    * The class implementing the Preemptive-RANSAC algorithm, used to estimate a pose given a set of keypoints and
    * associated modal clusters.
