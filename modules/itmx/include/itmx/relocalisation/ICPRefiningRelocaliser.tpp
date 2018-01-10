@@ -270,7 +270,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::generate_depth_from_voxels(con
     return;
   }
 
-  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+  if(!renderState) renderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
 
   m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
   m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
