@@ -1,17 +1,17 @@
 /**
- * spaint: DepthVisualiser_Shared.h
+ * itmx: DepthVisualiser_Shared.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_DEPTHVISUALISER_SHARED
-#define H_SPAINT_DEPTHVISUALISER_SHARED
+#ifndef H_ITMX_DEPTHVISUALISER_SHARED
+#define H_ITMX_DEPTHVISUALISER_SHARED
 
 #include <cmath>
 
 #include <ITMLib/Engines/Visualisation/Shared/ITMVisualisationEngine_Shared.h>
 #include <ITMLib/Objects/Scene/ITMRepresentationAccess.h>
 
-namespace spaint {
+namespace itmx {
 
 //#################### SHARED HELPER FUNCTIONS ####################
 

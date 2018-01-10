@@ -1,5 +1,5 @@
 /**
- * spaint: DepthVisualiser_CPU.cpp
+ * itmx: DepthVisualiser_CPU.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -7,7 +7,7 @@
 
 #include "visualisation/shared/DepthVisualiser_Shared.h"
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
