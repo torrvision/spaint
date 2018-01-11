@@ -177,6 +177,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       if(m_chooseBestResult)
       {
         float score = score_result(refinementResult);
+        std::cout << resultIdx << ' ' << score << '\n';
         if(score < bestScore)
         {
           bestScore = score;
@@ -337,19 +338,18 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 #endif
 
   // Determine the average depth difference for valid pixels in the real and synthetic depth images.
-  // FIXME: Ignore pixels with invalid depth.
-  cv::Scalar meanDepthDiff = cv::mean(cvMaskedDepthDiff);
+  cv::Scalar meanDepthDiff = cv::mean(cvMaskedDepthDiff, cvCombinedMask);
 #if DEBUGGING
   std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
 #endif
 
   // Compute the fraction of the synthetic depth image that is valid.
-  float targetValidFraction = static_cast<float>(cv::countNonZero(cvSynthMask == 255)) / (cvSynthMask.size().width * cvSynthMask.size().height);
+  float validFraction = static_cast<float>(cv::countNonZero(cvSynthMask == 255)) / (cvSynthMask.size().width * cvSynthMask.size().height);
 #if DEBUGGING
-  std::cout << "Valid Target Pixels: " << cv::countNonZero(cvSynthMask == 255) << std::endl;
+  std::cout << "Valid Synthetic Depth Pixels: " << cv::countNonZero(cvSynthMask == 255) << std::endl;
 #endif
 
-  return targetValidFraction >= 0.5f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
+  return validFraction >= 0.5f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
 #else
   return 0.0f;
 #endif
