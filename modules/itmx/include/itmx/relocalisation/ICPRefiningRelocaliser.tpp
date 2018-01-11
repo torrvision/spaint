@@ -177,7 +177,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       if(m_chooseBestResult)
       {
         float score = score_result(refinementResult);
-        if(score < bestScore && score < 5.0f) // TEMPORARY
+        if(score < bestScore)
         {
           bestScore = score;
           initialPoses.clear();
