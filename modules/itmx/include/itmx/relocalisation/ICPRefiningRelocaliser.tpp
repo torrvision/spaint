@@ -171,7 +171,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     // Run the tracker to refine the initial pose.
     m_trackingController->Track(m_trackingState.get(), m_view.get());
 
-#if 1
+#if 0
     if(m_chooseBestResult)
     {
       float score = score_result(relocalisationResults[resultIdx]);
@@ -320,41 +320,48 @@ template <typename VoxelType, typename IndexType>
 float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& result) const
 {
 #ifdef WITH_OPENCV
-  // Make an OpenCV copy of the current depth image.
-  const float scaleFactor = 100.0f;
+  // Make an OpenCV wrapper of the current depth image.
   m_view->depth->UpdateHostFromDevice();
-  cv::Mat1b cvRealDepth = OpenCVUtil::make_greyscale_image(m_view->depth->GetData(MEMORYDEVICE_CPU), m_view->depth->noDims.x, m_view->depth->noDims.y, OpenCVUtil::ROW_MAJOR, scaleFactor);
+  cv::Mat cvRealDepth(m_view->depth->noDims.y, m_view->depth->noDims.x, CV_32FC1, m_view->depth->GetData(MEMORYDEVICE_CPU));
 
   // Render a synthetic depth image of the scene from the suggested pose.
   ITMFloatImage_Ptr synthDepth(new ITMFloatImage(m_view->depth->noDims, true, true));
   generate_depth_from_voxels(synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState, DepthVisualiser::DT_ORTHOGRAPHIC);
 
-  // Make an OpenCV copy of the synthetic depth image.
-  cv::Mat1b cvSynthDepth = OpenCVUtil::make_greyscale_image(synthDepth->GetData(MEMORYDEVICE_CPU), synthDepth->noDims.x, synthDepth->noDims.y, OpenCVUtil::ROW_MAJOR, scaleFactor);
+  // Make an OpenCV wrapper of the synthetic depth image.
+  cv::Mat cvSynthDepth(synthDepth->noDims.y, synthDepth->noDims.x, CV_32FC1, synthDepth->GetData(MEMORYDEVICE_CPU));
 
 #if DEBUGGING
   // If we're debugging, show the real and synthetic depth images to the user.
-  cv::imshow("Real Depth", cvRealDepth);
-  cv::imshow("Synthetic Depth", cvSynthDepth);
-  cv::waitKey(1);
+
+  // Note, we need to convert them to unsigned chars for visualization.
+  // We don't use the OpenCV normalize function because we want consistent visualisations for different frames (even though there might be clamping).
+  float scaleFactor = 100.f;
+  cv::Mat cvRealDepthViz, cvSynthDepthViz;
+  cvRealDepth.convertTo(cvRealDepthViz, CV_8U, scaleFactor);
+  cvSynthDepth.convertTo(cvSynthDepthViz, CV_8U, scaleFactor);
+
+  cv::imshow("Real Depth", cvRealDepthViz);
+  cv::imshow("Synthetic Depth", cvSynthDepthViz);
 #endif
 
   // Compute a binary mask showing which pixels are valid in both the real and synthetic depth images.
-  cv::Mat cvRealMask, cvSynthMask;
-  cv::inRange(cvRealDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvRealMask);
-  cv::inRange(cvSynthDepth, cv::Scalar(0,0,0), cv::Scalar(0,0,0), cvSynthMask);
-  cv::bitwise_not(cvRealMask, cvRealMask);
-  cv::bitwise_not(cvSynthMask, cvSynthMask);
+  cv::Mat cvRealMask = cvRealDepth > 0;
+  cv::Mat cvSynthMask = cvSynthDepth > 0;
 
-  cv::Mat cvCombinedMask;
-  cv::bitwise_and(cvRealMask, cvSynthMask, cvCombinedMask);
+  cv::Mat cvCombinedMask = cvRealMask & cvSynthMask;
 
   // Compute the difference between the real and synthetic depth images, and mask it using the combined mask.
   cv::Mat cvDepthDiff, cvMaskedDepthDiff;
   cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
   cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
 #if DEBUGGING
+  // We need to convert the image for visualisation.
+  cv::Mat cvMaskedDepthDiffViz;
+  cvMaskedDepthDiff.convertTo(cvMaskedDepthDiffViz, CV_8U, scaleFactor);
+
   cv::imshow("Masked Depth Difference", cvMaskedDepthDiff);
+  cv::waitKey(1);
 #endif
 
   // Determine the average depth difference for valid pixels in the real and synthetic depth images.
@@ -364,12 +371,12 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 #endif
 
   // Compute the fraction of the synthetic depth image that is valid.
-  float validFraction = static_cast<float>(cv::countNonZero(cvSynthMask == 255)) / (cvSynthMask.size().width * cvSynthMask.size().height);
+  float validFraction = static_cast<float>(cv::countNonZero(cvSynthMask)) / (cvSynthMask.size().area());
 #if DEBUGGING
-  std::cout << "Valid Synthetic Depth Pixels: " << cv::countNonZero(cvSynthMask == 255) << std::endl;
+  std::cout << "Valid Synthetic Depth Pixels: " << cv::countNonZero(cvSynthMask) << std::endl;
 #endif
 
-  return validFraction >= 0.5f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
+  return validFraction >= 0.1f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
 #else
   return 0.0f;
 #endif
