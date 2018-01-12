@@ -113,6 +113,10 @@ std::vector<Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
+  static int frameIdx = -1;
+  ++frameIdx;
+  std::cout << "---\nFrame Index: " << frameIdx << std::endl;
+
   start_timer(m_timerRelocalisation);
 
   // Reset the initial poses.
@@ -167,6 +171,22 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     // Run the tracker to refine the initial pose.
     m_trackingController->Track(m_trackingState.get(), m_view.get());
 
+#if 1
+    if(m_chooseBestResult)
+    {
+      float score = score_result(relocalisationResults[resultIdx]);
+      std::cout << resultIdx << "(I): " << score << '\n';
+      if(score < bestScore)
+      {
+        bestScore = score;
+        initialPoses.clear();
+        initialPoses.push_back(initialPose);
+        refinementResults.clear();
+        refinementResults.push_back(relocalisationResults[resultIdx]);
+      }
+    }
+#endif
+
     // Set up the result.
     if(m_trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
     {
@@ -177,7 +197,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       if(m_chooseBestResult)
       {
         float score = score_result(refinementResult);
-        std::cout << resultIdx << ' ' << score << '\n';
+        std::cout << resultIdx << "(R): " << score << '\n';
         if(score < bestScore)
         {
           bestScore = score;
