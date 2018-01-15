@@ -113,9 +113,11 @@ std::vector<Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
+#if DEBUGGING
   static int frameIdx = -1;
   ++frameIdx;
   std::cout << "---\nFrame Index: " << frameIdx << std::endl;
+#endif
 
   start_timer(m_timerRelocalisation);
 
@@ -197,7 +199,9 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       if(m_chooseBestResult)
       {
         float score = score_result(refinementResult);
+#if DEBUGGING
         std::cout << resultIdx << "(R): " << score << '\n';
+#endif
         if(score < bestScore)
         {
           bestScore = score;
