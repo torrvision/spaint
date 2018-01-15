@@ -38,6 +38,9 @@ class ZedEngine : public InputSource::ImageSourceEngine
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The intrinsic calibration parameters for the camera. */
+  ITMLib::ITMRGBDCalib m_calib;
+
   /** The Zed camera handle. */
   sl::Camera_Ptr m_camera;
 

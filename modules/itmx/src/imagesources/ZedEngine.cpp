@@ -17,36 +17,37 @@ ZedEngine::ZedEngine()
   sl::Camera *camera = new sl::Camera;
 
   // TODO: Comment here.
-  sl::InitParameters params;
-  params.camera_resolution = sl::RESOLUTION_VGA;
-  params.depth_mode = sl::DEPTH_MODE_QUALITY;
-  params.coordinate_units = sl::UNIT_METER;
+  sl::InitParameters initParams;
+  initParams.camera_resolution = sl::RESOLUTION_VGA;
+  initParams.depth_mode = sl::DEPTH_MODE_QUALITY;
+  initParams.coordinate_units = sl::UNIT_METER;
 
   // TODO: Comment here.
-  sl::ERROR_CODE err = camera->open(params);
-  if(err == sl::SUCCESS)
+  sl::ERROR_CODE err = camera->open(initParams);
+  if(err != sl::SUCCESS)
   {
-    // TODO: Comment here.
-    m_camera.reset(camera, destroy_camera);
-
-    // TODO: Comment here.
-    m_colourImage.reset(new sl::Mat(m_camera->getResolution(), sl::MAT_TYPE_8U_C4));
-    m_depthImage.reset(new sl::Mat);
-  }
-  else
-  {
-    // TODO: Comment here.
     delete camera;
-    throw std::runtime_error("Error: Could not initialise Zed camera");
+    return;
   }
+
+  // TODO: Comment here.
+  m_camera.reset(camera, destroy_camera);
+
+  // TODO: Comment here.
+  m_colourImage.reset(new sl::Mat(m_camera->getResolution(), sl::MAT_TYPE_8U_C4));
+  m_depthImage.reset(new sl::Mat);
+
+  // TODO: Comment here.
+  sl::CalibrationParameters calibParams = m_camera->getCameraInformation().calibration_parameters;
+  m_calib.intrinsics_rgb.SetFrom(calibParams.left_cam.fx, calibParams.left_cam.fy, calibParams.left_cam.cx, calibParams.left_cam.cy);
+  m_calib.intrinsics_d = m_calib.intrinsics_rgb;
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 ITMLib::ITMRGBDCalib ZedEngine::getCalib() const
 {
-  // TODO
-  throw 23;
+  return m_calib;
 }
 
 Vector2i ZedEngine::getDepthImageSize() const
@@ -64,16 +65,24 @@ void ZedEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
   if(m_camera->grab(params) == sl::SUCCESS)
   {
     // TODO: Comment here.
-    m_camera->retrieveMeasure(*m_depthImage, sl::MEASURE_DEPTH);
     m_camera->retrieveImage(*m_colourImage, sl::VIEW_LEFT);
+    m_camera->retrieveMeasure(*m_depthImage, sl::MEASURE_DEPTH);
+
+    // TODO: Comment here.
+    unsigned char *dest = reinterpret_cast<unsigned char*>(rgb->GetData(MEMORYDEVICE_CPU));
+    const unsigned char *src = m_colourImage->getPtr<sl::uchar1>();
+    for(size_t i = 0, size = m_colourImage->getWidthBytes() * m_colourImage->getHeight(); i < size; i += 4)
+    {
+      // Convert BGRA to RGBA.
+      dest[i+0] = src[i+2];
+      dest[i+1] = src[i+1];
+      dest[i+2] = src[i+0];
+      dest[i+3] = src[i+3];
+    }
 
     // TODO: Comment here.
     int x;
     x = 23;
-
-    // TODO: Comment here.
-    unsigned char *rgbPtr = reinterpret_cast<unsigned char*>(rgb->GetData(MEMORYDEVICE_CPU));
-    memcpy(rgbPtr, m_colourImage->getPtr<sl::uchar1>(), m_colourImage->getWidthBytes() * m_colourImage->getHeight());
   }
   else throw std::runtime_error("Error: Could not get images from Zed camera");
 }
@@ -97,8 +106,12 @@ bool ZedEngine::hasMoreImages() const
 
 Vector2i ZedEngine::get_image_size() const
 {
-  sl::Resolution imgSize = m_camera->getResolution();
-  return Vector2i(static_cast<int>(imgSize.width), static_cast<int>(imgSize.height));
+  if(m_camera)
+  {
+    sl::Resolution imgSize = m_camera->getResolution();
+    return Vector2i(static_cast<int>(imgSize.width), static_cast<int>(imgSize.height));
+  }
+  else return Vector2i(0,0);
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
