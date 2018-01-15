@@ -69,20 +69,28 @@ void ZedEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
     m_camera->retrieveMeasure(*m_depthImage, sl::MEASURE_DEPTH);
 
     // TODO: Comment here.
-    unsigned char *dest = reinterpret_cast<unsigned char*>(rgb->GetData(MEMORYDEVICE_CPU));
-    const unsigned char *src = m_colourImage->getPtr<sl::uchar1>();
-    for(size_t i = 0, size = m_colourImage->getWidthBytes() * m_colourImage->getHeight(); i < size; i += 4)
     {
-      // Convert BGRA to RGBA.
-      dest[i+0] = src[i+2];
-      dest[i+1] = src[i+1];
-      dest[i+2] = src[i+0];
-      dest[i+3] = src[i+3];
+      unsigned char *dest = reinterpret_cast<unsigned char*>(rgb->GetData(MEMORYDEVICE_CPU));
+      const unsigned char *src = m_colourImage->getPtr<sl::uchar1>();
+      for(size_t i = 0, size = m_colourImage->getWidthBytes() * m_colourImage->getHeight(); i < size; i += 4)
+      {
+        // Convert BGRA to RGBA.
+        dest[i+0] = src[i+2];
+        dest[i+1] = src[i+1];
+        dest[i+2] = src[i+0];
+        dest[i+3] = src[i+3];
+      }
     }
 
     // TODO: Comment here.
-    int x;
-    x = 23;
+    {
+      short *dest = rawDepth->GetData(MEMORYDEVICE_CPU);
+      const float *src = m_depthImage->getPtr<float>();
+      for(size_t i = 0, size = m_depthImage->getWidth() * m_depthImage->getHeight(); i < size; ++i)
+      {
+        dest[i] = (short)(CLAMP(ROUND(src[i] * 1000), 0, std::numeric_limits<short>::max()));
+      }
+    }
   }
   else throw std::runtime_error("Error: Could not get images from Zed camera");
 }
