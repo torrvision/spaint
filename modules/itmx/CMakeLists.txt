@@ -22,6 +22,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
 #############################
 # Specify the project files #
@@ -66,12 +67,14 @@ SET(imagesources_sources
 src/imagesources/AsyncImageSourceEngine.cpp
 src/imagesources/RemoteImageSourceEngine.cpp
 src/imagesources/SingleRGBDImagePipe.cpp
+src/imagesources/ZedEngine.cpp
 )
 
 SET(imagesources_headers
 include/itmx/imagesources/AsyncImageSourceEngine.h
 include/itmx/imagesources/RemoteImageSourceEngine.h
 include/itmx/imagesources/SingleRGBDImagePipe.h
+include/itmx/imagesources/ZedEngine.h
 )
 
 ##
