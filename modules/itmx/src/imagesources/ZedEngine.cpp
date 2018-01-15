@@ -19,8 +19,11 @@ ZedEngine::ZedEngine()
   // TODO: Comment here.
   sl::InitParameters initParams;
   initParams.camera_resolution = sl::RESOLUTION_VGA;
-  initParams.depth_mode = sl::DEPTH_MODE_QUALITY;
   initParams.coordinate_units = sl::UNIT_METER;
+  initParams.depth_mode = sl::DEPTH_MODE_QUALITY;
+
+  initParams.sdk_gpu_id = 0;
+  cuCtxGetCurrent(&initParams.sdk_cuda_ctx);
 
   // TODO: Comment here.
   sl::ERROR_CODE err = camera->open(initParams);
