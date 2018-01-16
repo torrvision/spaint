@@ -33,7 +33,7 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${ZED_INCLUDE_DIRS})
+# None needed
 
 ##########################################
 # Specify the target and where to put it #
