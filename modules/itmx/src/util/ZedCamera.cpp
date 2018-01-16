@@ -70,21 +70,6 @@ Vector2i ZedCamera::get_depth_image_size() const
   return get_image_size();
 }
 
-bool ZedCamera::grab_frame()
-{
-  // TODO: Comment here.
-  sl::RuntimeParameters params;
-  params.sensing_mode = sl::SENSING_MODE_STANDARD;
-
-  // TODO: Comment here.
-  if(m_camera->grab(params) == sl::SUCCESS)
-  {
-    m_newImagesNeeded = m_newPoseNeeded = false;
-    return true;
-  }
-  else return false;
-}
-
 void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
 {
   // TODO: Comment here.
@@ -191,6 +176,21 @@ Vector2i ZedCamera::get_image_size() const
     return Vector2i(static_cast<int>(imgSize.width), static_cast<int>(imgSize.height));
   }
   else return Vector2i(0,0);
+}
+
+bool ZedCamera::grab_frame()
+{
+  // TODO: Comment here.
+  sl::RuntimeParameters params;
+  params.sensing_mode = sl::SENSING_MODE_STANDARD;
+
+  // TODO: Comment here.
+  if(m_camera->grab(params) == sl::SUCCESS)
+  {
+    m_newImagesNeeded = m_newPoseNeeded = false;
+    return true;
+  }
+  else return false;
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################

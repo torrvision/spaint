@@ -35,31 +35,31 @@ typedef boost::shared_ptr<const Camera> Camera_CPtr;
 namespace itmx {
 
 /**
- * \brief An instance of this class can be used to get RGB-D images and poses from a Zed camera.
+ * \brief An instance of this class can be used to get RGB-D images and camera poses from a Zed camera.
  */
 class ZedCamera
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The intrinsic calibration parameters for the camera. */
+  /** The calibration parameters for the camera. */
   ITMLib::ITMRGBDCalib m_calib;
 
   /** The Zed camera handle. */
   sl::Camera_Ptr m_camera;
 
-  /** A temporary image in which to store the current colour input. */
+  /** The most recent colour image retrieved from the Zed camera. */
   boost::shared_ptr<sl::Mat> m_colourImage;
 
-  /** A temporary image in which to store the current depth input. */
+  /** The most recent depth image retrieved from the Zed camera. */
   boost::shared_ptr<sl::Mat> m_depthImage;
 
-  /** TODO */
+  /** Whether or not the next attempt to get RGB-D images from the camera should trigger a grab. */
   bool m_newImagesNeeded;
 
-  /** TODO */
+  /** Whether or not the next attempt to get the camera pose should trigger a grab. */
   bool m_newPoseNeeded;
 
-  /** TODO */
+  /** The most recent tracking state retrieved from the Zed camera. */
   boost::shared_ptr<std::pair<ORUtils::SE3Pose,ITMLib::ITMTrackingState::TrackingResult> > m_trackingState;
 
   //#################### SINGLETON IMPLEMENTATION ####################
@@ -80,37 +80,52 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the calibration parameters for the Zed camera.
+   *
+   * \return  The calibration parameters for the Zed camera.
    */
   const ITMLib::ITMRGBDCalib& get_calib() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the size of the depth images being produced by the Zed camera.
+   *
+   * \return  The size of the depth images being produced by the Zed camera.
    */
   Vector2i get_depth_image_size() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the next RGB-D pair from the Zed camera.
+   *
+   * \param rgb   An image into which to copy the next RGB image from the Zed camera.
+   * \param depth An image into which to copy the next depth image from the Zed camera.
    */
   void get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
 
   /**
-   * \brief TODO
+   * \brief Gets the size of the colour images being produced by the Zed camera.
+   *
+   * \return  The size of the colour images being produced by the Zed camera.
    */
   Vector2i get_rgb_image_size() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the next tracking state from the Zed camera.
+   *
+   * \param trackingState A location into which to copy the next tracking state from the Zed camera.
    */
   void get_tracking_state(ITMLib::ITMTrackingState *trackingState);
 
   /**
-   * \brief TODO
+   * \brief Gets whether or not the Zed camera is ready to yield an RGB-D frame.
+   *
+   * \return  true, if the Zed camera is ready to yield an RGB-D frame, or false otherwise.
    */
   bool has_images_now() const;
 
   /**
-   * \brief TODO
+   * \brief Gets whether or not the Zed camera may still have more RGB-D frames to yield.
+   *
+   * \return  true, if the Zed camera may still have more RGB-D frames to yield, or false otherwise.
    */
   bool has_more_images() const;
 
@@ -124,7 +139,9 @@ private:
   Vector2i get_image_size() const;
 
   /**
-   * \brief TODO
+   * \brief Attempts to grab the next frame of data from the Zed camera.
+   *
+   * \return  true, if a frame was successfully grabbed, or false otherwise.
    */
   bool grab_frame();
 
