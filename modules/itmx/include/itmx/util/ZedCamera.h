@@ -1,10 +1,10 @@
 /**
- * itmx: ZedEngine.h
+ * itmx: ZedCamera.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#ifndef H_ITMX_ZEDENGINE
-#define H_ITMX_ZEDENGINE
+#ifndef H_ITMX_ZEDCAMERA
+#define H_ITMX_ZEDCAMERA
 
 #ifdef _MSC_VER
   // Suppress some VC++ warnings that are produced when including the StereoLabs headers.
@@ -18,7 +18,10 @@
   #pragma warning(default:4056)
 #endif
 
-#include <InputSource/ImageSourceEngine.h>
+#include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
+#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
+
+#include <ORUtils/SE3Pose.h>
 
 #include "../base/ITMImagePtrTypes.h"
 
@@ -32,9 +35,9 @@ typedef boost::shared_ptr<const Camera> Camera_CPtr;
 namespace itmx {
 
 /**
- * \brief An instance of this class can be used to yield RGB-D images that have been obtained from a Zed camera.
+ * \brief An instance of this class can be used to get RGB-D images and poses from a Zed camera.
  */
-class ZedEngine : public InputSource::ImageSourceEngine
+class ZedCamera
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -44,44 +47,63 @@ private:
   /** The Zed camera handle. */
   sl::Camera_Ptr m_camera;
 
-  /** A temporary image in which to store the current coloru input. */
+  /** A temporary image in which to store the current colour input. */
   boost::shared_ptr<sl::Mat> m_colourImage;
 
   /** A temporary image in which to store the current depth input. */
   boost::shared_ptr<sl::Mat> m_depthImage;
 
-  //#################### CONSTRUCTORS ####################
+  //#################### SINGLETON IMPLEMENTATION ####################
+private:
+  /**
+   * \brief Constructs a ZedCamera instance.
+   */
+  ZedCamera();
+
 public:
   /**
-   * \brief Constructs a Zed engine.
+   * \brief Gets the singleton instance.
+   *
+   * \return  The singleton instance.
    */
-  ZedEngine();
-
-  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
-private:
-  // Deliberately private and unimplemented.
-  ZedEngine(const ZedEngine&);
-  ZedEngine& operator=(const ZedEngine&);
+  static boost::shared_ptr<ZedCamera>& instance();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override */
-  virtual ITMLib::ITMRGBDCalib getCalib() const;
+  /**
+   * \brief TODO
+   */
+  const ITMLib::ITMRGBDCalib& get_calib() const;
 
-  /** Override */
-  virtual Vector2i getDepthImageSize() const;
+  /**
+   * \brief TODO
+   */
+  Vector2i get_depth_image_size() const;
 
-  /** Override */
-  virtual void getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
+  /**
+   * \brief TODO
+   */
+  void get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
 
-  /** Override */
-  virtual Vector2i getRGBImageSize() const;
+  /**
+   * \brief TODO
+   */
+  Vector2i get_rgb_image_size() const;
 
-  /** Override */
-  virtual bool hasImagesNow() const;
+  /**
+   * \brief TODO
+   */
+  void get_tracking_state(ITMLib::ITMTrackingState *trackingState);
 
-  /** Override */
-  virtual bool hasMoreImages() const;
+  /**
+   * \brief TODO
+   */
+  bool has_images_now() const;
+
+  /**
+   * \brief TODO
+   */
+  bool has_more_images() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -101,6 +123,11 @@ private:
    */
   static void destroy_camera(sl::Camera *camera);
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<ZedCamera> ZedCamera_Ptr;
+typedef boost::shared_ptr<const ZedCamera> ZedCamera_CPtr;
 
 }
 

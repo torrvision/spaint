@@ -37,7 +37,7 @@
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #ifdef WITH_ZED
-#include <itmx/imagesources/ZedEngine.h>
+#include <itmx/imagesources/ZedImageSourceEngine.h>
 #endif
 
 #include <tvgutil/filesystem/PathFinder.h>
@@ -210,7 +210,7 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
   if(cameraSubengine == NULL)
   {
     std::cout << "[spaint] Probing Zed camera\n";
-    cameraSubengine = check_camera_subengine(new ZedEngine);
+    cameraSubengine = check_camera_subengine(new ZedImageSourceEngine(ZedCamera::instance()));
   }
 #endif
 

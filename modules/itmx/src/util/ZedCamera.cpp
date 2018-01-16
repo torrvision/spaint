@@ -1,17 +1,18 @@
 /**
- * itmx: ZedEngine.cpp
+ * itmx: ZedCamera.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#include "imagesources/ZedEngine.h"
+#include "util/ZedCamera.h"
+using namespace ITMLib;
 
 #include <stdexcept>
 
 namespace itmx {
 
-//#################### CONSTRUCTORS ####################
+//#################### SINGLETON IMPLEMENTATION ####################
 
-ZedEngine::ZedEngine()
+ZedCamera::ZedCamera()
 {
   // TODO: Comment here.
   sl::Camera *camera = new sl::Camera;
@@ -30,7 +31,7 @@ ZedEngine::ZedEngine()
   if(err != sl::SUCCESS)
   {
     delete camera;
-    return;
+    throw std::runtime_error("Error: Could not open Zed camera");
   }
 
   // TODO: Comment here.
@@ -46,19 +47,25 @@ ZedEngine::ZedEngine()
   m_calib.intrinsics_d = m_calib.intrinsics_rgb;
 }
 
+ZedCamera_Ptr& ZedCamera::instance()
+{
+  static ZedCamera_Ptr s_instance(new ZedCamera);
+  return s_instance;
+}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-ITMLib::ITMRGBDCalib ZedEngine::getCalib() const
+const ITMRGBDCalib& ZedCamera::get_calib() const
 {
   return m_calib;
 }
 
-Vector2i ZedEngine::getDepthImageSize() const
+Vector2i ZedCamera::get_depth_image_size() const
 {
   return get_image_size();
 }
 
-void ZedEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
 {
   // TODO: Comment here.
   sl::RuntimeParameters params;
@@ -97,24 +104,29 @@ void ZedEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
   }
 }
 
-Vector2i ZedEngine::getRGBImageSize() const
+Vector2i ZedCamera::get_rgb_image_size() const
 {
   return get_image_size();
 }
 
-bool ZedEngine::hasImagesNow() const
+void ZedCamera::get_tracking_state(ITMTrackingState *trackingState)
+{
+  trackingState->trackerResult = ITMTrackingState::TRACKING_FAILED;
+}
+
+bool ZedCamera::has_images_now() const
 {
   return m_camera->isOpened();
 }
 
-bool ZedEngine::hasMoreImages() const
+bool ZedCamera::has_more_images() const
 {
   return m_camera->isOpened();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-Vector2i ZedEngine::get_image_size() const
+Vector2i ZedCamera::get_image_size() const
 {
   if(m_camera)
   {
@@ -126,7 +138,7 @@ Vector2i ZedEngine::get_image_size() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void ZedEngine::destroy_camera(sl::Camera *camera)
+void ZedCamera::destroy_camera(sl::Camera *camera)
 {
   if(camera)
   {

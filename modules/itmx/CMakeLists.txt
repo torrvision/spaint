@@ -67,15 +67,18 @@ SET(imagesources_sources
 src/imagesources/AsyncImageSourceEngine.cpp
 src/imagesources/RemoteImageSourceEngine.cpp
 src/imagesources/SingleRGBDImagePipe.cpp
-src/imagesources/ZedEngine.cpp
 )
 
 SET(imagesources_headers
 include/itmx/imagesources/AsyncImageSourceEngine.h
 include/itmx/imagesources/RemoteImageSourceEngine.h
 include/itmx/imagesources/SingleRGBDImagePipe.h
-include/itmx/imagesources/ZedEngine.h
 )
+
+IF(WITH_ZED)
+  SET(imagesources_sources ${imagesources_sources} src/imagesources/ZedImageSourceEngine.cpp)
+  SET(imagesources_headers ${imagesources_headers} include/itmx/imagesources/ZedImageSourceEngine.h)
+ENDIF()
 
 ##
 SET(ocv_sources
@@ -177,6 +180,11 @@ IF(WITH_VICON)
   )
 ENDIF()
 
+IF(WITH_ZED)
+  SET(trackers_sources ${trackers_sources} src/trackers/ZedTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/itmx/trackers/ZedTracker.h)
+ENDIF()
+
 ##
 SET(util_sources
 src/util/CameraPoseConverter.cpp
@@ -188,6 +196,11 @@ include/itmx/util/CameraPoseConverter.h
 include/itmx/util/ColourConversion_Shared.h
 include/itmx/util/RGBDUtil.h
 )
+
+IF(WITH_ZED)
+  SET(util_sources ${util_sources} src/util/ZedCamera.cpp)
+  SET(util_headers ${util_headers} include/itmx/util/ZedCamera.h)
+ENDIF()
 
 ##
 SET(visualisation_sources
