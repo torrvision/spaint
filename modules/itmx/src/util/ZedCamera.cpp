@@ -151,14 +151,14 @@ void ZedCamera::get_tracking_state(ITMTrackingState *trackingState)
     trackingState->pose_d->SetInvM(M);
     trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
   }
-  else trackingState->trackerResult = ITMTrackingState::TRACKING_POOR;
+  else trackingState->trackerResult = ITMTrackingState::TRACKING_FAILED;
 
   m_newPoseNeeded = true;
 }
 
 bool ZedCamera::has_images_now() const
 {
-  return m_camera->isOpened();
+  return !m_newImagesNeeded || grab_frame();
 }
 
 bool ZedCamera::has_more_images() const
@@ -178,7 +178,7 @@ Vector2i ZedCamera::get_image_size() const
   else return Vector2i(0,0);
 }
 
-bool ZedCamera::grab_frame()
+bool ZedCamera::grab_frame() const
 {
   // TODO: Comment here.
   sl::RuntimeParameters params;

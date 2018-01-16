@@ -54,10 +54,10 @@ private:
   boost::shared_ptr<sl::Mat> m_depthImage;
 
   /** Whether or not the next attempt to get RGB-D images from the camera should trigger a grab. */
-  bool m_newImagesNeeded;
+  mutable bool m_newImagesNeeded;
 
   /** Whether or not the next attempt to get the camera pose should trigger a grab. */
-  bool m_newPoseNeeded;
+  mutable bool m_newPoseNeeded;
 
   /** The most recent tracking state retrieved from the Zed camera. */
   boost::shared_ptr<std::pair<ORUtils::SE3Pose,ITMLib::ITMTrackingState::TrackingResult> > m_trackingState;
@@ -143,7 +143,7 @@ private:
    *
    * \return  true, if a frame was successfully grabbed, or false otherwise.
    */
-  bool grab_frame();
+  bool grab_frame() const;
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
