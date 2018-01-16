@@ -13,6 +13,7 @@ namespace itmx {
 //#################### SINGLETON IMPLEMENTATION ####################
 
 ZedCamera::ZedCamera()
+: m_newImagesNeeded(true), m_newPoseNeeded(true)
 {
   // TODO: Comment here.
   sl::Camera *camera = new sl::Camera;
@@ -20,6 +21,7 @@ ZedCamera::ZedCamera()
   // TODO: Comment here.
   sl::InitParameters initParams;
   initParams.camera_resolution = sl::RESOLUTION_VGA;
+  initParams.coordinate_system = sl::COORDINATE_SYSTEM_RIGHT_HANDED_Z_UP;
   initParams.coordinate_units = sl::UNIT_METER;
   initParams.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
 
@@ -45,6 +47,9 @@ ZedCamera::ZedCamera()
   sl::CalibrationParameters calibParams = m_camera->getCameraInformation().calibration_parameters;
   m_calib.intrinsics_rgb.SetFrom(calibParams.left_cam.fx, calibParams.left_cam.fy, calibParams.left_cam.cx, calibParams.left_cam.cy);
   m_calib.intrinsics_d = m_calib.intrinsics_rgb;
+
+  sl::TrackingParameters trackingParams;
+  m_camera->enableTracking(trackingParams);
 }
 
 ZedCamera_Ptr& ZedCamera::instance()
@@ -65,7 +70,7 @@ Vector2i ZedCamera::get_depth_image_size() const
   return get_image_size();
 }
 
-void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+bool ZedCamera::grab_frame()
 {
   // TODO: Comment here.
   sl::RuntimeParameters params;
@@ -74,34 +79,50 @@ void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
   // TODO: Comment here.
   if(m_camera->grab(params) == sl::SUCCESS)
   {
-    // TODO: Comment here.
-    m_camera->retrieveImage(*m_colourImage, sl::VIEW_LEFT);
-    m_camera->retrieveMeasure(*m_depthImage, sl::MEASURE_DEPTH);
+    m_newImagesNeeded = m_newPoseNeeded = false;
+    return true;
+  }
+  else return false;
+}
 
-    // TODO: Comment here.
-    {
-      unsigned char *dest = reinterpret_cast<unsigned char*>(rgb->GetData(MEMORYDEVICE_CPU));
-      const unsigned char *src = m_colourImage->getPtr<sl::uchar1>();
-      for(size_t i = 0, size = m_colourImage->getWidthBytes() * m_colourImage->getHeight(); i < size; i += 4)
-      {
-        // Convert BGRA to RGBA.
-        dest[i+0] = src[i+2];
-        dest[i+1] = src[i+1];
-        dest[i+2] = src[i+0];
-        dest[i+3] = src[i+3];
-      }
-    }
+void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+{
+  // TODO: Comment here.
+  if(m_newImagesNeeded)
+  {
+    bool succeeded = grab_frame();
+    if(!succeeded) return;
+  }
 
-    // TODO: Comment here.
+  // TODO: Comment here.
+  m_camera->retrieveImage(*m_colourImage, sl::VIEW_LEFT);
+  m_camera->retrieveMeasure(*m_depthImage, sl::MEASURE_DEPTH);
+
+  // TODO: Comment here.
+  {
+    unsigned char *dest = reinterpret_cast<unsigned char*>(rgb->GetData(MEMORYDEVICE_CPU));
+    const unsigned char *src = m_colourImage->getPtr<sl::uchar1>();
+    for(size_t i = 0, size = m_colourImage->getWidthBytes() * m_colourImage->getHeight(); i < size; i += 4)
     {
-      short *dest = rawDepth->GetData(MEMORYDEVICE_CPU);
-      const float *src = m_depthImage->getPtr<float>();
-      for(size_t i = 0, size = m_depthImage->getWidth() * m_depthImage->getHeight(); i < size; ++i)
-      {
-        dest[i] = (short)(CLAMP(ROUND(src[i] / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max()));
-      }
+      // Convert BGRA to RGBA.
+      dest[i+0] = src[i+2];
+      dest[i+1] = src[i+1];
+      dest[i+2] = src[i+0];
+      dest[i+3] = src[i+3];
     }
   }
+
+  // TODO: Comment here.
+  {
+    short *dest = rawDepth->GetData(MEMORYDEVICE_CPU);
+    const float *src = m_depthImage->getPtr<float>();
+    for(size_t i = 0, size = m_depthImage->getWidth() * m_depthImage->getHeight(); i < size; ++i)
+    {
+      dest[i] = (short)(CLAMP(ROUND(src[i] / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max()));
+    }
+  }
+
+  m_newImagesNeeded = true;
 }
 
 Vector2i ZedCamera::get_rgb_image_size() const
@@ -111,7 +132,43 @@ Vector2i ZedCamera::get_rgb_image_size() const
 
 void ZedCamera::get_tracking_state(ITMTrackingState *trackingState)
 {
-  trackingState->trackerResult = ITMTrackingState::TRACKING_FAILED;
+  // TODO: Comment here.
+  if(m_newPoseNeeded)
+  {
+    bool succeeded = grab_frame();
+    if(!succeeded) return;
+  }
+
+  sl::Pose pose;
+  sl::TRACKING_STATE state = m_camera->getPosition(pose, sl::REFERENCE_FRAME_WORLD);
+
+  sl::Rotation& R = pose.getRotation();
+  sl::Translation& t = pose.getTranslation();
+
+  if(state == sl::TRACKING_STATE_OK)
+  {
+    Matrix4f M;
+    M(0,0) = R(0,0); M(1,0) = R(0,1); M(2,0) = R(0,2); M(3,0) = t.x;
+    M(0,1) = R(1,0); M(1,1) = R(1,1); M(2,1) = R(1,2); M(3,1) = t.y;
+    M(0,2) = R(2,0); M(1,2) = R(2,1); M(2,2) = R(2,2); M(3,2) = t.z;
+    M(0,3) = 0.0f;   M(1,3) = 0.0f;   M(2,3) = 0.0f;   M(3,3) = 1.0f;
+
+    Matrix4f X;
+    X(0,0) = 1.0f; X(1,0) = 0.0f; X(2,0) = 0.0f;  X(3,0) = 0.0f;
+    X(0,1) = 0.0f; X(1,1) = 0.0f; X(2,1) = 1.0f; X(3,1) = 0.0f;
+    X(0,2) = 0.0f; X(1,2) = -1.0f; X(2,2) = 0.0f;  X(3,2) = 0.0f;
+    X(0,3) = 0.0f; X(1,3) = 0.0f; X(2,3) = 0.0f;  X(3,3) = 1.0f;
+
+    M = M * X;
+
+    std::cout << M << std::endl;
+
+    trackingState->pose_d->SetInvM(M);
+    trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
+  }
+  else trackingState->trackerResult = ITMTrackingState::TRACKING_POOR;
+
+  m_newPoseNeeded = true;
 }
 
 bool ZedCamera::has_images_now() const

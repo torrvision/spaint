@@ -53,6 +53,15 @@ private:
   /** A temporary image in which to store the current depth input. */
   boost::shared_ptr<sl::Mat> m_depthImage;
 
+  /** TODO */
+  bool m_newImagesNeeded;
+
+  /** TODO */
+  bool m_newPoseNeeded;
+
+  /** TODO */
+  boost::shared_ptr<std::pair<ORUtils::SE3Pose,ITMLib::ITMTrackingState::TrackingResult> > m_trackingState;
+
   //#################### SINGLETON IMPLEMENTATION ####################
 private:
   /**
@@ -113,6 +122,11 @@ private:
    * \return  The size of the images being produced by the Zed camera.
    */
   Vector2i get_image_size() const;
+
+  /**
+   * \brief TODO
+   */
+  bool grab_frame();
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
