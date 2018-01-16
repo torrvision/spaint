@@ -20,7 +20,7 @@ ZedEngine::ZedEngine()
   sl::InitParameters initParams;
   initParams.camera_resolution = sl::RESOLUTION_VGA;
   initParams.coordinate_units = sl::UNIT_METER;
-  initParams.depth_mode = sl::DEPTH_MODE_QUALITY;
+  initParams.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
 
   initParams.sdk_gpu_id = 0;
   cuCtxGetCurrent(&initParams.sdk_cuda_ctx);
@@ -95,7 +95,6 @@ void ZedEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
       }
     }
   }
-  else throw std::runtime_error("Error: Could not get images from Zed camera");
 }
 
 Vector2i ZedEngine::getRGBImageSize() const
