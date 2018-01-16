@@ -44,9 +44,6 @@ public:
 
   /** Override */
   virtual void TrackCamera(ITMLib::ITMTrackingState *trackingState, const ITMLib::ITMView *view);
-
-  /** Override */
-  virtual void UpdateInitialPose(ITMLib::ITMTrackingState *trackingState);
 };
 
 }

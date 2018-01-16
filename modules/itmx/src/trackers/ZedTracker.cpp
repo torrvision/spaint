@@ -36,9 +36,4 @@ void ZedTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *vie
   m_camera->get_tracking_state(trackingState);
 }
 
-void ZedTracker::UpdateInitialPose(ITMTrackingState *trackingState)
-{
-  //m_camera->get_tracking_state(trackingState);
-}
-
 }
