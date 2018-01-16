@@ -66,8 +66,10 @@ private:
 private:
   /**
    * \brief Constructs a ZedCamera instance.
+   *
+   * \param The ID of the GPU that the Zed SDK should use for CUDA.
    */
-  ZedCamera();
+  explicit ZedCamera(int gpuID = 0);
 
 public:
   /**

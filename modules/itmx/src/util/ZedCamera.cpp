@@ -12,23 +12,22 @@ namespace itmx {
 
 //#################### SINGLETON IMPLEMENTATION ####################
 
-ZedCamera::ZedCamera()
+ZedCamera::ZedCamera(int gpuID)
 : m_newImagesNeeded(true), m_newPoseNeeded(true)
 {
-  // TODO: Comment here.
+  // Construct the Zed camera.
   sl::Camera *camera = new sl::Camera;
 
-  // TODO: Comment here.
+  // Set up the initialisation parameters for the camera.
   sl::InitParameters initParams;
   initParams.camera_resolution = sl::RESOLUTION_VGA;
   initParams.coordinate_system = sl::COORDINATE_SYSTEM_RIGHT_HANDED_Z_UP;
   initParams.coordinate_units = sl::UNIT_METER;
   initParams.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-
-  initParams.sdk_gpu_id = 0;
   cuCtxGetCurrent(&initParams.sdk_cuda_ctx);
+  initParams.sdk_gpu_id = gpuID;
 
-  // TODO: Comment here.
+  // Try to open the camera. If we fail, throw.
   sl::ERROR_CODE err = camera->open(initParams);
   if(err != sl::SUCCESS)
   {
@@ -36,18 +35,19 @@ ZedCamera::ZedCamera()
     throw std::runtime_error("Error: Could not open Zed camera");
   }
 
-  // TODO: Comment here.
+  // Save the camera pointer and ensure that the camera will eventually be closed and deleted correctly.
   m_camera.reset(camera, destroy_camera);
 
-  // TODO: Comment here.
+  // Make the internal images into which to store images retrieved from the camera.
   m_colourImage.reset(new sl::Mat(m_camera->getResolution(), sl::MAT_TYPE_8U_C4));
   m_depthImage.reset(new sl::Mat);
 
-  // TODO: Comment here.
+  // Retrieve the camera calibration parameters.
   sl::CalibrationParameters calibParams = m_camera->getCameraInformation().calibration_parameters;
   m_calib.intrinsics_rgb.SetFrom(calibParams.left_cam.fx, calibParams.left_cam.fy, calibParams.left_cam.cx, calibParams.left_cam.cy);
   m_calib.intrinsics_d = m_calib.intrinsics_rgb;
 
+  // Enable tracking.
   sl::TrackingParameters trackingParams;
   m_camera->enableTracking(trackingParams);
 }
@@ -72,24 +72,23 @@ Vector2i ZedCamera::get_depth_image_size() const
 
 void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
 {
-  // TODO: Comment here.
+  // If needed, try to grab the next frame.
   if(m_newImagesNeeded)
   {
     bool succeeded = grab_frame();
     if(!succeeded) return;
   }
 
-  // TODO: Comment here.
+  // Retrieve the colour and depth images from the camera and store them in the internal images.
   m_camera->retrieveImage(*m_colourImage, sl::VIEW_LEFT);
   m_camera->retrieveMeasure(*m_depthImage, sl::MEASURE_DEPTH);
 
-  // TODO: Comment here.
+  // Copy the internal colour image into the output colour image, converting its format from BGRA to RGBA in the process.
   {
     unsigned char *dest = reinterpret_cast<unsigned char*>(rgb->GetData(MEMORYDEVICE_CPU));
     const unsigned char *src = m_colourImage->getPtr<sl::uchar1>();
     for(size_t i = 0, size = m_colourImage->getWidthBytes() * m_colourImage->getHeight(); i < size; i += 4)
     {
-      // Convert BGRA to RGBA.
       dest[i+0] = src[i+2];
       dest[i+1] = src[i+1];
       dest[i+2] = src[i+0];
@@ -97,7 +96,7 @@ void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
     }
   }
 
-  // TODO: Comment here.
+  // Copy the internal depth image into the output depth image, converting its format from float to short in the process.
   {
     short *dest = rawDepth->GetData(MEMORYDEVICE_CPU);
     const float *src = m_depthImage->getPtr<float>();
@@ -117,41 +116,50 @@ Vector2i ZedCamera::get_rgb_image_size() const
 
 void ZedCamera::get_tracking_state(ITMTrackingState *trackingState)
 {
-  // TODO: Comment here.
+  // If needed, try to grab the next frame.
   if(m_newPoseNeeded)
   {
     bool succeeded = grab_frame();
     if(!succeeded) return;
   }
 
+  // Retrieve the Zed tracking state from the camera.
   sl::Pose pose;
   sl::TRACKING_STATE state = m_camera->getPosition(pose, sl::REFERENCE_FRAME_WORLD);
-
   sl::Rotation R = pose.getRotation();
   sl::Translation t = pose.getTranslation();
 
+  // If tracking is currently succeeding, update the camera pose accordingly and report successful tracking;
+  // otherwise, leave the camera pose alone and report that the tracking has failed.
   if(state == sl::TRACKING_STATE_OK)
   {
+    // Make a version of the pose matrix in the Zed coordinate system (right-handed, with z up).
     Matrix4f M;
     M(0,0) = R(0,0); M(1,0) = R(0,1); M(2,0) = R(0,2); M(3,0) = t.x;
     M(0,1) = R(1,0); M(1,1) = R(1,1); M(2,1) = R(1,2); M(3,1) = t.y;
     M(0,2) = R(2,0); M(1,2) = R(2,1); M(2,2) = R(2,2); M(3,2) = t.z;
     M(0,3) = 0.0f;   M(1,3) = 0.0f;   M(2,3) = 0.0f;   M(3,3) = 1.0f;
 
+    // Map it to the InfiniTAM coordinate system (right-handed, with z forwards).
     Matrix4f X;
-    X(0,0) = 1.0f; X(1,0) = 0.0f; X(2,0) = 0.0f;  X(3,0) = 0.0f;
-    X(0,1) = 0.0f; X(1,1) = 0.0f; X(2,1) = 1.0f; X(3,1) = 0.0f;
-    X(0,2) = 0.0f; X(1,2) = -1.0f; X(2,2) = 0.0f;  X(3,2) = 0.0f;
-    X(0,3) = 0.0f; X(1,3) = 0.0f; X(2,3) = 0.0f;  X(3,3) = 1.0f;
+    X(0,0) = 1.0f; X(1,0) = 0.0f;  X(2,0) = 0.0f; X(3,0) = 0.0f;
+    X(0,1) = 0.0f; X(1,1) = 0.0f;  X(2,1) = 1.0f; X(3,1) = 0.0f;
+    X(0,2) = 0.0f; X(1,2) = -1.0f; X(2,2) = 0.0f; X(3,2) = 0.0f;
+    X(0,3) = 0.0f; X(1,3) = 0.0f;  X(2,3) = 0.0f; X(3,3) = 1.0f;
 
-    M = M * X;
+    Matrix4f Xinv;
+    X.inv(Xinv);
 
-    std::cout << M << std::endl;
+    M = Xinv * M * X;
 
+    // Update the InfiniTAM tracking state.
     trackingState->pose_d->SetInvM(M);
     trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
   }
-  else trackingState->trackerResult = ITMTrackingState::TRACKING_FAILED;
+  else
+  {
+    trackingState->trackerResult = ITMTrackingState::TRACKING_FAILED;
+  }
 
   m_newPoseNeeded = true;
 }
@@ -180,11 +188,11 @@ Vector2i ZedCamera::get_image_size() const
 
 bool ZedCamera::grab_frame() const
 {
-  // TODO: Comment here.
+  // Set the sensing mode.
   sl::RuntimeParameters params;
   params.sensing_mode = sl::SENSING_MODE_STANDARD;
 
-  // TODO: Comment here.
+  // Attempt to grab the next frame.
   if(m_camera->grab(params) == sl::SUCCESS)
   {
     m_newImagesNeeded = m_newPoseNeeded = false;
