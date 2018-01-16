@@ -142,8 +142,8 @@ void ZedCamera::get_tracking_state(ITMTrackingState *trackingState)
   sl::Pose pose;
   sl::TRACKING_STATE state = m_camera->getPosition(pose, sl::REFERENCE_FRAME_WORLD);
 
-  sl::Rotation& R = pose.getRotation();
-  sl::Translation& t = pose.getTranslation();
+  sl::Rotation R = pose.getRotation();
+  sl::Translation t = pose.getTranslation();
 
   if(state == sl::TRACKING_STATE_OK)
   {
