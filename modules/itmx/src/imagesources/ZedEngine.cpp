@@ -91,7 +91,7 @@ void ZedEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
       const float *src = m_depthImage->getPtr<float>();
       for(size_t i = 0, size = m_depthImage->getWidth() * m_depthImage->getHeight(); i < size; ++i)
       {
-        dest[i] = (short)(CLAMP(ROUND(src[i] * 1000), 0, std::numeric_limits<short>::max()));
+        dest[i] = (short)(CLAMP(ROUND(src[i] / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max()));
       }
     }
   }
