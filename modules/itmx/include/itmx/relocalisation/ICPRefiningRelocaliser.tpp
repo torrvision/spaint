@@ -9,7 +9,6 @@
 #include <stdexcept>
 
 #include <ITMLib/Core/ITMTrackingController.h>
-#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
@@ -20,6 +19,7 @@
 #include "../geometry/GeometryUtil.h"
 #include "../persistence/PosePersister.h"
 #include "../util/CameraPoseConverter.h"
+#include "../visualisation/DepthVisualisationUtil.tpp"
 #include "../visualisation/DepthVisualiserFactory.h"
 
 #ifdef WITH_OPENCV
@@ -286,31 +286,6 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::update()
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                                             const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
-{
-  if(!scene)
-  {
-    output->Clear();
-    return;
-  }
-
-  if(!renderState) renderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
-
-  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
-  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
-  m_visualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
-
-  const rigging::SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
-  m_depthVisualiser->render_depth(
-    depthType, GeometryUtil::to_itm(camera.p()), GeometryUtil::to_itm(camera.n()),
-    renderState.get(), m_settings->sceneParams.voxelSize, -1.0f, output
-  );
-
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
-}
-
-template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const
 {
   if(!m_savePoses) return;
@@ -330,7 +305,10 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 
   // Render a synthetic depth image of the scene from the suggested pose.
   ITMFloatImage_Ptr synthDepth(new ITMFloatImage(m_view->depth->noDims, true, true));
-  generate_depth_from_voxels(synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState, DepthVisualiser::DT_ORTHOGRAPHIC);
+  DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
+    synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState,
+    DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
+  );
 
   // Make an OpenCV wrapper of the synthetic depth image.
   cv::Mat cvSynthDepth(synthDepth->noDims.y, synthDepth->noDims.x, CV_32FC1, synthDepth->GetData(MEMORYDEVICE_CPU));

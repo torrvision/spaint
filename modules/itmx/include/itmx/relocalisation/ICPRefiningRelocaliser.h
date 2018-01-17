@@ -160,22 +160,6 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Generates a synthetic depth image of a voxel scene from the specified pose.
-   *
-   * \note  This produces a floating-point depth image whose format matches that used by InfiniTAM,
-   *        as opposed to a colourised depth image that is suitable for showing to the user.
-   *
-   * \param output      The location into which to put the output image.
-   * \param scene       The scene to visualise.
-   * \param pose        The pose from which to visualise the scene.
-   * \param intrinsics  The camera intrinsics to use when visualising the scene.
-   * \param renderState The render state to use for intermediate storage (can be null, in which case a new one will be created).
-   * \param depthType   The type of depth calculation to use.
-   */
-  void generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                  const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const;
-
-  /**
    * \brief Saves the relocalised and refined poses in text files so that they can be used later (e.g. for evaluation).
    *
    * \note Saving happens only if m_savePoses is true.

@@ -7,11 +7,11 @@
 
 #include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
-#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace ITMLib;
 
 #include <itmx/geometry/GeometryUtil.h>
 #include <itmx/util/CameraPoseConverter.h>
+#include <itmx/visualisation/DepthVisualisationUtil.tpp>
 #include <itmx/visualisation/DepthVisualiserFactory.h>
 using namespace itmx;
 using namespace rigging;
@@ -45,25 +45,9 @@ VisualisationGenerator::VisualisationGenerator(const Settings_CPtr& settings, co
 void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                         const ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
 {
-  if(!scene)
-  {
-    output->Clear();
-    return;
-  }
-
-  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(output->noDims, scene->sceneParams, m_settings->GetMemoryType()));
-
-  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, &intrinsics, renderState.get());
-  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, &intrinsics, renderState.get());
-  m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, &intrinsics, renderState.get());
-
-  const SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
-  m_depthVisualiser->render_depth(
-    depthType, GeometryUtil::to_itm(camera.p()), GeometryUtil::to_itm(camera.n()),
-    renderState.get(), m_settings->sceneParams.voxelSize, -1.0f, output
+  return DepthVisualisationUtil<SpaintVoxel,ITMVoxelIndex>::generate_depth_from_voxels(
+    output, scene, pose, intrinsics, renderState, depthType, m_voxelVisualisationEngine, m_depthVisualiser, m_settings
   );
-
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
 }
 
 void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
