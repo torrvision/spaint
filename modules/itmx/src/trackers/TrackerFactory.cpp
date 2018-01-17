@@ -27,6 +27,10 @@ using namespace tvgutil;
 #include "trackers/ViconTracker.h"
 #endif
 
+#ifdef WITH_ZED
+#include "trackers/ZedTracker.h"
+#endif
+
 namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -106,6 +110,16 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
     tracker = fallibleTracker;
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
+    trackerType = "infinitam";
+    trackerParams = "";
+#endif
+  }
+  else if(trackerType == "zed")
+  {
+#ifdef WITH_ZED
+    tracker = new ZedTracker(ZedCamera::instance());
+#else
+    // If we haven't built with Zed support, make sure that we're not trying to use the Zed tracker.
     trackerType = "infinitam";
     trackerParams = "";
 #endif

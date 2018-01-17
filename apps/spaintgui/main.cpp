@@ -36,6 +36,9 @@
 
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
+#ifdef WITH_ZED
+#include <itmx/imagesources/ZedImageSourceEngine.h>
+#endif
 
 #include <tvgutil/filesystem/PathFinder.h>
 
@@ -199,6 +202,15 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
   {
     std::cout << "[spaint] Probing RealSense camera\n";
     cameraSubengine = check_camera_subengine(new RealSenseEngine(args.calibrationFilename.c_str()));
+  }
+#endif
+
+#ifdef WITH_ZED
+  // Probe for a Zed camera.
+  if(cameraSubengine == NULL)
+  {
+    std::cout << "[spaint] Probing Zed camera\n";
+    cameraSubengine = check_camera_subengine(new ZedImageSourceEngine(ZedCamera::instance()));
   }
 #endif
 
