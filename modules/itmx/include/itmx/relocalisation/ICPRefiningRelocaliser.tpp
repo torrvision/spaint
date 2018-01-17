@@ -8,6 +8,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <boost/bind.hpp>
+
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 
@@ -176,16 +178,17 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       Result refinementResult;
       refinementResult.pose.SetFrom(m_trackingState->pose_d);
       refinementResult.quality = m_trackingState->trackerResult == ITMLib::ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
+      refinementResult.score = m_trackingState->trackerScore;
 
       if(m_chooseBestResult)
       {
-        float score = score_result(refinementResult);
+        refinementResult.score = score_result(refinementResult);
 #if DEBUGGING
         std::cout << resultIdx << ": " << score << '\n';
 #endif
-        if(score < bestScore)
+        if(refinementResult.score < bestScore)
         {
-          bestScore = score;
+          bestScore = refinementResult.score;
           initialPoses.clear();
           initialPoses.push_back(initialPose);
           refinementResults.clear();
@@ -199,6 +202,12 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
         refinementResults.push_back(refinementResult);
       }
     }
+  }
+
+  if(m_chooseBestResult)
+  {
+    // Sort the refinement results by ascending score.
+    std::sort(refinementResults.begin(), refinementResults.end(), boost::bind(&Result::score, _1) < boost::bind(&Result::score, _2));
   }
 
   stop_timer(m_timerRelocalisation);
