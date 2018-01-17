@@ -21,9 +21,9 @@ ZedCamera::ZedCamera(int gpuID)
   // Set up the initialisation parameters for the camera.
   sl::InitParameters initParams;
   initParams.camera_resolution = sl::RESOLUTION_VGA;
-  initParams.coordinate_system = sl::COORDINATE_SYSTEM_RIGHT_HANDED_Z_UP;
+  initParams.coordinate_system = sl::COORDINATE_SYSTEM_IMAGE;
   initParams.coordinate_units = sl::UNIT_METER;
-  initParams.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
+  initParams.depth_mode = sl::DEPTH_MODE_QUALITY;
   cuCtxGetCurrent(&initParams.sdk_cuda_ctx);
   initParams.sdk_gpu_id = gpuID;
 
@@ -137,26 +137,12 @@ void ZedCamera::get_tracking_state(ITMTrackingState *trackingState)
   // otherwise, leave the camera pose alone and report that the tracking has failed.
   if(state == sl::TRACKING_STATE_OK)
   {
-    // Make a version of the pose matrix in the Zed coordinate system (right-handed, with z up).
     Matrix4f M;
     M(0,0) = R(0,0); M(1,0) = R(0,1); M(2,0) = R(0,2); M(3,0) = t.x;
     M(0,1) = R(1,0); M(1,1) = R(1,1); M(2,1) = R(1,2); M(3,1) = t.y;
     M(0,2) = R(2,0); M(1,2) = R(2,1); M(2,2) = R(2,2); M(3,2) = t.z;
     M(0,3) = 0.0f;   M(1,3) = 0.0f;   M(2,3) = 0.0f;   M(3,3) = 1.0f;
 
-    // Map it to the InfiniTAM coordinate system (right-handed, with z forwards).
-    Matrix4f X;
-    X(0,0) = 1.0f; X(1,0) = 0.0f;  X(2,0) = 0.0f; X(3,0) = 0.0f;
-    X(0,1) = 0.0f; X(1,1) = 0.0f;  X(2,1) = 1.0f; X(3,1) = 0.0f;
-    X(0,2) = 0.0f; X(1,2) = -1.0f; X(2,2) = 0.0f; X(3,2) = 0.0f;
-    X(0,3) = 0.0f; X(1,3) = 0.0f;  X(2,3) = 0.0f; X(3,3) = 1.0f;
-
-    Matrix4f Xinv;
-    X.inv(Xinv);
-
-    M = Xinv * M * X;
-
-    // Update the InfiniTAM tracking state.
     trackingState->pose_d->SetInvM(M);
     trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
   }
