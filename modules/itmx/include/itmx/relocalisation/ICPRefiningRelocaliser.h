@@ -37,7 +37,6 @@ private:
   typedef boost::shared_ptr<DenseMapper> DenseMapper_Ptr;
   typedef ITMLib::ITMScene<VoxelType,IndexType> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
-  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef ITMLib::ITMVisualisationEngine<VoxelType,IndexType> VisualisationEngine;
   typedef boost::shared_ptr<const VisualisationEngine> VisualisationEngine_CPtr;
 
