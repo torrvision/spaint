@@ -46,9 +46,9 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   m_visualisationEngine(visualisationEngine)
 {
   // Construct the tracking controller, tracking state and view.
-  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), m_settings.get()));
-  m_trackingState.reset(new ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
-  m_view.reset(new ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA));
+  m_trackingController.reset(new ITMLib::ITMTrackingController(m_tracker.get(), m_settings.get()));
+  m_trackingState.reset(new ITMLib::ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
+  m_view.reset(new ITMLib::ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA));
 
   // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
@@ -142,8 +142,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     const ORUtils::SE3Pose initialPose = relocalisationResults[resultIdx].pose;
 
     // Copy the depth and RGB images into the view.
-    m_view->depth->SetFrom(depthImage, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
-    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
+    m_view->depth->SetFrom(depthImage, m_settings->deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
+    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
 
     // Create a fresh render state ready for raycasting.
     // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
@@ -151,7 +151,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
     //        currently create a fresh render state each time as a workaround. A mildly less costly alternative might
     //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
-    m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
+    m_voxelRenderState.reset(ITMLib::ITMRenderStateFactory<IndexType>::CreateRenderState(
       m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
       m_scene->sceneParams,
       m_settings->GetMemoryType()
@@ -171,11 +171,11 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     m_trackingController->Track(m_trackingState.get(), m_view.get());
 
     // Set up the result.
-    if(m_trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
+    if(m_trackingState->trackerResult != ITMLib::ITMTrackingState::TRACKING_FAILED)
     {
       Result refinementResult;
       refinementResult.pose.SetFrom(m_trackingState->pose_d);
-      refinementResult.quality = m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
+      refinementResult.quality = m_trackingState->trackerResult == ITMLib::ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
 
       if(m_chooseBestResult)
       {
