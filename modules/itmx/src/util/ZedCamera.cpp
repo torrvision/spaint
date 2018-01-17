@@ -120,7 +120,11 @@ void ZedCamera::get_tracking_state(ITMTrackingState *trackingState)
   if(m_newPoseNeeded)
   {
     bool succeeded = grab_frame();
-    if(!succeeded) return;
+    if(!succeeded)
+    {
+      trackingState->trackerResult = ITMTrackingState::TRACKING_FAILED;
+      return;
+    }
   }
 
   // Retrieve the Zed tracking state from the camera.
