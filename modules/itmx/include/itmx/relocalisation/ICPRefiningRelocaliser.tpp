@@ -8,8 +8,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <boost/bind.hpp>
-
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 
@@ -184,7 +182,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       {
         refinementResult.score = score_result(refinementResult);
 #if DEBUGGING
-        std::cout << resultIdx << ": " << score << '\n';
+        std::cout << resultIdx << ": " << refinementResult.score << '\n';
 #endif
         if(refinementResult.score < bestScore)
         {

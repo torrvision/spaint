@@ -51,12 +51,10 @@ public:
     /** A score associated with the relocalisation. */
     float score;
 
-    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTOR ~~~~~~~~~~~~~~~~~~~~
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 
-    /** Default contructor. */
-    Result() :
-     quality(RELOCALISATION_POOR),
-     score(0.0f)
+    Result()
+    : quality(RELOCALISATION_POOR), score(0.0f)
     {}
   };
 
