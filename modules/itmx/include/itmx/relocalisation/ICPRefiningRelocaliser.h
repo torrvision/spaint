@@ -170,7 +170,11 @@ private:
   void save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const;
 
   /**
-   * \brief TODO
+   * \brief Scores a relocalisation result by computing the mean depth difference between the real depth image
+   *        and a synthetic depth image rendered from its pose.
+   *
+   * \param result  The relocalisation result to score.
+   * \return        The score computed for the relocalisation result.
    */
   float score_result(const Result& result) const;
 
