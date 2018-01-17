@@ -162,6 +162,7 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
       Result result;
       result.pose.SetInvM(poseCandidate->cameraPose);
       result.quality = RELOCALISATION_GOOD;
+      result.score = poseCandidate->energy;
 
       results.push_back(result);
 
@@ -180,6 +181,7 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
           Result result;
           result.pose.SetInvM(candidates[i].cameraPose);
           result.quality = RELOCALISATION_GOOD;
+          result.score = candidates[i].energy;
 
           results.push_back(result);
         }

@@ -47,6 +47,17 @@ public:
 
     /** The quality of the relocalisation. */
     Quality quality;
+
+    /** A score associated with the relocalisation. */
+    float score;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTOR ~~~~~~~~~~~~~~~~~~~~
+
+    /** Default contructor. */
+    Result() :
+     quality(RELOCALISATION_POOR),
+     score(0.0f)
+    {}
   };
 
   //#################### DESTRUCTOR ####################
