@@ -34,8 +34,10 @@ void FernRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliser->LoadFromDirectory(inputFolder + "/");
 }
 
-std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
+std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
+  std::vector<Relocaliser::Result> results;
+
   // Copy the current depth input across to the CPU for use by the relocaliser.
   depthImage->UpdateHostFromDevice();
 
@@ -48,9 +50,6 @@ std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Imag
   // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe
   // (if any) that is currently in the database.
   m_relocaliser->ProcessFrame(depthImage, NULL, sceneId, requestedNearestNeighbourCount, &nearestNeighbour, NULL, considerKeyframe);
-
-  // Prepare output container.
-  std::vector<Relocaliser::Result> results;
 
   // If a nearest keyframe was found by the relocaliser, return it.
   if(nearestNeighbour != -1)
