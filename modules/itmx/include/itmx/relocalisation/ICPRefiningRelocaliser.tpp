@@ -54,7 +54,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
 
   // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
-  m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", true);
+  m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", false);
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
@@ -180,7 +180,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       refinementResult.quality = m_trackingState->trackerResult == ITMLib::ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
       refinementResult.score = m_trackingState->trackerScore;
 
-      if(m_chooseBestResult)
+      if(m_chooseBestResult && relocalisationResults.size() > 1)
       {
         refinementResult.score = score_result(refinementResult);
 #if DEBUGGING
@@ -202,12 +202,6 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
         refinementResults.push_back(refinementResult);
       }
     }
-  }
-
-  if(m_chooseBestResult)
-  {
-    // Sort the refinement results by ascending score.
-    std::sort(refinementResults.begin(), refinementResults.end(), boost::bind(&Result::score, _1) < boost::bind(&Result::score, _2));
   }
 
   stop_timer(m_timerRelocalisation);
