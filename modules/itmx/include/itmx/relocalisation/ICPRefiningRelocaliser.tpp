@@ -170,22 +170,6 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     // Run the tracker to refine the initial pose.
     m_trackingController->Track(m_trackingState.get(), m_view.get());
 
-#if 0
-    if(m_chooseBestResult)
-    {
-      float score = score_result(relocalisationResults[resultIdx]);
-      std::cout << resultIdx << "(I): " << score << '\n';
-      if(score < bestScore)
-      {
-        bestScore = score;
-        initialPoses.clear();
-        initialPoses.push_back(initialPose);
-        refinementResults.clear();
-        refinementResults.push_back(relocalisationResults[resultIdx]);
-      }
-    }
-#endif
-
     // Set up the result.
     if(m_trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
     {
@@ -197,7 +181,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       {
         float score = score_result(refinementResult);
 #if DEBUGGING
-        std::cout << resultIdx << "(R): " << score << '\n';
+        std::cout << resultIdx << ": " << score << '\n';
 #endif
         if(score < bestScore)
         {
@@ -240,8 +224,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     // Actually save the poses.
     save_poses(initialPose, refinedPose);
 
-    // Since we are saving the poses (i.e. we are running in evaluation mode),
-    // we set the quality of every relocalisation to POOR to prevent fusion whilst evaluating the testing sequence.
+    // Since we are saving the poses (i.e. we are running in evaluation mode), we set the quality of every
+    // relocalisation to POOR to prevent fusion whilst evaluating the testing sequence.
     for(size_t i = 0; i < refinementResults.size(); ++i)
     {
       refinementResults[i].quality = RELOCALISATION_POOR;
@@ -311,11 +295,9 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::Mat cvSynthDepth(synthDepth->noDims.y, synthDepth->noDims.x, CV_32FC1, synthDepth->GetData(MEMORYDEVICE_CPU));
 
 #if DEBUGGING
-  // If we're debugging, show the real and synthetic depth images to the user.
-
-  // Note, we need to convert them to unsigned chars for visualization.
+  // If we're debugging, show the real and synthetic depth images to the user (note that we need to convert them to unsigned chars for visualization).
   // We don't use the OpenCV normalize function because we want consistent visualisations for different frames (even though there might be clamping).
-  float scaleFactor = 100.f;
+  const float scaleFactor = 100.0f;
   cv::Mat cvRealDepthViz, cvSynthDepthViz;
   cvRealDepth.convertTo(cvRealDepthViz, CV_8U, scaleFactor);
   cvSynthDepth.convertTo(cvSynthDepthViz, CV_8U, scaleFactor);
@@ -327,13 +309,13 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   // Compute a binary mask showing which pixels are valid in both the real and synthetic depth images.
   cv::Mat cvRealMask = cvRealDepth > 0;
   cv::Mat cvSynthMask = cvSynthDepth > 0;
-
   cv::Mat cvCombinedMask = cvRealMask & cvSynthMask;
 
   // Compute the difference between the real and synthetic depth images, and mask it using the combined mask.
   cv::Mat cvDepthDiff, cvMaskedDepthDiff;
   cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
   cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
+
 #if DEBUGGING
   // We need to convert the image for visualisation.
   cv::Mat cvMaskedDepthDiffViz;
@@ -343,7 +325,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::waitKey(1);
 #endif
 
-  // Determine the average depth difference for valid pixels in the real and synthetic depth images.
+  // Determine the mean depth difference for valid pixels in the real and synthetic depth images.
   cv::Scalar meanDepthDiff = cv::mean(cvMaskedDepthDiff, cvCombinedMask);
 #if DEBUGGING
   std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
