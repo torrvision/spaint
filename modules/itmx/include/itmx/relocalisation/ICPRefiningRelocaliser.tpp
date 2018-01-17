@@ -16,9 +16,7 @@
 #include <tvgutil/timing/TimeUtil.h>
 
 #include "../base/ITMImagePtrTypes.h"
-#include "../geometry/GeometryUtil.h"
 #include "../persistence/PosePersister.h"
-#include "../util/CameraPoseConverter.h"
 #include "../visualisation/DepthVisualisationUtil.tpp"
 #include "../visualisation/DepthVisualiserFactory.h"
 
@@ -113,6 +111,8 @@ std::vector<Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
+  std::vector<Relocaliser::Result> refinementResults;
+
 #if DEBUGGING
   static int frameIdx = -1;
   ++frameIdx;
@@ -123,9 +123,6 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
 
   // Reset the initial poses.
   initialPoses.clear();
-
-  // Prepare output container.
-  std::vector<Relocaliser::Result> refinementResults;
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
   std::vector<Result> relocalisationResults = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);

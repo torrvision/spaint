@@ -7,6 +7,9 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 
+#include "../geometry/GeometryUtil.h"
+#include "../util/CameraPoseConverter.h"
+
 namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
