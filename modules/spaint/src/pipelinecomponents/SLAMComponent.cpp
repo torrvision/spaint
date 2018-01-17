@@ -396,8 +396,9 @@ void SLAMComponent::process_relocalisation()
 
     if(!relocalisationResults.empty())
     {
-      trackingState->pose_d->SetFrom(&relocalisationResults[0].pose);
-      trackingState->trackerResult = relocalisationResults[0].quality == Relocaliser::RELOCALISATION_GOOD ? ITMTrackingState::TRACKING_GOOD : ITMTrackingState::TRACKING_POOR;
+      const Relocaliser::Result& bestRelocalisationResult = relocalisationResults[0];
+      trackingState->pose_d->SetFrom(&bestRelocalisationResult.pose);
+      trackingState->trackerResult = bestRelocalisationResult.quality == Relocaliser::RELOCALISATION_GOOD ? ITMTrackingState::TRACKING_GOOD : ITMTrackingState::TRACKING_POOR;
     }
   }
 
