@@ -2,9 +2,15 @@
 # UseZed.cmake #
 ################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+
 OPTION(WITH_ZED "Build with Zed SDK support?" OFF)
 
 IF(WITH_ZED)
+  IF(NOT WITH_CUDA)
+    MESSAGE(FATAL_ERROR "The Zed SDK requires CUDA to work. Please enable the WITH_CUDA flag in CMake.")
+  ENDIF()
+
   FIND_PACKAGE(ZED 2 REQUIRED)
 
   IF(MSVC_IDE)
