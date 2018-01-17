@@ -38,7 +38,7 @@ public:
    * \param colourImage     The colour image.
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param initialPose     A location in which to store the camera poses estimated by the inner relocaliser (if it succeeded),
+   * \param initialPoses    A location in which to store the camera poses estimated by the inner relocaliser (if it succeeded),
    *                        or an empty vector otherwise.
    *
    * \return  The results of the relocalisation, from best to worst, or an empty vector otherwise.
