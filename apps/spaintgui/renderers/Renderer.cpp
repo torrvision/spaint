@@ -388,9 +388,8 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
-                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose,
-                                      const View_CPtr& view, const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType,
-                                      bool surfelFlag, const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
+                                      const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const
 {
   VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
 
@@ -407,13 +406,31 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
       if(view)
       {
         if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, intrinsics, surfelRenderState, visualisationType);
-        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, postprocessor);
+        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, get_postprocessor());
       }
       else output->Clear();
 
       break;
     }
   }
+}
+
+const boost::optional<VisualisationGenerator::Postprocessor>& Renderer::get_postprocessor() const
+{
+  // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
+  static boost::optional<VisualisationGenerator::Postprocessor> postprocessor = boost::none;
+  if(!m_medianFilteringEnabled && postprocessor)
+  {
+    postprocessor.reset();
+  }
+  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+#if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
+    const unsigned int kernelWidth = 3;
+    postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
+#endif
+  }
+  return postprocessor;
 }
 
 void Renderer::render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlending) const
@@ -473,21 +490,6 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 
 void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
-  // Set up any post-processing that needs to be applied to the rendering result.
-  // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
-  static boost::optional<VisualisationGenerator::Postprocessor> postprocessor = boost::none;
-  if(!m_medianFilteringEnabled && postprocessor)
-  {
-    postprocessor.reset();
-  }
-  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
-    const unsigned int kernelWidth = 3;
-    postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
-#endif
-  }
-
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
 
@@ -542,7 +544,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
       generate_visualisation(
         images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
         subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-        tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
+        tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag()
       );
 
       m_model->get_visualisation_generator()->generate_depth_from_voxels(
@@ -562,7 +564,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
     subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag()
   );
 
 #if 1

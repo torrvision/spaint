@@ -238,12 +238,17 @@ private:
    * \param intrinsics        The intrinsics to use when rendering synthetic visualisations of the scene.
    * \param visualisationType The type of visualisation to generate.
    * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
-   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
                               VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                              const ITMLib::ITMIntrinsics& intrinsics, spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
-                              const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
+                              const ITMLib::ITMIntrinsics& intrinsics, spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const;
+
+  /**
+   * \brief Gets the function (if any) with which to postprocess scene visualisations.
+   *
+   * \return  The function (if any) with which to postprocess scene visualisations.
+   */
+  const boost::optional<spaint::VisualisationGenerator::Postprocessor>& get_postprocessor() const;
 
   /**
    * \brief Renders a colour image over the contents of the current subwindow.
