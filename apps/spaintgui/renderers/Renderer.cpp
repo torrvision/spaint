@@ -357,8 +357,18 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
-    // Render the reconstructed scene, then render a synthetic scene over the top of it.
-    render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    if(sceneID == Model::get_world_scene_id())
+    {
+      // Render all the reconstructed scenes in the same subwindow, with appropriate depth testing.
+      render_all_reconstructed_scenes(pose, subwindow, viewIndex);
+    }
+    else
+    {
+      // Render the reconstructed scene.
+      render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    }
+
+    // Render the synthetic scene over the top of the reconstructed scene.
     render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
@@ -388,9 +398,8 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
-                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose,
-                                      const View_CPtr& view, const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType,
-                                      bool surfelFlag, const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
+                                      const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const
 {
   VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
 
@@ -407,7 +416,7 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
       if(view)
       {
         if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, intrinsics, surfelRenderState, visualisationType);
-        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, postprocessor);
+        else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, intrinsics, voxelRenderState, visualisationType, get_postprocessor());
       }
       else output->Clear();
 
@@ -416,27 +425,167 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
   }
 }
 
-void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+const boost::optional<VisualisationGenerator::Postprocessor>& Renderer::get_postprocessor() const
 {
-  // Copy the overlay to a texture.
+  // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
+  static boost::optional<VisualisationGenerator::Postprocessor> postprocessor = boost::none;
+  if(!m_medianFilteringEnabled && postprocessor)
+  {
+    postprocessor.reset();
+  }
+  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+#if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
+    const unsigned int kernelWidth = 3;
+    postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
+#endif
+  }
+  return postprocessor;
+}
+
+void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
+{
+  // Generate the subwindow image.
+  const ITMUChar4Image_Ptr& image = subwindow.get_image();
+
+  static std::vector<ITMUChar4Image_Ptr> colourImages;
+  static std::vector<ITMFloatImage_Ptr> depthImages;
+  static bool supersamplingEnabled = m_supersamplingEnabled;
+  const std::vector<std::string> sceneIDs = m_model->get_scene_ids();
+  std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
+
+  // Step 1: If supersampling has been toggled since the last time we rendered the scenes, arrange for the colour and depth images for the scenes to be reallocated.
+  if(supersamplingEnabled != m_supersamplingEnabled)
+  {
+    supersamplingEnabled = m_supersamplingEnabled;
+    colourImages.clear();
+    depthImages.clear();
+  }
+
+  // Step 2: Reallocate the colour and depth images for the scenes if needed.
+  while(colourImages.size() < sceneIDs.size())
+  {
+    colourImages.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
+    depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
+  }
+
+  // Step 3: Render colour and depth images for each scene, making sure to render the primary scene for the
+  //         subwindow last so that the raycast result ultimately contains the correct voxels for picking.
+  const std::string primarySceneID = subwindow.get_scene_id();
+  size_t primarySceneIdx = 0;
+  for(size_t i = 0; i < sceneIDs.size() + 1; ++i)
+  {
+    // Determine which scene we should be rendering in this iteration of the loop. This will be the scene
+    // indicated by the loop counter unless either (i) i < sceneIDs[i] && sceneIDs[i] == primarySceneID,
+    // in which case we record the array index of the primary scene for later and skip the loop iteration,
+    // or (ii) i == sceneIDs.size(), in which case we arrange for the primary scene to be rendered.
+    size_t sceneIdx;
+    if(i < sceneIDs.size())
+    {
+      if(sceneIDs[i] == primarySceneID)
+      {
+        primarySceneIdx = i;
+        continue;
+      }
+      else sceneIdx = i;
+    }
+    else sceneIdx = primarySceneIdx;
+
+    // Clear the colour and depth images for the chosen scene.
+    colourImages[sceneIdx]->Clear();
+    depthImages[sceneIdx]->Clear();
+
+    // If we have not yet started reconstruction for this scene, avoid rendering it and early out.
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[sceneIdx]);
+    if(!slamState || !slamState->get_view()) continue;
+
+    // Determine the pose and visualisation type to use for the scene.
+    SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
+    visualisationTypes[sceneIdx] = subwindow.get_type();
+
+    if(sceneIDs[sceneIdx] != primarySceneID)
+    {
+      boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform(primarySceneID, sceneIDs[sceneIdx]);
+      SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((sceneIdx + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+      if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[sceneIdx] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
+
+      // ciTwi * wiTwj = ciTwj
+      tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
+    }
+
+    // Actually render the colour and depth images for the scene.
+    const ITMIntrinsics intrinsics = slamState->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+
+    generate_visualisation(
+      colourImages[sceneIdx], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
+      subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+      tempPose, slamState->get_view(), intrinsics, visualisationTypes[sceneIdx], subwindow.get_surfel_flag()
+    );
+
+    m_model->get_visualisation_generator()->generate_depth_from_voxels(
+      depthImages[sceneIdx], slamState->get_voxel_scene(), tempPose, intrinsics,
+      subwindow.get_voxel_render_state(viewIndex), DepthVisualiser::DT_ORTHOGRAPHIC
+    );
+
+    // Make sure the depth image for the scene is available on the CPU so that it can be used for depth testing.
+    depthImages[sceneIdx]->UpdateHostFromDevice();
+  }
+
+  // Step 4: Combine the colour images for the different scenes using per-pixel depth testing to produce the final image for the subwindow.
+  image->Clear();
+  for(int k = 0; k < image->noDims.width * image->noDims.height; ++k)
+  {
+    float smallestDepth = static_cast<float>(INT_MAX);
+    for(size_t i = 0, size = colourImages.size(); i < size; ++i)
+    {
+      const float arbitrarilyLargeDepth = 100.0f;
+      float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
+      if(depth != -1.0f && visualisationTypes[i] == VisualisationGenerator::VT_SCENE_SEMANTICPHONG) depth = arbitrarilyLargeDepth;
+      if(depth != -1.0f && depth < smallestDepth)
+      {
+        smallestDepth = depth;
+        image->GetData(MEMORYDEVICE_CPU)[k] = colourImages[i]->GetData(MEMORYDEVICE_CPU)[k];
+      }
+    }
+  }
+
+  // Step 5: Render a quad textured with the final subwindow image.
+  render_image(image);
+}
+
+void Renderer::render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlending) const
+{
+  // Copy the image to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, overlay->noDims.x, overlay->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, overlay->GetData(MEMORYDEVICE_CPU));
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  // Enable blending.
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if(useAlphaBlending)
+  {
+    // Enable alphba blending.
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
 
-  // Render a semi-transparent quad textured with the overlay over the top of the existing scene.
+  // Render a quad textured with the image over the top of the existing scene.
   begin_2d();
     render_textured_quad(m_textureID);
   end_2d();
 
-  // Disable blending again.
-  glDisable(GL_BLEND);
+  if(useAlphaBlending)
+  {
+    // Disable alpha blending again.
+    glDisable(GL_BLEND);
+  }
+}
+
+void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+{
+  const bool useAlphaBlending = true;
+  render_image(overlay, useAlphaBlending);
 }
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
@@ -461,87 +610,8 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 
 void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
-  // Set up any post-processing that needs to be applied to the rendering result.
-  // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
-  static boost::optional<VisualisationGenerator::Postprocessor> postprocessor = boost::none;
-  if(!m_medianFilteringEnabled && postprocessor)
-  {
-    postprocessor.reset();
-  }
-  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
-    const unsigned int kernelWidth = 3;
-    postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
-#endif
-  }
-
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-
-#if 1
-  // FIXME: This is a disgusting hack.
-  static std::vector<ITMUChar4Image_Ptr> images;
-  static std::vector<ITMFloatImage_Ptr> depthImages;
-  static bool supersamplingEnabled = m_supersamplingEnabled;
-  const std::vector<std::string> sceneIDs = m_model->get_scene_ids();
-  std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
-
-  if(supersamplingEnabled != m_supersamplingEnabled)
-  {
-    supersamplingEnabled = m_supersamplingEnabled;
-    images.clear();
-    depthImages.clear();
-  }
-
-  if(&subwindow == &m_subwindowConfiguration->subwindow(0))
-  {
-    while(images.size() < sceneIDs.size())
-    {
-      images.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
-      depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
-    }
-
-    const ITMIntrinsics intrinsics = m_model->get_slam_state(sceneID)->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
-
-    for(size_t i = 0; i < sceneIDs.size(); ++i)
-    {
-      images[i]->Clear();
-      depthImages[i]->Clear();
-
-      SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
-      visualisationTypes[i] = subwindow.get_type();
-
-      if(sceneIDs[i] != "World")
-      {
-        boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform("World", sceneIDs[i]);
-        SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-        if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
-
-        // ciTwi * wiTwj = ciTwj
-        tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
-      }
-
-      SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
-
-      // If we have not yet started reconstruction for this scene, avoid rendering it.
-      if(!slamState || !slamState->get_view()) continue;
-
-      generate_visualisation(
-        images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-        subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-        tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag(), postprocessor
-      );
-
-      m_model->get_visualisation_generator()->generate_depth_from_voxels(
-        depthImages[i], slamState->get_voxel_scene(), tempPose, intrinsics,
-        subwindow.get_voxel_render_state(viewIndex), DepthVisualiser::DT_ORTHOGRAPHIC
-      );
-
-      depthImages[i]->UpdateHostFromDevice();
-    }
-  }
-#endif
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   const View_CPtr view = slamState->get_view();
@@ -550,43 +620,11 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
     subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag()
   );
 
-#if 1
-  // FIXME: This is also a disgusting hack.
-  if(&subwindow == &m_subwindowConfiguration->subwindow(0))
-  {
-    for(int k = 0; k < image->noDims.width * image->noDims.height; ++k)
-    {
-      float smallestDepth = static_cast<float>(INT_MAX);
-      for(size_t i = 0, size = images.size(); i < size; ++i)
-      {
-        const float arbitrarilyLargeDepth = 100.0f;
-        float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
-        if(depth != -1.0f && visualisationTypes[i] == VisualisationGenerator::VT_SCENE_SEMANTICPHONG) depth = arbitrarilyLargeDepth;
-        if(depth != -1.0f && depth < smallestDepth)
-        {
-          smallestDepth = depth;
-          image->GetData(MEMORYDEVICE_CPU)[k] = images[i]->GetData(MEMORYDEVICE_CPU)[k];
-        }
-      }
-    }
-  }
-#endif
-
-  // Copy the raycasted scene to a texture.
-  glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
   // Render a quad textured with the subwindow image.
-  begin_2d();
-    render_textured_quad(m_textureID);
-  end_2d();
+  render_image(image);
 }
 
 void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const
