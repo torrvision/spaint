@@ -17,6 +17,7 @@ using namespace tvgutil;
 #include "remotemapping/AckMessage.h"
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 #include "remotemapping/CompressedRGBDFrameMessage.h"
+#include "remotemapping/InteractionTypeMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 #include "remotemapping/RGBDFrameCompressor.h"
 
@@ -283,43 +284,69 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
 #endif
   m_clientReady.notify_one();
 
-  // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
+  // Read and process messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
+  InteractionTypeMessage interactionTypeMsg;
   CompressedRGBDFrameHeaderMessage headerMsg;
   CompressedRGBDFrameMessage frameMsg(headerMsg);
   while(connectionOk && !m_shouldTerminate)
   {
-    // First, try to read a frame header message.
-    if((connectionOk = read_message(sock, headerMsg)))
+    // First, try to read an interaction type message.
+    if((connectionOk = read_message(sock, interactionTypeMsg)))
     {
-      // If that succeeds, set up the frame message accordingly.
-      frameMsg.set_compressed_image_sizes(headerMsg);
-
-      // Now, read the frame message itself.
-      if((connectionOk = read_message(sock, frameMsg)))
+      // If that succeeds, determine the type of interaction the client wants to have with the server and proceed accordingly.
+      switch(interactionTypeMsg.extract_value())
       {
-        // If that succeeds, uncompress the images and send an acknowledgement to the client.
+        case IT_REQUESTGLOBALRENDER:
+        {
+          // TODO
+          break;
+        }
+        case IT_SENDFRAMETOSERVER:
+        {
 #if DEBUGGING
-        std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+          std::cout << "Receiving frame from client" << std::endl;
 #endif
 
-        RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
-        boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-        RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
+          // Try to read a frame header message.
+          if((connectionOk = read_message(sock, headerMsg)))
+          {
+            // If that succeeds, set up the frame message accordingly.
+            frameMsg.set_compressed_image_sizes(headerMsg);
 
-        frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
-        connectionOk = write_message(sock, AckMessage());
+            // Now, read the frame message itself.
+            if((connectionOk = read_message(sock, frameMsg)))
+            {
+              // If that succeeds, uncompress the images, store them on the frame message queue and send an acknowledgement to the client.
+#if DEBUGGING
+              std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+#endif
+
+              RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
+              boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
+              RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
+              frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
+
+              connectionOk = write_message(sock, AckMessage());
 
 #if DEBUGGING
-        std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
+              std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
-      #ifdef WITH_OPENCV
-        static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
-        msg.extract_rgb_image(rgbImage.get());
-        cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
-        cv::imshow("RGB", cvRGB);
-        cv::waitKey(1);
-      #endif
+            #ifdef WITH_OPENCV
+              static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
+              msg.extract_rgb_image(rgbImage.get());
+              cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
+              cv::imshow("RGB", cvRGB);
+              cv::waitKey(1);
+            #endif
 #endif
+            }
+          }
+          break;
+        }
+        default:
+        {
+          break;
+        }
       }
     }
   }

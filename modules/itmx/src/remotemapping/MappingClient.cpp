@@ -12,6 +12,7 @@ using namespace tvgutil;
 using boost::asio::ip::tcp;
 
 #include "remotemapping/AckMessage.h"
+#include "remotemapping/InteractionTypeMessage.h"
 
 namespace itmx {
 
@@ -65,6 +66,7 @@ void MappingClient::run_message_sender()
   AckMessage ackMsg;
   CompressedRGBDFrameHeaderMessage headerMsg;
   CompressedRGBDFrameMessage frameMsg(headerMsg);
+  InteractionTypeMessage interactionTypeMsg(IT_SENDFRAMETOSERVER);
 
   bool connectionOk = true;
 
@@ -78,9 +80,11 @@ void MappingClient::run_message_sender()
     // the actual frame data.
     m_frameCompressor->compress_rgbd_frame(*msg, headerMsg, frameMsg);
 
-    // First send the header message, then send the frame message, then wait for an acknowledgement
-    // from the server. We chain all of these with && so as to early out in case of failure.
+    // First send the interaction type message, then send the frame header message, then send
+    // the frame message itself, then wait for an acknowledgement from the server. We chain
+    // all of these with && so as to early out in case of failure.
     connectionOk = connectionOk
+      && m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size())
       && m_stream.write(headerMsg.get_data_ptr(), headerMsg.get_size())
       && m_stream.write(frameMsg.get_data_ptr(), frameMsg.get_size())
       && m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
