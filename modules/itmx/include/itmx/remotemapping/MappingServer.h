@@ -69,6 +69,9 @@ private:
     /** A flag indicating whether or not the pose associated with the first message in the queue has already been read. */
     bool m_poseDirty;
 
+    /** An optional pose (in the client's coordinate system) from which the client wants the server to render the scene. */
+    boost::optional<ORUtils::SE3Pose> m_renderingPose;
+
     /** The size of RGB image produced by the camera associated with the client. */
     Vector2i m_rgbImageSize;
 

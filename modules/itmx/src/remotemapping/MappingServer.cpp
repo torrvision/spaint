@@ -285,10 +285,11 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
   m_clientReady.notify_one();
 
   // Read and process messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
-  InteractionTypeMessage interactionTypeMsg;
-  SimpleMessage<ORUtils::SE3Pose> clientPoseMsg;
   CompressedRGBDFrameHeaderMessage headerMsg;
   CompressedRGBDFrameMessage frameMsg(headerMsg);
+  InteractionTypeMessage interactionTypeMsg;
+  SimpleMessage<ORUtils::SE3Pose> renderingPoseMsg;
+
   while(connectionOk && !m_shouldTerminate)
   {
     // First, try to read an interaction type message.
@@ -355,14 +356,11 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
           std::cout << "Receiving update rendering request from client" << std::endl;
 #endif
 
-          // Try to read a client pose message.
-          if((connectionOk = read_message(sock, clientPoseMsg)))
+          // Try to read a rendering pose message.
+          if((connectionOk = read_message(sock, renderingPoseMsg)))
           {
             // If that succeeds, store the pose so that it can be picked up by the renderer and send an acknowledgement to the client.
-#if DEBUGGING
-            // TODO
-#endif
-
+            client->m_renderingPose = renderingPoseMsg.extract_value();
             connectionOk = write_message(sock, AckMessage());
           }
 
