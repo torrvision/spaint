@@ -6,6 +6,8 @@
 #ifndef H_ITMX_ICPREFININGRELOCALISER
 #define H_ITMX_ICPREFININGRELOCALISER
 
+#include <boost/optional.hpp>
+
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
@@ -14,6 +16,7 @@
 #include <tvgutil/timing/AverageTimer.h>
 
 #include "../base/ITMObjectPtrTypes.h"
+#include "../visualisation/interface/DepthVisualiser.h"
 #include "RefiningRelocaliser.h"
 
 namespace itmx {
@@ -39,8 +42,14 @@ private:
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  /** Whether or not to choose the best result. */
+  bool m_chooseBestResult;
+
   /** The dense mapper used to find visible blocks in the voxel scene. */
   DenseMapper_Ptr m_denseVoxelMapper;
+
+  /** The depth visualiser. */
+  DepthVisualiser_CPtr m_depthVisualiser;
 
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
@@ -125,12 +134,12 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics) const;
+  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                         const Vector4f& depthIntrinsics) const;
 
   /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics, boost::optional<ORUtils::SE3Pose>& initialPose) const;
+  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                         const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const;
 
   /** Override */
   virtual void reset();
@@ -156,6 +165,15 @@ private:
    * \param refinedPose     The result of refining the relocalised pose.
    */
   void save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const;
+
+  /**
+   * \brief Scores a relocalisation result by computing the mean depth difference between the real depth image
+   *        and a synthetic depth image rendered from its pose.
+   *
+   * \param result  The relocalisation result to score.
+   * \return        The score computed for the relocalisation result.
+   */
+  float score_result(const Result& result) const;
 
   /**
    * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).

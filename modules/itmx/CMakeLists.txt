@@ -210,7 +210,12 @@ src/visualisation/DepthVisualiserFactory.cpp
 )
 
 SET(visualisation_headers
+include/itmx/visualisation/DepthVisualisationUtil.h
 include/itmx/visualisation/DepthVisualiserFactory.h
+)
+
+SET(visualisation_templates
+include/itmx/visualisation/DepthVisualisationUtil.tpp
 )
 
 ##
@@ -277,6 +282,7 @@ ${visualisation_shared_headers}
 
 SET(templates
 ${relocalisation_templates}
+${visualisation_templates}
 )
 
 IF(WITH_CUDA)
@@ -303,7 +309,7 @@ SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_hea
 SOURCE_GROUP(remotemapping FILES ${remotemapping_sources} ${remotemapping_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
-SOURCE_GROUP(visualisation FILES ${visualisation_sources} ${visualisation_headers})
+SOURCE_GROUP(visualisation FILES ${visualisation_sources} ${visualisation_headers} ${visualisation_templates})
 SOURCE_GROUP(visualisation\\cpu FILES ${visualisation_cpu_sources} ${visualisation_cpu_headers})
 SOURCE_GROUP(visualisation\\cuda FILES ${visualisation_cuda_sources} ${visualisation_cuda_headers})
 SOURCE_GROUP(visualisation\\interface FILES ${visualisation_interface_sources} ${visualisation_interface_headers})

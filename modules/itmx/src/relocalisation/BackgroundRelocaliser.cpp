@@ -41,8 +41,7 @@ void BackgroundRelocaliser::load_from_disk(const std::string& inputFolder)
   to_old_gpu();
 }
 
-boost::optional<Relocaliser::Result>
-BackgroundRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   // Prevent training and updating of the decorated relocaliser during a relocalisation.
   m_relocaliserRunning = true;
@@ -58,7 +57,7 @@ BackgroundRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFl
   copy_images(colourImage, depthImage);
 
   // Attempt to relocalise using the internal copies.
-  boost::optional<Relocaliser::Result> result = m_relocaliser->relocalise(m_colourImage.get(), m_depthImage.get(), depthIntrinsics);
+  std::vector<Relocaliser::Result> result = m_relocaliser->relocalise(m_colourImage.get(), m_depthImage.get(), depthIntrinsics);
 
   // Reset the current GPU to the one on which calls were previously being performed.
   to_old_gpu();

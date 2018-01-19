@@ -14,11 +14,10 @@ void NullRelocaliser::load_from_disk(const std::string& inputFolder)
   // No-op
 }
 
-boost::optional<NullRelocaliser::Result>
-NullRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> NullRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   // A null relocaliser always fails to relocalise.
-  return boost::none;
+  return std::vector<Relocaliser::Result>();
 }
 
 void NullRelocaliser::reset()
