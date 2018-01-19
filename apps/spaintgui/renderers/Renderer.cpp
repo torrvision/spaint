@@ -448,84 +448,95 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
 
-  // TEMPORARY
-  const std::string sceneID = subwindow.get_scene_id();
-
-  // FIXME: This is a disgusting hack.
-  static std::vector<ITMUChar4Image_Ptr> images;
+  static std::vector<ITMUChar4Image_Ptr> colourImages;
   static std::vector<ITMFloatImage_Ptr> depthImages;
   static bool supersamplingEnabled = m_supersamplingEnabled;
   const std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
 
+  // Step 1: If supersampling has been toggled since the last time we rendered the scenes, arrange for the colour and depth images for the scenes to be reallocated.
   if(supersamplingEnabled != m_supersamplingEnabled)
   {
     supersamplingEnabled = m_supersamplingEnabled;
-    images.clear();
+    colourImages.clear();
     depthImages.clear();
   }
 
-  while(images.size() < sceneIDs.size())
+  // Step 2: Reallocate the colour and depth images for the scenes if needed.
+  while(colourImages.size() < sceneIDs.size())
   {
-    images.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
+    colourImages.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
     depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
   }
 
-  const ITMIntrinsics intrinsics = m_model->get_slam_state(sceneID)->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
-
-  for(size_t i = 0; i < sceneIDs.size(); ++i)
+  // Step 3: Render colour and depth images for each scene, making sure to render the primary scene for the
+  //         subwindow last so that the raycast result ultimately contains the correct voxels for picking.
+  const std::string primarySceneID = subwindow.get_scene_id();
+  size_t primarySceneIdx = 0;
+  for(size_t i = 0; i < sceneIDs.size() + 1; ++i)
   {
-    images[i]->Clear();
-    depthImages[i]->Clear();
-
-    SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
-    visualisationTypes[i] = subwindow.get_type();
-
-    if(sceneIDs[i] != "World")
+    // Determine which scene we should be rendering in this iteration of the loop. This will be the scene
+    // indicated by the loop counter unless either (i) i < sceneIDs[i] && sceneIDs[i] == primarySceneID,
+    // in which case we record the array index of the primary scene for later and skip the loop iteration,
+    // or (ii) i == sceneIDs.size(), in which case we arrange for the primary scene to be rendered.
+    size_t sceneIdx;
+    if(i < sceneIDs.size())
     {
-      boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform("World", sceneIDs[i]);
-      SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-      if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
+      if(sceneIDs[i] == primarySceneID)
+      {
+        primarySceneIdx = i;
+        continue;
+      }
+      else sceneIdx = i;
+    }
+    else sceneIdx = primarySceneIdx;
+
+    // Clear the colour and depth images for the chosen scene.
+    colourImages[sceneIdx]->Clear();
+    depthImages[sceneIdx]->Clear();
+
+    // If we have not yet started reconstruction for this scene, avoid rendering it and early out.
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[sceneIdx]);
+    if(!slamState || !slamState->get_view()) continue;
+
+    // Determine the pose and visualisation type to use for the scene.
+    SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
+    visualisationTypes[sceneIdx] = subwindow.get_type();
+
+    if(sceneIDs[sceneIdx] != primarySceneID)
+    {
+      boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform(primarySceneID, sceneIDs[sceneIdx]);
+      SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((sceneIdx + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+      if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[sceneIdx] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
 
       // ciTwi * wiTwj = ciTwj
       tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
     }
 
-    SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
-
-    // If we have not yet started reconstruction for this scene, avoid rendering it.
-    if(!slamState || !slamState->get_view()) continue;
+    // Actually render the colour and depth images for the scene.
+    const ITMIntrinsics intrinsics = slamState->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
 
     generate_visualisation(
-      images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
+      colourImages[sceneIdx], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
       subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-      tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag()
+      tempPose, slamState->get_view(), intrinsics, visualisationTypes[sceneIdx], subwindow.get_surfel_flag()
     );
 
     m_model->get_visualisation_generator()->generate_depth_from_voxels(
-      depthImages[i], slamState->get_voxel_scene(), tempPose, intrinsics,
+      depthImages[sceneIdx], slamState->get_voxel_scene(), tempPose, intrinsics,
       subwindow.get_voxel_render_state(viewIndex), DepthVisualiser::DT_ORTHOGRAPHIC
     );
 
-    depthImages[i]->UpdateHostFromDevice();
+    // Make sure the depth image for the scene is available on the CPU so that it can be used for depth testing.
+    depthImages[sceneIdx]->UpdateHostFromDevice();
   }
 
-  SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
-  const View_CPtr view = slamState->get_view();
-  //const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
-
-  generate_visualisation(
-    image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag()
-  );
-
-  // TODO: Comment here.
+  // Step 4: Combine the colour images for the different scenes using per-pixel depth testing to produce the final image for the subwindow.
   image->Clear();
   for(int k = 0; k < image->noDims.width * image->noDims.height; ++k)
   {
     float smallestDepth = static_cast<float>(INT_MAX);
-    for(size_t i = 0, size = images.size(); i < size; ++i)
+    for(size_t i = 0, size = colourImages.size(); i < size; ++i)
     {
       const float arbitrarilyLargeDepth = 100.0f;
       float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
@@ -533,12 +544,12 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
       if(depth != -1.0f && depth < smallestDepth)
       {
         smallestDepth = depth;
-        image->GetData(MEMORYDEVICE_CPU)[k] = images[i]->GetData(MEMORYDEVICE_CPU)[k];
+        image->GetData(MEMORYDEVICE_CPU)[k] = colourImages[i]->GetData(MEMORYDEVICE_CPU)[k];
       }
     }
   }
 
-  // Render a quad textured with the subwindow image.
+  // Step 5: Render a quad textured with the final subwindow image.
   render_image(image);
 }
 
