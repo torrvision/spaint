@@ -251,13 +251,23 @@ private:
   const boost::optional<spaint::VisualisationGenerator::Postprocessor>& get_postprocessor() const;
 
   /**
+   * \brief Renders all the reconstructed scenes, with appropriate depth testing.
+   *
+   * TODO: Some of these names may need fixing.
+   */
+  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, const std::string& primarySceneID,
+                                       spaint::VisualisationGenerator::VisualisationType primaryVisualisationType,
+                                       VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                                       const Vector2i& originalImgSize, bool surfelFlag, const ITMUChar4Image_Ptr& output) const;
+
+  /**
    * \brief Renders all the reconstructed scenes into a sub-window, with appropriate depth testing.
    *
-   * \param pose  The camera pose.
-   * \param subwindow The sub-window into which to render.
-   * \param viewIndex The index of the free camera view for the sub-window.
+   * \param primaryPose The camera pose in the primary scene.
+   * \param subwindow   The sub-window into which to render.
+   * \param viewIndex   The index of the free camera view for the sub-window.
    */
-  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const;
+  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, Subwindow& subwindow, int viewIndex) const;
 
   /**
    * \brief Renders a colour image over the contents of the current subwindow.
