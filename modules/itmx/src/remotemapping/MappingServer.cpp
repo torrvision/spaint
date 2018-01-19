@@ -288,14 +288,6 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
   CompressedRGBDFrameMessage frameMsg(headerMsg);
   while(connectionOk && !m_shouldTerminate)
   {
-#if DEBUGGING
-    std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
-#endif
-
-    RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
-    boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-    RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
-
     // First, try to read a frame header message.
     if((connectionOk = read_message(sock, headerMsg)))
     {
@@ -306,6 +298,14 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
       if((connectionOk = read_message(sock, frameMsg)))
       {
         // If that succeeds, uncompress the images and send an acknowledgement to the client.
+#if DEBUGGING
+        std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+#endif
+
+        RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
+        boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
+        RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
+
         frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
         connectionOk = write_message(sock, AckMessage());
 
