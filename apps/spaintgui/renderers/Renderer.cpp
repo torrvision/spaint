@@ -587,18 +587,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   }
 #endif
 
-  // Copy the raycasted scene to a texture.
-  glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
   // Render a quad textured with the subwindow image.
-  begin_2d();
-    render_textured_quad(m_textureID);
-  end_2d();
+  render_image(image);
 }
 
 void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const
