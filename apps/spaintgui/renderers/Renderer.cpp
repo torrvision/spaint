@@ -451,7 +451,6 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
   // TEMPORARY
   const std::string sceneID = subwindow.get_scene_id();
 
-#if 1
   // FIXME: This is a disgusting hack.
   static std::vector<ITMUChar4Image_Ptr> images;
   static std::vector<ITMFloatImage_Ptr> depthImages;
@@ -466,58 +465,54 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
     depthImages.clear();
   }
 
-  if(&subwindow == &m_subwindowConfiguration->subwindow(0))
+  while(images.size() < sceneIDs.size())
   {
-    while(images.size() < sceneIDs.size())
-    {
-      images.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
-      depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
-    }
-
-    const ITMIntrinsics intrinsics = m_model->get_slam_state(sceneID)->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
-
-    for(size_t i = 0; i < sceneIDs.size(); ++i)
-    {
-      images[i]->Clear();
-      depthImages[i]->Clear();
-
-      SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
-      visualisationTypes[i] = subwindow.get_type();
-
-      if(sceneIDs[i] != "World")
-      {
-        boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform("World", sceneIDs[i]);
-        SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-        if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
-
-        // ciTwi * wiTwj = ciTwj
-        tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
-      }
-
-      SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
-
-      // If we have not yet started reconstruction for this scene, avoid rendering it.
-      if(!slamState || !slamState->get_view()) continue;
-
-      generate_visualisation(
-        images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-        subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-        tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag()
-      );
-
-      m_model->get_visualisation_generator()->generate_depth_from_voxels(
-        depthImages[i], slamState->get_voxel_scene(), tempPose, intrinsics,
-        subwindow.get_voxel_render_state(viewIndex), DepthVisualiser::DT_ORTHOGRAPHIC
-      );
-
-      depthImages[i]->UpdateHostFromDevice();
-    }
+    images.push_back(ITMUChar4Image_Ptr(new ITMUChar4Image(image->noDims, true, true)));
+    depthImages.push_back(ITMFloatImage_Ptr(new ITMFloatImage(image->noDims, true, true)));
   }
-#endif
+
+  const ITMIntrinsics intrinsics = m_model->get_slam_state(sceneID)->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+
+  for(size_t i = 0; i < sceneIDs.size(); ++i)
+  {
+    images[i]->Clear();
+    depthImages[i]->Clear();
+
+    SE3Pose tempPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
+    visualisationTypes[i] = subwindow.get_type();
+
+    if(sceneIDs[i] != "World")
+    {
+      boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform("World", sceneIDs[i]);
+      SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((i + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+      if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[i] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
+
+      // ciTwi * wiTwj = ciTwj
+      tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
+    }
+
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[i]);
+
+    // If we have not yet started reconstruction for this scene, avoid rendering it.
+    if(!slamState || !slamState->get_view()) continue;
+
+    generate_visualisation(
+      images[i], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
+      subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+      tempPose, slamState->get_view(), intrinsics, visualisationTypes[i], subwindow.get_surfel_flag()
+    );
+
+    m_model->get_visualisation_generator()->generate_depth_from_voxels(
+      depthImages[i], slamState->get_voxel_scene(), tempPose, intrinsics,
+      subwindow.get_voxel_render_state(viewIndex), DepthVisualiser::DT_ORTHOGRAPHIC
+    );
+
+    depthImages[i]->UpdateHostFromDevice();
+  }
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   const View_CPtr view = slamState->get_view();
-  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+  //const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
 
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
@@ -525,27 +520,23 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
     pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag()
   );
 
-#if 1
-  // FIXME: This is also a disgusting hack.
-  if(&subwindow == &m_subwindowConfiguration->subwindow(0))
+  // TODO: Comment here.
+  image->Clear();
+  for(int k = 0; k < image->noDims.width * image->noDims.height; ++k)
   {
-    for(int k = 0; k < image->noDims.width * image->noDims.height; ++k)
+    float smallestDepth = static_cast<float>(INT_MAX);
+    for(size_t i = 0, size = images.size(); i < size; ++i)
     {
-      float smallestDepth = static_cast<float>(INT_MAX);
-      for(size_t i = 0, size = images.size(); i < size; ++i)
+      const float arbitrarilyLargeDepth = 100.0f;
+      float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
+      if(depth != -1.0f && visualisationTypes[i] == VisualisationGenerator::VT_SCENE_SEMANTICPHONG) depth = arbitrarilyLargeDepth;
+      if(depth != -1.0f && depth < smallestDepth)
       {
-        const float arbitrarilyLargeDepth = 100.0f;
-        float depth = depthImages[i]->GetData(MEMORYDEVICE_CPU)[k];
-        if(depth != -1.0f && visualisationTypes[i] == VisualisationGenerator::VT_SCENE_SEMANTICPHONG) depth = arbitrarilyLargeDepth;
-        if(depth != -1.0f && depth < smallestDepth)
-        {
-          smallestDepth = depth;
-          image->GetData(MEMORYDEVICE_CPU)[k] = images[i]->GetData(MEMORYDEVICE_CPU)[k];
-        }
+        smallestDepth = depth;
+        image->GetData(MEMORYDEVICE_CPU)[k] = images[i]->GetData(MEMORYDEVICE_CPU)[k];
       }
     }
   }
-#endif
 
   // Render a quad textured with the subwindow image.
   render_image(image);
