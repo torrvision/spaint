@@ -246,6 +246,14 @@ private:
                               const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
 
   /**
+   * \brief Renders a colour image over the contents of the current subwindow.
+   *
+   * \param image             The colour image.
+   * \param useAlphaBlending  Whether or not to use alpha blending.
+   */
+  void render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlending = false) const;
+
+  /**
    * \brief Renders a semi-transparent colour overlay over the existing scene.
    *
    * \param overlay The colour overlay.

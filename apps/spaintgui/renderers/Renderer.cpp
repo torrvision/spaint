@@ -416,27 +416,39 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
   }
 }
 
-void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+void Renderer::render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlending) const
 {
-  // Copy the overlay to a texture.
+  // Copy the image to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, overlay->noDims.x, overlay->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, overlay->GetData(MEMORYDEVICE_CPU));
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  // Enable blending.
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if(useAlphaBlending)
+  {
+    // Enable alphba blending.
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
 
-  // Render a semi-transparent quad textured with the overlay over the top of the existing scene.
+  // Render a quad textured with the image over the top of the existing scene.
   begin_2d();
     render_textured_quad(m_textureID);
   end_2d();
 
-  // Disable blending again.
-  glDisable(GL_BLEND);
+  if(useAlphaBlending)
+  {
+    // Disable alpha blending again.
+    glDisable(GL_BLEND);
+  }
+}
+
+void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+{
+  const bool useAlphaBlending = true;
+  render_image(overlay, useAlphaBlending);
 }
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
