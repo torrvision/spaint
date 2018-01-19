@@ -17,35 +17,22 @@ namespace itmx {
  */
 enum InteractionType
 {
-  /** An interaction in which the client asks the server to render and send across an image of the global map from a specified pose. */
-  IT_REQUESTGLOBALRENDER,
+  /** An interaction in which the client asks the server to send its scene rendering for that client. */
+  IT_GETRENDERING,
 
   /** An interaction in which the client sends a single RGB-D frame to the server. */
-  IT_SENDFRAMETOSERVER,
+  IT_SENDFRAME,
 
-  /** An unknown interaction (used when default constructing an interaction type message). */
-  IT_UNKNOWN,
+  /** An interaction in which the client asks the server to update its scene rendering for that client. */
+  IT_UPDATERENDERING,
 };
 
 //#################### TYPES ####################
 
 /**
- * \brief An instance of this class represents a message containing the way in which a mapping client next wants to interact with a mapping server.
+ * \brief An instance of this type represents a message containing the way in which a mapping client next wants to interact with a mapping server.
  */
-class InteractionTypeMessage : public SimpleMessage<InteractionType>
-{
-  //#################### CONSTRUCTORS #########################
-public:
-  /**
-   * \brief Constructs an interaction type message.
-   *
-   * \param interactionType The interaction type to store in the message.
-   */
-  explicit InteractionTypeMessage(InteractionType interactionType = IT_UNKNOWN)
-  {
-    set_value(interactionType);
-  }
-};
+typedef SimpleMessage<InteractionType> InteractionTypeMessage;
 
 }
 

@@ -59,6 +59,22 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
 
+void MappingClient::update_rendering(const ORUtils::SE3Pose& clientPose)
+{
+  AckMessage ackMsg;
+  InteractionTypeMessage interactionTypeMsg(IT_UPDATERENDERING);
+  SimpleMessage<ORUtils::SE3Pose> clientPoseMsg(clientPose);
+
+  boost::lock_guard<boost::mutex> lock(m_interactionMutex);
+
+  // First send the interaction type message, then send the client pose message,
+  // then wait for an acknowledgement from the server. We chain all of these
+  // with && so as to early out in case of failure.
+  m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()) &&
+  m_stream.write(clientPoseMsg.get_data_ptr(), clientPoseMsg.get_size()) &&
+  m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void MappingClient::run_message_sender()
@@ -66,7 +82,7 @@ void MappingClient::run_message_sender()
   AckMessage ackMsg;
   CompressedRGBDFrameHeaderMessage headerMsg;
   CompressedRGBDFrameMessage frameMsg(headerMsg);
-  InteractionTypeMessage interactionTypeMsg(IT_SENDFRAMETOSERVER);
+  InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
 
   bool connectionOk = true;
 
@@ -80,14 +96,18 @@ void MappingClient::run_message_sender()
     // the actual frame data.
     m_frameCompressor->compress_rgbd_frame(*msg, headerMsg, frameMsg);
 
-    // First send the interaction type message, then send the frame header message, then send
-    // the frame message itself, then wait for an acknowledgement from the server. We chain
-    // all of these with && so as to early out in case of failure.
-    connectionOk = connectionOk
-      && m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size())
-      && m_stream.write(headerMsg.get_data_ptr(), headerMsg.get_size())
-      && m_stream.write(frameMsg.get_data_ptr(), frameMsg.get_size())
-      && m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
+    {
+      boost::lock_guard<boost::mutex> lock(m_interactionMutex);
+
+      // First send the interaction type message, then send the frame header message, then send
+      // the frame message itself, then wait for an acknowledgement from the server. We chain
+      // all of these with && so as to early out in case of failure.
+      connectionOk = connectionOk
+        && m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size())
+        && m_stream.write(headerMsg.get_data_ptr(), headerMsg.get_size())
+        && m_stream.write(frameMsg.get_data_ptr(), frameMsg.get_size())
+        && m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
+    }
 
     // Remove the frame message that we have just sent from the queue.
     m_frameMessageQueue.pop();

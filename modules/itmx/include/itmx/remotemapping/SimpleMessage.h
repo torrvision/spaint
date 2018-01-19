@@ -25,11 +25,14 @@ private:
 public:
   /**
    * \brief Constructs a simple message.
+   *
+   * \param value The initial message value (if any).
    */
-  SimpleMessage()
+  SimpleMessage(const T& value = T())
   {
     m_valueSegment = std::make_pair(0, sizeof(T));
     m_data.resize(m_valueSegment.second);
+    set_value(value);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

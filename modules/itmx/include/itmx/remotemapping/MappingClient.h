@@ -32,6 +32,9 @@ private:
   /** A queue containing the RGB-D frame messages to be sent to the server. */
   RGBDFrameMessageQueue m_frameMessageQueue;
 
+  /** A mutex used to synchronise interactions with the server to avoid overlaps. */
+  boost::mutex m_interactionMutex;
+
   /** The TCP stream used as a wrapper around the connection to the server. */
   boost::asio::ip::tcp::iostream m_stream;
 
@@ -59,6 +62,13 @@ public:
    * \param msg The message to send.
    */
   void send_calibration_message(const RGBDCalibrationMessage& msg);
+
+  /**
+   * \brief Sends a request to the server to update its scene rendering for the client.
+   *
+   * \param pose  The client pose from which the scene should be rendered.
+   */
+  void update_rendering(const ORUtils::SE3Pose& clientPose);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
