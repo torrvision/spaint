@@ -72,6 +72,9 @@ private:
     /** An optional pose (in the client's coordinate system) from which the client wants the server to render the scene. */
     boost::optional<ORUtils::SE3Pose> m_renderingPose;
 
+    /** The synchronisation mutex for the rendering pose. */
+    boost::mutex m_renderingPoseMutex;
+
     /** The size of RGB image produced by the camera associated with the client. */
     Vector2i m_rgbImageSize;
 
@@ -200,6 +203,14 @@ public:
    * \param pose      A pose into which to copy the next pose from the client.
    */
   void get_pose(int clientID, ORUtils::SE3Pose& pose);
+
+  /**
+   * \brief Gets the optional rendering pose (in the client's coordinate system) from which the specified client wants the server to render the scene.
+   *
+   * \param clientID  The ID of the client whose rendering pose we want to get.
+   * \return          The rendering pose of the specified client.
+   */
+  const boost::optional<ORUtils::SE3Pose>& get_rendering_pose(int clientID) const;
 
   /**
    * \brief Attempts to get the size of RGB image produced by the camera associated with the specified client.

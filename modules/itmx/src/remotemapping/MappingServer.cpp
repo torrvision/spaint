@@ -130,6 +130,17 @@ void MappingServer::get_pose(int clientID, ORUtils::SE3Pose& pose)
   client->m_poseDirty = true;
 }
 
+const boost::optional<ORUtils::SE3Pose>& MappingServer::get_rendering_pose(int clientID) const
+{
+  Client_Ptr client = get_client(clientID);
+  if(client)
+  {
+    boost::lock_guard<boost::mutex> lock(client->m_renderingPoseMutex);
+    return client->m_renderingPose;
+  }
+  else return boost::none;
+}
+
 Vector2i MappingServer::get_rgb_image_size(int clientID) const
 {
   // FIXME: What to do when the client no longer exists needs more thought.
@@ -360,6 +371,7 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
           if((connectionOk = read_message(sock, renderingPoseMsg)))
           {
             // If that succeeds, store the pose so that it can be picked up by the renderer and send an acknowledgement to the client.
+            boost::lock_guard<boost::mutex> lock(client->m_renderingPoseMutex);
             client->m_renderingPose = renderingPoseMsg.extract_value();
             connectionOk = write_message(sock, AckMessage());
           }
