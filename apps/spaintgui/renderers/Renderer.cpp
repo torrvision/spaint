@@ -357,8 +357,18 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
-    // Render the reconstructed scene, then render a synthetic scene over the top of it.
-    render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    if(sceneID == Model::get_world_scene_id())
+    {
+      // Render all the reconstructed scenes in the same subwindow, with appropriate depth testing.
+      render_all_reconstructed_scenes(pose, subwindow, viewIndex);
+    }
+    else
+    {
+      // Render the reconstructed scene.
+      render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    }
+
+    // Render the synthetic scene over the top of the reconstructed scene.
     render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
@@ -433,65 +443,13 @@ const boost::optional<VisualisationGenerator::Postprocessor>& Renderer::get_post
   return postprocessor;
 }
 
-void Renderer::render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlending) const
-{
-  // Copy the image to a texture.
-  glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  if(useAlphaBlending)
-  {
-    // Enable alphba blending.
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  }
-
-  // Render a quad textured with the image over the top of the existing scene.
-  begin_2d();
-    render_textured_quad(m_textureID);
-  end_2d();
-
-  if(useAlphaBlending)
-  {
-    // Disable alpha blending again.
-    glDisable(GL_BLEND);
-  }
-}
-
-void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
-{
-  const bool useAlphaBlending = true;
-  render_image(overlay, useAlphaBlending);
-}
-
-#if WITH_GLUT && USE_PIXEL_DEBUGGING
-void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow& subwindow) const
-{
-  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracWindowPos);
-  if(!fracSubwindowPos) return;
-
-  ITMUChar4Image_CPtr image = subwindow.get_image();
-  int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
-  int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
-  Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
-
-  std::ostringstream oss;
-  oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
-
-  begin_2d();
-    render_text(oss.str(), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(0.025f, 0.95f));
-  end_2d();
-}
-#endif
-
-void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
+void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
+
+  // TEMPORARY
+  const std::string sceneID = subwindow.get_scene_id();
 
 #if 1
   // FIXME: This is a disgusting hack.
@@ -588,6 +546,80 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
     }
   }
 #endif
+
+  // Render a quad textured with the subwindow image.
+  render_image(image);
+}
+
+void Renderer::render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlending) const
+{
+  // Copy the image to a texture.
+  glBindTexture(GL_TEXTURE_2D, m_textureID);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  if(useAlphaBlending)
+  {
+    // Enable alphba blending.
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
+
+  // Render a quad textured with the image over the top of the existing scene.
+  begin_2d();
+    render_textured_quad(m_textureID);
+  end_2d();
+
+  if(useAlphaBlending)
+  {
+    // Disable alpha blending again.
+    glDisable(GL_BLEND);
+  }
+}
+
+void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+{
+  const bool useAlphaBlending = true;
+  render_image(overlay, useAlphaBlending);
+}
+
+#if WITH_GLUT && USE_PIXEL_DEBUGGING
+void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow& subwindow) const
+{
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracWindowPos);
+  if(!fracSubwindowPos) return;
+
+  ITMUChar4Image_CPtr image = subwindow.get_image();
+  int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
+  int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
+  Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
+
+  std::ostringstream oss;
+  oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
+
+  begin_2d();
+    render_text(oss.str(), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(0.025f, 0.95f));
+  end_2d();
+}
+#endif
+
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
+{
+  // Generate the subwindow image.
+  const ITMUChar4Image_Ptr& image = subwindow.get_image();
+
+  SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+  const View_CPtr view = slamState->get_view();
+  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+
+  generate_visualisation(
+    image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
+    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag()
+  );
 
   // Render a quad textured with the subwindow image.
   render_image(image);

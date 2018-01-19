@@ -251,6 +251,15 @@ private:
   const boost::optional<spaint::VisualisationGenerator::Postprocessor>& get_postprocessor() const;
 
   /**
+   * \brief Renders all the reconstructed scenes into a sub-window, with appropriate depth testing.
+   *
+   * \param pose  The camera pose.
+   * \param subwindow The sub-window into which to render.
+   * \param viewIndex The index of the free camera view for the sub-window.
+   */
+  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const;
+
+  /**
    * \brief Renders a colour image over the contents of the current subwindow.
    *
    * \param image             The colour image.
