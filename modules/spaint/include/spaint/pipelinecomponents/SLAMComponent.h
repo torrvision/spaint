@@ -99,9 +99,6 @@ private:
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
-  /** The mapping client (if any) to use to communicate with the remote mapping server. */
-  itmx::MappingClient_Ptr m_mappingClient;
-
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
 

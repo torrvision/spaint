@@ -17,6 +17,11 @@ void SLAMContext::add_scene_id(const std::string& sceneID)
   m_sceneIDs.push_back(sceneID);
 }
 
+itmx::MappingClient_Ptr& SLAMContext::get_mapping_client(const std::string& sceneID)
+{
+  return m_mappingClients[sceneID];
+}
+
 itmx::RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
 {
   return m_relocalisers[sceneID];

@@ -246,11 +246,11 @@ bool SLAMComponent::process_frame()
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
     }
 
-    // If a mapping client is active:
-    if(m_mappingClient)
+    // If a mapping client is active, send the current frame to the remote mapping server.
+    const MappingClient_Ptr& mappingClient = m_context->get_mapping_client(m_sceneID);
+    if(mappingClient)
     {
-      // Send the current frame to the remote mapping server.
-      MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_mappingClient->begin_push_frame_message();
+      MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = mappingClient->begin_push_frame_message();
       boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
       if(elt)
       {
@@ -260,9 +260,6 @@ bool SLAMComponent::process_frame()
         msg.set_rgb_image(inputRGBImage);
         msg.set_depth_image(inputRawDepthImage);
       }
-
-      // Ask the server to re-render the scene from the current pose.
-      m_mappingClient->update_rendering(*trackingState->pose_d);
     }
 
     ++m_fusedFramesCount;
@@ -336,10 +333,10 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 
 void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
 {
-  m_mappingClient = mappingClient;
+  m_context->get_mapping_client(m_sceneID) = mappingClient;
 
   // If we're using a mapping client, send an initial calibration message across to the server.
-  if(m_mappingClient)
+  if(mappingClient)
   {
     SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
 
@@ -358,7 +355,7 @@ void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
 #endif
 
     std::cout << "Sending calibration message" << std::endl;
-    m_mappingClient->send_calibration_message(calibMsg);
+    mappingClient->send_calibration_message(calibMsg);
   }
 }
 

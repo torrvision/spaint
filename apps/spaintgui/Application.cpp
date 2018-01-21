@@ -21,6 +21,7 @@ using namespace ITMLib;
 
 #include <itmx/persistence/ImagePersister.h>
 #include <itmx/persistence/PosePersister.h>
+#include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
 #include <rigging/MoveableCamera.h>
@@ -468,6 +469,7 @@ void Application::process_camera_input()
   }
 
   // If the active sub-window is in free camera mode, allow the user to move its camera around.
+  const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
   if(activeSubwindow.get_camera_mode() == Subwindow::CM_FREE)
   {
     const float SPEED = 0.1f;
@@ -525,7 +527,6 @@ void Application::process_camera_input()
     // and are in free camera mode to have the same pose as this one.
     if(m_usePoseMirroring)
     {
-      const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
       for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
       {
         Subwindow& subwindow = subwindowConfiguration->subwindow(i);
@@ -534,6 +535,18 @@ void Application::process_camera_input()
           subwindow.get_camera()->set_from(*camera);
         }
       }
+    }
+  }
+
+  // If one of the sub-windows has its remote flag set and a mapping client is active, send the sub-window's camera pose to the mapping server.
+  for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    Subwindow& subwindow = subwindowConfiguration->subwindow(i);
+    const MappingClient_Ptr& mappingClient = m_pipeline->get_model()->get_mapping_client(subwindow.get_scene_id());
+    if(/*subwindow.get_remote_flag() &&*/ mappingClient)
+    {
+      ORUtils::SE3Pose renderingPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
+      mappingClient->update_rendering(renderingPose);
     }
   }
 }
