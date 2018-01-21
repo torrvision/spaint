@@ -64,11 +64,11 @@ public:
   void send_calibration_message(const RGBDCalibrationMessage& msg);
 
   /**
-   * \brief Sends a request to the server to update its scene rendering for the client.
+   * \brief Sends a request to the server to update the pose from which it should render the scene for the client.
    *
-   * \param pose  The client pose from which the scene should be rendered.
+   * \param renderingPose The pose (in the client's coordinate system) from which the server should render the scene.
    */
-  void update_rendering(const ORUtils::SE3Pose& clientPose);
+  void update_rendering_pose(const ORUtils::SE3Pose& renderingPose);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

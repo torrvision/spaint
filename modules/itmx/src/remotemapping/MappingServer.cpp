@@ -361,10 +361,10 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
 
           break;
         }
-        case IT_UPDATERENDERING:
+        case IT_UPDATERENDERINGPOSE:
         {
 #if DEBUGGING
-          std::cout << "Receiving update rendering request from client" << std::endl;
+          std::cout << "Receiving updated rendering pose from client" << std::endl;
 #endif
 
           // Try to read a rendering pose message.
