@@ -17,8 +17,8 @@ namespace itmx {
  */
 enum InteractionType
 {
-  /** An interaction in which the client asks the server to send its scene rendering for that client. */
-  IT_GETRENDERING,
+  /** An interaction in which the client asks the server to send across its rendered image of the scene for that client. */
+  IT_GETRENDEREDIMAGE,
 
   /** An interaction in which the client sends a single RGB-D frame to the server. */
   IT_SENDFRAME,

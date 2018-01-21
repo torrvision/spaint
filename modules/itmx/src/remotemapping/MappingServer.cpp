@@ -283,7 +283,8 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
       calibMsg.extract_depth_compression_type()
     ));
 
-    // Construct a dummy frame message to consume messages that cannot be pushed onto the queue.
+    // Construct a dummy frame message to consume messages that cannot be pushed onto the queue
+    // and to use as a temporary storage space when sending renderings back to the client.
     dummyFrameMsg.reset(new RGBDFrameMessage(client->m_rgbImageSize, client->m_depthImageSize));
 
     // Signal to the client that the server is ready.
@@ -316,13 +317,22 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
       // If that succeeds, determine the type of interaction the client wants to have with the server and proceed accordingly.
       switch(interactionTypeMsg.extract_value())
       {
-        case IT_GETRENDERING:
+        case IT_GETRENDEREDIMAGE:
         {
 #if DEBUGGING
-          std::cout << "Receiving get rendering request from client" << std::endl;
+          std::cout << "Receiving get rendered image request from client" << std::endl;
 #endif
 
-          // TODO
+          if(!client->m_renderingImage) break;
+
+          dummyFrameMsg->set_frame_index(-1);
+          dummyFrameMsg->set_rgb_image(client->m_renderingImage);
+          frameCompressor->compress_rgbd_frame(*dummyFrameMsg, headerMsg, frameMsg);
+
+          // TODO: Comment here.
+          AckMessage ackMsg;
+          connectionOk = connectionOk && write_message(sock, headerMsg) && write_message(sock, frameMsg) && read_message(sock, ackMsg);
+
           break;
         }
         case IT_SENDFRAME:

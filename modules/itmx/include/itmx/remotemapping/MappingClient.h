@@ -33,10 +33,13 @@ private:
   RGBDFrameMessageQueue m_frameMessageQueue;
 
   /** A mutex used to synchronise interactions with the server to avoid overlaps. */
-  boost::mutex m_interactionMutex;
+  mutable boost::mutex m_interactionMutex;
+
+  /** TODO */
+  mutable ITMUChar4Image_Ptr m_remoteImage;
 
   /** The TCP stream used as a wrapper around the connection to the server. */
-  boost::asio::ip::tcp::iostream m_stream;
+  mutable boost::asio::ip::tcp::iostream m_stream;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -55,6 +58,11 @@ public:
    * \brief Starts the push of a frame message so that it can be sent to the server.
    */
   RGBDFrameMessageQueue::PushHandler_Ptr begin_push_frame_message();
+
+  /**
+   * \brief TODO
+   */
+  ITMUChar4Image_CPtr get_remote_image() const;
 
   /**
    * \brief Sends a calibration message to the server.

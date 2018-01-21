@@ -379,30 +379,39 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
     glViewport(left, top, width, height);
 
-    // If the sub-window is in follow mode, update its camera.
-    if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
+    MappingClient_CPtr mappingClient = m_model->get_mapping_client(sceneID);
+    if(/*subwindow.get_remote_flag() &&*/ mappingClient)
     {
-      ORUtils::SE3Pose livePose = slamState->get_pose();
-      subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
-    }
-
-    // Determine the pose from which to render.
-    Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
-    ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
-
-    if(subwindow.get_all_scenes_flag())
-    {
-      // Render all the reconstructed scenes in the same subwindow, with appropriate depth testing.
-      render_all_reconstructed_scenes(pose, subwindow, viewIndex);
+      ITMUChar4Image_CPtr remoteImage = mappingClient->get_remote_image();
+      render_image(remoteImage);
     }
     else
     {
-      // Render the reconstructed scene.
-      render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
-    }
+      // If the sub-window is in follow mode, update its camera.
+      if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
+      {
+        ORUtils::SE3Pose livePose = slamState->get_pose();
+        subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
+      }
 
-    // Render the synthetic scene over the top of the reconstructed scene.
-    render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
+      // Determine the pose from which to render.
+      Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
+      ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
+
+      if(subwindow.get_all_scenes_flag())
+      {
+        // Render all the reconstructed scenes in the same subwindow, with appropriate depth testing.
+        render_all_reconstructed_scenes(pose, subwindow, viewIndex);
+      }
+      else
+      {
+        // Render the reconstructed scene.
+        render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+      }
+
+      // Render the synthetic scene over the top of the reconstructed scene.
+      render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
+    }
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
     // Render the value of the pixel to which the user is pointing (for debugging purposes).

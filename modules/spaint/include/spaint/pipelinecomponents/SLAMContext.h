@@ -76,6 +76,14 @@ public:
   virtual itmx::MappingClient_Ptr& get_mapping_client(const std::string& sceneID);
 
   /**
+   * \brief Gets the mapping client (if any) for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The mapping client (if any) for the specified scene.
+   */
+  virtual itmx::MappingClient_CPtr get_mapping_client(const std::string& sceneID) const;
+
+  /**
    * \brief Gets the relocaliser for the specified scene.
    *
    * \param sceneID The scene ID.

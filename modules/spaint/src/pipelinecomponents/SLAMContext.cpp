@@ -22,6 +22,11 @@ itmx::MappingClient_Ptr& SLAMContext::get_mapping_client(const std::string& scen
   return m_mappingClients[sceneID];
 }
 
+itmx::MappingClient_CPtr SLAMContext::get_mapping_client(const std::string& sceneID) const
+{
+  return MapUtil::lookup(m_mappingClients, sceneID, itmx::MappingClient_Ptr());
+}
+
 itmx::RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
 {
   return m_relocalisers[sceneID];

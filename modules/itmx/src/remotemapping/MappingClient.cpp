@@ -31,6 +31,38 @@ MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr MappingClient::begin_push_
   return m_frameMessageQueue.begin_push();
 }
 
+ITMUChar4Image_CPtr MappingClient::get_remote_image() const
+{
+  AckMessage ackMsg;
+  InteractionTypeMessage interactionTypeMsg(IT_GETRENDEREDIMAGE);
+
+  boost::lock_guard<boost::mutex> lock(m_interactionMutex);
+
+  if(m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()))
+  {
+    CompressedRGBDFrameHeaderMessage headerMsg;
+    if(m_stream.read(headerMsg.get_data_ptr(), headerMsg.get_size()))
+    {
+      CompressedRGBDFrameMessage frameMsg(headerMsg);
+      if(m_stream.read(frameMsg.get_data_ptr(), frameMsg.get_size()))
+      {
+        m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size());
+
+        // FIXME: Avoid recreating this every time, and avoid hard-coding the sizes.
+        const Vector2i rgbImageSize(640,480);
+        const Vector2i depthImageSize(640,480);
+        RGBDFrameMessage uncompressedFrameMsg(rgbImageSize, depthImageSize);
+        m_frameCompressor->uncompress_rgbd_frame(frameMsg, uncompressedFrameMsg);
+        if(!m_remoteImage) m_remoteImage.reset(new ITMUChar4Image(rgbImageSize, true, false));
+        uncompressedFrameMsg.extract_rgb_image(m_remoteImage.get());
+        return m_remoteImage;
+      }
+    }
+  }
+
+  return ITMUChar4Image_CPtr();
+}
+
 void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
 {
   bool connectionOk = true;
