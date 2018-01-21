@@ -380,8 +380,9 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     glViewport(left, top, width, height);
 
     MappingClient_CPtr mappingClient = m_model->get_mapping_client(sceneID);
-    if(/*subwindow.get_remote_flag() &&*/ mappingClient)
+    if(mappingClient && subwindow.get_remote_flag())
     {
+      // TODO: Comment here.
       ITMUChar4Image_CPtr remoteImage = mappingClient->get_remote_image();
       render_image(remoteImage);
     }

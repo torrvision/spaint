@@ -53,6 +53,9 @@ private:
   /** The original size of the image in which to store the scene visualisation for the sub-window. */
   Vector2i m_originalImgSize;
 
+  /** A flag indicating whether or not to ask the mapping server to render the image for this sub-window. */
+  bool m_remoteFlag;
+
   /** The ID of the primary scene to render in the sub-window. */
   std::string m_sceneID;
 
@@ -87,16 +90,16 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
-   */
-  bool get_all_scenes_flag() const;
-
-  /**
    * \brief Gets the location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]).
    *
    * \return  The location of the bottom-right of the sub-window.
    */
   const Vector2f& bottom_right() const;
+
+  /**
+   * \brief TODO
+   */
+  bool get_all_scenes_flag() const;
 
   /**
    * \brief Gets the camera from which to render the scene.
@@ -139,6 +142,11 @@ public:
    * \return  The original size of the image in which to store the scene visualisation for the sub-window.
    */
   const Vector2i& get_original_image_size() const;
+
+  /**
+   * \brief TODO
+   */
+  bool get_remote_flag() const;
 
   /**
    * \brief Gets the ID of the primary scene to render in the sub-window.
@@ -228,6 +236,11 @@ public:
    * \param cameraUpVector  The up vector to use when rotating the camera.
    */
   void set_camera_up_vector(const Eigen::Vector3f& cameraUpVector);
+
+  /**
+   * \brief TODO
+   */
+  void set_remote_flag(bool remoteFlag);
 
   /**
    * \brief Sets a flag indicating whether or not to render a surfel visualisation rather than a voxel one.
