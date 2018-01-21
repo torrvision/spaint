@@ -256,23 +256,28 @@ void Renderer::render_client_images() const
   std::vector<int> clients = mappingServer->get_active_clients();
   for(size_t i = 0, size = clients.size(); i < size; ++i)
   {
+    MappingServer::RenderingImageHandler_Ptr imageHandler = mappingServer->get_rendering_image(clients[i]);
+    if(!imageHandler) continue;
+
     const boost::optional<ORUtils::SE3Pose>& optionalPose = mappingServer->get_rendering_pose(clients[i]);
     if(!optionalPose) continue;
 
+    ITMUChar4Image_Ptr& image = imageHandler->get();
+    if(!image)
+    {
+      // FIXME: The size shouldn't be hard-coded like this.
+      image.reset(new ITMUChar4Image(Vector2i(640,480), true, true));
+    }
+
     ORUtils::SE3Pose pose = *optionalPose;
 
-    // TEMPORARY
+    // FIXME: The primary scene ID shouldn't be hard-coded like this.
     const std::string primarySceneID = Model::get_world_scene_id();
-    static ITMUChar4Image_Ptr output(new ITMUChar4Image(Vector2i(640,480), true, true));
 
     static VoxelRenderState_Ptr voxelRenderState;
     static SurfelRenderState_Ptr surfelRenderState;
     const bool surfelFlag = false;
-    render_all_reconstructed_scenes(pose, primarySceneID, VisualisationGenerator::VT_SCENE_COLOUR, voxelRenderState, surfelRenderState, output->noDims, surfelFlag, output);
-
-    // FOR DEBUGGING PURPOSES (TO ALLOW A BREAKPOINT)
-    int x;
-    x = 23;
+    render_all_reconstructed_scenes(pose, primarySceneID, VisualisationGenerator::VT_SCENE_COLOUR, voxelRenderState, surfelRenderState, image->noDims, surfelFlag, image);
   }
 }
 

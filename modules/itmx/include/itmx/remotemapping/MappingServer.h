@@ -69,6 +69,12 @@ private:
     /** A flag indicating whether or not the pose associated with the first message in the queue has already been read. */
     bool m_poseDirty;
 
+    /** An optional image into which to render the scene for the client. */
+    ITMUChar4Image_Ptr m_renderingImage;
+
+    /** The synchronisation mutex for the rendering image. */
+    boost::mutex m_renderingImageMutex;
+
     /** An optional pose (in the client's coordinate system) from which the client wants the server to render the scene. */
     boost::optional<ORUtils::SE3Pose> m_renderingPose;
 
@@ -91,6 +97,45 @@ private:
   };
 
   typedef boost::shared_ptr<Client> Client_Ptr;
+
+public:
+  /**
+   * \brief TODO
+   */
+  class RenderingImageHandler
+  {
+    //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
+  private:
+    /** TODO */
+    Client_Ptr m_client;
+
+    /** TODO */
+    boost::lock_guard<boost::mutex> m_lock;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+  public:
+    /**
+     * \brief TODO
+     */
+    RenderingImageHandler(const Client_Ptr& client)
+    : m_client(client), m_lock(client->m_renderingImageMutex)
+    {}
+
+    //~~~~~~~~~~~~~~~~~~~~ COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ~~~~~~~~~~~~~~~~~~~~
+  private:
+    // Deliberately private and unimplemented.
+    RenderingImageHandler(const RenderingImageHandler&);
+    RenderingImageHandler& operator=(const RenderingImageHandler&);
+
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+  public:
+    ITMUChar4Image_Ptr& get()
+    {
+      return m_client->m_renderingImage;
+    }
+  };
+
+  typedef boost::shared_ptr<RenderingImageHandler> RenderingImageHandler_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -205,12 +250,17 @@ public:
   void get_pose(int clientID, ORUtils::SE3Pose& pose);
 
   /**
+   * \brief TODO
+   */
+  RenderingImageHandler_Ptr get_rendering_image(int clientID) const;
+
+  /**
    * \brief Gets the optional rendering pose (in the client's coordinate system) from which the specified client wants the server to render the scene.
    *
    * \param clientID  The ID of the client whose rendering pose we want to get.
    * \return          The rendering pose of the specified client.
    */
-  const boost::optional<ORUtils::SE3Pose>& get_rendering_pose(int clientID) const;
+  boost::optional<ORUtils::SE3Pose> get_rendering_pose(int clientID) const;
 
   /**
    * \brief Attempts to get the size of RGB image produced by the camera associated with the specified client.
