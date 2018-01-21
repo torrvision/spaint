@@ -15,7 +15,8 @@ using namespace tvgutil;
 //#################### CONSTRUCTORS ####################
 
 Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
-: m_bottomRight(bottomRight),
+: m_allScenesFlag(false),
+  m_bottomRight(bottomRight),
   m_cameraMode(CM_FOLLOW),
   m_originalImgSize(imgSize),
   m_sceneID(sceneID),
@@ -28,6 +29,11 @@ Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool Subwindow::get_all_scenes_flag() const
+{
+  return m_allScenesFlag;
+}
 
 const Vector2f& Subwindow::bottom_right() const
 {
@@ -115,6 +121,11 @@ void Subwindow::resize_image(const Vector2i& newImgSize)
   m_image.reset(new ITMUChar4Image(newImgSize, true, true));
   m_voxelRenderStates.clear();
   m_surfelRenderStates.clear();
+}
+
+void Subwindow::set_all_scenes_flag(bool allScenesFlag)
+{
+  m_allScenesFlag = allScenesFlag;
 }
 
 void Subwindow::set_camera_mode(CameraMode cameraMode)

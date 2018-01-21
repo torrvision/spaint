@@ -32,6 +32,9 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** A flag indicating whether or not to render all scenes rather than just the primary one. */
+  bool m_allScenesFlag;
+
   /** The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_bottomRight;
 
@@ -50,7 +53,7 @@ private:
   /** The original size of the image in which to store the scene visualisation for the sub-window. */
   Vector2i m_originalImgSize;
 
-  /** The ID of the scene to render in the sub-window. */
+  /** The ID of the primary scene to render in the sub-window. */
   std::string m_sceneID;
 
   /** A flag indicating whether or not to render a surfel visualisation rather than a voxel one. */
@@ -75,7 +78,7 @@ public:
    *
    * \param topLeft     The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]).
    * \param bottomRight The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]).
-   * \param sceneID     The ID of the scene to render in the sub-window.
+   * \param sceneID     The ID of the primary scene to render in the sub-window.
    * \param type        The type of scene visualisation to render in the sub-window.
    * \param imgSize     The size of image needed to store the scene visualisation for the sub-window.
    */
@@ -83,6 +86,11 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief TODO
+   */
+  bool get_all_scenes_flag() const;
+
   /**
    * \brief Gets the location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]).
    *
@@ -133,9 +141,9 @@ public:
   const Vector2i& get_original_image_size() const;
 
   /**
-   * \brief Gets the ID of the scene to render in the sub-window.
+   * \brief Gets the ID of the primary scene to render in the sub-window.
    *
-   * \return  The ID of the scene to render in the sub-window.
+   * \return  The ID of the primary scene to render in the sub-window.
    */
   const std::string& get_scene_id() const;
 
@@ -201,6 +209,11 @@ public:
    * \param newImgSize  The new size of image needed to store the scene visualisation for the sub-window.
    */
   void resize_image(const Vector2i& newImgSize);
+
+  /**
+   * \brief TODO
+   */
+  void set_all_scenes_flag(bool allScenesFlag);
 
   /**
    * \brief Sets the current camera mode.

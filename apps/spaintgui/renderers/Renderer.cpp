@@ -357,7 +357,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
-    if(sceneID == Model::get_world_scene_id())
+    if(subwindow.get_all_scenes_flag())
     {
       // Render all the reconstructed scenes in the same subwindow, with appropriate depth testing.
       render_all_reconstructed_scenes(pose, subwindow, viewIndex);
