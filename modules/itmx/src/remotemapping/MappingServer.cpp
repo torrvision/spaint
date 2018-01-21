@@ -323,10 +323,11 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
           std::cout << "Receiving get rendered image request from client" << std::endl;
 #endif
 
-          if(!client->m_renderingImage) break;
+          RenderingImageHandler_Ptr imageHandler = get_rendering_image(clientID);
+          if(!imageHandler->get()) break;
 
           dummyFrameMsg->set_frame_index(-1);
-          dummyFrameMsg->set_rgb_image(client->m_renderingImage);
+          dummyFrameMsg->set_rgb_image(imageHandler->get());
           frameCompressor->compress_rgbd_frame(*dummyFrameMsg, headerMsg, frameMsg);
 
           // TODO: Comment here.
