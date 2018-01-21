@@ -150,6 +150,11 @@ public:
   bool get_supersampling_enabled() const;
 
   /**
+   * \brief TODO
+   */
+  void render_client_images() const;
+
+  /**
    * \brief Sets whether or not to use median filtering when rendering the scene raycast.
    *
    * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.

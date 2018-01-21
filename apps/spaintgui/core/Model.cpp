@@ -70,6 +70,11 @@ const MappingServer_Ptr& Model::get_mapping_server()
   return m_mappingServer;
 }
 
+MappingServer_CPtr Model::get_mapping_server() const
+{
+  return m_mappingServer;
+}
+
 const std::string& Model::get_resources_dir() const
 {
   return m_resourcesDir;
