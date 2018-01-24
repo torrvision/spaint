@@ -13,7 +13,7 @@
 namespace itmx {
 
 /**
- \brief This struct provides a utility function that can render a synthetic depth image of a voxel scene.
+ * \brief This struct provides a utility function that can render a synthetic depth image of a voxel scene.
  */
 template <typename VoxelType, typename IndexType>
 struct DepthVisualisationUtil

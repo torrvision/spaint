@@ -15,7 +15,7 @@ ImageProcessor::~ImageProcessor() {}
 
 Vector2i ImageProcessor::image_size(const AFArray_CPtr& img)
 {
-  return Vector2i(img->dims(1), img->dims(0));
+  return Vector2i(static_cast<int>(img->dims(1)), static_cast<int>(img->dims(0)));
 }
 
 }
