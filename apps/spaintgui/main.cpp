@@ -201,7 +201,7 @@ std::map<std::string,DualQuatd> load_global_poses(const std::string& globalPoses
 
   // Determine the file from which to load the global poses.
   const std::string dirName = "global_poses";
-  const bf::path p = find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
+  const bf::path p = bf::is_regular(globalPosesSpecifier) ? globalPosesSpecifier : find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
 
   // Try to read the poses from the file. If we can't, throw.
   std::ifstream fs(p.string().c_str());
