@@ -253,7 +253,7 @@ private:
   /**
    * \brief Renders all the reconstructed scenes into a sub-window, with appropriate depth testing.
    *
-   * \param pose  The camera pose.
+   * \param pose      The camera pose.
    * \param subwindow The sub-window into which to render.
    * \param viewIndex The index of the free camera view for the sub-window.
    */
