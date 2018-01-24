@@ -57,7 +57,7 @@ std::vector<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ITMUCha
   copy_images(colourImage, depthImage);
 
   // Attempt to relocalise using the internal copies.
-  std::vector<Relocaliser::Result> result = m_relocaliser->relocalise(m_colourImage.get(), m_depthImage.get(), depthIntrinsics);
+  std::vector<Relocaliser::Result> results = m_relocaliser->relocalise(m_colourImage.get(), m_depthImage.get(), depthIntrinsics);
 
   // Reset the current GPU to the one on which calls were previously being performed.
   to_old_gpu();
@@ -65,7 +65,7 @@ std::vector<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ITMUCha
   // Allow training and updating of the decorated relocaliser again.
   m_relocaliserRunning = false;
 
-  return result;
+  return results;
 }
 
 void BackgroundRelocaliser::reset()
