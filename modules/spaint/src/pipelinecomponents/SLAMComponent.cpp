@@ -206,10 +206,14 @@ bool SLAMComponent::process_frame()
     runFusion = false;
   }
 
+  // Decide whether or not we need to reset the visible list. This is necessary if we won't be rendering
+  // point clouds during tracking, since otherwise space carving won't work.
+  const bool resetVisibleList = !m_tracker->requiresPointCloudRendering();
+
   if(runFusion)
   {
-    // Run the fusion process (we reset the visible list if the tracker does not require rendering of point clouds, otherwise the space carving process doesn't work).
-    m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), !m_tracker->requiresPointCloudRendering());
+    // Run the fusion process.
+    m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
     if(m_mappingMode != MAP_VOXELS_ONLY)
     {
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
@@ -235,8 +239,7 @@ bool SLAMComponent::process_frame()
   else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    // We reset the visible list if the tracker does not require rendering of point clouds, otherwise the space carving process doesn't work.
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), !m_tracker->requiresPointCloudRendering());
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
   }
   else
   {
