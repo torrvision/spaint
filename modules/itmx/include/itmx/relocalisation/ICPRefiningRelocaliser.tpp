@@ -112,8 +112,6 @@ std::vector<Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
-  std::vector<Relocaliser::Result> refinementResults;
-
 #if DEBUGGING
   static int frameIdx = -1;
   ++frameIdx;
@@ -126,21 +124,24 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
   initialPoses.clear();
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
-  std::vector<Result> relocalisationResults = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
-  if(relocalisationResults.empty())
+  std::vector<Result> initialResults = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
+  if(initialResults.empty())
   {
     Matrix4f invalidPose;
     invalidPose.setValues(std::numeric_limits<float>::quiet_NaN());
     save_poses(invalidPose, invalidPose);
     stop_timer(m_timerRelocalisation);
-    return refinementResults;
+    return std::vector<Relocaliser::Result>();
   }
 
-  // Iterate over all results from the inner relocaliser.
+  std::vector<Relocaliser::Result> refinedResults;
   float bestScore = static_cast<float>(INT_MAX);
-  for(size_t resultIdx = 0; resultIdx < relocalisationResults.size(); ++resultIdx)
+
+  // For each initial result from the inner relocaliser:
+  for(size_t resultIdx = 0; resultIdx < initialResults.size(); ++resultIdx)
   {
-    const ORUtils::SE3Pose initialPose = relocalisationResults[resultIdx].pose;
+    // Get the suggested pose.
+    const ORUtils::SE3Pose initialPose = initialResults[resultIdx].pose;
 
     // Copy the depth and RGB images into the view.
     m_view->depth->SetFrom(depthImage, m_settings->deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
@@ -171,52 +172,60 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     // Run the tracker to refine the initial pose.
     m_trackingController->Track(m_trackingState.get(), m_view.get());
 
-    // Set up the result.
+    // If tracking succeeded:
     if(m_trackingState->trackerResult != ITMLib::ITMTrackingState::TRACKING_FAILED)
     {
-      Result refinementResult;
-      refinementResult.pose.SetFrom(m_trackingState->pose_d);
-      refinementResult.quality = m_trackingState->trackerResult == ITMLib::ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
-      refinementResult.score = m_trackingState->trackerScore;
+      // Set up the refined result.
+      Result refinedResult;
+      refinedResult.pose.SetFrom(m_trackingState->pose_d);
+      refinedResult.quality = m_trackingState->trackerResult == ITMLib::ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
+      refinedResult.score = m_trackingState->trackerScore;
 
-      if(m_chooseBestResult && relocalisationResults.size() > 1)
+      // If the inner relocaliser produced multiple initial results, and we're trying to choose the best one after refinement:
+      if(initialResults.size() > 1 && m_chooseBestResult)
       {
-        refinementResult.score = score_result(refinementResult);
+        // Score the refined result.
+        refinedResult.score = score_result(refinedResult);
+
 #if DEBUGGING
-        std::cout << resultIdx << ": " << refinementResult.score << '\n';
+        std::cout << resultIdx << ": " << refinedResult.score << '\n';
 #endif
-        if(refinementResult.score < bestScore)
+
+        // If the score is better than the current best score, update the current best score and result.
+        if(refinedResult.score < bestScore)
         {
-          bestScore = refinementResult.score;
+          bestScore = refinedResult.score;
           initialPoses.clear();
           initialPoses.push_back(initialPose);
-          refinementResults.clear();
-          refinementResults.push_back(refinementResult);
+          refinedResults.clear();
+          refinedResults.push_back(refinedResult);
         }
       }
       else
       {
-        // Since the inner relocaliser succeeded, copy its result into the initial pose.
+        // If the inner relocaliser only produced one initial result, or we're not trying to choose the best one,
+        // simply store the initial pose and refined result without any scoring.
         initialPoses.push_back(initialPose);
-        refinementResults.push_back(refinementResult);
+        refinedResults.push_back(refinedResult);
       }
     }
   }
 
   stop_timer(m_timerRelocalisation);
 
-  // Save the poses if needed.
+  // Save the best initial and refined poses if needed.
   if(m_savePoses)
   {
-    // The initial pose is the best one returned by the relocaliser.
-    const Matrix4f initialPose = relocalisationResults[0].pose.GetInvM();
+    // The best initial pose is the best one returned by the inner relocaliser.
+    const Matrix4f initialPose = initialResults[0].pose.GetInvM();
 
-    // Note that the refined pose might have been refined from a different pose than the initialPose.
-    // The refined pose is set to NaNs if the refiner never succeeded.
+    // The best refined pose is the pose (if any) whose score is lowest after refinement. Note that the
+    // best refined pose is not necessarily the result of refining the best initial pose, since refinement
+    // is not monotonic. If refinement failed for all initial poses, the refined pose is set to NaNs.
     Matrix4f refinedPose;
-    if(!refinementResults.empty())
+    if(!refinedResults.empty())
     {
-      refinedPose = refinementResults[0].pose.GetInvM();
+      refinedPose = refinedResults[0].pose.GetInvM();
     }
     else
     {
@@ -226,15 +235,15 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     // Actually save the poses.
     save_poses(initialPose, refinedPose);
 
-    // Since we are saving the poses (i.e. we are running in evaluation mode), we set the quality of every
-    // relocalisation to POOR to prevent fusion whilst evaluating the testing sequence.
-    for(size_t i = 0; i < refinementResults.size(); ++i)
+    // Since we are saving the poses (i.e. we are running in evaluation mode), we force the quality of
+    // every refined result to POOR to prevent fusion whilst evaluating the testing sequence.
+    for(size_t i = 0; i < refinedResults.size(); ++i)
     {
-      refinementResults[i].quality = RELOCALISATION_POOR;
+      refinedResults[i].quality = RELOCALISATION_POOR;
     }
   }
 
-  return refinementResults;
+  return refinedResults;
 }
 
 template <typename VoxelType, typename IndexType>
@@ -297,15 +306,15 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::Mat cvSynthDepth(synthDepth->noDims.y, synthDepth->noDims.x, CV_32FC1, synthDepth->GetData(MEMORYDEVICE_CPU));
 
 #if DEBUGGING
-  // If we're debugging, show the real and synthetic depth images to the user (note that we need to convert them to unsigned chars for visualization).
+  // If we're debugging, show the real and synthetic depth images to the user (note that we need to convert them to unsigned chars for visualisation).
   // We don't use the OpenCV normalize function because we want consistent visualisations for different frames (even though there might be clamping).
   const float scaleFactor = 100.0f;
-  cv::Mat cvRealDepthViz, cvSynthDepthViz;
-  cvRealDepth.convertTo(cvRealDepthViz, CV_8U, scaleFactor);
-  cvSynthDepth.convertTo(cvSynthDepthViz, CV_8U, scaleFactor);
+  cv::Mat cvRealDepthVis, cvSynthDepthVis;
+  cvRealDepth.convertTo(cvRealDepthVis, CV_8U, scaleFactor);
+  cvSynthDepth.convertTo(cvSynthDepthVis, CV_8U, scaleFactor);
 
-  cv::imshow("Real Depth", cvRealDepthViz);
-  cv::imshow("Synthetic Depth", cvSynthDepthViz);
+  cv::imshow("Real Depth", cvRealDepthVis);
+  cv::imshow("Synthetic Depth", cvSynthDepthVis);
 #endif
 
   // Compute a binary mask showing which pixels are valid in both the real and synthetic depth images.
@@ -320,8 +329,8 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 
 #if DEBUGGING
   // We need to convert the image for visualisation.
-  cv::Mat cvMaskedDepthDiffViz;
-  cvMaskedDepthDiff.convertTo(cvMaskedDepthDiffViz, CV_8U, scaleFactor);
+  cv::Mat cvMaskedDepthDiffVis;
+  cvMaskedDepthDiff.convertTo(cvMaskedDepthDiffVis, CV_8U, scaleFactor);
 
   cv::imshow("Masked Depth Difference", cvMaskedDepthDiff);
   cv::waitKey(1);
@@ -329,12 +338,14 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 
   // Determine the mean depth difference for valid pixels in the real and synthetic depth images.
   cv::Scalar meanDepthDiff = cv::mean(cvMaskedDepthDiff, cvCombinedMask);
+
 #if DEBUGGING
   std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
 #endif
 
   // Compute the fraction of the synthetic depth image that is valid.
   float validFraction = static_cast<float>(cv::countNonZero(cvSynthMask)) / (cvSynthMask.size().area());
+
 #if DEBUGGING
   std::cout << "Valid Synthetic Depth Pixels: " << cv::countNonZero(cvSynthMask) << std::endl;
 #endif
