@@ -565,7 +565,7 @@ void Renderer::render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlend
 
   if(useAlphaBlending)
   {
-    // Enable alphba blending.
+    // Enable alpha blending.
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   }
