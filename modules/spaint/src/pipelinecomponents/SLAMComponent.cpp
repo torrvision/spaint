@@ -376,12 +376,13 @@ void SLAMComponent::process_relocalisation()
   const bool performRelocalisation = trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED || m_relocaliseEveryFrame;
   if(performRelocalisation)
   {
-    boost::optional<Relocaliser::Result> relocalisationResult = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
+    std::vector<Relocaliser::Result> relocalisationResults = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
 
-    if(relocalisationResult)
+    if(!relocalisationResults.empty())
     {
-      trackingState->pose_d->SetFrom(&relocalisationResult->pose);
-      trackingState->trackerResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD ? ITMTrackingState::TRACKING_GOOD : ITMTrackingState::TRACKING_POOR;
+      const Relocaliser::Result& bestRelocalisationResult = relocalisationResults[0];
+      trackingState->pose_d->SetFrom(&bestRelocalisationResult.pose);
+      trackingState->trackerResult = bestRelocalisationResult.quality == Relocaliser::RELOCALISATION_GOOD ? ITMTrackingState::TRACKING_GOOD : ITMTrackingState::TRACKING_POOR;
     }
   }
 
