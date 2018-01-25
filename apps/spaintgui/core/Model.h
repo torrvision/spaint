@@ -125,6 +125,13 @@ public:
   virtual const itmx::MappingServer_Ptr& get_mapping_server();
 
   /**
+   * \brief Gets the remote mapping server (if any).
+   *
+   * \return  The remote mapping server (if any).
+   */
+  virtual itmx::MappingServer_CPtr get_mapping_server() const;
+
+  /**
    * \brief Gets the path to the resources directory.
    *
    * \return The path to the resources directory.
