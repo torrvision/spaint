@@ -134,8 +134,7 @@ void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::reallocate_temporari
     m_densities->ChangeDims(newImgSize);
     m_parents->ChangeDims(newImgSize);
 
-    // The histogram image has one additional element per each row,
-    // to allow the size of clusters to range from 0 to exampleSetCapacity (included).
+    // The histogram image has one additional element per row to allow the cluster sizes to range from 0 to exampleSetCapacity (inclusive).
     const Vector2i histogramImgSize(newImgSize.x + 1, newImgSize.y);
     m_clusterSizeHistograms->ChangeDims(histogramImgSize);
 
