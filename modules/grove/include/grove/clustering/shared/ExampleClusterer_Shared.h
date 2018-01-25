@@ -313,7 +313,7 @@ inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity,
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-  // The histograms have an additional value that needs to be reset, so we need a separate for loop.
+  // The example set's histogram has an additional value that needs to be reset, so we need a separate offset.
   const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
 
   // Reset the cluster sizes and histogram values associated with the specified example set.
@@ -346,7 +346,7 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-  // Compute the linear offset to the beginning of the data associated with the specified histogram.
+  // Compute the linear offset to the beginning of the data associated with the specified example set's histogram.
   const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
 
   // Look up the number of valid clusters associated with the specified example set.
@@ -438,7 +438,7 @@ inline void update_cluster_size_histogram(int exampleSetIdx, int clusterIdx, con
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-  // Compute the linear offset to the beginning of the data associated with the specified histogram.
+  // Compute the linear offset to the beginning of the data associated with the specified example set's histogram.
   const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
 
   // Look up the size of the specified cluster.
