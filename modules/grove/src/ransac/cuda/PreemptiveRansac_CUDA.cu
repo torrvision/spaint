@@ -198,7 +198,7 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac_CUDA::compute_and_sort_energies()
+void PreemptiveRansac_CUDA::compute_energies_and_sort()
 {
   // Number of currently sampled inlier points, used to compute the energy.
   const size_t nbInliers = m_inliersIndicesBlock->dataSize;

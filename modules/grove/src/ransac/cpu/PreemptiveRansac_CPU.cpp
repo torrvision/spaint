@@ -30,7 +30,7 @@ PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr& setting
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac_CPU::compute_and_sort_energies()
+void PreemptiveRansac_CPU::compute_energies_and_sort()
 {
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);

@@ -123,7 +123,7 @@ protected:
 
   /**
    * The maximum number of points that are tested as inliers during the P-RANSAC phase.
-   * The actual number starts from m_batchSizeRansac and increases by m_batchSizeRansac each P-RANSAC iteration.
+   * The actual number starts from m_ransacInliersPerIteration and increases by m_ransacInliersPerIteration each P-RANSAC iteration.
    */
   size_t m_nbMaxInliers;
 
@@ -194,9 +194,9 @@ public:
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
+   * \brief Compute the energy associated to each remaining pose hypothesis and rerank them by increasing energy.
    */
-  virtual void compute_and_sort_energies() = 0;
+  virtual void compute_energies_and_sort() = 0;
 
   /**
    * \brief Generate a certain number of camera pose hypotheses according to the method described in the paper.
@@ -232,12 +232,12 @@ public:
    *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
    *        Luigi Di Stefano and Philip H. S. Torr
    *
-   * \param keypoints         An image representing 3D keypoints computed from an RGB-D input image pair.
-   * \param forestPredictions An image storing ScoreForest predictions for each keypoint in keypoints.
+   * \param keypointsImage    An image representing 3D keypoints computed from an RGB-D input image pair.
+   * \param predictionsImage  An image storing ScoreForest predictions for each keypoint in keypoints.
    *
    * \return The estimated pose if successful, an empty optional value otherwise.
    */
-  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypoints, const ScorePredictionsImage_CPtr& forestPredictions);
+  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypointsImage, const ScorePredictionsImage_CPtr& predictionsImage);
 
   /**
    * \brief Returns the best poses estimated by the P-RANSAC algorithm.

@@ -37,28 +37,28 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 {
   const std::string settingsNamespace = "PreemptiveRansac.";
 
-  // By default, we set all parameters as in scoreforests.
+  // By default, we set all parameters as in SCoRe forests.
   m_checkMinDistanceBetweenSampledModes = m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);                   // Whether or not to force sampled modes to have a minimum distance between them.
-  m_checkRigidTransformationConstraint = m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);                     // Setting this to false speeds up a lot, at the expense of quality.
+  m_checkRigidTransformationConstraint = m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);                     // Setting this to false speeds things up a lot, at the expense of quality.
   m_maxCandidateGenerationIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);                     // The maximum number of times we sample three pixel-mode pairs in the attempt to generate a pose candidate.
-  m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);                                                   // Number of initial pose candidates.
+  m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);                                                   // The number of initial pose candidates.
   m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);                                   // Aggressively cull hypotheses to this number.
   m_maxTranslationErrorForCorrectPose = m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);                     // In m.
   m_minSquaredDistanceBetweenSampledModes = m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);       // In m.
 
   // Optimisation parameters defaulted as in Valentin's paper.
-  m_poseOptimisationEnergyThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);
-  m_poseOptimisationGradientThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);                     // Sets the termination condition for the pose optimisation.
+  m_poseOptimisationEnergyThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationEnergyThreshold", 0.0);                          // Part of the termination condition for the pose optimisation.
+  m_poseOptimisationGradientThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationGradientThreshold", 1e-6);                     // Part of the termination condition for the pose optimisation.
   m_poseOptimisationInlierThreshold = m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);                          // In m.
   m_poseOptimisationMaxIterations = m_settings->get_first_value<uint32_t>(settingsNamespace + "poseOptimisationMaxIterations", 100);                            // Maximum number of LM iterations.
-  m_poseOptimisationStepThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);
+  m_poseOptimisationStepThreshold = m_settings->get_first_value<double>(settingsNamespace + "poseOptimisationStepThreshold", 0.0);                              // Part of the termination condition for the pose optimisation.
   m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "poseUpdate", true);                                                                     // Whether or not to optimise the poses with LM.
   m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);                                                                  // Whether or not to print the timers for each phase.
   m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);                                    // The number of inliers sampled in each P-RANSAC iteration.
-  m_useAllModesPerLeafInPoseHypothesisGeneration = m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true); // If false use the first mode only (representing the largest cluster).
-  m_usePredictionCovarianceForPoseOptimization = m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);     // If false use L2.
+  m_useAllModesPerLeafInPoseHypothesisGeneration = m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true); // If false, use the first mode only (representing the largest cluster).
+  m_usePredictionCovarianceForPoseOptimization = m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);     // If false, use L2.
 
-  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space for all.
+  // Each RANSAC iteration after the initial cull adds m_ransacInliersPerIteration inliers to the set, so we allocate enough space for all of them up-front.
   m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
 
   // Allocate memory.
@@ -67,7 +67,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
   m_inliersMaskImage = mbf.make_image<int>();
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_maxPoseCandidates);
 
-  const uint32_t poseOptimisationBufferSize = m_nbMaxInliers * m_maxPoseCandidates;
+  const uint32_t poseOptimisationBufferSize = static_cast<uint32_t>(m_nbMaxInliers * m_maxPoseCandidates);
   m_poseOptimisationCameraPoints = mbf.make_block<Vector4f>(poseOptimisationBufferSize);
   m_poseOptimisationPredictedModes = mbf.make_block<Keypoint3DColourCluster>(poseOptimisationBufferSize);
 
@@ -76,7 +76,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
   m_printTimers = true;
 #endif
 
-  // Setup the remaining timers.
+  // Set up the remaining timers.
   for(int i = 1; i <= 6; ++i)
   {
     m_timerInlierSampling.push_back(AverageTimer("Inlier Sampling " + boost::lexical_cast<std::string>(i)));
@@ -109,12 +109,12 @@ PreemptiveRansac::~PreemptiveRansac()
 
 //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 
-// Default implementation of the abstract function.
 void PreemptiveRansac::update_candidate_poses()
 {
+  // Note: This is a default implementation of the abstract function - it is intended to be called / overridden by derived classes.
+
   const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
 
-// Update every pose in parallel
 #ifdef WITH_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
@@ -126,21 +126,23 @@ void PreemptiveRansac::update_candidate_poses()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DColourImage_CPtr& keypoints, const ScorePredictionsImage_CPtr& forestPredictions)
+boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DColourImage_CPtr& keypointsImage, const ScorePredictionsImage_CPtr& predictionsImage)
 {
-  // NOTE: In this function and in the virtual functions of the CPU and CUDA subclasses we directly access and write
-  // onto the dataSize of several MemoryBlock variables instead of keeping a separate "valid size" variable.
-  // This is done on purpose since the Update*From* functions of MemoryBlock/Images only move the first "dataSize"
-  // elements of the block. By changing the number to the actual number of elements to move we can gain a slight speed
-  // up of the system.
+  /*
+  Note: In this function and in the virtual functions of the CPU and CUDA subclasses, we directly access and overwrite
+        the dataSize member of several MemoryBlock variables instead of keeping a separate "valid size" variable.
+        This is done on purpose since the Update*From* functions of MemoryBlock/Images only move the first dataSize
+        elements of the block. By changing the number to the actual number of elements to move we can gain a slight
+        speed-up of the system.
+  */
 
   m_timerTotal.start();
 
-  // Copy keypoints and predictions in the local variables, to avoid explicitly passing them to every function.
-  m_keypointsImage = keypoints;
-  m_predictionsImage = forestPredictions;
+  // Copy the keypoints and predictions images into member variables to avoid explicitly passing them to every function.
+  m_keypointsImage = keypointsImage;
+  m_predictionsImage = predictionsImage;
 
-  // 1. Generate the pose hypotheses.
+  // Step 1: Generate the initial pose candidates.
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -153,33 +155,35 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   // Reset the number of inliers for the new pose estimation.
   m_inliersIndicesBlock->dataSize = 0;
 
-  // 2. If we have to aggressively cull the initial hypotheses to a small number.
-  if(m_maxPoseCandidatesAfterCull < m_poseCandidates->dataSize)
+  // Step 2: If necessary, aggressively cull the initial candidates to reduce the computational cost of the remaining steps.
+  if(m_poseCandidates->dataSize > m_maxPoseCandidatesAfterCull)
   {
     m_timerFirstTrim.start();
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    // 2a. First, sample a set of points from the input data to evaluate the hypotheses quality.
+    // Step 2(a): First, sample a set of points from the input data to evaluate the quality of each candidate.
     {
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "sample inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      sample_inlier_candidates(false); // no mask for the first pass
+      const bool useMask = false; // no mask for the first pass
+      sample_inlier_candidates(useMask);
     }
 
-    // 2b. Sort the hypotheses by descending quality.
+    // Step 2(b): Then, sort the candidates in non-increasing order of quality.
     {
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "compute and sort energies: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
       m_timerFirstComputeEnergy.start();
-      compute_and_sort_energies();
+      compute_energies_and_sort();
       m_timerFirstComputeEnergy.stop();
     }
 
-    // 2c. Keep only the best ones.
+    // Step 2(c): Finally, trim the number of candidates down to the maximum number allowed. Since we previously sorted
+    //            the candidates by quality, this has the effect of keeping only the best ones.
     m_poseCandidates->dataSize = m_maxPoseCandidatesAfterCull;
 
     m_timerFirstTrim.stop();
@@ -228,7 +232,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 
     // 4c. Compute the energy for each hypothesis and sort them by decreasing quality.
     m_timerComputeEnergy[iteration].start();
-    compute_and_sort_energies();
+    compute_energies_and_sort();
     m_timerComputeEnergy[iteration].stop();
 
     // 4d. Remove half of the candidates with the worse energies.
@@ -333,7 +337,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   PointsForLM ptsForLM;
 
   // The current number of inlier points.
-  ptsForLM.nbPoints = m_inliersIndicesBlock->dataSize;
+  ptsForLM.nbPoints = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
 
   // The linearised offset in the pose optimisation buffers.
   const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;

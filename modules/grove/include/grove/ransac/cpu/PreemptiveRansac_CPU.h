@@ -42,9 +42,9 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
+   * \brief Compute the energy associated to each remaining pose hypothesis and rerank them by increasing energy.
    */
-  virtual void compute_and_sort_energies();
+  virtual void compute_energies_and_sort();
 
   /**
    * \brief Generate a certain number of camera pose hypotheses according to the method described in the paper.
