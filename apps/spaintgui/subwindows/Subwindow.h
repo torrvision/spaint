@@ -97,7 +97,9 @@ public:
   const Vector2f& bottom_right() const;
 
   /**
-   * \brief TODO
+   * \brief Gets a flag indicating whether or not to render all scenes rather than just the primary one.
+   *
+   * \return  A flag indicating whether or not to render all scenes rather than just the primary one.
    */
   bool get_all_scenes_flag() const;
 
@@ -219,7 +221,9 @@ public:
   void resize_image(const Vector2i& newImgSize);
 
   /**
-   * \brief TODO
+   * \brief Sets a flag indicating whether or not to render all scenes rather than just the primary one.
+   *
+   * \param allScenesFlag A flag indicating whether or not to render all scenes rather than just the primary one.
    */
   void set_all_scenes_flag(bool allScenesFlag);
 
