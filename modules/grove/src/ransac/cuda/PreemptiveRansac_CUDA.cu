@@ -184,8 +184,7 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
   MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Allocate memory blocks.
-  m_nbPoseCandidates_device =
-      mbf.make_block<int>(1); // Size 1, just to store a value that can be accessed from the GPU.
+  m_nbPoseCandidates_device = mbf.make_block<int>(1); // Size 1, just to store a value that can be accessed from the GPU.
   m_nbSampledInliers_device = mbf.make_block<int>(1); // As above.
   m_randomGenerators = mbf.make_block<CUDARNG>(m_maxPoseCandidates);
 
