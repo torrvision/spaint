@@ -224,7 +224,7 @@ void RelocaliserApplication::run()
     prepare_example_images(*currentExample);
 
     // Now relocalise.
-    boost::optional<Relocaliser::Result> relocaliserResult =
+    std::vector<Relocaliser::Result> relocaliserResults =
         m_relocaliser->relocalise(m_currentRgbImage.get(),
                                   m_currentDepthImage.get(),
                                   m_cameraCalibration.intrinsics_d.projectionParamsSimple.all);
@@ -233,9 +233,9 @@ void RelocaliserApplication::run()
     Matrix4f inverseCameraPose;
     inverseCameraPose.setValues(std::numeric_limits<float>::quiet_NaN());
 
-    if(relocaliserResult)
+    if(!relocaliserResults.empty())
     {
-      inverseCameraPose = relocaliserResult->pose.GetInvM();
+      inverseCameraPose = relocaliserResults[0].pose.GetInvM();
     }
 
     // Save the pose if required.

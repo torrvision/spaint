@@ -36,6 +36,9 @@
 
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
+#ifdef WITH_ZED
+#include <itmx/imagesources/ZedImageSourceEngine.h>
+#endif
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
@@ -229,6 +232,15 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
   }
 #endif
 
+#ifdef WITH_ZED
+  // Probe for a Zed camera.
+  if(cameraSubengine == NULL)
+  {
+    std::cout << "[spaint] Probing Zed camera\n";
+    cameraSubengine = check_camera_subengine(new ZedImageSourceEngine(ZedCamera::instance()));
+  }
+#endif
+
   return cameraSubengine;
 }
 
@@ -334,7 +346,7 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     return false;
   }
 
-  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth / RGB image masks appropriately.
+  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
   for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
   {
     // Determine the sequence type.
@@ -347,10 +359,33 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Set the depth / RGB image masks.
-    args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
-    args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
-    args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since colour might be missing).
+    const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
+    const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
+
+    // Set the depth/RGB/pose masks appropriately.
+    if(sevenScenesNaming && spaintNaming)
+    {
+      std::cout << "Error: The directory '" << dir.string() << "' contains images that follow both the 7-Scenes and spaint naming conventions.\n";
+      return false;
+    }
+    else if(sevenScenesNaming)
+    {
+      args.depthImageMasks.push_back((dir / "frame-%06i.depth.png").string());
+      args.poseFileMasks.push_back((dir / "frame-%06i.pose.txt").string());
+      args.rgbImageMasks.push_back((dir / "frame-%06i.color.png").string());
+    }
+    else if(spaintNaming)
+    {
+      args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+      args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
+      args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    }
+    else
+    {
+      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. Manually specify the masks using the -d and -r options.\n";
+      return false;
+    }
   }
 
   // If the user hasn't explicitly specified a calibration file, try to find one in the first sequence directory (if it exists).

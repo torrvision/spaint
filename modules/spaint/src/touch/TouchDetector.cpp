@@ -15,6 +15,7 @@ using namespace rafl;
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
 #include <itmx/util/RGBDUtil.h>
+#include <itmx/visualisation/DepthVisualiserFactory.h>
 using namespace itmx;
 
 #include <tvgutil/misc/ArgUtil.h>
@@ -22,7 +23,6 @@ using namespace tvgutil;
 
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "touch/TouchDescriptorCalculator.h"
-#include "visualisation/VisualiserFactory.h"
 
 //#define DEBUG_TOUCH_DISPLAY
 //#define DEBUG_TOUCH_OUTPUT_FOREST_STATISTICS 
@@ -50,7 +50,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSe
   m_changeMask(new af::array(imgSize.y, imgSize.x)),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
-  m_depthVisualiser(VisualiserFactory::make_depth_visualiser(itmSettings->deviceType)),
+  m_depthVisualiser(DepthVisualiserFactory::make_depth_visualiser(itmSettings->deviceType)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageProcessor(ImageProcessorFactory::make_image_processor(itmSettings->deviceType)),

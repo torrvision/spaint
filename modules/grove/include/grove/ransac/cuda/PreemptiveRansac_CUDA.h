@@ -25,10 +25,10 @@ class PreemptiveRansac_CUDA : public PreemptiveRansac
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The number of pose candidates currently sampled. Resides on device memory. */
+  /** The number of pose candidates currently sampled. Resides in device memory. */
   ITMIntMemoryBlock_Ptr m_nbPoseCandidates_device;
 
-  /** The number of currently sampled inliers. Resides on device memory. */
+  /** The number of currently sampled inliers. Resides in device memory. */
   ITMIntMemoryBlock_Ptr m_nbSampledInliers_device;
 
   /** The random number generators used during the P-RANSAC process. */
@@ -48,34 +48,20 @@ public:
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
-  /**
-   * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
-   */
-  virtual void compute_and_sort_energies();
+  /** Override */
+  virtual void compute_energies_and_sort();
 
-  /**
-   * \brief Generate a certain number of camera pose hypotheses according to the method described in the paper.
-   */
+  /** Override */
   virtual void generate_pose_candidates();
 
   /** Override */
   virtual void prepare_inliers_for_optimisation();
 
-  /**
-   * \brief Sample a certain number of keypoints from the input image. Those keypoints will be used for the subsequent
-   *        energy computation.
-   *
-   * \param useMask Whether or not to store in a persistent mask the location of already sampled keypoints.
-   */
-  virtual void sample_inlier_candidates(bool useMask = false);
-
-  /**
-   * \brief Perform the continuous optimisation step described in the paper to update each remaining pose hypothesis.
-   */
-  virtual void update_candidate_poses();
+  /** Override */
+  virtual void sample_inlier_candidates(bool useMask);
 
   /** Override */
-  virtual void update_host_pose_candidates() const;
+  virtual void update_candidate_poses();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -83,6 +69,9 @@ private:
    * \brief Initialises the random number generators in a deterministic manner.
    */
   void init_random();
+
+  /** Override */
+  virtual void update_host_pose_candidates() const;
 };
 
 }

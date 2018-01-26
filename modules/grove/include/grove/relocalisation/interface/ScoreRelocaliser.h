@@ -104,6 +104,9 @@ protected:
   /** The maximum number of cluster for each leaf in the forest. */
   uint32_t m_maxClusterCount;
 
+  /** The maximum number of relocalisations to output for each call to the relocalise method. */
+  uint32_t m_maxRelocalisationsToOutput;
+
   /** The minimum size of cluster to be considered valid. */
   uint32_t m_minClusterSize;
 
@@ -234,7 +237,7 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
+  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual void reset();

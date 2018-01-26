@@ -123,12 +123,15 @@ protected:
 
   /**
    * The maximum number of points that are tested as inliers during the P-RANSAC phase.
-   * The actual number starts from m_batchSizeRansac and increases by m_batchSizeRansac each P-RANSAC iteration.
+   * The actual number starts from m_ransacInliersPerIteration and increases by m_ransacInliersPerIteration each P-RANSAC iteration.
    */
   size_t m_nbMaxInliers;
 
   /** A memory block storing the pose hypotheses. */
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
+
+  /** The actual number of pose candidates that survived the culling process. */
+  uint32_t m_poseCandidatesAfterCull;
 
   /** The camera points used for the pose optimisation step. Each row represents the points for a pose candidate. */
   ITMFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
@@ -194,9 +197,9 @@ public:
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
+   * \brief Compute the energy associated to each remaining pose hypothesis and rerank them by increasing energy.
    */
-  virtual void compute_and_sort_energies() = 0;
+  virtual void compute_energies_and_sort() = 0;
 
   /**
    * \brief Generate a certain number of camera pose hypotheses according to the method described in the paper.
@@ -232,18 +235,21 @@ public:
    *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
    *        Luigi Di Stefano and Philip H. S. Torr
    *
-   * \param keypoints         An image representing 3D keypoints computed from an RGB-D input image pair.
-   * \param forestPredictions An image storing ScoreForest predictions for each keypoint in keypoints.
+   * \param keypointsImage    An image representing 3D keypoints computed from an RGB-D input image pair.
+   * \param predictionsImage  An image storing ScoreForest predictions for each keypoint in keypoints.
    *
    * \return The estimated pose if successful, an empty optional value otherwise.
    */
-  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypoints, const ScorePredictionsImage_CPtr& forestPredictions);
+  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypointsImage, const ScorePredictionsImage_CPtr& predictionsImage);
 
   /**
-   * \brief Returns the best poses estimated by the P-RANSAC algorithm.
+   * \brief Gets all of the candidate poses that survived the initial culling process, sorted in non-increasing order
+   *        of the number of P-RANSAC iterations they survived.
    *
-   * \param poseCandidates Output array that will be filled with the best poses estimated by P-RANSAC.
-   *                       Poses are sorted in descending quality order.
+   * \pre   This function should only be called after a prior call to estimate_pose.
+   * \note  The first entry of the vector will be the candidate (if any) returned by estimate_pose.
+   *
+   * \param poseCandidates An output array that will be filled with the candidate poses that survived the initial culling process.
    */
   void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
@@ -257,10 +263,10 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief For every generated pose hypothesis (3 pairs of points in camera/world coordinates) run the Kabsch algorithm
-   *        and estimate the rigid transformation matrix.
+   * \brief Runs the Kabsch algorithm on the three camera/world point correspondences of each generated pose hypothesis
+   *        to obtain an estimate of the camera pose (a rigid transformation matrix from camera space to world space).
    *
-   * \note  Will probably go away as soon as we implement a proper SVD solver that can run on both CPU and GPU.
+   * \note  This will probably go away as soon as we implement a proper SVD solver that can run on both the CPU and GPU.
    */
   void compute_candidate_poses_kabsch();
 
@@ -277,6 +283,8 @@ protected:
    */
   bool update_candidate_pose(int candidateIdx) const;
 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
   /**
    * \brief Make sure that the host version of the pose candidates memory block contains up to date values.
    */

@@ -22,6 +22,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
 #############################
 # Specify the project files #
@@ -73,6 +74,11 @@ include/itmx/imagesources/AsyncImageSourceEngine.h
 include/itmx/imagesources/RemoteImageSourceEngine.h
 include/itmx/imagesources/SingleRGBDImagePipe.h
 )
+
+IF(WITH_ZED)
+  SET(imagesources_sources ${imagesources_sources} src/imagesources/ZedImageSourceEngine.cpp)
+  SET(imagesources_headers ${imagesources_headers} include/itmx/imagesources/ZedImageSourceEngine.h)
+ENDIF()
 
 ##
 SET(ocv_sources
@@ -174,6 +180,11 @@ IF(WITH_VICON)
   )
 ENDIF()
 
+IF(WITH_ZED)
+  SET(trackers_sources ${trackers_sources} src/trackers/ZedTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/itmx/trackers/ZedTracker.h)
+ENDIF()
+
 ##
 SET(util_sources
 src/util/CameraPoseConverter.cpp
@@ -184,6 +195,53 @@ SET(util_headers
 include/itmx/util/CameraPoseConverter.h
 include/itmx/util/ColourConversion_Shared.h
 include/itmx/util/RGBDUtil.h
+)
+
+IF(WITH_ZED)
+  SET(util_sources ${util_sources} src/util/ZedCamera.cpp)
+  SET(util_headers ${util_headers} include/itmx/util/ZedCamera.h)
+ENDIF()
+
+##
+SET(visualisation_sources
+src/visualisation/DepthVisualiserFactory.cpp
+)
+
+SET(visualisation_headers
+include/itmx/visualisation/DepthVisualisationUtil.h
+include/itmx/visualisation/DepthVisualiserFactory.h
+)
+
+SET(visualisation_templates
+include/itmx/visualisation/DepthVisualisationUtil.tpp
+)
+
+##
+SET(visualisation_cpu_sources
+src/visualisation/cpu/DepthVisualiser_CPU.cpp
+)
+
+SET(visualisation_cpu_headers
+include/itmx/visualisation/cpu/DepthVisualiser_CPU.h
+)
+
+##
+SET(visualisation_cuda_sources
+src/visualisation/cuda/DepthVisualiser_CUDA.cu
+)
+
+SET(visualisation_cuda_headers
+include/itmx/visualisation/cuda/DepthVisualiser_CUDA.h
+)
+
+##
+SET(visualisation_interface_headers
+include/itmx/visualisation/interface/DepthVisualiser.h
+)
+
+##
+SET(visualisation_shared_headers
+include/itmx/visualisation/shared/DepthVisualiser_Shared.h
 )
 
 #################################################################
@@ -200,6 +258,8 @@ ${relocalisation_sources}
 ${remotemapping_sources}
 ${trackers_sources}
 ${util_sources}
+${visualisation_sources}
+${visualisation_cpu_sources}
 )
 
 SET(headers
@@ -212,11 +272,21 @@ ${relocalisation_headers}
 ${remotemapping_headers}
 ${trackers_headers}
 ${util_headers}
+${visualisation_headers}
+${visualisation_cpu_headers}
+${visualisation_interface_headers}
+${visualisation_shared_headers}
 )
 
 SET(templates
 ${relocalisation_templates}
+${visualisation_templates}
 )
+
+IF(WITH_CUDA)
+  SET(sources ${sources} ${visualisation_cuda_sources})
+  SET(headers ${headers} ${visualisation_cuda_headers})
+ENDIF()
 
 IF(WITH_OPENCV)
   SET(sources ${sources} ${ocv_sources})
@@ -237,6 +307,11 @@ SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_hea
 SOURCE_GROUP(remotemapping FILES ${remotemapping_sources} ${remotemapping_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
+SOURCE_GROUP(visualisation FILES ${visualisation_sources} ${visualisation_headers} ${visualisation_templates})
+SOURCE_GROUP(visualisation\\cpu FILES ${visualisation_cpu_sources} ${visualisation_cpu_headers})
+SOURCE_GROUP(visualisation\\cuda FILES ${visualisation_cuda_sources} ${visualisation_cuda_headers})
+SOURCE_GROUP(visualisation\\interface FILES ${visualisation_interface_sources} ${visualisation_interface_headers})
+SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 
 ##########################################
 # Specify additional include directories #
