@@ -378,11 +378,6 @@ void PreemptiveRansac_CUDA::update_candidate_poses()
   m_poseCandidates->UpdateDeviceFromHost();
 }
 
-void PreemptiveRansac_CUDA::update_host_pose_candidates() const
-{
-  m_poseCandidates->UpdateHostFromDevice();
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void PreemptiveRansac_CUDA::init_random()
@@ -395,6 +390,11 @@ void PreemptiveRansac_CUDA::init_random()
 
   ck_reinit_rngs<<<gridSize, blockSize>>>(randomGenerators, m_maxPoseCandidates, m_rngSeed);
   ORcudaKernelCheck;
+}
+
+void PreemptiveRansac_CUDA::update_host_pose_candidates() const
+{
+  m_poseCandidates->UpdateHostFromDevice();
 }
 
 }

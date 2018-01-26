@@ -398,6 +398,8 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   return false;
 }
 
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
 void PreemptiveRansac::update_host_pose_candidates() const
 {
   // No-op by default

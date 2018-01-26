@@ -283,6 +283,8 @@ protected:
    */
   bool update_candidate_pose(int candidateIdx) const;
 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
   /**
    * \brief Make sure that the host version of the pose candidates memory block contains up to date values.
    */

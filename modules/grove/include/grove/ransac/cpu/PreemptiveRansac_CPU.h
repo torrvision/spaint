@@ -33,7 +33,7 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of PreemptiveRansac_CUDA.
+   * \brief Constructs an instance of PreemptiveRansac_CPU.
    *
    * \param settings A pointer to the settings used to configure the algorithm.
    */
@@ -41,38 +41,27 @@ public:
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
-  /**
-   * \brief Compute the energy associated to each remaining pose hypothesis and rerank them by increasing energy.
-   */
+  /** Override */
   virtual void compute_energies_and_sort();
 
-  /**
-   * \brief Generate a certain number of camera pose hypotheses according to the method described in the paper.
-   */
+  /** Override */
   virtual void generate_pose_candidates();
 
   /** Override */
   virtual void prepare_inliers_for_optimisation();
 
-  /**
-   * \brief Sample a certain number of keypoints from the input image. Those keypoints will be used for the subsequent
-   *        energy computation.
-   *
-   * \param useMask Whether or not to store in a persistent mask the location of already sampled keypoints.
-   */
-  virtual void sample_inlier_candidates(bool useMask = false);
+  /** Override */
+  virtual void sample_inlier_candidates(bool useMask);
 
-  /**
-   * \brief Perform the continuous optimisation step described in the paper to update each remaining pose hypothesis.
-   */
+  /** Override */
   virtual void update_candidate_poses();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Compute the energy of a single pose hypothesis.
+   * \brief Compute the energy of a single pose candidate.
    *
-   * \param candidate The pose hypothesis to evaluate.
+   * \param candidate The pose candidate to evaluate.
    */
   void compute_pose_energy(PoseCandidate& candidate) const;
 
