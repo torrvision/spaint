@@ -75,12 +75,12 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
     // If we succeed, grab a unique index and store the candidate into the corresponding array element.
     if(valid)
     {
-      int finalCandidateIdx;
+      size_t finalCandidateIdx;
 
     #ifdef WITH_OPENMP
       #pragma omp atomic capture
     #endif
-      finalCandidateIdx = static_cast<int>(m_poseCandidates->dataSize++);
+      finalCandidateIdx = m_poseCandidates->dataSize++;
 
       poseCandidates[finalCandidateIdx] = candidate;
     }
