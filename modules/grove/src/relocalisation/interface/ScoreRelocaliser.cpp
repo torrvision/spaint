@@ -81,7 +81,7 @@ ScoreRelocaliser::~ScoreRelocaliser() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate> &poseCandidates) const
+void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate>& poseCandidates) const
 {
   // Just forward the vector to P-RANSAC.
   m_preemptiveRansac->get_best_poses(poseCandidates);

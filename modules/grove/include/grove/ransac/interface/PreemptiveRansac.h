@@ -130,6 +130,9 @@ protected:
   /** A memory block storing the pose hypotheses. */
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
 
+  /** The actual number of pose candidates that survived the culling process. */
+  uint32_t m_poseCandidatesAfterCull;
+
   /** The camera points used for the pose optimisation step. Each row represents the points for a pose candidate. */
   ITMFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
 
@@ -240,10 +243,13 @@ public:
   boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypointsImage, const ScorePredictionsImage_CPtr& predictionsImage);
 
   /**
-   * \brief Returns the best poses estimated by the P-RANSAC algorithm.
+   * \brief Gets all of the candidate poses that survived the initial culling process, sorted in non-increasing order
+   *        of the number of P-RANSAC iterations they survived.
    *
-   * \param poseCandidates Output array that will be filled with the best poses estimated by P-RANSAC.
-   *                       Poses are sorted in descending quality order.
+   * \pre   This function should only be called after a prior call to estimate_pose.
+   * \note  The first entry of the vector will be the candidate (if any) returned by estimate_pose.
+   *
+   * \param poseCandidates An output array that will be filled with the candidate poses that survived the initial culling process.
    */
   void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 

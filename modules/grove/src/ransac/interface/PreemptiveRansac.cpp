@@ -29,7 +29,8 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
-: m_timerCandidateGeneration("Candidate Generation"),
+: m_poseCandidatesAfterCull(0),
+  m_timerCandidateGeneration("Candidate Generation"),
   m_timerFirstComputeEnergy("First Energy Computation"),
   m_timerFirstTrim("First Trim"),
   m_timerTotal("P-RANSAC Total"),
@@ -189,6 +190,8 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     m_timerFirstTrim.stop();
   }
 
+  m_poseCandidatesAfterCull = static_cast<uint32_t>(m_poseCandidates->dataSize);
+
 #ifdef ENABLE_TIMERS
   boost::timer::auto_cpu_timer t(6, "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
@@ -273,19 +276,15 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 
 void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates) const
 {
-  // No need to check dataSize since it will likely be 1 after running estimate_pose. If estimate_pose has never run
-  // this will probably return garbage.
-  const PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-
-  // Setup output container.
+  // Set up the output container.
   poseCandidates.clear();
-  poseCandidates.reserve(m_maxPoseCandidatesAfterCull);
+  poseCandidates.reserve(m_poseCandidatesAfterCull);
 
-  // Copy the all the poses that survived after the initial cull. They are "ordered in blocks":
-  // the first one is the one returned by estimate_pose, the second is the one removed after the last RANSAC iteration,
-  // the third and fourth are removed in the iteration before (whilst they are not in a specific order, they are worse
-  // than those in position 0 and 1), and so on...
-  for(uint32_t poseIdx = 0; poseIdx < m_maxPoseCandidatesAfterCull; ++poseIdx)
+  // Copy all the poses that survived the initial cull. They are ordered in blocks: the first one is the one returned by
+  // estimate_pose, the second is the one removed after the last RANSAC iteration, the third and fourth are removed in the
+  // iteration before (whilst they are not in a specific order, they are worse than those in positions 0 and 1), etc.
+  const PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  for(uint32_t poseIdx = 0; poseIdx < m_poseCandidatesAfterCull; ++poseIdx)
   {
     poseCandidates.push_back(candidates[poseIdx]);
   }
