@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_PREEMPTIVERANSACCUDA
-#define H_GROVE_PREEMPTIVERANSACCUDA
+#ifndef H_GROVE_PREEMPTIVERANSAC_CUDA
+#define H_GROVE_PREEMPTIVERANSAC_CUDA
 
 #include "../interface/PreemptiveRansac.h"
 #include "../../numbers/CUDARNG.h"
@@ -13,12 +13,11 @@ namespace grove {
 
 /**
  * \brief An instance of this class allows the estimation of a 6DOF pose from a set of
- *        3D Keypoints and associated ScoreForest predictions, using the GPU.
+ *        3D keypoints and their associated SCoRe forest predictions using CUDA.
  *
- *        This technique is based on the Preemptive-RANSAC algorithm, details can be found in:
- *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
- *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
- *        Luigi Di Stefano and Philip H. S. Torr
+ * The technique used is based on preemptive RANSAC, as described in:
+ *
+ * "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., CVPR 2017)
  *
  */
 class PreemptiveRansac_CUDA : public PreemptiveRansac
