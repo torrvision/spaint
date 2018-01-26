@@ -292,7 +292,7 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates
 
 int PreemptiveRansac::get_min_nb_required_points() const
 {
-  // At least the number of inliers required for a RANSAC iteration.
+  // We need at least the number of inliers required for a RANSAC iteration.
   return m_ransacInliersPerIteration;
 }
 
@@ -300,14 +300,16 @@ int PreemptiveRansac::get_min_nb_required_points() const
 
 void PreemptiveRansac::compute_candidate_poses_kabsch()
 {
-  // The assumption is that the data on the CPU memory is up to date. It's the task of the CUDA subclass to make sure of
-  // it. This function will probably go away as soon as we implement a shared SVD solver.
+  // We assume that the data on the CPU is up-to-date (the CUDA subclass must ensure this).
+  // This function will probably go away as soon as we implement a shared SVD solver.
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-//  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
+#if 0
+  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
+#endif
 
-// Process all candidates in parallel.
+  // For each candidate:
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
@@ -315,18 +317,17 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
   {
     PoseCandidate& candidate = poseCandidates[candidateIdx];
 
-    // We have to copy the points from the ORUtil Vector types to Eigen Matrices.
-    Eigen::Matrix3f localPoints;
+    // Copy the camera and world space points into two Eigen matrices (one point per column in each) on which we can run the Kabsch algorithm.
+    Eigen::Matrix3f cameraPoints;
     Eigen::Matrix3f worldPoints;
-
-    for(int s = 0; s < PoseCandidate::KABSCH_POINTS; ++s)
+    for(int i = 0; i < PoseCandidate::KABSCH_POINTS; ++i)
     {
-      localPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsCamera[s].v);
-      worldPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsWorld[s].v);
+      cameraPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsCamera[i].v);
+      worldPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsWorld[i].v);
     }
 
-    // Run Kabsch and store the result in the candidate cameraPose matrix.
-    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = GeometryUtil::estimate_rigid_transform(localPoints, worldPoints);
+    // Run the Kabsch algorithm and store the resulting camera -> world transformation in the candidate's cameraPose matrix.
+    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = GeometryUtil::estimate_rigid_transform(cameraPoints, worldPoints);
   }
 }
 

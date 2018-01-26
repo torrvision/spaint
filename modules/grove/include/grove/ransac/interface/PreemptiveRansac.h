@@ -263,10 +263,10 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief For every generated pose hypothesis (3 pairs of points in camera/world coordinates) run the Kabsch algorithm
-   *        and estimate the rigid transformation matrix.
+   * \brief Runs the Kabsch algorithm on the three camera/world point correspondences of each generated pose hypothesis
+   *        to obtain an estimate of the camera pose (a rigid transformation matrix from camera space to world space).
    *
-   * \note  Will probably go away as soon as we implement a proper SVD solver that can run on both CPU and GPU.
+   * \note  This will probably go away as soon as we implement a proper SVD solver that can run on both the CPU and GPU.
    */
   void compute_candidate_poses_kabsch();
 
