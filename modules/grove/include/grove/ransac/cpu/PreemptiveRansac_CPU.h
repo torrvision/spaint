@@ -25,7 +25,7 @@ class PreemptiveRansac_CPU : public PreemptiveRansac
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The random number generators used during the P-RANSAC process. */
-  CPURNGMemoryBlock_Ptr m_randomGenerators;
+  CPURNGMemoryBlock_Ptr m_rngs;
 
   /** The seed used to initialise the random number generators. */
   uint32_t m_rngSeed;

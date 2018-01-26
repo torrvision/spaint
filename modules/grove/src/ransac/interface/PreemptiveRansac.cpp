@@ -113,7 +113,6 @@ PreemptiveRansac::~PreemptiveRansac()
 void PreemptiveRansac::update_candidate_poses()
 {
   // Note: This is a default implementation of the abstract function - it is intended to be called / overridden by derived classes.
-
   const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
 
 #ifdef WITH_OPENMP
