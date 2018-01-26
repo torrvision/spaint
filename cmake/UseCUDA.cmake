@@ -48,7 +48,7 @@ IF(WITH_CUDA)
 
   # Disable some annoying nvcc warnings.
   IF(MSVC_IDE)
-    SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=bad_friend_decl" ; -Xcudafe "--diag_suppress=overloaded_function_linkage" ; ${CUDA_NVCC_FLAGS})
+    SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=bad_friend_decl" ; -Xcudafe "--diag_suppress=overloaded_function_linkage" ; -Xcudafe "--diag_suppress=useless_type_qualifier_on_return_type" ; ${CUDA_NVCC_FLAGS})
   ELSE()
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()

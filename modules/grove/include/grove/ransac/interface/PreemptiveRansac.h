@@ -28,12 +28,11 @@ namespace grove {
 
 /**
  * \brief An instance of a class deriving from this one allows the estimation of a 6DOF pose from a set of
- *        3D Keypoints and associated ScoreForest predictions.
+ *        3D keypoints and their associated SCoRe forest predictions.
  *
- * This technique is based on the Preemptive-RANSAC algorithm, details can be found in:
- * "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
- * Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
- * Luigi Di Stefano and Philip H. S. Torr
+ * The technique used is based on preemptive RANSAC, as described in:
+ *
+ * "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., CVPR 2017)
  *
  */
 class PreemptiveRansac
