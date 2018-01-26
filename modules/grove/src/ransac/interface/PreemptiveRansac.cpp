@@ -163,7 +163,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     boost::timer::auto_cpu_timer t(6, "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    // Step 2(a): First, sample a set of points from the input data to evaluate the quality of each candidate.
+    // Step 2(a): First, sample a set of points from the input data to use to evaluate the quality of each candidate.
     {
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "sample inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -172,10 +172,10 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
       sample_inlier_candidates(useMask);
     }
 
-    // Step 2(b): Then, sort the candidates in non-increasing order of quality.
+    // Step 2(b): Then, evaluate the candidates and sort them in non-increasing order of quality.
     {
 #ifdef ENABLE_TIMERS
-      boost::timer::auto_cpu_timer t(6, "compute and sort energies: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+      boost::timer::auto_cpu_timer t(6, "compute energies and sort: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
       m_timerFirstComputeEnergy.start();
       compute_energies_and_sort();
@@ -193,29 +193,30 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   boost::timer::auto_cpu_timer t(6, "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-  // 3. Reset inlier mask (and inliers that might have been selected in a previous invocation of the method.)
-  m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once, NOP afterwards.
+  // Step 3: Reset the inlier mask (and inliers that might have been selected in a previous invocation of the method).
+  m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once (no-op on subsequent occasions).
   m_inliersMaskImage->Clear();                              // This and the following happen every time.
   m_inliersIndicesBlock->dataSize = 0;
 
+  // Step 4: Run preemptive RANSAC until only a single candidate remains.
   int iteration = 0;
-
-  // 4. Main P-RANSAC loop, continue until only a single hypothesis remains.
   while(m_poseCandidates->dataSize > 1)
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    //    std::cout << candidates.size() << " camera remaining" << std::endl;
 
-    // 4a. Sample a set of keypoints from the input image. Record that thay have been selected in the mask image, to
-    // avoid selecting them again.
+#if 0
+    std::cout << candidates.size() << " camera(s) remaining" << std::endl;
+#endif
+
+    // Step 4(a): Sample a set of keypoints from the input image. Record that thay have been selected in the mask image, to avoid selecting them again.
     m_timerInlierSampling[iteration].start();
-    sample_inlier_candidates(true);
+    const bool useMask = true;
+    sample_inlier_candidates(useMask);
     m_timerInlierSampling[iteration].stop();
 
-    // 4b. If the poseUpdate is enabled, optimise all the remaining hypotheses keeping into account the newly selected
-    // inliers.
+    // Step 4(b): If pose update is enabled, optimise all remaining candidates, taking into account the newly selected inliers.
     if(m_poseUpdate)
     {
       m_timerPrepareOptimisation[iteration].start();
@@ -230,19 +231,18 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
       m_timerOptimisation[iteration].stop();
     }
 
-    // 4c. Compute the energy for each hypothesis and sort them by decreasing quality.
+    // Step 4(c): Compute the energy for each candidate and sort them in non-increasing order of quality.
     m_timerComputeEnergy[iteration].start();
     compute_energies_and_sort();
     m_timerComputeEnergy[iteration].stop();
 
-    // 4d. Remove half of the candidates with the worse energies.
+    // Step 4(d): Remove the worse half of the candidates.
     m_poseCandidates->dataSize /= 2;
 
     ++iteration;
   }
 
-  // If we generated a single pose, the update step above wouldn't have been executed (zero iterations). Force its
-  // execution.
+  // If we initially generated a single candidate, the update step above wouldn't have been executed (zero iterations). Force its execution.
   if(m_poseUpdate && iteration == 0 && m_poseCandidates->dataSize == 1)
   {
     // Sample some inliers.
@@ -255,7 +255,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     prepare_inliers_for_optimisation();
     m_timerPrepareOptimisation[iteration].stop();
 
-    // Run optimisation.
+    // Run the optimisation.
     m_timerOptimisation[iteration].start();
     update_candidate_poses();
     m_timerOptimisation[iteration].stop();
@@ -266,9 +266,9 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   // Make sure the pose candidates available on the host are up to date.
   update_host_pose_candidates();
 
-  // 5. If we have been able to generate at least one candidate hypothesis, return the best one.
-  PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  return m_poseCandidates->dataSize > 0 ? candidates[0] : boost::optional<PoseCandidate>();
+  // Step 5: If we managed to generate at least one candidate, return the best one.
+  const PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  return m_poseCandidates->dataSize > 0 ? boost::optional<PoseCandidate>(candidates[0]) : boost::none;
 }
 
 void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates) const
@@ -400,7 +400,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 
 void PreemptiveRansac::update_host_pose_candidates() const
 {
-  // NOP by default.
+  // No-op by default
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
