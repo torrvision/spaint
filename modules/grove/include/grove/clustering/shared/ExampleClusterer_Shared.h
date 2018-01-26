@@ -313,12 +313,18 @@ inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity,
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
+  // The example set's histogram has an additional value that needs to be reset, so we need a separate offset.
+  const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
+
   // Reset the cluster sizes and histogram values associated with the specified example set.
   for(int i = 0; i < exampleSetCapacity; ++i)
   {
     clusterSizes[exampleSetOffset + i] = 0;
-    clusterSizeHistograms[exampleSetOffset + i] = 0;
+    clusterSizeHistograms[histogramOffset + i] = 0;
   }
+
+  // We also need to reset the last element of the histogram.
+  clusterSizeHistograms[histogramOffset + exampleSetCapacity] = 0;
 }
 
 /**
@@ -339,6 +345,9 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
 {
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+
+  // Compute the linear offset to the beginning of the data associated with the specified example set's histogram.
+  const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
 
   // Look up the number of valid clusters associated with the specified example set.
   const int nbValidClusters = nbClustersPerExampleSet[exampleSetIdx];
@@ -362,7 +371,7 @@ inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, 
   while(minSelectedClusterSize > minClusterSize && nbSelectedClusters < maxSelectedClusters)
   {
     --minSelectedClusterSize;
-    nbSmallestClustersToKeep = MIN(clusterSizeHistograms[exampleSetOffset + minSelectedClusterSize], maxSelectedClusters - nbSelectedClusters);
+    nbSmallestClustersToKeep = MIN(clusterSizeHistograms[histogramOffset + minSelectedClusterSize], maxSelectedClusters - nbSelectedClusters);
     nbSelectedClusters += nbSmallestClustersToKeep;
   }
 
@@ -429,18 +438,21 @@ inline void update_cluster_size_histogram(int exampleSetIdx, int clusterIdx, con
   // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
+  // Compute the linear offset to the beginning of the data associated with the specified example set's histogram.
+  const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
+
   // Look up the size of the specified cluster.
   const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];
 
   // Atomically increment the corresponding bin in the histogram.
   // Note: The __CUDA_ARCH__ check is needed because this function is not a template.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-  atomicAdd(&clusterSizeHistograms[exampleSetOffset + clusterSize], 1);
+  atomicAdd(&clusterSizeHistograms[histogramOffset + clusterSize], 1);
 #else
 #ifdef WITH_OPENMP
   #pragma omp atomic
 #endif
-  clusterSizeHistograms[exampleSetOffset + clusterSize]++;
+  clusterSizeHistograms[histogramOffset + clusterSize]++;
 #endif
 }
 

@@ -6,7 +6,8 @@
 #ifndef H_ITMX_RELOCALISER
 #define H_ITMX_RELOCALISER
 
-#include <boost/optional.hpp>
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Utils/ITMImageTypes.h>
@@ -46,6 +47,15 @@ public:
 
     /** The quality of the relocalisation. */
     Quality quality;
+
+    /** A score associated with the relocalisation. */
+    float score;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+
+    Result()
+    : quality(RELOCALISATION_POOR), score(0.0f)
+    {}
   };
 
   //#################### DESTRUCTOR ####################
@@ -73,9 +83,9 @@ public:
    * \param colourImage     The colour image.
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \return                The result of the relocalisation, if successful, or boost::none otherwise.
+   * \return                The results of the relocalisation, from best to worst, or an empty vector otherwise.
    */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const = 0;
+  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Resets the relocaliser, allowing the integration of information for a new area.

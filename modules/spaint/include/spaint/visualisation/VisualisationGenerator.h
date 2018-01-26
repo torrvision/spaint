@@ -14,8 +14,8 @@
 
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMObjectPtrTypes.h>
+#include <itmx/visualisation/interface/DepthVisualiser.h>
 
-#include "interface/DepthVisualiser.h"
 #include "interface/SemanticVisualiser.h"
 #include "../util/SpaintSurfelScene.h"
 
@@ -56,7 +56,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The depth visualiser. */
-  DepthVisualiser_CPtr m_depthVisualiser;
+  itmx::DepthVisualiser_CPtr m_depthVisualiser;
 
   /** The label manager to use (only needed if we want to generate semantic visualisations). */
   LabelManager_CPtr m_labelManager;
@@ -103,7 +103,7 @@ public:
    * \param depthType   The type of depth calculation to use.
    */
   void generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                  const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const;
+                                  const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, itmx::DepthVisualiser::DepthType depthType) const;
 
   /**
    * \brief Generates a visualisation of a surfel scene from the specified pose.

@@ -131,9 +131,12 @@ void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::reallocate_temporari
     // The following images have a row for each example set to cluster and a column for each element of the example sets.
     m_clusterIndices->ChangeDims(newImgSize);
     m_clusterSizes->ChangeDims(newImgSize);
-    m_clusterSizeHistograms->ChangeDims(newImgSize);
     m_densities->ChangeDims(newImgSize);
     m_parents->ChangeDims(newImgSize);
+
+    // The histogram image has one additional element per row to allow the cluster sizes to range from 0 to exampleSetCapacity (inclusive).
+    const Vector2i histogramImgSize(newImgSize.x + 1, newImgSize.y);
+    m_clusterSizeHistograms->ChangeDims(histogramImgSize);
 
     // The selected clusters image has a row for each example set and a column for each potential cluster to output.
     m_selectedClusters->ChangeDims(Vector2i(m_maxClusterCount, exampleSetCount));
