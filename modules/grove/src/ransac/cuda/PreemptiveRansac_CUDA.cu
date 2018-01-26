@@ -161,9 +161,9 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
 void PreemptiveRansac_CUDA::compute_energies_and_sort()
 {
   // Number of currently sampled inlier points, used to compute the energy.
-  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
   // Number of currently "valid" pose candidates.
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
 
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
@@ -234,10 +234,10 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
 
-  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
   const int *inlierLinearisedIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
 
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
   const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
 
   // Grap pointers to the output storage.
