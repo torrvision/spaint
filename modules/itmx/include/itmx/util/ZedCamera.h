@@ -53,6 +53,9 @@ private:
   /** The most recent depth image retrieved from the Zed camera. */
   boost::shared_ptr<sl::Mat> m_depthImage;
 
+  /** The most recent depth confidence image retrieved from the Zed camera. */
+  boost::shared_ptr<sl::Mat> m_depthConfidenceImage;
+
   /** Whether or not the next attempt to get RGB-D images from the camera should trigger a grab. */
   mutable bool m_newImagesNeeded;
 
@@ -98,8 +101,8 @@ public:
   /**
    * \brief Gets the next RGB-D pair from the Zed camera.
    *
-   * \param rgb   An image into which to copy the next RGB image from the Zed camera.
-   * \param depth An image into which to copy the next depth image from the Zed camera.
+   * \param rgb       An image into which to copy the next RGB image from the Zed camera.
+   * \param rawDepth  An image into which to copy the next depth image from the Zed camera.
    */
   void get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
 
