@@ -181,7 +181,7 @@ private:
 //#################### CONSTRUCTORS ####################
 
 Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
-: m_medianFilteringEnabled(true),
+: m_medianFilteringEnabled(false),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
   m_supersamplingEnabled(false),
