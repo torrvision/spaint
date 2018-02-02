@@ -24,6 +24,7 @@
 #include <ORUtils/SE3Pose.h>
 
 #include "../base/ITMImagePtrTypes.h"
+#include "../base/ITMObjectPtrTypes.h"
 
 namespace sl {
 
@@ -50,6 +51,12 @@ private:
   /** The most recent colour image retrieved from the Zed camera. */
   boost::shared_ptr<sl::Mat> m_colourImage;
 
+  /** The most recent depth confidence image retrieved from the Zed camera. */
+  boost::shared_ptr<sl::Mat> m_depthConfidenceImage;
+
+  /** The depth confidence threshold to use. */
+  float m_depthConfidenceThreshold;
+
   /** The most recent depth image retrieved from the Zed camera. */
   boost::shared_ptr<sl::Mat> m_depthImage;
 
@@ -67,7 +74,7 @@ private:
   /**
    * \brief Constructs a ZedCamera instance.
    *
-   * \param The ID of the GPU that the Zed SDK should use for CUDA.
+   * \param gpuID The ID of the GPU that the Zed SDK should use for CUDA.
    */
   explicit ZedCamera(int gpuID = 0);
 
@@ -98,8 +105,8 @@ public:
   /**
    * \brief Gets the next RGB-D pair from the Zed camera.
    *
-   * \param rgb   An image into which to copy the next RGB image from the Zed camera.
-   * \param depth An image into which to copy the next depth image from the Zed camera.
+   * \param rgb       An image into which to copy the next RGB image from the Zed camera.
+   * \param rawDepth  An image into which to copy the next depth image from the Zed camera.
    */
   void get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
 
@@ -130,6 +137,13 @@ public:
    * \return  true, if the Zed camera may still have more RGB-D frames to yield, or false otherwise.
    */
   bool has_more_images() const;
+
+  /**
+   * \brief Sets the depth confidence threshold to use.
+   *
+   * \param depthConfidenceThreshold  The depth confidence threshold to use.
+   */
+  void set_depth_confidence_threshold(float depthConfidenceThreshold);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
