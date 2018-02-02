@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_PREEMPTIVERANSACCPU
-#define H_GROVE_PREEMPTIVERANSACCPU
+#ifndef H_GROVE_PREEMPTIVERANSAC_CPU
+#define H_GROVE_PREEMPTIVERANSAC_CPU
 
 #include "../interface/PreemptiveRansac.h"
 #include "../../numbers/CPURNG.h"
@@ -13,19 +13,19 @@ namespace grove {
 
 /**
  * \brief An instance of this class allows the estimation of a 6DOF pose from a set of
- *        3D Keypoints and associated ScoreForest predictions, using the CPU.
+ *        3D keypoints and their associated SCoRe forest predictions using the CPU.
  *
- *        This technique is based on the Preemptive-RANSAC algorithm, details can be found in:
- *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
- *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
- *        Luigi Di Stefano and Philip H. S. Torr
+ * The technique used is based on preemptive RANSAC, as described in:
+ *
+ * "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., CVPR 2017)
+ *
  */
 class PreemptiveRansac_CPU : public PreemptiveRansac
 {
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The random number generators used during the P-RANSAC process. */
-  CPURNGMemoryBlock_Ptr m_randomGenerators;
+  CPURNGMemoryBlock_Ptr m_rngs;
 
   /** The seed used to initialise the random number generators. */
   uint32_t m_rngSeed;
@@ -59,9 +59,9 @@ protected:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Compute the energy of a single pose candidate.
+   * \brief Computes the energy of a single pose candidate.
    *
-   * \param candidate The pose candidate to evaluate.
+   * \param candidate The pose candidate whose energy we want to compute.
    */
   void compute_pose_energy(PoseCandidate& candidate) const;
 
