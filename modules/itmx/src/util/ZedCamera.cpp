@@ -13,7 +13,9 @@ namespace itmx {
 //#################### SINGLETON IMPLEMENTATION ####################
 
 ZedCamera::ZedCamera(int gpuID)
-: m_newImagesNeeded(true), m_newPoseNeeded(true)
+: m_depthConfidenceThreshold(0.3f),
+  m_newImagesNeeded(true),
+  m_newPoseNeeded(true)
 {
   // Construct the Zed camera.
   sl::Camera *camera = new sl::Camera;
@@ -108,7 +110,9 @@ void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
     {
       const float depth = src[i];
       const float confidence = 1.0f - depthConfidence[i] * confidenceScalingFactor;
-      dest[i] = isValidMeasure(depth) && confidence >= 0.3f ? (short)(CLAMP(ROUND(depth / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max())) : 0;
+      dest[i] = isValidMeasure(depth) && confidence >= m_depthConfidenceThreshold
+        ? (short)(CLAMP(ROUND(depth / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max()))
+        : 0;
     }
   }
 
@@ -168,6 +172,11 @@ bool ZedCamera::has_images_now() const
 bool ZedCamera::has_more_images() const
 {
   return m_camera->isOpened();
+}
+
+void ZedCamera::set_depth_confidence_threshold(float depthConfidenceThreshold)
+{
+  m_depthConfidenceThreshold = depthConfidenceThreshold;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
