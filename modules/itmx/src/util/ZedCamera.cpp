@@ -13,7 +13,9 @@ namespace itmx {
 //#################### SINGLETON IMPLEMENTATION ####################
 
 ZedCamera::ZedCamera(int gpuID)
-: m_newImagesNeeded(true), m_newPoseNeeded(true)
+: m_depthConfidenceThreshold(0.3f),
+  m_newImagesNeeded(true),
+  m_newPoseNeeded(true)
 {
   // Construct the Zed camera.
   sl::Camera *camera = new sl::Camera;
@@ -41,6 +43,7 @@ ZedCamera::ZedCamera(int gpuID)
   // Make the internal images into which to store images retrieved from the camera.
   m_colourImage.reset(new sl::Mat(m_camera->getResolution(), sl::MAT_TYPE_8U_C4));
   m_depthImage.reset(new sl::Mat);
+  m_depthConfidenceImage.reset(new sl::Mat);
 
   // Retrieve the camera calibration parameters.
   sl::CalibrationParameters calibParams = m_camera->getCameraInformation().calibration_parameters;
@@ -79,9 +82,10 @@ void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
     if(!succeeded) return;
   }
 
-  // Retrieve the colour and depth images from the camera and store them in the internal images.
+  // Retrieve the colour, depth and depth confidence images from the camera and store them in the internal images.
   m_camera->retrieveImage(*m_colourImage, sl::VIEW_LEFT);
   m_camera->retrieveMeasure(*m_depthImage, sl::MEASURE_DEPTH);
+  m_camera->retrieveMeasure(*m_depthConfidenceImage, sl::MEASURE_CONFIDENCE);
 
   // Copy the internal colour image into the output colour image, converting its format from BGRA to RGBA in the process.
   {
@@ -96,13 +100,19 @@ void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
     }
   }
 
-  // Copy the internal depth image into the output depth image, converting its format from float to short in the process.
+  // Copy the internal depth image into the output depth image, filtering based on confidence and converting its format from float to short in the process.
   {
+    const float confidenceScalingFactor = 0.01f;
     short *dest = rawDepth->GetData(MEMORYDEVICE_CPU);
     const float *src = m_depthImage->getPtr<float>();
+    const float *depthConfidence = m_depthConfidenceImage->getPtr<float>();
     for(size_t i = 0, size = m_depthImage->getWidth() * m_depthImage->getHeight(); i < size; ++i)
     {
-      dest[i] = (short)(CLAMP(ROUND(src[i] / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max()));
+      const float depth = src[i];
+      const float confidence = 1.0f - depthConfidence[i] * confidenceScalingFactor;
+      dest[i] = isValidMeasure(depth) && confidence >= m_depthConfidenceThreshold
+        ? (short)(CLAMP(ROUND(depth / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max()))
+        : 0;
     }
   }
 
@@ -162,6 +172,11 @@ bool ZedCamera::has_images_now() const
 bool ZedCamera::has_more_images() const
 {
   return m_camera->isOpened();
+}
+
+void ZedCamera::set_depth_confidence_threshold(float depthConfidenceThreshold)
+{
+  m_depthConfidenceThreshold = depthConfidenceThreshold;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
