@@ -108,7 +108,7 @@ void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
     {
       const float depth = src[i];
       const float confidence = 1.0f - depthConfidence[i] * confidenceScalingFactor;
-      dest[i] = isValidMeasure(depth) && confidence >= 0.2f ? (short)(CLAMP(ROUND(depth / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max())) : 0;
+      dest[i] = isValidMeasure(depth) && confidence >= 0.3f ? (short)(CLAMP(ROUND(depth / m_calib.disparityCalib.GetParams()[0]), 0, std::numeric_limits<short>::max())) : 0;
     }
   }
 
