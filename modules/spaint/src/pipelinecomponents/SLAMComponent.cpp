@@ -311,8 +311,6 @@ void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
     SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
 
     RGBDCalibrationMessage calibMsg;
-    calibMsg.set_rgb_image_size(slamState->get_rgb_image_size());
-    calibMsg.set_depth_image_size(slamState->get_depth_image_size());
     calibMsg.set_calib(m_imageSourceEngine->getCalib());
 
     // TODO: Allow these to be configured from the command line.
