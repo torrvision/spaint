@@ -189,11 +189,11 @@ public:
   void reset_scene();
 
   /**
-   * \brief Saves the reconstructed scene to disk.
+   * \brief Saves a model of the reconstructed scene to the specified directory on disk.
    *
-   * \param outputDirectory  The folder where to save the scene.
+   * \param outputDir The directory into which to save the model.
    */
-  void save_scene(const std::string& outputDirectory) const;
+  void save_model(const std::string& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected.

@@ -189,11 +189,11 @@ public:
   void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
 
   /**
-   * \brief Saves all voxel scenes into a directory on disk.
+   * \brief Saves a model of each voxel scene into a directory on disk.
    *
-   * \param outputDirectory  The directory into which to save all scenes.
+   * \param outputDir The directory into which to save the models.
    */
-  void save_all_scenes(const std::string& outputDirectory) const;
+  void save_models(const boost::filesystem::path& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected in the specified scene.

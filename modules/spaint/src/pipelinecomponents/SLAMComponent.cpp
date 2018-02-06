@@ -320,17 +320,17 @@ void SLAMComponent::reset_scene()
   m_fusionEnabled = true;
 }
 
-void SLAMComponent::save_scene(const std::string& outputDirectory) const
+void SLAMComponent::save_model(const std::string& outputDir) const
 {
   // Make sure that the output directory exists.
-  bf::create_directories(outputDirectory);
+  bf::create_directories(outputDir);
 
-  // Save the model.
-  // Note that we have to add the '/' to the folder in order to force the saving function to save the files INSIDE the specified folder.
-  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDirectory + "/");
+  // Save the scene model. Note that we have to add the '/' to the directory in order to force
+  // InfiniTAM's saving function to save the files *inside* the specified folder.
+  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDir + "/");
 
   // Save the relocaliser.
-  m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDirectory);
+  m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDir);
 }
 
 void SLAMComponent::set_detect_fiducials(bool detectFiducials)
