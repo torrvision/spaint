@@ -23,6 +23,11 @@ namespace tvgutil {
  */
 class SettingsContainer
 {
+  //#################### CONSTANTS ####################
+public:
+  /** The value to use to indicate that a setting has not been set by the user and has no sensible default. */
+  static const std::string NOT_SET;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The key -> [value] map storing the values for the settings. */
@@ -58,7 +63,7 @@ public:
   T get_first_value(const std::string& key) const
   {
     const std::vector<std::string>& values = MapUtil::lookup(m_settings, key);
-    if(values.empty()) throw std::runtime_error("Value for " + key + " not found in the container");
+    if(values.empty() || values[0] == NOT_SET) throw std::runtime_error("Value for " + key + " not found in the container");
     return from_string<T>(values[0]);
   }
 
@@ -77,7 +82,22 @@ public:
   {
     static std::vector<std::string> defaultEmptyVector;
     const std::vector<std::string>& values = MapUtil::lookup(m_settings, key, defaultEmptyVector);
-    return values.empty() ? defaultValue : from_string<T>(values[0]);
+    return values.empty() ? defaultValue : from_string_if_set<T>(values[0], defaultValue);
+  }
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Converts a string to the specified type, unless it is NOT_SET, in which case a default value is returned.
+   *
+   * \param in            The string to convert.
+   * \param defaultValue  The default value to return if the string is NOT_SET.
+   * \return              The result of the conversion, unless the string is NOT_SET, in which case the default value.
+   */
+  template <typename T>
+  T from_string_if_set(const std::string& in, typename boost::mpl::identity<const T>::type& defaultValue) const
+  {
+    return in != NOT_SET ? from_string<T>(in) : defaultValue;
   }
 
   //#################### STREAM OPERATORS ####################
