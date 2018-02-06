@@ -84,7 +84,7 @@ private:
   /** Whether or not to save a mesh of the scene on exiting the application. */
   bool m_saveMeshOnExit;
 
-  /** Whether or not to save the reconstructed voxel models on exiting the application. */
+  /** Whether or not to save models of the scenes on exiting the application. */
   bool m_saveModelsOnExit;
 
   /** The path generator for the current sequence recording (if any). */
@@ -143,9 +143,9 @@ public:
   void set_save_mesh_on_exit(bool saveMeshOnExit);
 
   /**
-   * \brief Sets whether or not to save a model of the voxel scene on exiting the application.
+   * \brief Sets whether or not to save models of the scenes on exiting the application.
    *
-   * \param saveModelsOnExit  Whether or not to save a model of the voxel scene on exiting the application.
+   * \param saveModelsOnExit  Whether or not to save models of the scenes on exiting the application.
    */
   void set_save_models_on_exit(bool saveModelsOnExit);
 
@@ -286,7 +286,7 @@ private:
   void save_mesh() const;
 
   /**
-   * \brief Saved the reconstructed voxel scenes to disk.
+   * \brief Saves models of the scenes to disk.
    */
   void save_models() const;
 
