@@ -840,13 +840,13 @@ void Application::save_models() const
   boost::filesystem::path modelsSubdir = find_subdir_from_executable("models");
   boost::filesystem::create_directories(modelsSubdir);
 
-  // Determine the folder to use for saving the models, based on either the experiment tag (if specified) or the current timestamp (otherwise).
+  // Determine the directory to use for saving the models, based on either the experiment tag (if specified) or the current timestamp (otherwise).
   const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
   std::string modelName = settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
-  boost::filesystem::path modelPath = modelsSubdir / modelName;
+  boost::filesystem::path dir = modelsSubdir / modelName;
 
-  // Save the model of each scene to disk.
-  m_pipeline->save_all_scenes(modelPath.string());
+  // Save the models to disk.
+  m_pipeline->save_all_scenes(dir.string());
 }
 
 void Application::save_screenshot() const
