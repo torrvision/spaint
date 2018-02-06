@@ -79,13 +79,13 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
 
   // Initialise the frame message queue.
   const int capacity = 1;
-  m_frameMessageQueue.initialise(capacity, boost::bind(&RGBDFrameMessage::make, msg.extract_rgb_image_size(), msg.extract_depth_image_size()));
+  const ITMLib::ITMRGBDCalib calib = msg.extract_calib();
+  const Vector2i rgbImageSize = calib.intrinsics_rgb.imgSize;
+  const Vector2i depthImageSize = calib.intrinsics_d.imgSize;
+  m_frameMessageQueue.initialise(capacity, boost::bind(&RGBDFrameMessage::make, rgbImageSize, depthImageSize));
 
   // Set up the RGB-D frame compressor.
-  m_frameCompressor.reset(new RGBDFrameCompressor(
-    msg.extract_rgb_image_size(), msg.extract_depth_image_size(),
-    msg.extract_rgb_compression_type(), msg.extract_depth_compression_type()
-  ));
+  m_frameCompressor.reset(new RGBDFrameCompressor(rgbImageSize, depthImageSize, msg.extract_rgb_compression_type(), msg.extract_depth_compression_type()));
 
   // Start the message sender thread.
   boost::thread messageSender(&MappingClient::run_message_sender, this);
