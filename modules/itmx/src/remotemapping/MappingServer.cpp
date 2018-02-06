@@ -71,7 +71,7 @@ Vector2i MappingServer::get_depth_image_size(int clientID) const
 {
   // FIXME: What to do when the client no longer exists needs more thought.
   Client_Ptr client = get_client(clientID);
-  return client ? client->m_depthImageSize : Vector2i();
+  return client ? client->get_depth_image_size() : Vector2i();
 }
 
 void MappingServer::get_images(int clientID, ITMUChar4Image *rgb, ITMShortImage *rawDepth)
@@ -145,7 +145,7 @@ Vector2i MappingServer::get_rgb_image_size(int clientID) const
 {
   // FIXME: What to do when the client no longer exists needs more thought.
   Client_Ptr client = get_client(clientID);
-  return client ? client->m_rgbImageSize : Vector2i();
+  return client ? client->get_rgb_image_size() : Vector2i();
 }
 
 bool MappingServer::has_images_now(int clientID) const
@@ -260,24 +260,20 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
   RGBDFrameMessage_Ptr dummyFrameMsg;
   if(connectionOk)
   {
-    // Save the image sizes and calibration parameters.
-    client->m_rgbImageSize = calibMsg.extract_rgb_image_size();
-    client->m_depthImageSize = calibMsg.extract_depth_image_size();
+    // Save the calibration parameters.
     client->m_calib = calibMsg.extract_calib();
 
     // Initialise the frame message queue.
     const size_t capacity = 5;
-    client->m_frameMessageQueue->initialise(capacity, boost::bind(&RGBDFrameMessage::make, client->m_rgbImageSize, client->m_depthImageSize));
+    const Vector2i& rgbImageSize = client->get_rgb_image_size();
+    const Vector2i& depthImageSize = client->get_depth_image_size();
+    client->m_frameMessageQueue->initialise(capacity, boost::bind(&RGBDFrameMessage::make, rgbImageSize, depthImageSize));
 
     // Set up the frame compressor.
-    frameCompressor.reset(new RGBDFrameCompressor(
-      client->m_rgbImageSize, client->m_depthImageSize,
-      calibMsg.extract_rgb_compression_type(),
-      calibMsg.extract_depth_compression_type()
-    ));
+    frameCompressor.reset(new RGBDFrameCompressor(rgbImageSize, depthImageSize, calibMsg.extract_rgb_compression_type(), calibMsg.extract_depth_compression_type()));
 
     // Construct a dummy frame message to consume messages that cannot be pushed onto the queue.
-    dummyFrameMsg.reset(new RGBDFrameMessage(client->m_rgbImageSize, client->m_depthImageSize));
+    dummyFrameMsg.reset(new RGBDFrameMessage(rgbImageSize, depthImageSize));
 
     // Signal to the client that the server is ready.
     connectionOk = write_message(sock, AckMessage());

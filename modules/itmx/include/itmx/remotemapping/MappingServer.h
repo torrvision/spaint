@@ -57,9 +57,6 @@ private:
     /** The calibration parameters of the camera associated with the client. */
     ITMLib::ITMRGBDCalib m_calib;
 
-    /** The size of depth image produced by the camera associated with the client. */
-    Vector2i m_depthImageSize;
-
     /** A queue containing the RGB-D frame messages received from the client. */
     RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
 
@@ -75,9 +72,6 @@ private:
     /** The synchronisation mutex for the rendering pose. */
     boost::mutex m_renderingPoseMutex;
 
-    /** The size of RGB image produced by the camera associated with the client. */
-    Vector2i m_rgbImageSize;
-
     /** The thread that manages communication with the client. */
     boost::shared_ptr<boost::thread> m_thread;
 
@@ -88,6 +82,18 @@ private:
       m_imagesDirty(false),
       m_poseDirty(false)
     {}
+
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+
+    const Vector2i& get_depth_image_size() const
+    {
+      return m_calib.intrinsics_d.imgSize;
+    }
+
+    const Vector2i& get_rgb_image_size() const
+    {
+      return m_calib.intrinsics_rgb.imgSize;
+    }
   };
 
   typedef boost::shared_ptr<Client> Client_Ptr;
