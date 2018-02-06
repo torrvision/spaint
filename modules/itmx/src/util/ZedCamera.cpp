@@ -47,7 +47,12 @@ ZedCamera::ZedCamera(int gpuID)
 
   // Retrieve the camera calibration parameters.
   sl::CalibrationParameters calibParams = m_camera->getCameraInformation().calibration_parameters;
-  m_calib.intrinsics_rgb.SetFrom(calibParams.left_cam.fx, calibParams.left_cam.fy, calibParams.left_cam.cx, calibParams.left_cam.cy);
+  m_calib.intrinsics_rgb.SetFrom(
+    static_cast<int>(m_colourImage->getWidth()),
+    static_cast<int>(m_colourImage->getHeight()),
+    calibParams.left_cam.fx, calibParams.left_cam.fy,
+    calibParams.left_cam.cx, calibParams.left_cam.cy
+  );
   m_calib.intrinsics_d = m_calib.intrinsics_rgb;
 
   // Enable tracking.
