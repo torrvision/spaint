@@ -196,14 +196,6 @@ public:
   void save_all_scenes(const std::string& outputDirectory) const;
 
   /**
-   * \brief Saves a voxel scene into a directory on disk.
-   *
-   * \param outputDirectory  The directory into which to save the scene.
-   * \param sceneID          The scene ID.
-   */
-  void save_scene(const std::string& outputDirectory, const std::string& sceneID) const;
-
-  /**
    * \brief Sets whether or not the user wants fiducials to be detected in the specified scene.
    *
    * \param sceneID         The scene ID.

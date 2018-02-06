@@ -153,11 +153,6 @@ void MultiScenePipeline::save_all_scenes(const std::string& outputDirectory) con
   }
 }
 
-void MultiScenePipeline::save_scene(const std::string& outputDirectory, const std::string& sceneID) const
-{
-  MapUtil::lookup(m_slamComponents, sceneID)->save_scene(outputDirectory);
-}
-
 void MultiScenePipeline::set_detect_fiducials(const std::string& sceneID, bool detectFiducials)
 {
   MapUtil::lookup(m_slamComponents, sceneID)->set_detect_fiducials(detectFiducials);
