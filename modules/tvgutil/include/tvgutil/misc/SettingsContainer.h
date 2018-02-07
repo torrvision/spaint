@@ -82,22 +82,7 @@ public:
   {
     static std::vector<std::string> defaultEmptyVector;
     const std::vector<std::string>& values = MapUtil::lookup(m_settings, key, defaultEmptyVector);
-    return values.empty() ? defaultValue : from_string_if_set<T>(values[0], defaultValue);
-  }
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Converts a string to the specified type, unless it is NOT_SET, in which case a default value is returned.
-   *
-   * \param in            The string to convert.
-   * \param defaultValue  The default value to return if the string is NOT_SET.
-   * \return              The result of the conversion, unless the string is NOT_SET, in which case the default value.
-   */
-  template <typename T>
-  T from_string_if_set(const std::string& in, typename boost::mpl::identity<const T>::type& defaultValue) const
-  {
-    return in != NOT_SET ? from_string<T>(in) : defaultValue;
+    return values.empty() || values[0] == NOT_SET ? defaultValue : from_string<T>(values[0]);
   }
 
   //#################### STREAM OPERATORS ####################
