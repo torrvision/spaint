@@ -148,16 +148,6 @@ public:
   const std::string& get_type() const;
 
   /**
-   * \brief Loads a voxel scene from a directory on disk.
-   *
-   * \param inputDirectory  The folder containing the voxel scene data.
-   * \param sceneID         The scene ID.
-   *
-   * \throws std::runtime_error if the specified scene ID does not exist or the inputDirectory does not contain voxel data.
-   */
-  void load_scene(const std::string& inputDirectory, const std::string& sceneID);
-
-  /**
    * \brief Resets the random forest for the specified scene.
    *
    * \param sceneID The scene ID.
@@ -189,19 +179,11 @@ public:
   void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
 
   /**
-   * \brief Saves all voxel scenes into a directory on disk.
+   * \brief Saves the voxel model and surfel model (if any) of each scene into a directory on disk.
    *
-   * \param outputDirectory  The directory into which to save all scenes.
+   * \param outputDir The directory into which to save the models.
    */
-  void save_all_scenes(const std::string& outputDirectory) const;
-
-  /**
-   * \brief Saves a voxel scene into a directory on disk.
-   *
-   * \param outputDirectory  The directory into which to save the scene.
-   * \param sceneID          The scene ID.
-   */
-  void save_scene(const std::string& outputDirectory, const std::string& sceneID) const;
+  void save_models(const boost::filesystem::path& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected in the specified scene.
@@ -241,6 +223,18 @@ public:
    * \param raycastResultSize The new raycast result size.
    */
   void update_raycast_result_size(int raycastResultSize);
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Replaces the specified SLAM component's voxel model and surfel model (if available) with ones loaded from a directory on disk.
+   *
+   * \param slamComponent The SLAM component whose models are to be replaced.
+   * \param inputDir      A directory containing a voxel model (and possibly also a surfel model) for a SLAM component.
+   *
+   * \throws std::runtime_error If the input directory does not contain at least a voxel model for a SLAM component.
+   */
+  void load_models(const spaint::SLAMComponent_Ptr& slamComponent, const std::string& inputDir);
 };
 
 //#################### TYPEDEFS ####################

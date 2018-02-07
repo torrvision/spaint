@@ -13,6 +13,7 @@ namespace bf = boost::filesystem;
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
+#include <ITMLib/Objects/Camera/ITMCalibIO.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace InputSource;
 using namespace ITMLib;
@@ -114,38 +115,47 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SLAMComponent::load_scene(const std::string& inputDirectory)
+bool SLAMComponent::get_fusion_enabled() const
+{
+  return m_fusionEnabled;
+}
+
+const std::string& SLAMComponent::get_scene_id() const
+{
+  return m_sceneID;
+}
+
+void SLAMComponent::load_models(const std::string& inputDir)
 {
   // Reset the scene.
   reset_scene();
 
-  // Load the model.
-  // Note that we have to add the '/' to the folder in order to force the loading function to load the files from INSIDE the specified folder.
-  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->LoadFromDirectory(inputDirectory + "/");
+  // Load the voxel model. Note that we have to add '/' to the directory in order to force
+  // InfiniTAM's loading function to load the files from *inside* the specified folder.
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  slamState->get_voxel_scene()->LoadFromDirectory(inputDir + "/");
+
+  // TODO: If we support surfel model loading at some point in the future, the surfel model should be loaded here as well.
 
   // Load the relocaliser.
-  m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDirectory);
+  m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDir);
 
-  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  // Set up the view to allow the scene to be rendered without any frames needing to be processed.
+  // We are aiming to roughly mirror what would happen if we reconstructed the scene frame-by-frame.
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const View_Ptr& view = slamState->get_view();
 
-  // Setup a dummy view, to allow rendering even if the processing has not started yet. Hack that needs to be fixed.
   ITMView *newView = view.get();
-  ITMUChar4Image_Ptr dummyRgb(new ITMUChar4Image(m_imageSourceEngine->getRGBImageSize(), true, true));
-  ITMShortImage_Ptr dummyDepth(new ITMShortImage(m_imageSourceEngine->getDepthImageSize(), true, true));
-  dummyRgb->Clear();
-  dummyDepth->Clear();
-
+  inputRGBImage->Clear();
+  inputRawDepthImage->Clear();
   const bool useBilateralFilter = false;
-  m_viewBuilder->UpdateView(&newView, dummyRgb.get(), dummyDepth.get(), useBilateralFilter);
+  m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   slamState->set_view(newView);
-}
 
-bool SLAMComponent::get_fusion_enabled() const
-{
-  return m_fusionEnabled;
+  // Set the tracking to failed and disable fusion, since we don't know where we are after loading the models.
+  slamState->get_tracking_state()->trackerResult = ITMTrackingState::TRACKING_FAILED;
+  set_fusion_enabled(false);
 }
 
 void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
@@ -329,17 +339,24 @@ void SLAMComponent::reset_scene()
   m_fusionEnabled = true;
 }
 
-void SLAMComponent::save_scene(const std::string& outputDirectory) const
+void SLAMComponent::save_models(const std::string& outputDir) const
 {
   // Make sure that the output directory exists.
-  bf::create_directories(outputDirectory);
+  bf::create_directories(outputDir);
 
-  // Save the model.
-  // Note that we have to add the '/' to the folder in order to force the saving function to save the files INSIDE the specified folder.
-  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDirectory + "/");
+  // Save the camera calibration.
+  SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
+  const std::string calibFilename = outputDir + "/calib.txt";
+  writeRGBDCalib(calibFilename.c_str(), slamState->get_view()->calib);
+
+  // Save the voxel model. Note that we have to add '/' to the directory in order to force
+  // InfiniTAM's saving function to save the files *inside* the specified folder.
+  slamState->get_voxel_scene()->SaveToDirectory(outputDir + "/");
+
+  // TODO: If we support surfel model saving at some point in the future, the surfel model should be saved here as well.
 
   // Save the relocaliser.
-  m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDirectory);
+  m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDir);
 }
 
 void SLAMComponent::set_detect_fiducials(bool detectFiducials)

@@ -15,8 +15,9 @@ using namespace itmx;
 
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
-                                   const std::string& modelSpecifier, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
-                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, const MappingServer_Ptr& mappingServer)
+                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
+                                   const boost::optional<boost::filesystem::path>& modelDir, const FiducialDetector_CPtr& fiducialDetector,
+                                   bool detectFiducials, const MappingServer_Ptr& mappingServer)
 : MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount, mappingServer)
 {
   const std::string sceneID = Model::get_world_scene_id();
@@ -25,11 +26,7 @@ SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::stri
   m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
   m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));
 
-  // Load the scene if a model specifier is set.
-  if(modelSpecifier != "")
-  {
-    MultiScenePipeline::load_scene(modelSpecifier, sceneID);
-  }
+  if(modelDir) load_models(m_slamComponents[sceneID], modelDir->string());
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

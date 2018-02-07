@@ -66,12 +66,6 @@ const std::string& MultiScenePipeline::get_type() const
   return m_type;
 }
 
-void MultiScenePipeline::load_scene(const std::string& inputDirectory, const std::string& sceneID)
-{
-  std::cout << "Loading voxel scene " << sceneID << " from: " << inputDirectory << std::endl;
-  MapUtil::lookup(m_slamComponents, sceneID)->load_scene(inputDirectory);
-}
-
 void MultiScenePipeline::reset_forest(const std::string& sceneID)
 {
   MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::reset_forest, _1));
@@ -135,27 +129,18 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
   }
 }
 
-void MultiScenePipeline::save_all_scenes(const std::string& outputDirectory) const
+void MultiScenePipeline::save_models(const bf::path& outputDir) const
 {
-  const bf::path parentPath(outputDirectory);
+  // Make sure that the output directory exists.
+  bf::create_directories(outputDir);
 
-  // Make sure the parent folder exists.
-  bf::create_directories(outputDirectory);
-
-  // Save each scene in its own folder.
+  // Save the models for each scene into a separate subdirectory.
   for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
-    const bf::path scenePath = parentPath / it->first;
-
-    std::cout << "Saving model for " << it->first << " in: " << scenePath << '\n';
-
-    it->second->save_scene(scenePath.string());
+    const bf::path scenePath = outputDir / it->first;
+    std::cout << "Saving models for " << it->first << " in: " << scenePath << '\n';
+    it->second->save_models(scenePath.string());
   }
-}
-
-void MultiScenePipeline::save_scene(const std::string& outputDirectory, const std::string& sceneID) const
-{
-  MapUtil::lookup(m_slamComponents, sceneID)->save_scene(outputDirectory);
 }
 
 void MultiScenePipeline::set_detect_fiducials(const std::string& sceneID, bool detectFiducials)
@@ -189,4 +174,12 @@ void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
   {
     it->second->reset_voxel_samplers(raycastResultSize);
   }
+}
+
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
+void MultiScenePipeline::load_models(const SLAMComponent_Ptr& slamComponent, const std::string& inputDir)
+{
+  std::cout << "Loading models for " << slamComponent->get_scene_id() << " from: " << inputDir << std::endl;
+  slamComponent->load_models(inputDir);
 }
