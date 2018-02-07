@@ -16,9 +16,7 @@ SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings, const std::string& reso
 {
   const std::string sceneID = Model::get_world_scene_id();
   m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));
-
-  // Load the scene from disk if a model specifier is set.
-  if(modelSpecifier != "") load_scene(m_slamComponents[sceneID], modelSpecifier);
+  if(modelSpecifier != "") load_models(m_slamComponents[sceneID], modelSpecifier);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

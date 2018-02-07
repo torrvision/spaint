@@ -227,14 +227,14 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Replaces the specified SLAM component's scene with one loaded from a directory on disk.
+   * \brief Replaces the specified SLAM component's voxel model and surfel model (if available) with ones loaded from a directory on disk.
    *
-   * \param slamComponent The SLAM component whose scene is to be replaced.
-   * \param inputDir      A directory containing a scene model.
+   * \param slamComponent The SLAM component whose models are to be replaced.
+   * \param inputDir      A directory containing a voxel model (and possibly also a surfel model) for a SLAM component.
    *
-   * \throws std::runtime_error If the input directory does not contain a scene model.
+   * \throws std::runtime_error If the input directory does not contain at least a voxel model for a SLAM component.
    */
-  void load_scene(const spaint::SLAMComponent_Ptr& slamComponent, const std::string& inputDir);
+  void load_models(const spaint::SLAMComponent_Ptr& slamComponent, const std::string& inputDir);
 };
 
 //#################### TYPEDEFS ####################

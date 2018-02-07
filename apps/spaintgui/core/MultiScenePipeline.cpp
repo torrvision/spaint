@@ -134,12 +134,12 @@ void MultiScenePipeline::save_models(const bf::path& outputDir) const
   // Make sure that the output directory exists.
   bf::create_directories(outputDir);
 
-  // Save the model for each scene into a separate subdirectory.
+  // Save the models for each scene into a separate subdirectory.
   for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
     const bf::path scenePath = outputDir / it->first;
-    std::cout << "Saving model for " << it->first << " in: " << scenePath << '\n';
-    it->second->save_model(scenePath.string());
+    std::cout << "Saving models for " << it->first << " in: " << scenePath << '\n';
+    it->second->save_models(scenePath.string());
   }
 }
 
@@ -178,8 +178,8 @@ void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void MultiScenePipeline::load_scene(const SLAMComponent_Ptr& slamComponent, const std::string& inputDir)
+void MultiScenePipeline::load_models(const SLAMComponent_Ptr& slamComponent, const std::string& inputDir)
 {
-  std::cout << "Loading scene " << slamComponent->get_scene_id() << " from: " << inputDir << std::endl;
-  slamComponent->load_scene(inputDir);
+  std::cout << "Loading models for " << slamComponent->get_scene_id() << " from: " << inputDir << std::endl;
+  slamComponent->load_models(inputDir);
 }
