@@ -124,14 +124,16 @@ void SLAMComponent::load_models(const std::string& inputDir)
 
   // Load the voxel model. Note that we have to add '/' to the directory in order to force
   // InfiniTAM's loading function to load the files from *inside* the specified folder.
-  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->LoadFromDirectory(inputDir + "/");
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  slamState->get_voxel_scene()->LoadFromDirectory(inputDir + "/");
+
+  // TODO: If we support surfel model loading at some point in the future, the surfel model should be loaded here as well.
 
   // Load the relocaliser.
   m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDir);
 
   // Set up the view to allow the scene to be rendered without any frames needing to be processed.
   // We are aiming to roughly mirror what would happen if we reconstructed the scene frame-by-frame.
-  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const View_Ptr& view = slamState->get_view();
@@ -142,6 +144,10 @@ void SLAMComponent::load_models(const std::string& inputDir)
   const bool useBilateralFilter = false;
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   slamState->set_view(newView);
+
+  // Set the tracking to failed and disable fusion, since we don't know where we are after loading the models.
+  slamState->get_tracking_state()->trackerResult = ITMTrackingState::TRACKING_FAILED;
+  set_fusion_enabled(false);
 }
 
 void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)

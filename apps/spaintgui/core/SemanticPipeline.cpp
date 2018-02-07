@@ -15,8 +15,9 @@ using namespace itmx;
 
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
-                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode, const std::string& modelSpecifier,
-                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, const MappingServer_Ptr& mappingServer)
+                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
+                                   const boost::optional<boost::filesystem::path>& modelDir, const FiducialDetector_CPtr& fiducialDetector,
+                                   bool detectFiducials, const MappingServer_Ptr& mappingServer)
 : MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount, mappingServer)
 {
   const std::string sceneID = Model::get_world_scene_id();
@@ -25,7 +26,7 @@ SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::stri
   m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
   m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));
 
-  if(modelSpecifier != "") load_models(m_slamComponents[sceneID], modelSpecifier);
+  if(modelDir) load_models(m_slamComponents[sceneID], modelDir->string());
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

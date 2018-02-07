@@ -17,6 +17,7 @@
 #include <af/cuda.h>
 #endif
 
+#include <InputSource/IdleImageSourceEngine.h>
 #include <InputSource/OpenNIEngine.h>
 #ifdef WITH_REALSENSE
 #include <InputSource/RealSenseEngine.h>
@@ -92,6 +93,7 @@ struct CommandLineArguments
   bool trackSurfels;
 
   // Derived arguments
+  boost::optional<bf::path> modelDir;
   std::vector<bf::path> sequenceDirs;
 
   //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
@@ -260,15 +262,6 @@ std::string make_tracker_config(CommandLineArguments& args)
   // For each tracker that is needed:
   for(size_t i = 0; i < trackerCount; ++i)
   {
-    // If a model specifier was set, this overrides whatever tracker was set for the first sequence with a disk tracker starting from the last frame.
-    if(i == 0 && args.modelSpecifier != "")
-    {
-      const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
-      const size_t lastFrameNo = find_last_frame_in_sequence(args.depthImageMasks[i]);
-      result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + ",initialFrameNo=" + boost::lexical_cast<std::string>(lastFrameNo) + "</params></tracker>";
-      continue;
-    }
-
     // Look to see if the user specified an explicit tracker specifier for it on the command line; if not, use a default tracker specifier.
     const std::string trackerSpecifier = i < args.trackerSpecifiers.size() ? args.trackerSpecifiers[i] : "InfiniTAM";
 
@@ -327,13 +320,10 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     return false;
   }
 
-  // If the user specified a model to load, make sure there is at least one sequence specified, ideally the same used to create the model.
-  // We need that to set camera parameters and image size for the views.
-  // We only support sequences specified by -s at the moment.
-  if(args.modelSpecifier != "" && args.sequenceSpecifiers.empty())
+  // If the user specified a model to load, determine the model directory and record it for later use.
+  if(args.modelSpecifier != "")
   {
-    std::cout << "Error: a model specifier is present without an associated sequence.\n";
-    return false;
+    args.modelDir = bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier / Model::get_world_scene_id();
   }
 
   // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth / RGB image masks appropriately.
@@ -548,27 +538,29 @@ try
   // Construct the image source engine.
   boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
 
+  // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
+  if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
+  {
+    const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
+    imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
+  }
+
   // Add a subengine for each disk sequence specified.
   for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
   {
     const std::string& depthImageMask = args.depthImageMasks[i];
     const std::string& rgbImageMask = args.rgbImageMasks[i];
 
-    // If a model specifier was set and this is the first sequence, we set the initial frame number to the last frame in the sequence
-    // (we need a valid frame otherwise the view builder and a bunch of other cuda kernels fail due to having images of size 0,0).
-//    const size_t initialFrameNumber = (args.modelSpecifier != "" && i == 0) ? std::numeric_limits<size_t>::max() : args.initialFrameNumber;
-    const size_t initialFrameNumber = (args.modelSpecifier != "" && i == 0) ? find_last_frame_in_sequence(depthImageMask) : args.initialFrameNumber;
-
     std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
     imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, initialFrameNumber),
+      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
       args.prefetchBufferCapacity
     ));
   }
 
-  // If no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
-  if(args.depthImageMasks.empty() || args.cameraAfterDisk)
+  // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+  if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
   {
     ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
     if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
@@ -595,7 +587,7 @@ try
       make_tracker_config(args),
       mappingMode,
       trackingMode,
-      args.modelSpecifier,
+      args.modelDir,
       fiducialDetector,
       args.detectFiducials
     ));
@@ -612,7 +604,7 @@ try
       make_tracker_config(args),
       mappingMode,
       trackingMode,
-      args.modelSpecifier,
+      args.modelDir,
       fiducialDetector,
       args.detectFiducials
     ));
