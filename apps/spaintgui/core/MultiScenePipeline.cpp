@@ -129,17 +129,17 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
   }
 }
 
-void MultiScenePipeline::save_models(const bf::path& outputDir) const
+void MultiScenePipeline::save_voxel_models(const bf::path& outputDir) const
 {
   // Make sure that the output directory exists.
   bf::create_directories(outputDir);
 
-  // Save the model for each scene into a separate subdirectory.
+  // Save the model for each voxel scene into a separate subdirectory.
   for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
     const bf::path scenePath = outputDir / it->first;
     std::cout << "Saving model for " << it->first << " in: " << scenePath << '\n';
-    it->second->save_model(scenePath.string());
+    it->second->save_voxel_model(scenePath.string());
   }
 }
 

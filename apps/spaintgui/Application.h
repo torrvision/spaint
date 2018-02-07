@@ -286,11 +286,6 @@ private:
   void save_mesh() const;
 
   /**
-   * \brief Saves models of the scenes to disk.
-   */
-  void save_models() const;
-
-  /**
    * \brief Saves a screenshot to disk.
    */
   void save_screenshot() const;
@@ -304,6 +299,11 @@ private:
    * \brief Saves the next frame of the video being recorded to disk.
    */
   void save_video_frame();
+
+  /**
+   * \brief Saves models of the voxel scenes to disk.
+   */
+  void save_voxel_models() const;
 
   /**
    * \brief Sets up the semantic labels with which the user can label the scene.

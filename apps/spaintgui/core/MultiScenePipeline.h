@@ -183,7 +183,7 @@ public:
    *
    * \param outputDir The directory into which to save the models.
    */
-  void save_models(const boost::filesystem::path& outputDir) const;
+  void save_voxel_models(const boost::filesystem::path& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected in the specified scene.

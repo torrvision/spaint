@@ -200,11 +200,11 @@ public:
   void reset_scene();
 
   /**
-   * \brief Saves a model of the reconstructed scene to the specified directory on disk.
+   * \brief Saves a model of the reconstructed voxel scene to the specified directory on disk.
    *
    * \param outputDir The directory into which to save the model.
    */
-  void save_model(const std::string& outputDir) const;
+  void save_voxel_model(const std::string& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected.

@@ -325,12 +325,12 @@ void SLAMComponent::reset_scene()
   m_fusionEnabled = true;
 }
 
-void SLAMComponent::save_model(const std::string& outputDir) const
+void SLAMComponent::save_voxel_model(const std::string& outputDir) const
 {
   // Make sure that the output directory exists.
   bf::create_directories(outputDir);
 
-  // Save the scene model. Note that we have to add the '/' to the directory in order to force
+  // Save the voxel scene model. Note that we have to add the '/' to the directory in order to force
   // InfiniTAM's saving function to save the files *inside* the specified folder.
   m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDir + "/");
 
