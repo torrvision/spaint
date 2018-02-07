@@ -181,5 +181,5 @@ void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
 void MultiScenePipeline::load_voxel_scene(const SLAMComponent_Ptr& slamComponent, const std::string& inputDir)
 {
   std::cout << "Loading voxel scene " << slamComponent->get_scene_id() << " from: " << inputDir << std::endl;
-  slamComponent->load_scene(inputDir);
+  slamComponent->load_voxel_scene(inputDir);
 }

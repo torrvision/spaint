@@ -156,13 +156,6 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Loads the reconstructed scene from a directory.
-   *
-   * \param inputDirectory  The location of the reconstructed scene.
-   */
-  void load_scene(const std::string& inputDirectory);
-
-  /**
    * \brief Gets whether or not the user wants fusion to be run.
    *
    * \return  true, if the user wants fusion to be run, or false otherwise.
@@ -175,6 +168,17 @@ public:
    * \return  The ID of the scene being reconstructed by this SLAM component.
    */
   const std::string& get_scene_id() const;
+
+  /**
+   * \brief Replaces the SLAM component's voxel scene with one loaded from the specified directory on disk.
+   *
+   * Note: The SLAM component's surfel scene (if any) will also be reset as a side-effect of this process.
+   *       Saving and loading of surfel scenes is not currently supported, but we may want to change how
+   *       this works if it gets added in the future.
+   *
+   * \param inputDir  A directory containing a voxel scene model.
+   */
+  void load_voxel_scene(const std::string& inputDir);
 
   /**
    * \brief Makes the SLAM component mirror the pose of the specified scene, rather than using its own tracker.

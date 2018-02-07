@@ -106,17 +106,27 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SLAMComponent::load_scene(const std::string& inputDirectory)
+bool SLAMComponent::get_fusion_enabled() const
+{
+  return m_fusionEnabled;
+}
+
+const std::string& SLAMComponent::get_scene_id() const
+{
+  return m_sceneID;
+}
+
+void SLAMComponent::load_voxel_scene(const std::string& inputDir)
 {
   // Reset the scene.
   reset_scene();
 
   // Load the model.
   // Note that we have to add the '/' to the folder in order to force the loading function to load the files from INSIDE the specified folder.
-  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->LoadFromDirectory(inputDirectory + "/");
+  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->LoadFromDirectory(inputDir + "/");
 
   // Load the relocaliser.
-  m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDirectory);
+  m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDir);
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
@@ -133,16 +143,6 @@ void SLAMComponent::load_scene(const std::string& inputDirectory)
   const bool useBilateralFilter = false;
   m_viewBuilder->UpdateView(&newView, dummyRgb.get(), dummyDepth.get(), useBilateralFilter);
   slamState->set_view(newView);
-}
-
-bool SLAMComponent::get_fusion_enabled() const
-{
-  return m_fusionEnabled;
-}
-
-const std::string& SLAMComponent::get_scene_id() const
-{
-  return m_sceneID;
 }
 
 void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)

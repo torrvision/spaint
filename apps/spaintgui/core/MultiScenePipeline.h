@@ -229,6 +229,10 @@ protected:
   /**
    * \brief Replaces the specified SLAM component's voxel scene with one loaded from a directory on disk.
    *
+   * Note: The SLAM component's surfel scene (if any) will also be reset as a side-effect of this process.
+   *       Saving and loading of surfel scenes is not currently supported, but we may want to change how
+   *       this works if it gets added in the future.
+   *
    * \param slamComponent The SLAM component whose voxel scene is to be replaced.
    * \param inputDir      A directory containing a voxel scene model.
    *
