@@ -121,27 +121,25 @@ void SLAMComponent::load_models(const std::string& inputDir)
   // Reset the scene.
   reset_scene();
 
-  // Load the voxel model.
-  // Note that we have to add the '/' to the folder in order to force the loading function to load the files from INSIDE the specified folder.
+  // Load the voxel model. Note that we have to add '/' to the directory in order to force
+  // InfiniTAM's loading function to load the files from *inside* the specified folder.
   m_context->get_slam_state(m_sceneID)->get_voxel_scene()->LoadFromDirectory(inputDir + "/");
 
   // Load the relocaliser.
   m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDir);
 
+  // Set up the view to allow the scene to be rendered without any frames needing to be processed.
+  // We are aiming to roughly mirror what would happen if we reconstructed the scene frame-by-frame.
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const View_Ptr& view = slamState->get_view();
 
-  // Setup a dummy view, to allow rendering even if the processing has not started yet. Hack that needs to be fixed.
   ITMView *newView = view.get();
-  ITMUChar4Image_Ptr dummyRgb(new ITMUChar4Image(m_imageSourceEngine->getRGBImageSize(), true, true));
-  ITMShortImage_Ptr dummyDepth(new ITMShortImage(m_imageSourceEngine->getDepthImageSize(), true, true));
-  dummyRgb->Clear();
-  dummyDepth->Clear();
-
+  inputRGBImage->Clear();
+  inputRawDepthImage->Clear();
   const bool useBilateralFilter = false;
-  m_viewBuilder->UpdateView(&newView, dummyRgb.get(), dummyDepth.get(), useBilateralFilter);
+  m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   slamState->set_view(newView);
 }
 
@@ -330,11 +328,11 @@ void SLAMComponent::save_models(const std::string& outputDir) const
   // Make sure that the output directory exists.
   bf::create_directories(outputDir);
 
-  // Save the voxel scene model. Note that we have to add the '/' to the directory in order to force
+  // Save the voxel model. Note that we have to add '/' to the directory in order to force
   // InfiniTAM's saving function to save the files *inside* the specified folder.
   m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDir + "/");
 
-  // TODO: If we support surfel model saving at some point in the future, the surfel scene model should be saved here as well.
+  // TODO: If we support surfel model saving at some point in the future, the surfel model should be saved here as well.
 
   // Save the relocaliser.
   m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDir);

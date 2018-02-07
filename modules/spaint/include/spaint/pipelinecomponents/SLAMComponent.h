@@ -173,7 +173,8 @@ public:
    * \brief Replaces the SLAM component's voxel (and surfel model, if available) with ones loaded from the specified directory on disk.
    *
    * Note #1: Surfel model loading is not currently supported, but may be added in the future.
-   # Note #2: Currently, the SLAM component's surfel model will simply be reset whenever load_models is called.
+   * Note #2: Currently, the SLAM component's surfel model is simply reset whenever load_models is called. Ultimately,
+   *          the surfel model will be replaced with one loaded from disk (if available), or reset otherwise.
    *
    * \param inputDir  A directory containing a voxel model (and possibly also a surfel model) for a SLAM component.
    */
