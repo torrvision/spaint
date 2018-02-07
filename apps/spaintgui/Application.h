@@ -87,6 +87,9 @@ private:
   /** Whether or not to save a mesh of the scene on exiting the application. */
   bool m_saveMeshOnExit;
 
+  /** Whether or not to save models of the scenes on exiting the application. */
+  bool m_saveModelsOnExit;
+
   /** The path generator for the current sequence recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_sequencePathGenerator;
 
@@ -148,6 +151,13 @@ public:
    * \param saveMeshOnExit  Whether or not to save a mesh of the scene on exiting the application.
    */
   void set_save_mesh_on_exit(bool saveMeshOnExit);
+
+  /**
+   * \brief Sets whether or not to save models of the scenes on exiting the application.
+   *
+   * \param saveModelsOnExit  Whether or not to save models of the scenes on exiting the application.
+   */
+  void set_save_models_on_exit(bool saveModelsOnExit);
 
   /**
    * \brief Sets whether or not server mode is enabled.
@@ -289,6 +299,11 @@ private:
    * \brief Saves a mesh of the scene to disk.
    */
   void save_mesh() const;
+
+  /**
+   * \brief Saves models of the scenes to disk.
+   */
+  void save_models() const;
 
   /**
    * \brief Saves a screenshot to disk.

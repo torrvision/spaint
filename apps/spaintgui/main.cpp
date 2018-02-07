@@ -17,6 +17,7 @@
 #include <af/cuda.h>
 #endif
 
+#include <InputSource/IdleImageSourceEngine.h>
 #include <InputSource/OpenNIEngine.h>
 #ifdef WITH_REALSENSE
 #include <InputSource/RealSenseEngine.h>
@@ -80,6 +81,7 @@ struct CommandLineArguments
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
+  std::string modelSpecifier;
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
@@ -92,6 +94,7 @@ struct CommandLineArguments
   std::vector<std::string> rgbImageMasks;
   bool runServer;
   bool saveMeshOnExit;
+  bool saveModelsOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
   std::string subwindowConfigurationIndex;
@@ -100,6 +103,7 @@ struct CommandLineArguments
   bool trackSurfels;
 
   // Derived arguments
+  boost::optional<bf::path> modelDir;
   std::vector<bf::path> sequenceDirs;
 
   //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
@@ -124,6 +128,7 @@ struct CommandLineArguments
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
+      ADD_SETTING(modelSpecifier);
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
@@ -136,6 +141,7 @@ struct CommandLineArguments
       ADD_SETTINGS(rgbImageMasks);
       ADD_SETTING(runServer);
       ADD_SETTING(saveMeshOnExit);
+      ADD_SETTING(saveModelsOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
       ADD_SETTING(subwindowConfigurationIndex);
@@ -376,6 +382,12 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     return false;
   }
 
+  // If the user specified a model to load, determine the model directory and record it for later use.
+  if(args.modelSpecifier != "")
+  {
+    args.modelDir = bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier / Model::get_world_scene_id();
+  }
+
   // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
   for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
   {
@@ -542,7 +554,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("collaborationMode", po::value<std::string>(&args.collaborationMode)->default_value("batch"), "collaboration mode (batch|live)")
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
-    ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
+    ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
     ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
@@ -555,6 +567,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
+    ("saveModelsOnExit", po::bool_switch(&args.saveModelsOnExit), "save a model of each voxel scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
@@ -569,6 +582,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("modelSpecifier,m", po::value<std::string>(&args.modelSpecifier)->default_value(""), "model specifier")
     ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
@@ -720,6 +734,13 @@ try
     // Construct the image source engine.
     boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
 
+    // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
+    if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
+    {
+      const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
+      imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
+    }
+
     // Add a subengine for each disk sequence specified.
     for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
     {
@@ -734,8 +755,8 @@ try
       ));
     }
 
-    // If no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
-    if(args.depthImageMasks.empty() || args.cameraAfterDisk)
+    // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+    if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
     {
       ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
       if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
@@ -761,6 +782,7 @@ try
         make_tracker_config(args),
         mappingMode,
         trackingMode,
+        args.modelDir,
         fiducialDetector,
         args.detectFiducials
       ));
@@ -777,6 +799,7 @@ try
         make_tracker_config(args),
         mappingMode,
         trackingMode,
+        args.modelDir,
         fiducialDetector,
         args.detectFiducials
       ));
@@ -873,6 +896,7 @@ try
   if(args.runServer) app.set_server_mode_enabled(true);
   app.set_save_memory_usage(args.profileMemory);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
+  app.set_save_models_on_exit(args.saveModelsOnExit);
   bool runSucceeded = app.run();
 
 #ifdef WITH_OVR

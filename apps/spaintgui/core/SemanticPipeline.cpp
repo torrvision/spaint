@@ -16,7 +16,8 @@ using namespace spaint;
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
                                    SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
-                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, const MappingServer_Ptr& mappingServer)
+                                   const boost::optional<boost::filesystem::path>& modelDir, const FiducialDetector_CPtr& fiducialDetector,
+                                   bool detectFiducials, const MappingServer_Ptr& mappingServer)
 : MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount, mappingServer)
 {
   const std::string sceneID = Model::get_world_scene_id();
@@ -24,6 +25,8 @@ SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::stri
   m_propagationComponents[sceneID].reset(new PropagationComponent(m_model, sceneID));
   m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
   m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));
+
+  if(modelDir) load_models(m_slamComponents[sceneID], modelDir->string());
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
