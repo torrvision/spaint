@@ -13,6 +13,7 @@ namespace bf = boost::filesystem;
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
+#include <ITMLib/Objects/Camera/ITMCalibIO.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace InputSource;
 using namespace ITMLib;
@@ -328,9 +329,14 @@ void SLAMComponent::save_models(const std::string& outputDir) const
   // Make sure that the output directory exists.
   bf::create_directories(outputDir);
 
+  // Save the camera calibration.
+  SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
+  const std::string calibFilename = outputDir + "/calib.txt";
+  writeRGBDCalib(calibFilename.c_str(), slamState->get_view()->calib);
+
   // Save the voxel model. Note that we have to add '/' to the directory in order to force
   // InfiniTAM's saving function to save the files *inside* the specified folder.
-  m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDir + "/");
+  slamState->get_voxel_scene()->SaveToDirectory(outputDir + "/");
 
   // TODO: If we support surfel model saving at some point in the future, the surfel model should be saved here as well.
 
