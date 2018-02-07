@@ -177,24 +177,6 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
   else return cameraSubengine;
 }
 
-size_t find_last_frame_in_sequence(const std::string& sequenceSpecifier)
-{
-  const bf::path sequenceSpecifierPath(sequenceSpecifier);
-  const std::string sequenceMask = sequenceSpecifierPath.filename().string();
-
-  SequentialPathGenerator pg(sequenceSpecifierPath.parent_path());
-
-  while(bf::is_regular_file(pg.make_path(sequenceMask)))
-  {
-    pg.increment_index();
-  }
-
-  size_t lastValidFrame = pg.get_index() - 1;
-  std::cout << "Last valid frame in " << sequenceSpecifier << " is: " << lastValidFrame << '\n';
-
-  return lastValidFrame;
-}
-
 /**
  * \brief Attempts to make a camera subengine to read images from any suitable camera that is attached.
  *
