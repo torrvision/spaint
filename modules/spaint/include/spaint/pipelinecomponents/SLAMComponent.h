@@ -170,6 +170,13 @@ public:
   bool get_fusion_enabled() const;
 
   /**
+   * \brief Gets the ID of the scene being reconstructed by this SLAM component.
+   *
+   * \return  The ID of the scene being reconstructed by this SLAM component.
+   */
+  const std::string& get_scene_id() const;
+
+  /**
    * \brief Makes the SLAM component mirror the pose of the specified scene, rather than using its own tracker.
    *
    * \param mirrorSceneID The ID of the scene whose pose is to be mirrored.

@@ -66,12 +66,6 @@ const std::string& MultiScenePipeline::get_type() const
   return m_type;
 }
 
-void MultiScenePipeline::load_scene(const std::string& inputDirectory, const std::string& sceneID)
-{
-  std::cout << "Loading voxel scene " << sceneID << " from: " << inputDirectory << std::endl;
-  MapUtil::lookup(m_slamComponents, sceneID)->load_scene(inputDirectory);
-}
-
 void MultiScenePipeline::reset_forest(const std::string& sceneID)
 {
   MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::reset_forest, _1));
@@ -180,4 +174,12 @@ void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
   {
     it->second->reset_voxel_samplers(raycastResultSize);
   }
+}
+
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
+void MultiScenePipeline::load_voxel_scene(const SLAMComponent_Ptr& slamComponent, const std::string& inputDir)
+{
+  std::cout << "Loading voxel scene " << slamComponent->get_scene_id() << " from: " << inputDir << std::endl;
+  slamComponent->load_scene(inputDir);
 }

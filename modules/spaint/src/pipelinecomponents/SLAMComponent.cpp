@@ -140,6 +140,11 @@ bool SLAMComponent::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
+const std::string& SLAMComponent::get_scene_id() const
+{
+  return m_sceneID;
+}
+
 void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
 {
   m_mirrorSceneID = mirrorSceneID;

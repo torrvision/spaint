@@ -148,16 +148,6 @@ public:
   const std::string& get_type() const;
 
   /**
-   * \brief Loads a voxel scene from a directory on disk.
-   *
-   * \param inputDirectory  The folder containing the voxel scene data.
-   * \param sceneID         The scene ID.
-   *
-   * \throws std::runtime_error if the specified scene ID does not exist or the inputDirectory does not contain voxel data.
-   */
-  void load_scene(const std::string& inputDirectory, const std::string& sceneID);
-
-  /**
    * \brief Resets the random forest for the specified scene.
    *
    * \param sceneID The scene ID.
@@ -233,6 +223,18 @@ public:
    * \param raycastResultSize The new raycast result size.
    */
   void update_raycast_result_size(int raycastResultSize);
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Replaces the specified SLAM component's voxel scene with one loaded from a directory on disk.
+   *
+   * \param slamComponent The SLAM component whose voxel scene is to be replaced.
+   * \param inputDir      A directory containing a voxel scene model.
+   *
+   * \throws std::runtime_error If the input directory does not contain a voxel scene model.
+   */
+  void load_voxel_scene(const spaint::SLAMComponent_Ptr& slamComponent, const std::string& inputDir);
 };
 
 //#################### TYPEDEFS ####################
