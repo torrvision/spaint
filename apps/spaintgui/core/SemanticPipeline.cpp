@@ -15,7 +15,7 @@ using namespace itmx;
 
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
-                                   const std::string& modelSpecifier, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
+                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode, const std::string& modelSpecifier,
                                    const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, const MappingServer_Ptr& mappingServer)
 : MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount, mappingServer)
 {

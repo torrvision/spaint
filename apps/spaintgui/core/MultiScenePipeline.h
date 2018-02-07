@@ -179,7 +179,7 @@ public:
   void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
 
   /**
-   * \brief Saves a model of each scene into a directory on disk.
+   * \brief Saves the voxel model and surfel model (if any) of each scene into a directory on disk.
    *
    * \param outputDir The directory into which to save the models.
    */

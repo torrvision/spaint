@@ -593,9 +593,9 @@ try
       Application::resources_dir().string(),
       imageSourceEngine,
       make_tracker_config(args),
-      args.modelSpecifier,
       mappingMode,
       trackingMode,
+      args.modelSpecifier,
       fiducialDetector,
       args.detectFiducials
     ));
@@ -610,9 +610,9 @@ try
       imageSourceEngine,
       seed,
       make_tracker_config(args),
-      args.modelSpecifier,
       mappingMode,
       trackingMode,
+      args.modelSpecifier,
       fiducialDetector,
       args.detectFiducials
     ));
