@@ -116,7 +116,7 @@ const std::string& SLAMComponent::get_scene_id() const
   return m_sceneID;
 }
 
-void SLAMComponent::load_voxel_scene(const std::string& inputDir)
+void SLAMComponent::load_scene(const std::string& inputDir)
 {
   // Reset the scene.
   reset_scene();
@@ -325,7 +325,7 @@ void SLAMComponent::reset_scene()
   m_fusionEnabled = true;
 }
 
-void SLAMComponent::save_voxel_model(const std::string& outputDir) const
+void SLAMComponent::save_model(const std::string& outputDir) const
 {
   // Make sure that the output directory exists.
   bf::create_directories(outputDir);
@@ -333,6 +333,8 @@ void SLAMComponent::save_voxel_model(const std::string& outputDir) const
   // Save the voxel scene model. Note that we have to add the '/' to the directory in order to force
   // InfiniTAM's saving function to save the files *inside* the specified folder.
   m_context->get_slam_state(m_sceneID)->get_voxel_scene()->SaveToDirectory(outputDir + "/");
+
+  // TODO: If we support surfel model saving at some point in the future, the surfel scene model should be saved here as well.
 
   // Save the relocaliser.
   m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDir);

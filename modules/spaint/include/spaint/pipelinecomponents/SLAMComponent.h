@@ -172,13 +172,12 @@ public:
   /**
    * \brief Replaces the SLAM component's voxel scene with one loaded from the specified directory on disk.
    *
-   * Note: The SLAM component's surfel scene (if any) will also be reset as a side-effect of this process.
-   *       Saving and loading of surfel scenes is not currently supported, but we may want to change how
-   *       this works if it gets added in the future.
+   * Note: The SLAM component's surfel scene (if any) will currently be reset as a side-effect of this process.
+   *       Saving and loading of surfel scenes is not currently supported, but may be added in the future.
    *
    * \param inputDir  A directory containing a voxel scene model.
    */
-  void load_voxel_scene(const std::string& inputDir);
+  void load_scene(const std::string& inputDir);
 
   /**
    * \brief Makes the SLAM component mirror the pose of the specified scene, rather than using its own tracker.
@@ -200,11 +199,11 @@ public:
   void reset_scene();
 
   /**
-   * \brief Saves a model of the reconstructed voxel scene to the specified directory on disk.
+   * \brief Saves a model of the reconstructed scene to the specified directory on disk.
    *
    * \param outputDir The directory into which to save the model.
    */
-  void save_voxel_model(const std::string& outputDir) const;
+  void save_model(const std::string& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected.

@@ -25,8 +25,8 @@ SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::stri
   m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
   m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));
 
-  // Load the voxel scene from disk if a model specifier is set.
-  if(modelSpecifier != "") load_voxel_scene(m_slamComponents[sceneID], modelSpecifier);
+  // Load the scene from disk if a model specifier is set.
+  if(modelSpecifier != "") load_scene(m_slamComponents[sceneID], modelSpecifier);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

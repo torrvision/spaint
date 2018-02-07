@@ -116,8 +116,8 @@ bool Application::run()
   // If desired, save a mesh of the scene before the application terminates.
   if(m_saveMeshOnExit) save_mesh();
 
-  // If desired, save a model of each voxel scene before the application terminates.
-  if(m_saveModelsOnExit) save_voxel_models();
+  // If desired, save a model of each scene before the application terminates.
+  if(m_saveModelsOnExit) save_models();
 
   return true;
 }
@@ -834,6 +834,21 @@ void Application::save_mesh() const
   mesh->WriteSTL(meshPath.string().c_str());
 }
 
+void Application::save_models() const
+{
+  // Find the models directory and make sure it exists.
+  boost::filesystem::path modelsSubdir = find_subdir_from_executable("models");
+  boost::filesystem::create_directories(modelsSubdir);
+
+  // Determine the directory to use for saving the models, based on either the experiment tag (if specified) or the current timestamp (otherwise).
+  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
+  std::string modelName = settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
+  boost::filesystem::path outputDir = modelsSubdir / modelName;
+
+  // Save the models to disk.
+  m_pipeline->save_models(outputDir);
+}
+
 void Application::save_screenshot() const
 {
   boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
@@ -869,21 +884,6 @@ void Application::save_video_frame()
 {
   m_videoPathGenerator->increment_index();
   ImagePersister::save_image_on_thread(m_renderer->capture_screenshot(), m_videoPathGenerator->make_path("%06i.png"));
-}
-
-void Application::save_voxel_models() const
-{
-  // Find the models directory and make sure it exists.
-  boost::filesystem::path modelsSubdir = find_subdir_from_executable("models");
-  boost::filesystem::create_directories(modelsSubdir);
-
-  // Determine the directory to use for saving the models, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-  std::string modelName = settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
-  boost::filesystem::path outputDir = modelsSubdir / modelName;
-
-  // Save the models to disk.
-  m_pipeline->save_voxel_models(outputDir);
 }
 
 void Application::setup_labels()

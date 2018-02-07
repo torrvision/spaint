@@ -179,11 +179,11 @@ public:
   void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
 
   /**
-   * \brief Saves a model of each voxel scene into a directory on disk.
+   * \brief Saves a model of each scene into a directory on disk.
    *
    * \param outputDir The directory into which to save the models.
    */
-  void save_voxel_models(const boost::filesystem::path& outputDir) const;
+  void save_models(const boost::filesystem::path& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected in the specified scene.
@@ -227,18 +227,14 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Replaces the specified SLAM component's voxel scene with one loaded from a directory on disk.
+   * \brief Replaces the specified SLAM component's scene with one loaded from a directory on disk.
    *
-   * Note: The SLAM component's surfel scene (if any) will also be reset as a side-effect of this process.
-   *       Saving and loading of surfel scenes is not currently supported, but we may want to change how
-   *       this works if it gets added in the future.
+   * \param slamComponent The SLAM component whose scene is to be replaced.
+   * \param inputDir      A directory containing a scene model.
    *
-   * \param slamComponent The SLAM component whose voxel scene is to be replaced.
-   * \param inputDir      A directory containing a voxel scene model.
-   *
-   * \throws std::runtime_error If the input directory does not contain a voxel scene model.
+   * \throws std::runtime_error If the input directory does not contain a scene model.
    */
-  void load_voxel_scene(const spaint::SLAMComponent_Ptr& slamComponent, const std::string& inputDir);
+  void load_scene(const spaint::SLAMComponent_Ptr& slamComponent, const std::string& inputDir);
 };
 
 //#################### TYPEDEFS ####################
