@@ -42,7 +42,6 @@
 #endif
 
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/filesystem/SequentialPathGenerator.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
