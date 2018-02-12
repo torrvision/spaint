@@ -314,7 +314,7 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
   // If the user specified a model to load, determine the model directory and record it for later use.
   if(args.modelSpecifier != "")
   {
-    args.modelDir = bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier / Model::get_world_scene_id();
+    args.modelDir = (bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier) / Model::get_world_scene_id();
   }
 
   // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
