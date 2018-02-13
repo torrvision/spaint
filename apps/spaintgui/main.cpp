@@ -408,7 +408,7 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
   // If the user specified a model to load, determine the model directory and parse the model's configuration file (if present).
   if(args.modelSpecifier != "")
   {
-    args.modelDir = (bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier) / Model::get_world_scene_id();
+    args.modelDir = bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier / Model::get_world_scene_id();
 
     const bf::path configPath = *args.modelDir / "settings.ini";
     if(bf::is_regular_file(configPath))
