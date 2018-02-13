@@ -28,6 +28,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLUT.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGraphviz.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
@@ -41,6 +42,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseRealSense.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
 #############################
 # Specify the project files #
@@ -73,13 +75,13 @@ core/SLAMPipeline.h
 )
 
 ##
-SET(debugging_sources
-debugging/RelocaliserFiguresGenerator.cpp
-)
+SET(debugging_sources)
+SET(debugging_headers)
 
-SET(debugging_headers
-debugging/RelocaliserFiguresGenerator.h
-)
+IF(BUILD_GROVE)
+  SET(debugging_sources ${debugging_sources} debugging/RelocaliserFiguresGenerator.cpp)
+  SET(debugging_headers ${debugging_headers} debugging/RelocaliserFiguresGenerator.h)
+ENDIF()
 
 ##
 SET(renderers_sources
@@ -179,14 +181,15 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 
 # Note: spaint needs to precede rafl on Linux.
 TARGET_LINK_LIBRARIES(${targetname} spaint itmx rafl rigging tvginput tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLUT.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLodePNG.cmake)
@@ -197,6 +200,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkRealSense.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVicon.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkZed.cmake)
 
 #########################################
 # Copy resource files to the build tree #

@@ -19,8 +19,7 @@
 #include "reservoirs/cpu/ExampleReservoirs_CPU.tpp"
 #include "reservoirs/interface/ExampleReservoirs.tpp"
 
-#include "scoreforests/Keypoint3DColourClusteringUtils.h"
-#include "scoreforests/Mode3DColour.h"
+#include "scoreforests/Keypoint3DColourCluster.h"
 #include "scoreforests/ScorePrediction.h"
 
 namespace grove {
@@ -31,20 +30,20 @@ namespace {
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
-template class ExampleClusterer<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
-template class ExampleClusterer_CPU<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
-template class ExampleClustererFactory<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
+template class ExampleClusterer<Keypoint3DColour, Keypoint3DColourCluster, ScorePrediction::Capacity>;
+template class ExampleClusterer_CPU<Keypoint3DColour, Keypoint3DColourCluster, ScorePrediction::Capacity>;
+template struct ExampleClustererFactory<Keypoint3DColour, Keypoint3DColourCluster, ScorePrediction::Capacity>;
 
 template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescriptor> >
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint2D,RGBDPatchDescriptor>(
     ITMLib::ITMLibSettings::DeviceType deviceType,
     bool depthAdaptive,
-    RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+    RGBDPatchFeatureDifferenceType depthDifferenceType,
     uint32_t depthFeatureCount,
     uint32_t depthFeatureOffset,
     uint32_t depthMinRadius,
     uint32_t depthMaxRadius,
-    RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+    RGBDPatchFeatureDifferenceType rgbDifferenceType,
     uint32_t rgbFeatureCount,
     uint32_t rgbFeatureOffset,
     uint32_t rgbMinRadius,
@@ -53,12 +52,12 @@ template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint3DColour,RGBDPatch
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint3DColour,RGBDPatchDescriptor>(
     ITMLib::ITMLibSettings::DeviceType deviceType,
     bool depthAdaptive,
-    RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+    RGBDPatchFeatureDifferenceType depthDifferenceType,
     uint32_t depthFeatureCount,
     uint32_t depthFeatureOffset,
     uint32_t depthMinRadius,
     uint32_t depthMaxRadius,
-    RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+    RGBDPatchFeatureDifferenceType rgbDifferenceType,
     uint32_t rgbFeatureCount,
     uint32_t rgbFeatureOffset,
     uint32_t rgbMinRadius,
@@ -70,7 +69,7 @@ template class RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescript
 
 template class DecisionForest<RGBDPatchDescriptor, FOREST_TREES>;
 template class DecisionForest_CPU<RGBDPatchDescriptor, FOREST_TREES>;
-template class DecisionForestFactory<RGBDPatchDescriptor, FOREST_TREES>;
+template struct DecisionForestFactory<RGBDPatchDescriptor, FOREST_TREES>;
 
 template class ExampleReservoirs<Keypoint3DColour>;
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
@@ -78,7 +77,7 @@ template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleIma
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
     const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, FOREST_TREES> > >&);
 template class ExampleReservoirs_CPU<Keypoint3DColour>;
-template class ExampleReservoirsFactory<Keypoint3DColour>;
+template struct ExampleReservoirsFactory<Keypoint3DColour>;
 
 template class ExampleReservoirs<Keypoint2D>;
 template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&,
@@ -86,6 +85,6 @@ template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPt
 template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&,
     const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, FOREST_TREES> > >&);
 template class ExampleReservoirs_CPU<Keypoint2D>;
-template class ExampleReservoirsFactory<Keypoint2D>;
+template struct ExampleReservoirsFactory<Keypoint2D>;
 
 }

@@ -4,27 +4,32 @@
  */
 
 #include "ransac/cuda/PreemptiveRansac_CUDA.h"
+using namespace tvgutil;
+
+#ifdef _MSC_VER
+  // Suppress some VC++ warnings that are produced when including the Thrust headers.
+  #pragma warning(disable:4244 4267)
+#endif
 
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 
+#ifdef _MSC_VER
+  // Reenable the suppressed warnings for the rest of the translation unit.
+  #pragma warning(default:4244 4267)
+#endif
+
 #include <itmx/base/MemoryBlockFactory.h>
+using namespace itmx;
 
 #include "ransac/shared/PreemptiveRansac_Shared.h"
-
-using namespace itmx;
-using namespace tvgutil;
 
 namespace grove {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *keypoints,
-                                                      const ScorePrediction *predictions,
-                                                      const int *inlierRasterIndices,
-                                                      uint32_t nbInliers,
-                                                      PoseCandidate *poseCandidates,
-                                                      int nbCandidates)
+__global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierRasterIndices,
+                                                      uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
 {
   const int tId = threadIdx.x;
   const int threadsPerBlock = blockDim.x;
@@ -37,7 +42,7 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
     return;
   }
 
-  PoseCandidate &currentCandidate = poseCandidates[candidateIdx];
+  PoseCandidate& currentCandidate = poseCandidates[candidateIdx];
 
   // Compute the energy for a strided subset of inliers.
   float localEnergy = preemptive_ransac_compute_candidate_energy(
@@ -59,18 +64,11 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
 }
 
 template <typename RNG>
-__global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DColour *keypoints,
-                                                              const ScorePrediction *predictions,
-                                                              const Vector2i imgSize,
-                                                              RNG *randomGenerators,
-                                                              PoseCandidate *poseCandidates,
-                                                              int *nbPoseCandidates,
-                                                              uint32_t maxCandidateGenerationIterations,
-                                                              uint32_t maxPoseCandidates,
-                                                              bool useAllModesPerLeafInPoseHypothesisGeneration,
-                                                              bool checkMinDistanceBetweenSampledModes,
-                                                              float minDistanceBetweenSampledModes,
-                                                              bool checkRigidTransformationConstraint,
+__global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i imgSize,
+                                                              RNG *randomGenerators, PoseCandidate *poseCandidates, int *nbPoseCandidates,
+                                                              uint32_t maxCandidateGenerationIterations, uint32_t maxPoseCandidates,
+                                                              bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
+                                                              float minDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
                                                               float translationErrorMaxForCorrectPose)
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -80,17 +78,10 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
   // Try to generate a candidate in a local variable.
   PoseCandidate candidate;
 
-  bool valid = preemptive_ransac_generate_candidate(keypoints,
-                                                    predictions,
-                                                    imgSize,
-                                                    randomGenerators[candidateIdx],
-                                                    candidate,
-                                                    maxCandidateGenerationIterations,
-                                                    useAllModesPerLeafInPoseHypothesisGeneration,
-                                                    checkMinDistanceBetweenSampledModes,
-                                                    minDistanceBetweenSampledModes,
-                                                    checkRigidTransformationConstraint,
-                                                    translationErrorMaxForCorrectPose);
+  bool valid = preemptive_ransac_generate_candidate(
+    keypoints, predictions, imgSize, randomGenerators[candidateIdx], candidate, maxCandidateGenerationIterations, useAllModesPerLeafInPoseHypothesisGeneration,
+    checkMinDistanceBetweenSampledModes, minDistanceBetweenSampledModes, checkRigidTransformationConstraint, translationErrorMaxForCorrectPose
+  );
 
   // If we succeeded, grab an unique index and store the candidate in the array.
   if(valid)
@@ -100,40 +91,18 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
   }
 }
 
-__global__ void ck_preemptive_ransac_init_random_generators(CUDARNG *randomGenerators, uint32_t nbStates, uint32_t seed)
-{
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(idx >= nbStates) return;
-
-  randomGenerators[idx].reset(seed, idx);
-}
-
-__global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints,
-                                                                      const ScorePrediction *predictions,
-                                                                      const int *inlierIndices,
-                                                                      int nbInliers,
-                                                                      const PoseCandidate *poseCandidates,
-                                                                      int nbPoseCandidates,
-                                                                      Vector4f *inlierCameraPoints,
-                                                                      Mode3DColour *inlierModes,
-                                                                      float inlierThreshold)
+__global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
+                                                                      int nbInliers, const PoseCandidate *poseCandidates, int nbPoseCandidates, Vector4f *inlierCameraPoints,
+                                                                      Keypoint3DColourCluster *inlierModes, float inlierThreshold)
 {
   const int candidateIdx = blockIdx.y;
   const int inlierIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
   if(candidateIdx >= nbPoseCandidates || inlierIdx >= nbInliers) return;
 
-  preemptive_ransac_prepare_inliers_for_optimisation(keypoints,
-                                                     predictions,
-                                                     inlierIndices,
-                                                     nbInliers,
-                                                     poseCandidates,
-                                                     inlierCameraPoints,
-                                                     inlierModes,
-                                                     inlierThreshold,
-                                                     candidateIdx,
-                                                     inlierIdx);
+  preemptive_ransac_prepare_inliers_for_optimisation(
+    keypoints, predictions, inlierIndices, nbInliers, poseCandidates, inlierCameraPoints, inlierModes, inlierThreshold, candidateIdx, inlierIdx
+  );
 }
 
 __global__ void ck_preemptive_ransac_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
@@ -149,14 +118,8 @@ __global__ void ck_preemptive_ransac_reset_candidate_energies(PoseCandidate *pos
 }
 
 template <bool useMask, typename RNG>
-__global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keypointsData,
-                                                    const ScorePrediction *predictionsData,
-                                                    const Vector2i imgSize,
-                                                    RNG *randomGenerators,
-                                                    int *inlierIndices,
-                                                    int *inlierCount,
-                                                    uint32_t nbMaxSamples,
-                                                    int *inlierMaskData = NULL)
+__global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i imgSize,
+                                                    RNG *randomGenerators, int *inlierIndices, int *inlierCount, uint32_t nbMaxSamples, int *inlierMaskData = NULL)
 {
   const uint32_t sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -164,8 +127,7 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
   // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask
   // if necessary.
-  const int sampledLinearIdx = preemptive_ransac_sample_inlier<useMask>(
-      keypointsData, predictionsData, imgSize, randomGenerators[sampleIdx], inlierMaskData);
+  const int sampledLinearIdx = preemptive_ransac_sample_inlier<useMask>(keypointsData, predictionsData, imgSize, randomGenerators[sampleIdx], inlierMaskData);
 
   // If the sampling succeeded grab a global index and store the keypoint index.
   if(sampledLinearIdx >= 0)
@@ -177,13 +139,13 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
+PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& settings)
+: PreemptiveRansac(settings)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Allocate memory blocks.
-  m_nbPoseCandidates_device =
-      mbf.make_block<int>(1); // Size 1, just to store a value that can be accessed from the GPU.
+  m_nbPoseCandidates_device = mbf.make_block<int>(1); // Size 1, just to store a value that can be accessed from the GPU.
   m_nbSampledInliers_device = mbf.make_block<int>(1); // As above.
   m_randomGenerators = mbf.make_block<CUDARNG>(m_maxPoseCandidates);
 
@@ -196,12 +158,12 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr &setti
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac_CUDA::compute_and_sort_energies()
+void PreemptiveRansac_CUDA::compute_energies_and_sort()
 {
   // Number of currently sampled inlier points, used to compute the energy.
-  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
   // Number of currently "valid" pose candidates.
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
 
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
@@ -223,8 +185,7 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
     // Launch one block per candidate (in this way many blocks will exit immediately in later stages of P-RANSAC).
     dim3 blockSize(128); // Threads to compute the energy for each candidate.
     dim3 gridSize(nbPoseCandidates);
-    ck_preemptive_ransac_compute_energies<<<gridSize, blockSize>>>(
-        keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates);
+    ck_preemptive_ransac_compute_energies<<<gridSize, blockSize>>>(keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates);
     ORcudaKernelCheck;
   }
 
@@ -250,19 +211,11 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   // Reset number of candidates (device only, the host number will be updated later, when we are done generating).
   ORcudaSafeCall(cudaMemsetAsync(nbPoseCandidates_device, 0, sizeof(int)));
 
-  ck_preemptive_ransac_generate_pose_candidates<<<gridSize, blockSize>>>(keypoints,
-                                                                         predictions,
-                                                                         imgSize,
-                                                                         randomGenerators,
-                                                                         poseCandidates,
-                                                                         nbPoseCandidates_device,
-                                                                         m_maxCandidateGenerationIterations,
-                                                                         m_maxPoseCandidates,
-                                                                         m_useAllModesPerLeafInPoseHypothesisGeneration,
-                                                                         m_checkMinDistanceBetweenSampledModes,
-                                                                         m_minSquaredDistanceBetweenSampledModes,
-                                                                         m_checkRigidTransformationConstraint,
-                                                                         m_maxTranslationErrorForCorrectPose);
+  ck_preemptive_ransac_generate_pose_candidates<<<gridSize, blockSize>>>(
+    keypoints, predictions, imgSize, randomGenerators, poseCandidates, nbPoseCandidates_device, m_maxCandidateGenerationIterations,
+    m_maxPoseCandidates, m_useAllModesPerLeafInPoseHypothesisGeneration, m_checkMinDistanceBetweenSampledModes,
+    m_minSquaredDistanceBetweenSampledModes, m_checkRigidTransformationConstraint, m_maxTranslationErrorForCorrectPose
+  );
   ORcudaKernelCheck;
 
   // Need to make the data available to the host (for Kabsch).
@@ -281,28 +234,23 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
 
-  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
   const int *inlierLinearisedIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
 
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
   const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
 
   // Grap pointers to the output storage.
   Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
-  Mode3DColour *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(256);
   dim3 gridSize((nbInliers + blockSize.x - 1) / blockSize.x, nbPoseCandidates);
 
-  ck_preemptive_ransac_prepare_inliers_for_optimisation<<<gridSize, blockSize>>>(keypointsData,
-                                                                                 predictionsData,
-                                                                                 inlierLinearisedIndicesData,
-                                                                                 nbInliers,
-                                                                                 poseCandidatesData,
-                                                                                 nbPoseCandidates,
-                                                                                 candidateCameraPoints,
-                                                                                 candidateModes,
-                                                                                 m_poseOptimizationInlierThreshold);
+  ck_preemptive_ransac_prepare_inliers_for_optimisation<<<gridSize, blockSize>>>(
+    keypointsData, predictionsData, inlierLinearisedIndicesData, nbInliers, poseCandidatesData,
+    nbPoseCandidates, candidateCameraPoints, candidateModes, m_poseOptimisationInlierThreshold
+  );
   ORcudaKernelCheck;
 
   // Compute the actual size of the buffers to avoid unnecessary copies.
@@ -339,25 +287,16 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 
   if(useMask)
   {
-    ck_preemptive_ransac_sample_inliers<true><<<gridSize, blockSize>>>(keypointsData,
-                                                                       predictionsData,
-                                                                       imgSize,
-                                                                       randomGenerators,
-                                                                       inlierIndicesData,
-                                                                       nbInlier_device,
-                                                                       m_ransacInliersPerIteration,
-                                                                       inlierMaskData);
+    ck_preemptive_ransac_sample_inliers<true><<<gridSize, blockSize>>>(
+      keypointsData, predictionsData, imgSize, randomGenerators, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration, inlierMaskData
+    );
     ORcudaKernelCheck;
   }
   else
   {
-    ck_preemptive_ransac_sample_inliers<false><<<gridSize, blockSize>>>(keypointsData,
-                                                                        predictionsData,
-                                                                        imgSize,
-                                                                        randomGenerators,
-                                                                        inlierIndicesData,
-                                                                        nbInlier_device,
-                                                                        m_ransacInliersPerIteration);
+    ck_preemptive_ransac_sample_inliers<false><<<gridSize, blockSize>>>(
+      keypointsData, predictionsData, imgSize, randomGenerators, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration
+    );
     ORcudaKernelCheck;
   }
 
@@ -376,11 +315,6 @@ void PreemptiveRansac_CUDA::update_candidate_poses()
   m_poseCandidates->UpdateDeviceFromHost();
 }
 
-void PreemptiveRansac_CUDA::update_host_pose_candidates() const
-{
-  m_poseCandidates->UpdateHostFromDevice();
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void PreemptiveRansac_CUDA::init_random()
@@ -391,8 +325,13 @@ void PreemptiveRansac_CUDA::init_random()
   dim3 blockSize(256);
   dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
-  ck_preemptive_ransac_init_random_generators<<<gridSize, blockSize>>>(
-      randomGenerators, m_maxPoseCandidates, m_rngSeed);
+  ck_reinit_rngs<<<gridSize, blockSize>>>(randomGenerators, m_maxPoseCandidates, m_rngSeed);
+  ORcudaKernelCheck;
 }
 
-} // namespace grove
+void PreemptiveRansac_CUDA::update_host_pose_candidates() const
+{
+  m_poseCandidates->UpdateHostFromDevice();
+}
+
+}

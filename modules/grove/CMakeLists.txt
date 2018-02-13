@@ -25,11 +25,15 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
 #############################
 
 ##
-SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
-SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
+SET(toplevel_sources src/CPUInstantiations.cpp)
+
+IF(WITH_CUDA)
+  SET(toplevel_sources ${toplevel_sources} src/CUDAInstantiations.cu)
+ENDIF()
 
 ##
-SET(clustering_base_headers include/grove/clustering/base/ClusterContainer.h)
+SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
+SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
 
 ##
 SET(clustering_cpu_headers include/grove/clustering/cpu/ExampleClusterer_CPU.h)
@@ -52,7 +56,10 @@ SET(features_templates include/grove/features/FeatureCalculatorFactory.tpp)
 SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 
 ##
-SET(features_base_headers include/grove/features/base/Descriptor.h)
+SET(features_base_headers
+include/grove/features/base/Descriptor.h
+include/grove/features/base/RGBDPatchFeatureDifferenceType.h
+)
 
 ##
 SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h)
@@ -109,9 +116,6 @@ SET(ransac_headers include/grove/ransac/RansacFactory.h)
 SET(ransac_sources src/ransac/RansacFactory.cpp)
 
 ##
-SET(ransac_base_headers include/grove/ransac/base/PoseCandidate.h)
-
-##
 SET(ransac_cpu_headers include/grove/ransac/cpu/PreemptiveRansac_CPU.h)
 SET(ransac_cpu_sources src/ransac/cpu/PreemptiveRansac_CPU.cpp)
 
@@ -124,11 +128,18 @@ SET(ransac_interface_headers include/grove/ransac/interface/PreemptiveRansac.h)
 SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
 
 ##
-SET(ransac_shared_headers include/grove/ransac/shared/PreemptiveRansac_Shared.h)
+SET(ransac_shared_headers
+include/grove/ransac/shared/PoseCandidate.h
+include/grove/ransac/shared/PreemptiveRansac_Shared.h
+)
 
 ##
 SET(relocalisation_headers include/grove/relocalisation/ScoreRelocaliserFactory.h)
 SET(relocalisation_sources src/relocalisation/ScoreRelocaliserFactory.cpp)
+
+##
+SET(relocalisation_base_headers include/grove/relocalisation/base/ScoreRelocaliserState.h)
+SET(relocalisation_base_sources src/relocalisation/base/ScoreRelocaliserState.cpp)
 
 ##
 SET(relocalisation_cpu_headers include/grove/relocalisation/cpu/ScoreRelocaliser_CPU.h)
@@ -155,7 +166,6 @@ SET(reservoirs_cpu_templates include/grove/reservoirs/cpu/ExampleReservoirs_CPU.
 
 ##
 SET(reservoirs_cuda_headers include/grove/reservoirs/cuda/ExampleReservoirs_CUDA.h)
-SET(reservoirs_cuda_sources src/reservoirs/cuda/ExampleReservoirs_CUDA.cu)
 SET(reservoirs_cuda_templates include/grove/reservoirs/cuda/ExampleReservoirs_CUDA.tcu)
 
 ##
@@ -167,17 +177,12 @@ SET(reservoirs_shared_headers include/grove/reservoirs/shared/ExampleReservoirs_
 
 ##
 SET(scoreforests_headers
-include/grove/scoreforests/Keypoint3DColourClusteringUtils.h
-include/grove/scoreforests/Mode3DColour.h
+include/grove/scoreforests/Keypoint3DColourCluster.h
 include/grove/scoreforests/ScorePrediction.h
 )
 
 ##
-SET(toplevel_sources src/CPUInstantiations.cpp)
-
-IF(WITH_CUDA)
-  SET(toplevel_sources ${toplevel_sources} src/CUDAInstantiations.cu)
-ENDIF()
+SET(util_headers include/grove/util/Array.h)
 
 #################################################################
 # Collect the project files into sources, headers and templates #
@@ -190,6 +195,7 @@ ${ransac_sources}
 ${ransac_cpu_sources}
 ${ransac_interface_sources}
 ${relocalisation_sources}
+${relocalisation_base_sources}
 ${relocalisation_cpu_sources}
 ${relocalisation_interface_sources}
 ${toplevel_sources}
@@ -197,7 +203,6 @@ ${toplevel_sources}
 
 SET(headers
 ${clustering_headers}
-${clustering_base_headers}
 ${clustering_cpu_headers}
 ${clustering_interface_headers}
 ${clustering_shared_headers}
@@ -213,11 +218,11 @@ ${forests_shared_headers}
 ${keypoints_headers}
 ${numbers_headers}
 ${ransac_headers}
-${ransac_base_headers}
 ${ransac_cpu_headers}
 ${ransac_interface_headers}
 ${ransac_shared_headers}
 ${relocalisation_headers}
+${relocalisation_base_headers}
 ${relocalisation_cpu_headers}
 ${relocalisation_interface_headers}
 ${relocalisation_shared_headers}
@@ -226,6 +231,7 @@ ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
 ${reservoirs_shared_headers}
 ${scoreforests_headers}
+${util_headers}
 )
 
 SET(templates
@@ -258,7 +264,6 @@ IF(WITH_CUDA)
       ${sources}
       ${ransac_cuda_sources}
       ${relocalisation_cuda_sources}
-      ${reservoirs_cuda_sources}
       )
       
   SET(templates
@@ -276,7 +281,6 @@ ENDIF()
 
 SOURCE_GROUP("" FILES ${toplevel_sources})
 SOURCE_GROUP(clustering FILES ${clustering_headers} ${clustering_templates})
-SOURCE_GROUP(clustering\\base FILES ${clustering_base_headers})
 SOURCE_GROUP(clustering\\cpu FILES ${clustering_cpu_headers} ${clustering_cpu_templates})
 SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
 SOURCE_GROUP(clustering\\interface FILES ${clustering_interface_headers} ${clustering_interface_templates})
@@ -295,29 +299,29 @@ SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 SOURCE_GROUP(ransac FILES ${ransac_headers} ${ransac_sources})
-SOURCE_GROUP(ransac\\base FILES ${ransac_base_headers})
 SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})
 SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_headers} ${ransac_cuda_sources})
 SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_headers} ${ransac_interface_sources})
 SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_headers} ${relocalisation_sources})
+SOURCE_GROUP(relocalisation\\base FILES ${relocalisation_base_headers} ${relocalisation_base_sources})
 SOURCE_GROUP(relocalisation\\cpu FILES ${relocalisation_cpu_headers} ${relocalisation_cpu_sources})
 SOURCE_GROUP(relocalisation\\cuda FILES ${relocalisation_cuda_headers} ${relocalisation_cuda_sources})
 SOURCE_GROUP(relocalisation\\interface FILES ${relocalisation_interface_headers} ${relocalisation_interface_sources})
 SOURCE_GROUP(relocalisation\\shared FILES ${relocalisation_shared_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
-SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
+SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_templates})
 SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})
 SOURCE_GROUP(reservoirs\\shared FILES ${reservoirs_shared_headers})
 SOURCE_GROUP(scoreforests FILES ${scoreforests_headers})
+SOURCE_GROUP(util FILES ${util_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
 INCLUDE_DIRECTORIES(include/grove)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 

@@ -13,8 +13,8 @@
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
 
-#ifdef WITH_ARRAYFIRE
-  #include <arrayfire.h>
+#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
+#include <af/cuda.h>
 #endif
 
 #include <InputSource/OpenNIEngine.h>
@@ -35,8 +35,10 @@
 #endif
 
 #include <itmx/base/MemoryBlockFactory.h>
-
-#include <spaint/imagesources/AsyncImageSourceEngine.h>
+#include <itmx/imagesources/AsyncImageSourceEngine.h>
+#ifdef WITH_ZED
+#include <itmx/imagesources/ZedImageSourceEngine.h>
+#endif
 
 #include <tvgutil/filesystem/PathFinder.h>
 
@@ -77,6 +79,7 @@ struct CommandLineArguments
   std::string pipelineType;
   std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
+  std::string relocaliserType;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
   bool saveMeshOnExit;
@@ -114,6 +117,7 @@ struct CommandLineArguments
       ADD_SETTING(pipelineType);
       ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
+      ADD_SETTING(relocaliserType);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
       ADD_SETTING(saveMeshOnExit);
@@ -205,6 +209,15 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
   }
 #endif
 
+#ifdef WITH_ZED
+  // Probe for a Zed camera.
+  if(cameraSubengine == NULL)
+  {
+    std::cout << "[spaint] Probing Zed camera\n";
+    cameraSubengine = check_camera_subengine(new ZedImageSourceEngine(ZedCamera::instance()));
+  }
+#endif
+
   return cameraSubengine;
 }
 
@@ -243,13 +256,13 @@ std::string make_tracker_config(CommandLineArguments& args)
     size_t chunkCount = chunks.size();
     if(chunkCount > 1) result += "<tracker type='composite'>";
 
-    for(size_t i = 0; i < chunkCount; ++i)
+    for(size_t j = 0; j < chunkCount; ++j)
     {
-      if(chunks[i] == "InfiniTAM")
+      if(chunks[j] == "InfiniTAM")
       {
         result += "<tracker type='infinitam'/>";
       }
-      else if(chunks[i] == "Disk")
+      else if(chunks[j] == "Disk")
       {
         if(args.poseFileMasks.size() < i)
         {
@@ -262,7 +275,7 @@ std::string make_tracker_config(CommandLineArguments& args)
       }
       else
       {
-        result += "<tracker type='import'><params>builtin:" + chunks[i] + "</params></tracker>";
+        result += "<tracker type='import'><params>builtin:" + chunks[j] + "</params></tracker>";
       }
     }
 
@@ -292,7 +305,7 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     return false;
   }
 
-  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth / RGB image masks appropriately.
+  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
   for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
   {
     // Determine the sequence type.
@@ -305,10 +318,33 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Set the depth / RGB image masks.
-    args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
-    args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
-    args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since colour might be missing).
+    const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
+    const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
+
+    // Set the depth/RGB/pose masks appropriately.
+    if(sevenScenesNaming && spaintNaming)
+    {
+      std::cout << "Error: The directory '" << dir.string() << "' contains images that follow both the 7-Scenes and spaint naming conventions.\n";
+      return false;
+    }
+    else if(sevenScenesNaming)
+    {
+      args.depthImageMasks.push_back((dir / "frame-%06i.depth.png").string());
+      args.poseFileMasks.push_back((dir / "frame-%06i.pose.txt").string());
+      args.rgbImageMasks.push_back((dir / "frame-%06i.color.png").string());
+    }
+    else if(spaintNaming)
+    {
+      args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+      args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
+      args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+    }
+    else
+    {
+      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. Manually specify the masks using the -d and -r options.\n";
+      return false;
+    }
   }
 
   // If the user hasn't explicitly specified a calibration file, try to find one in the first sequence directory (if it exists).
@@ -410,6 +446,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
@@ -510,10 +547,31 @@ try
   }
 
   // Initialise SDL.
-  if(SDL_Init(SDL_INIT_VIDEO) < 0)
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
   {
     quit("Error: Failed to initialise SDL.");
   }
+
+  // Find all available joysticks and report the number found to the user.
+  const int availableJoysticks = SDL_NumJoysticks();
+  std::cout << "[spaint] Found " << availableJoysticks << " joysticks.\n";
+
+  // Open all available joysticks.
+  typedef boost::shared_ptr<SDL_Joystick> SDL_Joystick_Ptr;
+  std::vector<SDL_Joystick_Ptr> joysticks;
+  for(int i = 0; i < availableJoysticks; ++i)
+  {
+    SDL_Joystick *joystick = SDL_JoystickOpen(i);
+    if(!joystick) throw std::runtime_error("Couldn't open joystick " + boost::lexical_cast<std::string>(i));
+
+    std::cout << "[spaint] Opened joystick " << i << ": " << SDL_JoystickName(joystick) << '\n';
+    joysticks.push_back(SDL_Joystick_Ptr(joystick, &SDL_JoystickClose));
+  }
+
+#if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
+  // Tell ArrayFire to run on the primary GPU.
+  afcu::setNativeId(0);
+#endif
 
 #ifdef WITH_GLUT
   // Initialise GLUT (used for text rendering only).
@@ -631,6 +689,9 @@ try
   // If we built with Rift support, shut down the Rift SDK.
   ovr_Shutdown();
 #endif
+
+  // Close all open joysticks.
+  joysticks.clear();
 
   // Shut down SDL.
   SDL_Quit();

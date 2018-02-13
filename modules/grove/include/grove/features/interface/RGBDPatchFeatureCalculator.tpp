@@ -8,56 +8,24 @@
 #include <iostream>
 
 #include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
-
-#include <tvgutil/numbers/RandomNumberGenerator.h>
-using namespace tvgutil;
-
-
-//#################### HELPER FUNCTIONS ####################
-
-namespace {
-
-/**
- * \brief Generates a random integer offset in the intervals [-max, -min] and [min, max]
- *        using the specified random number generator.
- *
- * \param rng The random number generator to use.
- * \param min The minimum value of the positive interval.
- * \param max The maximum value of the positive interval.
- * \return    A random integer in [-max, -min] U [min, max].
- */
-int generate_offset(RandomNumberGenerator& rng, int min, int max)
-{
-  static const int signMin = 0;
-  static const int signMax = 1;
-  return rng.generate_int_from_uniform(std::abs(min), std::abs(max)) * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
-}
-
-}
 
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
 template <typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator(bool depthAdaptive,
-                                                                                    RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
-                                                                                    uint32_t depthFeatureCount,
-                                                                                    uint32_t depthFeatureOffset,
-                                                                                    uint32_t depthMinRadius,
-                                                                                    uint32_t depthMaxRadius,
-                                                                                    RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
-                                                                                    uint32_t rgbFeatureCount,
-                                                                                    uint32_t rgbFeatureOffset,
-                                                                                    uint32_t rgbMinRadius,
-                                                                                    uint32_t rgbMaxRadius)
+RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator(
+  bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
+  uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius,
+  uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
+  uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius
+)
 : m_depthDifferenceType(depthDifferenceType),
   m_depthFeatureCount(depthFeatureCount),
   m_depthFeatureOffset(depthFeatureOffset),
   m_depthMaxRadius(depthMaxRadius),
   m_depthMinRadius(depthMinRadius),
-  m_featureStep(4), // as per Julien's code (can be overridden with the setter on each invocation)
+  m_featureStep(4), // as per Julien's code (can be overridden with the setter)
   m_normaliseDepth(depthAdaptive),
   m_normaliseRgb(depthAdaptive),
   m_rgbDifferenceType(rgbDifferenceType),
@@ -75,7 +43,7 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalcula
     throw std::invalid_argument("rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT");
 
   // Set up the memory blocks used to specify the features.
-  const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
+  const itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
   m_depthOffsets = mbf.make_block<Vector4i>(m_depthFeatureCount);
   m_rgbChannels = mbf.make_block<uchar>(m_rgbFeatureCount);
   m_rgbOffsets = mbf.make_block<Vector4i>(m_rgbFeatureCount);
@@ -121,7 +89,7 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::set_feature_step(u
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-Vector2i RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, Vector2i &inputDims) const
+Vector2i RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
 {
   const bool requireColour = m_rgbFeatureCount > 0;
   const bool requireDepth = m_normaliseDepth || m_normaliseRgb || m_depthFeatureCount > 0;
@@ -134,20 +102,17 @@ Vector2i RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::compute_outpu
     throw std::invalid_argument("Error: A valid depth image is required to compute the features.");
   }
 
-  if(requireColour && !validColour)
+  // Note: Since the Structure Sensor does not provide colour information, we only throw
+  //       if the colour image is NULL and we are not computing depth features.
+  if(requireColour && !validColour && !requireDepth)
   {
-    // Note: Since the Structure Sensor does not provide colour information,
-    // we do not throw if the colour image is null AND we are also computing depth features.
-    if(!requireDepth)
-    {
-      throw std::invalid_argument("Error: A valid colour image is required to compute the features.");
-    }
+    throw std::invalid_argument("Error: A valid colour image is required to compute the features.");
   }
 
   // Use the depth image size as base, unless we want colour features only.
-  inputDims = (requireDepth && validDepth) ? depthImage->noDims : rgbImage->noDims;
+  Vector2i inputDims = (requireDepth && validDepth) ? depthImage->noDims : rgbImage->noDims;
 
-  // Compute output dimensions.
+  // Compute the output dimensions.
   return inputDims / m_featureStep;
 }
 
@@ -157,7 +122,7 @@ template <typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_colour_features()
 {
   // Initialise a random number generator with the default seed found in both the std and boost headers.
-  RandomNumberGenerator rng(5489u);
+  tvgutil::RandomNumberGenerator rng(5489u);
 
   const int channelMin = 0;
   const int channelMax = 2;
@@ -190,7 +155,7 @@ template <typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_depth_features()
 {
   // Initialise a random number generator with the default seed found in both the std and boost headers.
-  RandomNumberGenerator rng(5489u);
+  tvgutil::RandomNumberGenerator rng(5489u);
 
   Vector4i *offsets = m_depthOffsets->GetData(MEMORYDEVICE_CPU);
 
@@ -209,6 +174,16 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_depth_featur
     std::cout << i << " Depth Offset " << offsets[i] << '\n';
   }
 #endif
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+template <typename KeypointType, typename DescriptorType>
+int RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::generate_offset(tvgutil::RandomNumberGenerator& rng, int min, int max)
+{
+  static const int signMin = 0;
+  static const int signMax = 1;
+  return rng.generate_int_from_uniform(std::abs(min), std::abs(max)) * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
 }
 
 }

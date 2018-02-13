@@ -6,487 +6,413 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER_SHARED
 #define H_GROVE_EXAMPLECLUSTERER_SHARED
 
+#include <ORUtils/MathUtils.h>
 #include <ORUtils/PlatformIndependence.h>
 
-#include "../base/ClusterContainer.h"
+#include "../../util/Array.h"
 
 namespace grove {
 
 /**
- * \brief Compute an histogram of cluster sizes for each example set. Used later to select the largest clusters.
+ * \brief Computes the final cluster index for the specified example by following the parent links computed in compute_parent.
  *
- * \param clusterSizes            Pointer to the memory area wherein are stored the sizes of the clusters.
- * \param nbClustersPerExampleSet Pointer to an array wherein is stored the number of clusters extracted from each
- * example set.
- * \param clusterSizesHistogram   Pointer to the memory wherein the histogram of sizes will be stored.
- *                                One column for each element in the example sets (we might have either a single cluster
- *                                of maximum size or exampleSets.width clusters of size 1), one row per example set.
- * \param exampleSetCapacity      The maximum number of elements in each example set.
- * \param exampleSetIdx           The index of the current example set.
- * \param clusterIdx              The index of the current cluster.
- */
-_CPU_AND_GPU_CODE_
-inline void example_clusterer_compute_cluster_histogram(const int *clusterSizes,
-                                                        const int *nbClustersPerExampleSet,
-                                                        int *clusterSizesHistogram,
-                                                        int exampleSetCapacity,
-                                                        int exampleSetIdx,
-                                                        int clusterIdx)
-{
-  // Linear offset to the start of the current example set (or its associated data).
-  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Number of valid clusters for the current example set.
-  const int nbValidClusters = nbClustersPerExampleSet[exampleSetIdx];
-
-  // If the current cluster is invalid early out.
-  if (clusterIdx >= nbValidClusters) return;
-
-  // Grab the size for the current cluster.
-  const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];
-
-// Atomically increment the associated bin.
-#if defined(__CUDACC__) && defined(__CUDA_ARCH__) // Non templated function, need the __CUDA_ARCH__ check.
-  atomicAdd(&clusterSizesHistogram[exampleSetOffset + clusterSize], 1);
-#else
-#ifdef WITH_OPENMP
-#pragma omp atomic
-#endif
-  clusterSizesHistogram[exampleSetOffset + clusterSize]++;
-#endif
-}
-
-/**
- * \brief Compute the density of examples around a certain element of the example sets.
+ * \note  The compute_parent function split all the examples into subtrees and allocated a cluster index to the root
+ *        of each subtree. With this function, we navigate each example's subtree until we find the root and then copy
+ *        the cluster index across to the example. We also compute the size of each cluster.
  *
- * \param exampleSets        A pointer to the sets of examples (one set per row, one example per column).
- * \param exampleSetsSizes   A pointer to the actual sizes of each example set (number of valid elements in each row of
- *                           exampleSets).
- * \param densities          A pointer to the memory wherein to store the density of each example (one example set per
- *                           row, one density value per column).
- * \param exampleSetCapacity The maximum size of each example set (number of columns in exampleSets).
- * \param exampleSetIdx      The index of the current example set.
- * \param elementIdx         The index of the element for which we are computing the density.
- * \param sigma              Sigma of the gaussian used when computing the density.
- */
-template <typename ExampleType>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_compute_density(const ExampleType *exampleSets,
-                                                                          const int *exampleSetsSizes,
-                                                                          float *densities,
-                                                                          int exampleSetCapacity,
-                                                                          int exampleSetIdx,
-                                                                          int elementIdx,
-                                                                          float sigma)
-{
-  // Compute the linear offset to the beginning of the data associated to the current example set.
-  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // The size of the current example set.
-  const int exampleSetSize = exampleSetsSizes[exampleSetIdx];
-  // Offset of the current element from the beginning of the exampleSets array.
-  const int elementOffset = exampleSetOffset + elementIdx;
-
-  // Points farther away than three sigma have small contribution to the density.
-  const float threeSigmaSq = (3.f * sigma) * (3.f * sigma);
-  const float minusOneOverTwoSigmaSq = -1.f / (2.f * sigma * sigma);
-
-  float density = 0.f;
-
-  if (elementIdx < exampleSetSize)
-  {
-    const ExampleType centerExample = exampleSets[elementOffset];
-
-    for (int i = 0; i < exampleSetSize; ++i)
-    {
-      const ExampleType otherExample = exampleSets[exampleSetOffset + i];
-
-      // ExampleType MUST have a distanceSquared function defined for it.
-      const float normSq = distanceSquared(centerExample, otherExample);
-
-      // we ignore points farther away than three sigma.
-      if (normSq < threeSigmaSq)
-      {
-        density += expf(normSq * minusOneOverTwoSigmaSq);
-      }
-    }
-  }
-
-  // Store the density in the output variable.
-  densities[elementOffset] = density;
-}
-
-/**
- * \brief Compute the cluster parameters associated to a set of examples grouped by the other functions in this file.
- *
- * \note  The actual cluster parameters depend on the ClusterType and for this reason are left to the
- *        createClusterFromExamples function that MUST be defined for the current ExampleType.
- *
- * \param exampleSets         A pointer to the examples to cluster. One row per example set, one column per example.
- * \param exampleSetSizes     A pointer to the sizes of each example set.
- * \param clusterIndices      A pointer to the indices of the clusters associated to each example.
- * \param selectedClusters    A pointer to the cluster indices selected for each example set.
- * \param clusterContainers   A pointer to the output variables wherein to store the cluster parameters.
- * \param exampleSetCapacity  The maximum number of examples in each example set.
- * \param exampleSetIdx       The index of the current example set.
- * \param maxSelectedClusters The maximum number of clusters to extract from each example set.
- * \param clusterIdx          The index of the current cluster.
- */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void
-    example_clusterer_compute_modes(const ExampleType *exampleSets,
-                                    const int *exampleSetSizes,
-                                    const int *clusterIndices,
-                                    const int *selectedClusters,
-                                    ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers,
-                                    int exampleSetCapacity,
-                                    int exampleSetIdx,
-                                    int maxSelectedClusters,
-                                    int clusterIdx)
-{
-  // Linear offset to the first selected cluster of the current example set.
-  const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
-  // Unique identifier to the current cluster.
-  const int selectedClusterId = selectedClusters[selectedClustersOffset + clusterIdx];
-
-  // If this is a valid cluster.
-  if (selectedClusterId >= 0)
-  {
-    // Grab a reference to the cluster container for the current example set.
-    ClusterContainer<ClusterType, MAX_CLUSTERS> &currentClusterContainer = clusterContainers[exampleSetIdx];
-
-    // Atomically get the output index associated to the cluster.
-    int outputClusterIdx = -1;
-
-#ifdef __CUDACC__
-    outputClusterIdx = atomicAdd(&currentClusterContainer.nbClusters, 1);
-#else
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
-    outputClusterIdx = currentClusterContainer.nbClusters++;
-#endif
-
-    // Grab the size of the current example set.
-    const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-
-    // Offset in the examples and clusterIndices array where we can find the first element associated to the current
-    // example set.
-    const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-
-    // Pointers to the actual examples and clustersIndices associated to the current example set.
-    const ExampleType *exampleSetExamples = exampleSets + exampleSetOffset;
-    const int *exampleSetClusterIndices = clusterIndices + exampleSetOffset;
-
-    // Build the actual cluster by calling the createClusterFromExamples function that MUST be defined
-    // for the current ExampleType.
-    createClusterFromExamples(exampleSetExamples,
-                              exampleSetClusterIndices,
-                              exampleSetSize,
-                              selectedClusterId,
-                              currentClusterContainer.clusters[outputClusterIdx]);
-  }
-}
-
-/**
- * \brief Find the cluster index for each example in the example sets.
- *
- * \note  example_clusterer_link_neighbors split all the examples in subtrees and allocated a cluster index to the root
- *        of each subtree. With this function we navigate each example's subtree until we find the root and copy the
- *        cluster index. We also update a counter storing the size of each cluster.
- *
- * \param parents            A pointer to a memory area wherein is stored the parent for each example in the example
- * sets.
- * \param clusterIndices     A pointer to a memory area wherein is stored the index of the cluster associated to each
- * example.
- * \param clusterSizes       A pointer to a memory area wherein is stored the size of each cluster.
+ * \param exampleSetIdx      The index of the example set containing the example.
+ * \param exampleIdx         The index of the example within its example set.
  * \param exampleSetCapacity The maximum size of each example set.
- * \param exampleSetIdx      The idnex of the current example set.
- * \param elementIdx         The index of the current element.
+ * \param parents            An image containing the parent indices for the examples.
+ * \param clusterIndices     An image containing the cluster indices for the examples.
+ * \param clusterSizes       An array in which to keep track of the size of each cluster. Must contain zeros
+ *                           at the point at which the function is called.
  */
 _CPU_AND_GPU_CODE_
-inline void example_clusterer_identify_clusters(const int *parents,
-                                                int *clusterIndices,
-                                                int *clusterSizes,
-                                                int exampleSetCapacity,
-                                                int exampleSetIdx,
-                                                int elementIdx)
+inline void compute_cluster_index(int exampleSetIdx, int exampleIdx, int exampleSetCapacity, const int *parents, int *clusterIndices, int *clusterSizes)
 {
-  // Linear offset to the first example (or associated data) of the example set.
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Offset to the current element.
-  const int elementOffset = exampleSetOffset + elementIdx;
 
-  // Walk up on the tree until we find the root of the current subtree.
+  // Compute the raster offset of the specified example in the example sets image.
+  const int exampleOffset = exampleSetOffset + exampleIdx;
 
-  // No need to check if the current element is valid
-  // example_clusterer_link_neighbors sets the parent for invalid elements to themselves
-  int parentIdx = parents[elementOffset];
-  int currentIdx = elementIdx;
-
-  while (parentIdx != currentIdx)
+  // Follow the parent links from the specified example up to the root of its subtree.
+  // Note that there is no need to check if the example is valid, since compute_parent
+  // set the parents of invalid examples to themselves.
+  int currentIdx = exampleIdx;
+  int parentIdx = parents[exampleOffset];
+  while(parentIdx != currentIdx)
   {
     currentIdx = parentIdx;
     parentIdx = parents[exampleSetOffset + parentIdx];
   }
 
-  // Found the root of the subtree, get its cluster index.
+  // Get the cluster index of the subtree root and assign it to this example.
   const int clusterIdx = clusterIndices[exampleSetOffset + parentIdx];
+  clusterIndices[exampleOffset] = clusterIdx;
 
-  // Save the cluster index into the current element's cluster index variable.
-  clusterIndices[elementOffset] = clusterIdx;
-
-  // If it's a valid cluster then atomically increase its size (might be invalid if we started from an invalid example).
-  if (clusterIdx >= 0)
+  // If the cluster is valid then atomically increase its size (it might be invalid if we started from an invalid example).
+  if(clusterIdx >= 0)
   {
-#if defined(__CUDACC__) && defined(__CUDA_ARCH__) // Non templated function, need the __CUDA_ARCH__ check.
+    // Note: The __CUDA_ARCH__ check is needed because this function is not a template.
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
     atomicAdd(&clusterSizes[exampleSetOffset + clusterIdx], 1);
 #else
-#ifdef WITH_OPENMP
-#pragma omp atomic
-#endif
+  #ifdef WITH_OPENMP
+    #pragma omp atomic
+  #endif
     clusterSizes[exampleSetOffset + clusterIdx]++;
 #endif
   }
 }
 
 /**
- * \brief This function allows the linking of neighboring examples in a "tree" structure.
+ * \brief Compute the density of examples around an individual example in one of the example sets.
  *
- * \note  Each example becomes part of a subtree where each element has as parent the closest example
- *        with higher density. For details, see the RQS paper by Fulkerson and Soatto.
- *        http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
- *
- * \param exampleSets             The examples to link in subtrees (rectangular array, one row per example set, one
- *                                column per example).
- * \param exampleSetSizes         The actual size of each example set. One element per row in exampleSets.
- * \param densities               The densities associated to each example.
- * \param parents                 Output array where each element represents the parent of an example in the exampleSet.
- *                                Set to the element index itself if the example is the root of a subtree.
- * \param clusterIndices          Index of the cluster associated to each subtree.
- *                                Set to -1 unless the element is root of a subtree.
- * \param nbClustersPerExampleSet Will contain the number of subtrees in each example set.
- *                                Must be 0 when calling the function.
- * \param exampleSetCapacity      The maximum number of examples in an example set. Width of exampleSets.
- * \param exampleSetIdx           Index of the current example set.
- * \param elementIdx              Index of the element to process.
- * \param tauSq                   Maximum (squared) distance between examples to consider them linked together.
+ * \param exampleSetIdx      The index of the example set containing the example.
+ * \param exampleIdx         The index of the example within its example set.
+ * \param exampleSets        An image containing the sets of examples to be clustered (one set per row). The width of
+ *                           the image specifies the maximum number of examples that can be contained in each set.
+ * \param exampleSetSizes    The number of valid examples in each example set.
+ * \param exampleSetCapacity The maximum size of each example set.
+ * \param sigma              The sigma of the Gaussian used when computing the example density.
+ * \param densities          The memory in which to store the density of each example (one example set per row,
+ *                           one density value per column).
  */
 template <typename ExampleType>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void example_clusterer_link_neighbors(const ExampleType *exampleSets,
-                                                                         const int *exampleSetSizes,
-                                                                         const float *densities,
-                                                                         int *parents,
-                                                                         int *clusterIndices,
-                                                                         int *nbClustersPerExampleSet,
-                                                                         int exampleSetCapacity,
-                                                                         int exampleSetIdx,
-                                                                         int elementIdx,
-                                                                         float tauSq)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_density(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, const int *exampleSetSizes,
+                            int exampleSetCapacity, float sigma, float *densities)
 {
-  // Linear offset to the first element of the current example set.
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Actual size of the current example set.
-  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
-  // Linear offset of the current element wrt. the beginning of the exampleSets array.
-  const int elementOffset = exampleSetOffset + elementIdx;
 
-  // Unless it becomes part of a subtree, each element starts as its own parent.
-  int parentIdx = elementIdx;
-  // Index of the cluster associated to the current element.
+  // Compute the raster offset of the specified example in the example sets image.
+  const int exampleOffset = exampleSetOffset + exampleIdx;
+
+  // Look up the size of the specified example set.
+  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
+
+  float density = 0.0f;
+
+  // If the example is valid, loop over all of the examples in its set and
+  // compute the density based on the examples that are within 3 * sigma of it
+  // (points further away would only make a small contribution to the density).
+  if(exampleIdx < exampleSetSize)
+  {
+    const float threeSigmaSq = (3.0f * sigma) * (3.0f * sigma);
+    const float minusOneOverTwoSigmaSq = -1.0f / (2.0f * sigma * sigma);
+
+    const ExampleType centreExample = exampleSets[exampleOffset];
+    for(int i = 0; i < exampleSetSize; ++i)
+    {
+      const ExampleType otherExample = exampleSets[exampleSetOffset + i];
+
+      // Note: ExampleType must have a distance_squared function defined for it.
+      const float normSq = distance_squared(centreExample, otherExample);
+      if(normSq < threeSigmaSq)
+      {
+        density += expf(normSq * minusOneOverTwoSigmaSq);
+      }
+    }
+  }
+
+  densities[exampleOffset] = density;
+}
+
+/**
+ * \brief Computes the parent and initial cluster indices to assign to the specified example as part of the neighbour-linking step
+ *        of the really quick shift (RQS) algorithm.
+ *
+ * \note Each example becomes part of a subtree in which each example has as its parent the closest example with higher density.
+ *       For details about RQS, see the paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
+ *
+ * \param exampleSetIdx           The index of the example set containing the example.
+ * \param exampleIdx              The index of the example within its example set.
+ * \param exampleSets             An image containing the sets of examples to be clustered (one set per row). The width of
+ *                                the image specifies the maximum number of examples that can be contained in each set.
+ * \param exampleSetCapacity      The maximum number of examples in an example set.
+ * \param exampleSetSizes         The number of valid examples in each example set.
+ * \param densities               An image containing the density of each example (one set per row, one density value per column).
+ * \param tauSq                   The square of the maximum distance allowed between examples if they are to be linked.
+ * \param parents                 An image in which to store a parent index for each example. This will generally be the index of
+ *                                another example in the same set, but may be that of the example itself if it is a subtree root.
+ * \param clusterIndices          An image in which to store an initial cluster index for each example. The initial cluster index
+ *                                for an example will be set to -1 unless the example is a subtree root.
+ * \param nbClustersPerExampleSet An array in which to keep track of the number of clusters in each example set. Must contain zeros
+ *                                at the point at which the function is called.
+ */
+template <typename ExampleType>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType *exampleSets, int exampleSetCapacity, const int *exampleSetSizes,
+                           const float *densities, float tauSq, int *parents, int *clusterIndices, int *nbClustersPerExampleSet)
+{
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
+  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+
+  // Compute the raster offset of the specified example in the example sets image.
+  const int exampleOffset = exampleSetOffset + exampleIdx;
+
+  // Look up the size of the specified example set.
+  const int exampleSetSize = exampleSetSizes[exampleSetIdx];
+
+  // Unless it becomes part of a subtree, each example starts as its own parent.
+  int parentIdx = exampleIdx;
+
+  // The index of the cluster associated with the specified example (-1 except for subtree roots).
   int clusterIdx = -1;
 
-  // Proceed only if the current element is actually valid.
-  if (elementIdx < exampleSetSize)
+  // If the specified example is valid:
+  if(exampleIdx < exampleSetSize)
   {
-    // Copy the current element in a temporary variable.
-    const ExampleType centerExample = exampleSets[elementOffset];
-    // Density of examples around the current element.
-    const float centerDensity = densities[elementOffset];
+    // Read in the example and its density from global memory.
+    const ExampleType centreExample = exampleSets[exampleOffset];
+    const float centreDensity = densities[exampleOffset];
 
-    // We are only interested in examples closer to the current element than a tau distance.
-    float minDistance = tauSq;
+    // We are only interested in examples whose distance to the specified example is less than tau.
+    float minDistanceSq = tauSq;
 
-    // Check all the other examples.
-    for (int i = 0; i < exampleSetSize; ++i)
+    // For each other example in the specified example's set:
+    for(int i = 0; i < exampleSetSize; ++i)
     {
-      // Ignore the element being processed.
-      if (i == elementIdx) continue;
+      if(i == exampleIdx) continue;
 
-      // Grab a copy of the other example and its density.
+      // Read in the other example and its density from global memory.
       const ExampleType otherExample = exampleSets[exampleSetOffset + i];
       const float otherDensity = densities[exampleSetOffset + i];
 
-      // Compute the squared distance between the current example and the other.
-      // ExampleType MUST have a distanceSquared function defined for it.
-      const float normSq = distanceSquared(centerExample, otherExample);
+      // Compute the squared distance between the specified example and the other example.
+      // Note: ExampleType must have a distance_squared function defined for it.
+      const float otherDistSq = distance_squared(centreExample, otherExample);
 
-      // We are looking for the *closest* example with a higher density (doesn't matter how much) than the current
-      // example's one.
-      if (normSq < minDistance && centerDensity < otherDensity)
+      // We are looking for the closest example with a higher density (doesn't matter by how much) than that of the specified example.
+      if(otherDensity > centreDensity && otherDistSq < minDistanceSq)
       {
-        minDistance = normSq;
+        minDistanceSq = otherDistSq;
         parentIdx = i;
       }
     }
 
-    // Current element is the root of a subtree (didn't find any close example with higher density than itself).
-    // Grab a unique cluster index.
-    if (parentIdx == elementIdx)
+    // If the specified example is still its own parent (i.e. it is a subtree root), we didn't find any close
+    // example with a higher density, so grab a unique cluster index for the example.
+    if(parentIdx == exampleIdx)
     {
 #ifdef __CUDACC__
       clusterIdx = atomicAdd(&nbClustersPerExampleSet[exampleSetIdx], 1);
 #else
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
+    #ifdef WITH_OPENMP
+      #pragma omp atomic capture
+    #endif
       clusterIdx = nbClustersPerExampleSet[exampleSetIdx]++;
 #endif
     }
   }
 
-  // Store the parent of the current element (set to itself if the root of a subtree).
-  parents[elementOffset] = parentIdx;
-  // Store the cluster index (-1 unless the current element is the root of a subtree).
-  clusterIndices[elementOffset] = clusterIdx;
+  // Write the parent of the specified example to global memory.
+  parents[exampleOffset] = parentIdx;
+
+  // Write the cluster index associated with the example to global memory. (This will be -1 unless the example is a subtree root.)
+  clusterIndices[exampleOffset] = clusterIdx;
 }
 
 /**
- * \brief Reset a cluster container.
+ * \brief Computes the parameters for and stores the specified selected cluster for the specified example set.
  *
- * \param clusterContainers A pointer to the cluster containers.
- * \param containerIdx      The index of the cluster container to reset.
- */
-template <typename ClusterType, int MAX_CLUSTERS>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void
-    example_clusterer_reset_cluster_container(ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers,
-                                              int containerIdx)
-{
-  // Just reset the number of clusters, no need to reset the actual clusters since they will be overwritten later.
-  clusterContainers[containerIdx].nbClusters = 0;
-}
-
-/**
- * \brief Reset temporary working variables associated to a certain example set.
+ * \note  The examples in the set must already have been grouped into clusters by the other functions in this file,
+ *        and suitable clusters must have been selected for creation.
+ * \note  The actual cluster parameters depend on the ClusterType; for this reason, cluster creation is delegated to a function
+ *        called create_cluster_from_examples, which must be defined (elsewhere) for the relevant ExampleType and ClusterType pair.
  *
- * \param clustersPerExampleSet Pointer to the variables containing the number of clusters extracted
- *                              from each example set.
- * \param clusterSizes          Pointer to the variables storing the size of each extracted cluster.
- * \param clusterSizesHistogram Pointer to the variables storing the histogram of cluster sizes.
- * \param exampleSetCapacity    Maximum size of each example set.
- * \param exampleSetIdx         Index of the example set for which we are resetting the working variables.
+ * \param exampleSetIdx       The index of the example set for which the selected cluster is being created.
+ * \param selectedClusterIdx  The index of the selected cluster to create (this is an index into the selected clusters array).
+ * \param exampleSets         An image containing the sets of examples that have been clustered (one set per row). The width
+ *                            of the image specifies the maximum number of examples that can be contained in each set.
+ * \param exampleSetSizes     The number of valid examples in each example set.
+ * \param exampleSetCapacity  The maximum size of each example set.
+ * \param clusterIndices      An image containing the cluster indices for the examples.
+ * \param selectedClusters    The indices of the clusters selected for each example set.
+ * \param maxSelectedClusters The maximum number of clusters to extract from each example set.
+ * \param clusterContainers   The output containers in which to store the clusters created for each example set.
  */
-_CPU_AND_GPU_CODE_
-inline void example_clusterer_reset_temporaries(int *clustersPerExampleSet,
-                                                int *clusterSizes,
-                                                int *clusterSizesHistogram,
-                                                int exampleSetCapacity,
-                                                int exampleSetIdx)
+template <typename ExampleType, typename ClusterType, int MaxClusters>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, const ExampleType *exampleSets, const int *exampleSetSizes, int exampleSetCapacity,
+                                    const int *clusterIndices, const int *selectedClusters, int maxSelectedClusters, Array<ClusterType,MaxClusters> *clusterContainers)
 {
-  // Reset number of clusters per example set.
-  clustersPerExampleSet[exampleSetIdx] = 0;
+  // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
+  const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
 
-  // Compute the memory offset to the beginning of any data associated to the current example set.
-  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+  // Look up the real cluster index of the specified selected cluster (e.g. if this is the second selected
+  // cluster for the example set, and selectedClusters[1] = 23, then the real cluster index is 23).
+  const int clusterIdx = selectedClusters[selectedClustersOffset + selectedClusterIdx];
 
-  // Reset cluster sizes and histogram associated to the current example set.
-  for (int i = 0; i < exampleSetCapacity; ++i)
+  // If the specified selected cluster is valid:
+  if(clusterIdx >= 0)
   {
-    clusterSizes[exampleSetOffset + i] = 0;
-    clusterSizesHistogram[exampleSetOffset + i] = 0;
+    // Compute the linear offset to the beginning of the data associated with the specified example set
+    // in the example sets and cluster indices images.
+    const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+
+    // Get a reference to the output clusters array for the specified example set.
+    Array<ClusterType,MaxClusters>& outputClusters = clusterContainers[exampleSetIdx];
+
+    // Compute the index in the output clusters array at which to store the selected cluster once it has been created.
+    int outputClusterIdx = -1;
+
+#ifdef __CUDACC__
+    outputClusterIdx = atomicAdd(&outputClusters.size, 1);
+#else
+  #ifdef WITH_OPENMP
+    #pragma omp atomic capture
+  #endif
+    outputClusterIdx = outputClusters.size++;
+#endif
+
+    // Create the cluster and write it into the output clusters array at the specified location.
+    create_cluster_from_examples(
+      clusterIdx,
+      exampleSets + exampleSetOffset,
+      clusterIndices + exampleSetOffset,
+      exampleSetSizes[exampleSetIdx],
+      outputClusters.elts[outputClusterIdx]
+    );
   }
 }
 
 /**
- * \brief Select the largest clusters from each example set.
+ * \brief Resets a cluster container.
  *
- * \param clusterSizes            A pointer to the sizes of each extracted cluster.
- * \param clusterSizesHistogram   A pointer to the histogram of cluster sizes for each example set.
- * \param nbClustersPerExampleSet A pointer to the number of clusters found in each example set.
- * \param selectedClusters        A pointer to the memory area where we will store the indices of the clusters selected
- *                                from each example set.
- * \param exampleSetCapacity      The mamimum size of each example set.
- * \param exampleSetIdx           The index of the current example set.
- * \param maxSelectedClusters     The maximum number of clusters to keep in each example set.
- * \param minClusterSize          The minimum size of a cluster to be kept.
+ * \param exampleSetIdx     The index of the example set whose cluster container we want to reset.
+ * \param clusterContainers A pointer to the cluster containers.
+ */
+template <typename ClusterType, int MaxClusters>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void reset_cluster_container(int exampleSetIdx, Array<ClusterType,MaxClusters> *clusterContainers)
+{
+  // It is sufficient to just reset the size of the container (i.e. the number of clusters) to zero.
+  // There is no need to modify the actual clusters, since they will be overwritten later.
+  clusterContainers[exampleSetIdx].size = 0;
+}
+
+/**
+ * \brief Resets the temporary variables associated with the specified example set.
+ *
+ * \param exampleSetIdx           The index of the example set for which we are resetting the temporary variables.
+ * \param exampleSetCapacity      The maximum size of each example set.
+ * \param nbClustersPerExampleSet The number of clusters extracted from each example set.
+ * \param clusterSizes            An image containing the sizes of the extracted clusters (for all example sets).
+ * \param clusterSizeHistograms   The histograms of cluster sizes for the different example sets.
  */
 _CPU_AND_GPU_CODE_
-inline void example_clusterer_select_clusters(const int *clusterSizes,
-                                              const int *clusterSizesHistogram,
-                                              const int *nbClustersPerExampleSet,
-                                              int *selectedClusters,
-                                              int exampleSetCapacity,
-                                              int exampleSetIdx,
-                                              int maxSelectedClusters,
-                                              int minClusterSize)
+inline void reset_temporaries_for_set(int exampleSetIdx, int exampleSetCapacity, int *nbClustersPerExampleSet, int *clusterSizes, int *clusterSizeHistograms)
 {
-  // Linear index to the first example (and associated data) of the current example set.
+  // Reset the number of clusters extracted from the specified example set to zero.
+  nbClustersPerExampleSet[exampleSetIdx] = 0;
+
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
   const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
-  // Number of clusters found in the current example set.
+
+  // The example set's histogram has an additional value that needs to be reset, so we need a separate offset.
+  const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
+
+  // Reset the cluster sizes and histogram values associated with the specified example set.
+  for(int i = 0; i < exampleSetCapacity; ++i)
+  {
+    clusterSizes[exampleSetOffset + i] = 0;
+    clusterSizeHistograms[histogramOffset + i] = 0;
+  }
+
+  // We also need to reset the last element of the histogram.
+  clusterSizeHistograms[histogramOffset + exampleSetCapacity] = 0;
+}
+
+/**
+ * \brief Selects the largest clusters for the specified example set and writes their indices into the selected clusters image.
+ *
+ * \param exampleSetIdx           The index of the example set for which to select clusters.
+ * \param clusterSizes            An image containing the sizes of the extracted clusters (for all example sets).
+ * \param clusterSizeHistograms   The histograms of cluster sizes for the different example sets.
+ * \param nbClustersPerExampleSet The number of clusters extracted from each example set.
+ * \param exampleSetCapacity      The mamimum size of each example set.
+ * \param maxSelectedClusters     The maximum number of clusters to keep for each example set.
+ * \param minClusterSize          The minimum size of cluster to keep.
+ * \param selectedClusters        An image in which to store the indices of the clusters selected for each example set.
+ */
+_CPU_AND_GPU_CODE_
+inline void select_clusters_for_set(int exampleSetIdx, const int *clusterSizes, const int *clusterSizeHistograms, const int *nbClustersPerExampleSet,
+                                    int exampleSetCapacity, int maxSelectedClusters, int minClusterSize, int *selectedClusters)
+{
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
+  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
+
+  // Compute the linear offset to the beginning of the data associated with the specified example set's histogram.
+  const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
+
+  // Look up the number of valid clusters associated with the specified example set.
   const int nbValidClusters = nbClustersPerExampleSet[exampleSetIdx];
-  // Linear offset to the current cluster in the output array.
+
+  // Compute the linear offset to the beginning of the data associated with the selected clusters for the specified example set.
   const int selectedClustersOffset = exampleSetIdx * maxSelectedClusters;
 
-  // Reset output (set all cluster indices to invalid values).
-  for (int i = 0; i < maxSelectedClusters; ++i)
+  // Reset the selected clusters for the specified example set (by setting all selected cluster indices to an invalid value).
+  for(int i = 0; i < maxSelectedClusters; ++i)
   {
     selectedClusters[selectedClustersOffset + i] = -1;
   }
 
-  // Scan the histogram from the top end to find the minimum cluster size we want to select.
-  // We want up to maxSelectedClusters clusters.
+  // Starting from the largest clusters, scan downwards in the histogram to find the minimum size of cluster
+  // we need to consider in order to try to select maxSelectedClusters clusters. Note that we will not be
+  // able to select maxSelectedClusters if there are fewer suitable clusters than that to start with; if
+  // that happens, we simply keep all of the suitable clusters we do have.
   int nbSelectedClusters = 0;
-  int selectedClusterSize = exampleSetCapacity - 1;
-
-  for (; selectedClusterSize >= minClusterSize && nbSelectedClusters < maxSelectedClusters; --selectedClusterSize)
+  int nbSmallestClustersToKeep = 0;
+  int minSelectedClusterSize = exampleSetCapacity;
+  while(minSelectedClusterSize > minClusterSize && nbSelectedClusters < maxSelectedClusters)
   {
-    nbSelectedClusters += clusterSizesHistogram[exampleSetOffset + selectedClusterSize];
+    --minSelectedClusterSize;
+    nbSmallestClustersToKeep = MIN(clusterSizeHistograms[histogramOffset + minSelectedClusterSize], maxSelectedClusters - nbSelectedClusters);
+    nbSelectedClusters += nbSmallestClustersToKeep;
   }
 
-  // If we couldn't find any cluster early out. Means that the current example set was empty.
-  if (nbSelectedClusters == 0) return;
+  // If we couldn't find any suitable clusters at all, early out.
+  if(nbSelectedClusters == 0) return;
 
-  // nbSelectedClusters might be greater than maxSelectedClusters if more clusters had the same size during the alst
-  // check, need to keep this into account: at first add all clusters with size strictly greater than minClusterSize,
-  // then perform another loop over the clusters add as many clusters with size equal to selectedClusterSize as possible
-
+  // Now walk through all of the clusters we do have, selecting (a) all of those whose size is strictly greater
+  // than the minimum selected cluster size, and (b) as many as necessary of those whose size is exactly equal
+  // to the minimum selected cluster size.
   nbSelectedClusters = 0;
-
-  // First pass, strictly greater.
-  for (int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
+  int nbSmallestClustersKept = 0;
+  for(int clusterIdx = 0; clusterIdx < nbValidClusters; ++clusterIdx)
   {
-    // If the current cluster size is greater than the threshold then keep it.
-    if (clusterSizes[exampleSetOffset + i] > selectedClusterSize)
+    const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];
+    if(clusterSize > minSelectedClusterSize ||
+       (clusterSize == minSelectedClusterSize && nbSmallestClustersKept++ < nbSmallestClustersToKeep))
     {
-      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
+      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = clusterIdx;
     }
   }
 
-  // Second pass, equal, keep as many clusters as possible.
-  for (int i = 0; i < nbValidClusters && nbSelectedClusters < maxSelectedClusters; ++i)
+  // Sort the selected clusters in non-increasing order of size using a simple selection sort.
+  // Note: Selection sort is quadratic, but the number of clusters is small enough for now that it doesn't matter.
+  for(int i = 0; i < nbSelectedClusters; ++i)
   {
-    if (clusterSizes[exampleSetOffset + i] == selectedClusterSize)
-    {
-      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
-    }
-  }
-
-  // Sort clusters by descending number of inliers.
-  // Note: this implementation is quadratic but the number of clusters is small enough to not care for now.
-  for (int i = 0; i < nbSelectedClusters; ++i)
-  {
+    // Find a cluster with maximum size in selectedClusters[i..nbSelectedClusters).
     int maxSize = clusterSizes[exampleSetOffset + selectedClusters[selectedClustersOffset + i]];
     int maxIdx = i;
 
-    for (int j = i + 1; j < nbSelectedClusters; ++j)
+    for(int j = i + 1; j < nbSelectedClusters; ++j)
     {
       int size = clusterSizes[exampleSetOffset + selectedClusters[selectedClustersOffset + j]];
-      if (size > maxSize)
+      if(size > maxSize)
       {
         maxSize = size;
         maxIdx = j;
       }
     }
 
-    // Swap.
-    if (maxIdx != i)
+    // If selectedClusters[i] wasn't the maximal cluster, swap it with the cluster that was.
+    if(maxIdx != i)
     {
       int temp = selectedClusters[selectedClustersOffset + i];
       selectedClusters[selectedClustersOffset + i] = selectedClusters[selectedClustersOffset + maxIdx];
@@ -495,6 +421,41 @@ inline void example_clusterer_select_clusters(const int *clusterSizes,
   }
 }
 
-} // namespace grove
+/**
+ * \brief Updates the cluster size histogram for the specified example set based on the size of the specified cluster.
+ *
+ * \note The cluster size histograms will be used later to select the largest clusters in each example set.
+ *
+ * \param exampleSetIdx           The index of the example set whose histogram should be updated.
+ * \param clusterIdx              The index of the cluster whose size should be used to update the histogram.
+ * \param clusterSizes            An image containing the sizes of the extracted clusters (for all example sets).
+ * \param clusterSizeHistograms   An image storing a cluster size histogram for each example set under consideration (one histogram per row).
+ * \param exampleSetCapacity      The maximum number of elements in each example set.
+ */
+_CPU_AND_GPU_CODE_
+inline void update_cluster_size_histogram(int exampleSetIdx, int clusterIdx, const int *clusterSizes, int *clusterSizeHistograms, int exampleSetCapacity)
+{
+  // Compute the linear offset to the beginning of the data associated with the specified example set.
+  const int exampleSetOffset = exampleSetIdx * exampleSetCapacity;
 
-#endif // H_GROVE_EXAMPLECLUSTERER_SHARED
+  // Compute the linear offset to the beginning of the data associated with the specified example set's histogram.
+  const int histogramOffset = exampleSetIdx * (exampleSetCapacity + 1);
+
+  // Look up the size of the specified cluster.
+  const int clusterSize = clusterSizes[exampleSetOffset + clusterIdx];
+
+  // Atomically increment the corresponding bin in the histogram.
+  // Note: The __CUDA_ARCH__ check is needed because this function is not a template.
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
+  atomicAdd(&clusterSizeHistograms[histogramOffset + clusterSize], 1);
+#else
+#ifdef WITH_OPENMP
+  #pragma omp atomic
+#endif
+  clusterSizeHistograms[histogramOffset + clusterSize]++;
+#endif
+}
+
+}
+
+#endif

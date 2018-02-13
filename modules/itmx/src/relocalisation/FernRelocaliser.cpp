@@ -5,6 +5,9 @@
 
 #include "relocalisation/FernRelocaliser.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -24,9 +27,17 @@ FernRelocaliser::FernRelocaliser(const Vector2i& depthImageSize, float viewFrust
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
-boost::optional<Relocaliser::Result>
-FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
+void FernRelocaliser::load_from_disk(const std::string& inputFolder)
 {
+  // Load the relocaliser data from the input folder. Note that we need to add a "/" to
+  // the end of the folder path to force the loading to happen from *inside* the folder.
+  m_relocaliser->LoadFromDirectory(inputFolder + "/");
+}
+
+std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+{
+  std::vector<Relocaliser::Result> results;
+
   // Copy the current depth input across to the CPU for use by the relocaliser.
   depthImage->UpdateHostFromDevice();
 
@@ -52,10 +63,10 @@ FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatIma
     result.pose = m_relocaliser->RetrievePose(nearestNeighbour).pose;
     result.quality = RELOCALISATION_GOOD;
 
-    return result;
+    results.push_back(result);
   }
 
-  return boost::none;
+  return results;
 }
 
 void FernRelocaliser::reset()
@@ -65,6 +76,16 @@ void FernRelocaliser::reset()
   m_relocaliser.reset(new WrappedRelocaliser(
     m_depthImageSize, m_rangeParameters, m_harvestingThreshold, m_numFerns, m_decisionsPerFern
   ));
+}
+
+void FernRelocaliser::save_to_disk(const std::string& outputFolder) const
+{
+  // Ensure that the output folder exists.
+  bf::create_directories(outputFolder);
+
+  // Save the relocaliser data to the output folder. Note that we need to add a "/" to
+  // the end of the folder path to force the writing to happen *inside* the folder.
+  m_relocaliser->SaveToDirectory(outputFolder + "/");
 }
 
 void FernRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,

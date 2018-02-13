@@ -10,7 +10,8 @@ using namespace ITMLib;
 using namespace ORUtils;
 
 #include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
+#include <itmx/util/CameraPoseConverter.h>
+using namespace itmx;
 
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
@@ -18,7 +19,6 @@ using namespace tvgutil;
 #include "picking/PickerFactory.h"
 #include "selectiontransformers/SelectionTransformerFactory.h"
 #include "util/CameraFactory.h"
-#include "util/CameraPoseConverter.h"
 using namespace rigging;
 using namespace tvginput;
 

@@ -5,6 +5,7 @@
 
 #include "Model.h"
 using namespace ORUtils;
+using namespace itmx;
 using namespace tvginput;
 
 #include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
@@ -27,8 +28,9 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount, const MappingServer_Ptr& mappingServer)
 : m_labelManager(new LabelManager(maxLabelCount)),
+  m_mappingServer(mappingServer),
   m_resourcesDir(resourcesDir),
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),
@@ -42,7 +44,7 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
   m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, settings->deviceType);
 
   // Set up the visualisation generator.
-  m_visualisationGenerator.reset(new VisualisationGenerator(m_voxelVisualisationEngine, m_surfelVisualisationEngine, m_labelManager, settings));
+  m_visualisationGenerator.reset(new VisualisationGenerator(settings, m_labelManager, m_voxelVisualisationEngine, m_surfelVisualisationEngine));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -61,6 +63,11 @@ const LabelManager_Ptr& Model::get_label_manager()
 LabelManager_CPtr Model::get_label_manager() const
 {
   return m_labelManager;
+}
+
+const MappingServer_Ptr& Model::get_mapping_server()
+{
+  return m_mappingServer;
 }
 
 const std::string& Model::get_resources_dir() const
@@ -159,8 +166,8 @@ void Model::update_selector(const InputState& inputState, const SLAMState_CPtr& 
   // Update the current selection transformer (if any).
   if(m_selectionTransformer) m_selectionTransformer->update(inputState);
 
-  // Update the current selector.
-  m_selector->update(inputState, slamState, renderState, renderingInMono);
+  // Update the current selector (provided the render state is valid).
+  if(renderState) m_selector->update(inputState, slamState, renderState, renderingInMono);
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

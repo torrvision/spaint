@@ -35,7 +35,7 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (x >= imgSize.x || y >= imgSize.y) return;
+  if(x >= imgSize.x || y >= imgSize.y) return;
 
   get_prediction_for_leaf_shared(leafPredictions, leafIndices, outPredictions, imgSize, nbMaxPredictions, x, y);
 }
@@ -54,45 +54,77 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CUDA));
 
   // Forest.
-  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(ITMLibSettings::DEVICE_CUDA,
-                                                                                        m_forestFilename);
+  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, ITMLibSettings::DEVICE_CUDA);
 
   // These variables have to be set here, since they depend on the forest that has just been loaded.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
-  m_predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
-
-  // Reservoirs.
-  m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(
-      ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, m_reservoirsCount, m_rngSeed);
 
   // Clustering.
-  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::MAX_CLUSTERS>::make_clusterer(
-      ITMLibSettings::DEVICE_CUDA, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
+  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
+      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CUDA);
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CUDA, m_settings);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
 
-  // Clear internal state.
-  reset();
+  // Clear internal state (no virtual calls in the constructor).
+  ScoreRelocaliser_CUDA::reset();
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 ScorePrediction ScoreRelocaliser_CUDA::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
   {
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
 
-  return m_predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, MEMORYDEVICE_CUDA);
+  return m_relocaliserState->predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, MEMORYDEVICE_CUDA);
+}
+
+std::vector<Keypoint3DColour> ScoreRelocaliser_CUDA::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
+{
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  {
+    throw std::invalid_argument("Invalid tree or leaf index.");
+  }
+
+  const uint32_t linearReservoirIdx = leafIdx * m_scoreForest->get_nb_trees() + treeIdx;
+  const uint32_t currentReservoirSize = m_relocaliserState->exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, MEMORYDEVICE_CUDA);
+  const uint32_t reservoirCapacity = m_relocaliserState->exampleReservoirs->get_reservoir_capacity();
+
+  std::vector<Keypoint3DColour> reservoirContents;
+  reservoirContents.reserve(currentReservoirSize);
+
+  m_relocaliserState->exampleReservoirs->get_reservoirs()->UpdateHostFromDevice();
+  const Keypoint3DColour *reservoirData = m_relocaliserState->exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
+
+  for(uint32_t i = 0; i < currentReservoirSize; ++i)
+  {
+    reservoirContents.push_back(reservoirData[linearReservoirIdx * reservoirCapacity + i]);
+  }
+
+  return reservoirContents;
+}
+
+void ScoreRelocaliser_CUDA::reset()
+{
+  // Setup the reservoirs if they haven't been allocated yet.
+  if(!m_relocaliserState->exampleReservoirs)
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CUDA, m_rngSeed);
+
+  // Setup the predictions block.
+  if(!m_relocaliserState->predictionsBlock)
+    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+
+  ScoreRelocaliser::reset();
 }
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                                       const ScorePredictionsBlock_CPtr &leafPredictions,
-                                                       ScorePredictionsImage_Ptr &outputPredictions) const
+void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                                       const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                                       ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
@@ -112,4 +144,4 @@ void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CP
   ORcudaKernelCheck;
 }
 
-} // namespace grove
+}

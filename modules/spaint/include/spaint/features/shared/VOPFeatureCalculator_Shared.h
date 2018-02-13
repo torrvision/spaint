@@ -6,7 +6,8 @@
 #ifndef H_SPAINT_VOPFEATURECALCULATOR_SHARED
 #define H_SPAINT_VOPFEATURECALCULATOR_SHARED
 
-#include "../../util/ColourConversion_Shared.h"
+#include <itmx/util/ColourConversion_Shared.h>
+
 #include "../../util/SpaintVoxel.h"
 
 namespace spaint {
@@ -27,7 +28,7 @@ inline void convert_patch_to_lab(int voxelLocationIndex, size_t featureCount, fl
   for(size_t i = voxelLocationIndex * featureCount, end = i + featureCount - 4; i != end; i += 3)
   {
     Vector3f rgb(features[i] / 255.0f, features[i+1] / 255.0f, features[i+2] / 255.0f);
-    Vector3f lab = convert_rgb_to_lab(rgb);
+    Vector3f lab = itmx::convert_rgb_to_lab(rgb);
 
     features[i] = lab.x;
     features[i+1] = lab.y;
@@ -108,7 +109,7 @@ inline void compute_intensities_for_patch(int tid, const float *features, int fe
   float g = rgbPatch[pixelOffset + 1];
   float b = rgbPatch[pixelOffset + 2];
 
-  intensityPatch[indexInPatch] = convert_rgb_to_grey(r, g, b);
+  intensityPatch[indexInPatch] = itmx::convert_rgb_to_grey(r, g, b);
 }
 
 /**

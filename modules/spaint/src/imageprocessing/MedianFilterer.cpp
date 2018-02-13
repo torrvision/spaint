@@ -22,10 +22,14 @@ MedianFilterer::MedianFilterer(unsigned int kernelWidth, ITMLibSettings::DeviceT
 void MedianFilterer::operator()(const ITMUChar4Image_CPtr& input, const ITMUChar4Image_Ptr& output) const
 try
 {
-  static boost::shared_ptr<af::array> temp(new af::array(input->noDims.y, input->noDims.x, 4, u8));
-  m_imageProcessor->copy_itm_to_af(input, temp);
-  *temp = af::medfilt(*temp, m_kernelWidth, m_kernelWidth);
-  m_imageProcessor->copy_af_to_itm(temp, output);
+  if(!m_intermediate || ImageProcessor::image_size(input) != ImageProcessor::image_size(m_intermediate))
+  {
+    m_intermediate.reset(new af::array(input->noDims.y, input->noDims.x, 4, u8));
+  }
+
+  m_imageProcessor->copy_itm_to_af(input, m_intermediate);
+  *m_intermediate = af::medfilt(*m_intermediate, m_kernelWidth, m_kernelWidth);
+  m_imageProcessor->copy_af_to_itm(m_intermediate, output);
 }
 catch(af::exception&)
 {

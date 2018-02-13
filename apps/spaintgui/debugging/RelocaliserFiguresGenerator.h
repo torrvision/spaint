@@ -8,14 +8,21 @@
 
 #include "../core/Model.h"
 
-namespace spaintgui {
-
 /**
  * \brief This struct contains some functions that can be used to generate visualisations as in the CVPR relocalisation paper.
  *        The functions have to be set as frame callbacks in the main spaintgui application.
  */
 struct RelocaliserFiguresGenerator
 {
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  /**
+   * \brief Saves the modes (centroid and covariances) contained in a predetermined set of leaves as they grow.
+   *
+   * \param model The model containing the relocaliser.
+   */
+  static void show_growing_leaf_modes(const Model_Ptr &model);
+
   /**
    * \brief Prints on screen the modes (centroid and covariances) contained in a predetermined set of leaves.
    *
@@ -30,7 +37,5 @@ struct RelocaliserFiguresGenerator
    */
   static void show_ransac_correspondences(const Model_Ptr &model);
 };
-
-}
 
 #endif

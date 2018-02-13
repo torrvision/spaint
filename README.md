@@ -8,13 +8,13 @@ This is an open-source, real-time implementation of the interactive *SemanticPai
 
 This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg).
 
-It is built on top of [InfiniTAM v2](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact either [Victor Adrian Prisacariu](mailto:victor@viprad.net) or [Olaf Kaehler](mailto:olaf@robots.ox.ac.uk).
+It is built on top of [InfiniTAM v3](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
 
 The original concept for *SemanticPaint* was developed by a large number of people both at the University of Oxford and at Microsoft Research: Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi and Philip H S Torr.
 
 ## Acknowledgements
 
-We gratefully acknowledge the help of Julien Valentin, for his help in getting us up to speed with the project, of Victor Adrian Prisacariu, Olaf Kaehler and Carl Yuheng Ren, for implementing the 3D reconstruction engine on which our work is based, without which our work would not be possible, of Anurag Arnab, for his help with the saving and loading of scenes, and of Stephen Hicks and Joram van Rheede, for helping us to exhibit our work at SIGGRAPH 2015.
+We gratefully acknowledge the help of Julien Valentin, for his help in getting us up to speed with the project, of Victor Adrian Prisacariu and Olaf Kaehler, for implementing the 3D reconstruction engine on which our work is based, without which our work would not be possible, of Anurag Arnab, for his help with the saving and loading of scenes, and of Stephen Hicks and Joram van Rheede, for helping us to exhibit our work at SIGGRAPH 2015.
 
 ## Context
 
@@ -52,7 +52,7 @@ If you build on this framework for your research, please consider citing both ou
 
 ### 1.1 Overview
 
-SemanticPaint builds with CMake 2.8 and above on Windows, Ubuntu and Mac OS X.
+SemanticPaint builds with CMake 3.8.2 and above on Windows, Ubuntu and Mac OS X.
 It has been tested on recent versions of all three operating systems, but may
 require additional work to build on older versions.
 
@@ -68,7 +68,7 @@ build "out of the box". However, most users will probably want to install
 the remaining optional libraries in order to enable full functionality.
 
 ```
-  - ArrayFire
+  - ArrayFire (version 3.3.2)
     Status: Optional (needed for touch interaction and median filtering)
     Default: Disabled
     Flag: WITH_ARRAYFIRE
@@ -76,7 +76,7 @@ the remaining optional libraries in order to enable full functionality.
   - Boost (version 1.56.0)
     Status: Required
 
-  - CUDA (version 6.5)
+  - CUDA (version 8.0)
     Status: Optional (needed for GPU acceleration)
     Default: Enabled
     Flag: WITH_CUDA
@@ -87,7 +87,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 2)
+  - InfiniTAM (version 3)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -100,7 +100,7 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_OVR
 
-  - OpenCV (version 2.4.9)
+  - OpenCV (version 3.1.0)
     Status: Optional (needed for feature inspection mode)
     Default: Disabled
     Flag: WITH_OPENCV
@@ -119,7 +119,7 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_OPENNI
 
-  - SDL (version 2-2.0.3)
+  - SDL (version 2-2.0.7)
     Status: Required
 
   - Vicon SDK
@@ -136,7 +136,7 @@ Common steps on all platforms:
 
   2. Clone the InfiniTAM repository into <root>/InfiniTAM.
 
-  3. Build the spaint_v2 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
+  3. Build the spaint_v3 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
 
   4. Clone SemanticPaint into <root>/spaint, e.g.
 
@@ -224,10 +224,11 @@ If you have any trouble with the build, here are some of the likely causes:
 * The CMake executable is not on your path.
 * The MSBuild executable is not on your path. (Windows)
 * The Visual C++ compiler (cl.exe) is not on your path. (Windows)
+* The latest Visual Studio updates have not been installed. (Windows)
 
 # Licence
 
-SemanticPaint © 2015, Torr Vision Group, The University of Oxford (the "Software")
+SemanticPaint © 2015-2017, Torr Vision Group, The University of Oxford (the "Software")
 
 The Software remains the property of the University of Oxford ("the University").
 
@@ -250,6 +251,7 @@ Contact details are: [philip.torr@eng.ox.ac.uk](mailto:philip.torr@eng.ox.ac.uk)
 
 # History
 
+* 2017-AUG-08: second public release
 * 2015-SEP-26: first public release
 * 2015-JUL-23: initial draft
 

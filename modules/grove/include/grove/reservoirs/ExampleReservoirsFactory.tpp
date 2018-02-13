@@ -13,26 +13,25 @@
 
 namespace grove {
 
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
 template <typename ExampleType>
-typename ExampleReservoirsFactory<ExampleType>::Reservoirs_Ptr ExampleReservoirsFactory<ExampleType>::make_reservoirs(
-    ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t reservoirCapacity,
-    uint32_t reservoirCount, uint32_t rngSeed)
+typename ExampleReservoirsFactory<ExampleType>::Reservoirs_Ptr
+ExampleReservoirsFactory<ExampleType>::make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t rngSeed)
 {
   Reservoirs_Ptr reservoir;
 
-  if (deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    reservoir.reset(
-        new ExampleReservoirs_CUDA<ExampleType>(reservoirCapacity, reservoirCount, rngSeed));
+    reservoir.reset(new ExampleReservoirs_CUDA<ExampleType>(reservoirCount, reservoirCapacity, rngSeed));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
   {
-    reservoir.reset(
-        new ExampleReservoirs_CPU<ExampleType>(reservoirCapacity, reservoirCount, rngSeed));
+    reservoir.reset(new ExampleReservoirs_CPU<ExampleType>(reservoirCount, reservoirCapacity, rngSeed));
   }
 
   return reservoir;

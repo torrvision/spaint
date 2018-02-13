@@ -18,18 +18,25 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 
+#ifdef WITH_GROVE
 #include <grove/relocalisation/ScoreRelocaliserFactory.h>
 using namespace grove;
+#endif
 
+#ifdef WITH_OPENCV
+#include <itmx/ocv/OpenCVUtil.h>
+#endif
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
+#include <itmx/relocalisation/NullRelocaliser.h>
+#include <itmx/remotemapping/RGBDCalibrationMessage.h>
+#include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
 #include "segmentation/SegmentationUtil.h"
-#include "trackers/TrackerFactory.h"
 
 namespace spaint {
 
@@ -45,6 +52,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
+  m_relocaliserTrainingCount(0),
+  m_relocaliserTrainingSkipFrames(0),
   m_sceneID(sceneID),
   m_trackerConfig(trackerConfig),
   m_trackingMode(trackingMode)
@@ -118,6 +127,7 @@ void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
 bool SLAMComponent::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
+  if(!m_imageSourceEngine->hasImagesNow()) return true;
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
@@ -204,13 +214,32 @@ bool SLAMComponent::process_frame()
     runFusion = false;
   }
 
+  // Decide whether or not we need to reset the visible list. This is necessary if we won't be rendering
+  // point clouds during tracking, since otherwise space carving won't work.
+  const bool resetVisibleList = !m_tracker->requiresPointCloudRendering();
+
   if(runFusion)
   {
     // Run the fusion process.
-    m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get());
+    m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
     if(m_mappingMode != MAP_VOXELS_ONLY)
     {
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
+    }
+
+    // If a mapping client is active, use it to send the current frame to the remote mapping server.
+    if(m_mappingClient)
+    {
+      MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_mappingClient->begin_push_frame_message();
+      boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
+      if(elt)
+      {
+        RGBDFrameMessage& msg = **elt;
+        msg.set_frame_index(static_cast<int>(m_fusedFramesCount));
+        msg.set_pose(*trackingState->pose_d);
+        msg.set_rgb_image(inputRGBImage);
+        msg.set_depth_image(inputRawDepthImage);
+      }
     }
 
     ++m_fusedFramesCount;
@@ -218,7 +247,7 @@ bool SLAMComponent::process_frame()
   else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get());
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
   }
   else
   {
@@ -264,6 +293,7 @@ void SLAMComponent::reset_scene()
 
   // Reset the relocaliser.
   m_context->get_relocaliser(m_sceneID)->reset();
+  m_relocaliserTrainingCount = 0;
 
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
@@ -278,6 +308,32 @@ void SLAMComponent::set_detect_fiducials(bool detectFiducials)
 void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 {
   m_fusionEnabled = fusionEnabled;
+}
+
+void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
+{
+  m_mappingClient = mappingClient;
+
+  // If we're using a mapping client, send an initial calibration message across to the server.
+  if(m_mappingClient)
+  {
+    SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
+
+    RGBDCalibrationMessage calibMsg;
+    calibMsg.set_calib(m_imageSourceEngine->getCalib());
+
+    // TODO: Allow these to be configured from the command line.
+#ifdef WITH_OPENCV
+    calibMsg.set_depth_compression_type(DEPTH_COMPRESSION_PNG);
+    calibMsg.set_rgb_compression_type(RGB_COMPRESSION_JPG);
+#else
+    calibMsg.set_depth_compression_type(DEPTH_COMPRESSION_NONE);
+    calibMsg.set_rgb_compression_type(RGB_COMPRESSION_NONE);
+#endif
+
+    std::cout << "Sending calibration message" << std::endl;
+    m_mappingClient->send_calibration_message(calibMsg);
+  }
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -319,24 +375,32 @@ void SLAMComponent::process_relocalisation()
   // Save the current pose in case we need to restore it later.
   const SE3Pose oldPose(*trackingState->pose_d);
 
+  // Train if m_relocaliseEveryFrame is true OR (the tracking succeeded AND we don't have to skip the current frame).
+  const bool performTraining = m_relocaliseEveryFrame ||
+      (
+       trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD
+       &&
+       (m_relocaliserTrainingSkipFrames == 0 || (m_relocaliserTrainingCount++ % m_relocaliserTrainingSkipFrames == 0))
+      );
+
   // If we're not training in this frame, allow the relocaliser to perform any necessary internal bookkeeping.
   // Note that we prevent training and bookkeeping from both running in the same frame for performance reasons.
-  const bool performTraining = trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD || m_relocaliseEveryFrame;
   if(!performTraining)
   {
     relocaliser->update();
   }
 
   // Relocalise if either (a) the tracking has failed, or (b) we're forcibly relocalising every frame for evaluation purposes.
-  const bool performRelocalisation = trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED || m_relocaliseEveryFrame;
+  const bool performRelocalisation = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED;
   if(performRelocalisation)
   {
-    boost::optional<Relocaliser::Result> relocalisationResult = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
+    std::vector<Relocaliser::Result> relocalisationResults = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
 
-    if(relocalisationResult)
+    if(!relocalisationResults.empty())
     {
-      trackingState->pose_d->SetFrom(&relocalisationResult->pose);
-      trackingState->trackerResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD ? ITMTrackingState::TRACKING_GOOD : ITMTrackingState::TRACKING_POOR;
+      const Relocaliser::Result& bestRelocalisationResult = relocalisationResults[0];
+      trackingState->pose_d->SetFrom(&bestRelocalisationResult.pose);
+      trackingState->trackerResult = bestRelocalisationResult.quality == Relocaliser::RELOCALISATION_GOOD ? ITMTrackingState::TRACKING_GOOD : ITMTrackingState::TRACKING_POOR;
     }
   }
 
@@ -364,14 +428,26 @@ void SLAMComponent::setup_relocaliser()
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
   // Look up the non-relocaliser-specific settings, such as the type of relocaliser to construct.
+  // Note that the relocaliser type is a primary setting, so is not in the SLAMComponent namespace.
+  m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
+
   static const std::string settingsNamespace = "SLAMComponent.";
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
-  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "forest");
+
+#ifndef WITH_GROVE
+  // If the user is trying to use the Grove relocaliser and it has not been built, fall back to the ferns relocaliser and issue a warning.
+  if(m_relocaliserType == "forest")
+  {
+    m_relocaliserType = "ferns";
+    std::cerr << "Warning: Cannot use a Grove relocaliser because BUILD_GROVE is disabled in CMake. Falling back to random ferns.\n";
+  }
+#endif
 
   // Construct a relocaliser of the specified type.
   Relocaliser_Ptr innerRelocaliser;
   if(m_relocaliserType == "forest")
   {
+#ifdef WITH_GROVE
     // If we're trying to set up a forest-based relocaliser, determine the path to the file containing the forest.
     const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
     m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocalisationForestPath);
@@ -379,6 +455,7 @@ void SLAMComponent::setup_relocaliser()
 
     // Load the relocaliser from the specified file.
     innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
+#endif
   }
   else if(m_relocaliserType == "ferns")
   {
@@ -391,6 +468,10 @@ void SLAMComponent::setup_relocaliser()
       FernRelocaliser::get_default_num_decisions_per_fern(),
       m_relocaliseEveryFrame ? FernRelocaliser::ALWAYS_TRY_ADD : FernRelocaliser::DELAY_AFTER_RELOCALISATION
     ));
+  }
+  else if(m_relocaliserType == "none")
+  {
+    innerRelocaliser.reset(new NullRelocaliser);
   }
   else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
 
@@ -408,17 +489,23 @@ void SLAMComponent::setup_relocaliser()
     innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
     voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
   ));
+
+  // Finally, set the number of frames to skip betwenn calls to the train method.
+  m_relocaliserTrainingSkipFrames = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkipFrames", 0);
 }
 
 void SLAMComponent::setup_tracker()
 {
+  const MappingServer_Ptr& mappingServer = m_context->get_mapping_server();
   const Settings_CPtr& settings = m_context->get_settings();
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
 
   m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-  m_tracker = TrackerFactory::make_tracker_from_string(m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker);
+  m_tracker = TrackerFactory::make_tracker_from_string(
+    m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker, mappingServer
+  );
 }
 
 }

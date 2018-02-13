@@ -45,6 +45,12 @@ public:
    */
   virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
 
+  /** Override */
+  virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
+
+  /** Override */
+  virtual void reset();
+
   //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 protected:
   /**
@@ -57,11 +63,11 @@ protected:
    * \param outputPredictions An image wherein each element represent the modal clsters associated to the predicted
    *                          leaves.
    */
-  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,
-                                          const ScorePredictionsBlock_CPtr &leafPredictions,
-                                          ScorePredictionsImage_Ptr &outputPredictions) const;
+  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
+                                          const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                          ScorePredictionsImage_Ptr& outputPredictions) const;
 };
 
-} // namespace grove
+}
 
-#endif // H_GROVE_SCORERELOCALISERCPU
+#endif

@@ -10,20 +10,31 @@
 
 #include "interface/ExampleReservoirs.h"
 
-namespace grove
-{
+namespace grove {
 
+/**
+ * \brief An instantiation of this struct template can be used to construct sets of example reservoirs.
+ */
 template <typename ExampleType>
-class ExampleReservoirsFactory
+struct ExampleReservoirsFactory
 {
-public:
+  //#################### TYPEDEFS ####################
+
   typedef ExampleReservoirs<ExampleType> Reservoirs;
   typedef boost::shared_ptr<Reservoirs> Reservoirs_Ptr;
-  typedef boost::shared_ptr<const Reservoirs> Reservoirs_CPtr;
 
-  static Reservoirs_Ptr make_reservoirs(
-      ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t reservoirCapacity,
-      uint32_t reservoirCount, uint32_t rngSeed = 42);
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  /**
+   * \brief Makes a set of example reservoirs.
+   *
+   * \param reservoirCount    The number of reservoirs to create.
+   * \param reservoirCapacity The capacity (maximum size) of each reservoir.
+   * \param deviceType        The device on which the example reservoirs should be stored.
+   * \param rngSeed           The seed for the random number generator.
+   * \return                  The set of example reservoirs.
+   */
+  static Reservoirs_Ptr make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t rngSeed = 42);
 };
 
 }

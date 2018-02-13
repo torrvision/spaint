@@ -41,8 +41,14 @@ private:
   /** The current camera mode. */
   CameraMode m_cameraMode;
 
+  /** The up vector to use when rotating the camera. */
+  Eigen::Vector3f m_cameraUpVector;
+
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
+
+  /** The original size of the image in which to store the scene visualisation for the sub-window. */
+  Vector2i m_originalImgSize;
 
   /** The ID of the scene to render in the sub-window. */
   std::string m_sceneID;
@@ -99,6 +105,13 @@ public:
   CameraMode get_camera_mode() const;
 
   /**
+   * \brief Gets the up vector to use when rotating the camera.
+   *
+   * \return  The up vector to use when rotating the camera.
+   */
+  const Eigen::Vector3f& get_camera_up_vector() const;
+
+  /**
    * \brief Gets the image in which to store the scene visualisation for the sub-window.
    *
    * \return  The image in which to store the scene visualisation for the sub-window.
@@ -111,6 +124,13 @@ public:
    * \return  The image in which to store the scene visualisation for the sub-window.
    */
   ITMUChar4Image_CPtr get_image() const;
+
+  /**
+   * \brief Gets the original size of the image in which to store the scene visualisation for the sub-window.
+   *
+   * \return  The original size of the image in which to store the scene visualisation for the sub-window.
+   */
+  const Vector2i& get_original_image_size() const;
 
   /**
    * \brief Gets the ID of the scene to render in the sub-window.
@@ -176,11 +196,25 @@ public:
   void reset_camera();
 
   /**
+   * \brief Resizes the image in which to store the scene visualisation for the sub-window.
+   *
+   * \param newImgSize  The new size of image needed to store the scene visualisation for the sub-window.
+   */
+  void resize_image(const Vector2i& newImgSize);
+
+  /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
    */
   void set_camera_mode(CameraMode cameraMode);
+
+  /**
+   * \brief Sets the up vector to use when rotating the camera.
+   *
+   * \param cameraUpVector  The up vector to use when rotating the camera.
+   */
+  void set_camera_up_vector(const Eigen::Vector3f& cameraUpVector);
 
   /**
    * \brief Sets a flag indicating whether or not to render a surfel visualisation rather than a voxel one.

@@ -9,9 +9,11 @@
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMDenseSurfelMapper.h>
 
+#include <itmx/remotemapping/MappingClient.h>
+#include <itmx/trackers/FallibleTracker.h>
+
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
-#include "../trackers/FallibleTracker.h"
 
 namespace spaint {
 
@@ -67,7 +69,7 @@ private:
   bool m_detectFiducials;
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
-  FallibleTracker *m_fallibleTracker;
+  itmx::FallibleTracker *m_fallibleTracker;
 
   /** The fiducial detector to use (if any). */
   FiducialDetector_CPtr m_fiducialDetector;
@@ -97,6 +99,9 @@ private:
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
+  /** The mapping client (if any) to use to communicate with the remote mapping server. */
+  itmx::MappingClient_Ptr m_mappingClient;
+
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
 
@@ -108,6 +113,12 @@ private:
 
   /** The path to the relocalisation forest. */
   std::string m_relocaliserForestPath;
+
+  /** The number of times the relocaliser has been trained with new data. */
+  size_t m_relocaliserTrainingCount;
+
+  /** the number of frames to skip between each call to the relocaliser's train method. */
+  size_t m_relocaliserTrainingSkipFrames;
 
   /** The type of relocaliser. */
   std::string m_relocaliserType;
@@ -192,6 +203,13 @@ public:
    * \param fusionEnabled Whether or not the user wants fusion to be run.
    */
   void set_fusion_enabled(bool fusionEnabled);
+
+  /**
+   * \brief Sets the mapping client (if any) to use to communicate with the remote mapping server.
+   *
+   * \param mappingClient The mapping client (if any) to use to communicate with the remote mapping server.
+   */
+  void set_mapping_client(const itmx::MappingClient_Ptr& mappingClient);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

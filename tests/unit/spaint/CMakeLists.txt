@@ -12,12 +12,7 @@ SET(suitename spaint)
 # Specify the test names #
 ##########################
 
-SET(testnames
-ColourConversion
-DualNumber
-DualQuaternion
-GeometryUtil
-)
+SET(testnames)
 
 IF(WITH_ARRAYFIRE)
   SET(testnames ${testnames}

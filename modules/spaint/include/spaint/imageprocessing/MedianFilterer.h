@@ -22,6 +22,9 @@ private:
   /** The image processor. */
   ImageProcessor_CPtr m_imageProcessor;
 
+  /** An intermediate ArrayFire image on which to actually perform the filtering. */
+  mutable boost::shared_ptr<af::array> m_intermediate;
+
   /** The kernel width to use for median filtering. */
   unsigned int m_kernelWidth;
 

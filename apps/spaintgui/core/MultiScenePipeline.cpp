@@ -6,6 +6,7 @@
 #include "MultiScenePipeline.h"
 using namespace InputSource;
 using namespace ITMLib;
+using namespace itmx;
 using namespace spaint;
 
 #include <boost/bind.hpp>
@@ -15,7 +16,8 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir,
+                                       size_t maxLabelCount, const MappingServer_Ptr& mappingServer)
 : m_mode(MODE_NORMAL), m_type(type)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
@@ -28,7 +30,7 @@ MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_P
 #endif
 
   // Set up the spaint model.
-  m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
+  m_model.reset(new Model(settings, resourcesDir, maxLabelCount, mappingServer));
 }
 
 //#################### DESTRUCTOR ####################
@@ -135,7 +137,25 @@ void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fus
   MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
 }
 
+void MultiScenePipeline::set_mapping_client(const std::string& sceneID, const itmx::MappingClient_Ptr& mappingClient)
+{
+  MapUtil::call_if_found(m_slamComponents, sceneID, boost::bind(&SLAMComponent::set_mapping_client, _1, mappingClient));
+}
+
 void MultiScenePipeline::toggle_segmentation_output()
 {
   MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::toggle_output, _1));
+}
+
+void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
+{
+  for(std::map<std::string,PropagationComponent_Ptr>::const_iterator it = m_propagationComponents.begin(), iend = m_propagationComponents.end(); it != iend; ++it)
+  {
+    it->second->reset_label_propagator(raycastResultSize);
+  }
+
+  for(std::map<std::string,SemanticSegmentationComponent_Ptr>::const_iterator it = m_semanticSegmentationComponents.begin(), iend = m_semanticSegmentationComponents.end(); it != iend; ++it)
+  {
+    it->second->reset_voxel_samplers(raycastResultSize);
+  }
 }

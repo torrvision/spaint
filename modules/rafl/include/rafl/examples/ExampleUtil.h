@@ -75,7 +75,7 @@ public:
       const std::vector<std::string>& words = wordLines[i];
 
       Descriptor_Ptr descriptor(new Descriptor);
-      for(int j = 0; j < words.size() - 1; ++j)
+      for(size_t j = 0; j < words.size() - 1; ++j)
       {
         descriptor->push_back(boost::lexical_cast<float>(words[j]));
       }

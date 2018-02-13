@@ -9,6 +9,7 @@
 #include <arrayfire.h>
 
 #include <itmx/base/ITMObjectPtrTypes.h>
+#include <itmx/visualisation/interface/DepthVisualiser.h>
 
 #include <rafl/core/RandomForest.h>
 
@@ -18,7 +19,6 @@
 
 #include "TouchSettings.h"
 #include "../imageprocessing/interface/ImageProcessor.h"
-#include "../visualisation/interface/DepthVisualiser.h"
 
 namespace spaint {
 
@@ -54,7 +54,7 @@ private:
   ITMFloatImage_Ptr m_depthRaycast;
 
   /** The depth visualiser. */
-  DepthVisualiser_CPtr m_depthVisualiser;
+  itmx::DepthVisualiser_CPtr m_depthVisualiser;
 
   /** An image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;
@@ -234,14 +234,6 @@ private:
    * \return      A copy of the array in which the elements have been clamped to the specified range.
    */
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
-
-  /**
-   * \brief Converts an Eigen Vector to an InfiniTAM vector.
-   *
-   * \param v  The Eigen vector.
-   * \return   The InfiniTAM vector.
-   */
-  static Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
 //#################### TYPEDEFS ####################

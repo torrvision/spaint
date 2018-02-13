@@ -15,21 +15,22 @@
 namespace grove {
 
 /**
- * \brief This class can be used to create instances of the PreemptiveRansac class.
+ * \brief This struct can be used to create instances of classes that perform variants of the RANSAC algorithm.
  */
-class RansacFactory
+struct RansacFactory
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
+
   /**
-   * \brief Creates an instance of PreemptiveRansac using a certain device.
+   * \brief Creates a pre-emptive RANSAC.
    *
-   * \param deviceType The device type.
-   *
-   * \return An instance of PreemptiveRansac.
+   * \param settings    The settings used to configure the pre-emptive RANSAC.
+   * \param deviceType  The device on which the pre-emptive RANSAC should operate.
+   * \return            The pre-emptive RANSAC.
    */
-  static PreemptiveRansac_Ptr make_preemptive_ransac(ITMLib::ITMLibSettings::DeviceType deviceType, const tvgutil::SettingsContainer_CPtr& settings);
+  static PreemptiveRansac_Ptr make_preemptive_ransac(const tvgutil::SettingsContainer_CPtr& settings, ITMLib::ITMLibSettings::DeviceType deviceType);
 };
+
 }
 
 #endif

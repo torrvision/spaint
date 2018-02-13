@@ -6,75 +6,122 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER
 #define H_GROVE_EXAMPLECLUSTERER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ORUtils/Image.h>
-#include <ORUtils/MemoryBlock.h>
-
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
-#include "../base/ClusterContainer.h"
+#include "../../util/Array.h"
 
 namespace grove {
 
 /**
- * \brief An instance of a class deriving from this one can find clusters from a set of "examples".
- *        Clustering is performed via the "Really Quick shift" algorithm by Fulkerson and Soatto.
- *        See: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf for details.
+ * \brief An instance of a class deriving from this one can be used to cluster sets of examples.
+ *        Clustering is performed via the "Really quick shift" algorithm by Fulkerson and Soatto.
+ *        See http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf for details.
  *
- * \note  The clusterer is capable of clustering multiple sets of examples (in parallel, when using CUDA or OpenMP),
- *        for this reason the interface to the main clustering method expects not a single set of examples but an
- *        "image" wherein each row contains a certain number examples to be clustered.
- *        Different rows are then clustered independently.
+ * \note  The clusterer is capable of clustering multiple sets of examples (in parallel, when using CUDA or OpenMP).
+ *        For this reason, the interface to the main clustering method expects not a single set of examples, but an
+ *        image in which each row contains a certain number of examples to be clustered. Different rows are then
+ *        clustered independently.
  *
- * \note  The following functions are required to be defined:
- *        - _CPU_AND_GPU_CODE_ inline float distanceSquared(const ExampleType &a, const ExampleType &b)
- *          Returns the squared distancebetween two examples.
- *        - _CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples,
- *                                                                   const int *exampleKeys, int examplesCount,
- *                                                                   int key, ClusterType &outputCluster)
- *          Aggregates all the examples in the examples array having a certain key into a single cluster mode.
+ * \note  The following functions must be defined for each example type:
  *
- * \param ExampleType  The type of examples to cluster.
- * \param ClusterType  The type of clusters being generated.
- * \param MAX_CLUSTERS The maximum number of clusters being generated for each set of examples.
+ *        1) _CPU_AND_GPU_CODE_ inline float distance_squared(const ExampleType& a, const ExampleType& b);
+ *
+ *           Returns the squared distance between two examples.
+ *
+ *        2) _CPU_AND_GPU_CODE_ inline void create_cluster_from_examples(int key, const ExampleType *examples,
+ *                                                                       const int *exampleKeys, int examplesCount,
+ *                                                                       ClusterType& outputCluster);
+ *
+ *           Aggregates all the examples in the examples array that have a certain key into a single cluster.
+ *
+ * \param ExampleType  The type of example to cluster.
+ * \param ClusterType  The type of cluster being generated.
+ * \param MaxClusters  The maximum number of clusters being generated for each set of examples.
  */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+template <typename ExampleType, typename ClusterType, int MaxClusters>
 class ExampleClusterer
 {
   //#################### TYPEDEFS ####################
-public:
-  typedef ClusterContainer<ClusterType, MAX_CLUSTERS> Clusters;
-
-  typedef ORUtils::MemoryBlock<Clusters> ClustersBlock;
-  typedef boost::shared_ptr<ClustersBlock> ClustersBlock_Ptr;
-  typedef boost::shared_ptr<const ClustersBlock> ClustersBlock_CPtr;
-
+protected:
+  typedef Array<ClusterType,MaxClusters> ClusterContainer;
+  typedef ORUtils::MemoryBlock<ClusterContainer> ClusterContainers;
+  typedef boost::shared_ptr<ClusterContainers> ClusterContainers_Ptr;
   typedef ORUtils::Image<ExampleType> ExampleImage;
-  typedef boost::shared_ptr<ExampleImage> ExampleImage_Ptr;
   typedef boost::shared_ptr<const ExampleImage> ExampleImage_CPtr;
+
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** The maximum number of clusters to retain for each set of examples. */
+  uint32_t m_maxClusterCount;
+
+  /** The minimum size of cluster to keep. */
+  uint32_t m_minClusterSize;
+
+  /** The sigma of the Gaussian used when computing the example densities. */
+  float m_sigma;
+
+  /** The maximum distance there can be between two examples that are part of the same cluster. */
+  float m_tau;
+
+  //##################### CLUSTER EXAMPLES TEMPORARY VARIABLES #####################
+  //                                                                              //
+  // These temporary variables are used to store the state needed when invoking:  //
+  //                                                                              //
+  // cluster_examples(exampleSets, exampleSetSizes, exampleSetStart,              //
+  //                  exampleSetCount, clusterContainers);                        //
+  //                                                                              //
+  //################################################################################
+protected:
+  /** An image storing the cluster index associated with each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
+  ITMIntImage_Ptr m_clusterIndices;
+
+  /**
+   * An image storing a cluster size histogram for each example set under consideration (one histogram per row).
+   * Pixel (i,j) in the image counts the number of clusters in example set i that have size j.
+   */
+  ITMIntImage_Ptr m_clusterSizeHistograms;
+
+  /**
+   * The size of each cluster (for each considered example set). Has exampleSetCount rows and exampleSets->width columns.
+   * The number of clusters for each example set can range between 1 (i.e. a single cluster of size exampleSets->width)
+   * and exampleSets->width (i.e. a cluster for each individual example). Within the row of the image corresponding to
+   * example set i, the first m_nbClustersPerExampleSet[i] pixels store the sizes of the clusters for that example set.
+   * The remaining pixels on the row are ignored.
+   */
+  ITMIntImage_Ptr m_clusterSizes;
+
+  /** An image storing the density of examples around each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
+  ITMFloatImage_Ptr m_densities;
+
+  /** Stores the number of valid clusters in each example set. Has exampleSetCount elements. */
+  ITMIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
+
+  /** Defines the cluster tree structure. Holds the index of the parent for each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
+  ITMIntImage_Ptr m_parents;
+
+  /** An image storing the indices of the selected clusters in each example set. Has exampleSetCount rows and m_maxClusterCount columns. */
+  ITMIntImage_Ptr m_selectedClusters;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of ExampleClusterer.
+   * \brief Constructs an example clusterer.
    *
-   * \param sigma            The sigma distance used when estimating the example density.
-   * \param tau              The maximum distance that two examples must have to be part of the same cluster.
-   * \param maxClusterCount  The maximum number of clusters retained for each set of examples
-   *                         (all clusters are estimated but only the maxClusterCount largest ones are returned).
-   *                         Must be <= than MAX_CLUSTERS.
-   * \param minClusterSize   The minimum number of elements that have to be in a cluster for it to be valid.
+   * \param sigma            The sigma of the Gaussian used when computing the example densities.
+   * \param tau              The maximum distance there can be between two examples that are part of the same cluster.
+   * \param maxClusterCount  The maximum number of clusters retained for each set of examples (all clusters are estimated
+   *                         but only the maxClusterCount largest ones are returned). Must be <= MaxClusters.
+   * \param minClusterSize   The minimum size of cluster to keep.
    *
-   * \throws std::invalid_argument if maxClusterCount is > than MAX_CLUSTERS.
+   * \throws std::invalid_argument If maxClusterCount > MaxClusters.
    */
   ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 
-  //#################### DESTRUCTORS ####################
+  //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys an instance of ExampleClusterer.
+   * \brief Destroys the example clusterer.
    */
   virtual ~ExampleClusterer();
 
@@ -83,204 +130,139 @@ public:
   /**
    * \brief Clusters several sets of examples in parallel.
    *
-   * \param exampleSets       Sets of examples to be clustered. Each row of the image represents a set of size up to
-   *                          "width".
-   * \param exampleSetsSize   The number of valid examples for each row of the exampleSets image.
-   * \param clusterContainers Output containers that will hold the clusters extracted for each set of examples.
-   * \param startIdx          First row considered when computing the clusters.
-   * \param count             Clustering is performed on count rows of the examleSets image, starting from startIdx.
+   * \param exampleSets       An image containing the sets of examples to be clustered (one set per row). The width of
+   *                          the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetSizes   The number of valid examples in each example set.
+   * \param exampleSetStart   The index of the first example set for which to compute clusters.
+   * \param exampleSetCount   The number of example sets for which to compute clusters.
+   * \param clusterContainers Output containers that will hold the clusters computed for each example set.
    *
-   * \throws std::invalid_argument if startIdx + count would result in out of bounds access in exampleSets.
+   * \throws std::invalid_argument If exampleSetStart + exampleSetCount would result in out-of-bounds access in exampleSets.
    */
-  void find_modes(const ExampleImage_CPtr &exampleSets,
-                  const ITMIntMemoryBlock_CPtr &exampleSetsSize,
-                  ClustersBlock_Ptr &clusterContainers,
-                  uint32_t startIdx,
-                  uint32_t count);
+  void cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
+                        uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers);
 
-  //#################### PROTECTED MEMBER VARIABLES ####################
-protected:
-  /** Cluster index to which each example is associated. Has count rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_clusterIdx;
-
-  /** Size of each cluster. Has count rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_clusterSizes;
-
-  /** Histogram representing the number of clusters having a certain size. Has count rows and exampleSets->width
-   * columns. */
-  ITMIntImage_Ptr m_clusterSizesHistogram;
-
-  /** An image representing the density of examples around each example in the input sets. Has count rows and
-   * exampleSets->width columns. */
-  ITMFloatImage_Ptr m_densities;
-
-  /** The maximum number of clusters to return for each set of examples. */
-  uint32_t m_maxClusterCount;
-
-  /** The minimum number of examples in a valid cluster. */
-  uint32_t m_minClusterSize;
-
-  /** Stores the number of valid clusters in each example set. Has count elements. */
-  ITMIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
-
-  /** Defines the cluster tree structure. Holds the index to the parent for each example in the input sets. Has count
-   * rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_parents;
-
-  /** Stores the index of selected clusters in each example set. Has count rows and m_maxClusterCount columns. */
-  ITMIntImage_Ptr m_selectedClusters;
-
-  /** The sigma used to estimate example densities. */
-  float m_sigma;
-
-  /** The maximum distance between examples in the same set. */
-  float m_tau;
-
-  //#################### PROTECTED PURE VIRTUAL MEMBER FUNCTIONS ####################
-protected:
+  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
+private:
   /**
-   * \brief Build a histgram of cluster sizes.
-   *        One histogram per example set, each element of the histogram represents the number of clusters having a
-   * certain size.
+   * \brief Computes final cluster indices for the examples by following the parent links previously computed.
    *
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
+   */
+  virtual void compute_cluster_indices(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
+
+  /**
+   * \brief Builds a histogram of cluster sizes for each example set.
+   *
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
    */
   virtual void compute_cluster_size_histograms(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
    * \brief Compute the density of examples around each example in the input sets.
    *
-   * \param exampleSets         A pointer to the example sets.
-   * \param exampleSetsSizes    A pointer to the size of each example set.
-   * \param exampleSetsCapacity The maximum size of each exampleSet.
-   * \param exampleSetsCount    The number of example sets.
-   * \param sigma               The sigma used when computing the density.
+   * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
+   *                            the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetSizes     The number of valid examples in each example set.
+   * \param exampleSetCapacity  The maximum size of each example set.
+   * \param exampleSetCount     The number of example sets being clustered.
    */
-  virtual void compute_density(const ExampleType *exampleSets,
-                               const int *exampleSetsSizes,
-                               uint32_t exampleSetsCapacity,
-                               uint32_t exampleSetsCount,
-                               float sigma) = 0;
+  virtual void compute_densities(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
-   * \brief Having selected the examples part of each cluster, compute the cluster parameters
-   *        (e.g. centroid, covariances etc...).
+   * \brief Computes parents and initial cluster indices for the examples as part of the neighbour-linking step of the
+   *        really quick shift (RQS) algorithm.
    *
-   * \param exampleSets        A pointer to the example sets.
-   * \param exampleSetsSizes   A pointer to the size of each example set.
-   * \param predictionsData    A pointer to the output containers wherein to store the clusters
-   *                           extracted from each set of examples.
-   * \param maxClusterCount    Maximum number of clusters to select for each example set.
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \note For details of RQS, see the paper by Fulkerson and Soatto: http://vision.ucla.edu/~brian/papers/fulkerson10really.pdf
+   *
+   * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
+   *                            the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetSizes     The number of valid examples in each example set.
+   * \param exampleSetCapacity  The maximum size of each example set.
+   * \param exampleSetCount     The number of example sets being clustered.
+   * \param tauSq               The square of the maximum distance allowed between examples if they are to be linked.
    */
-  virtual void compute_cluster_parameters(const ExampleType *exampleSets,
-                                          const int *exampleSetsSizes,
-                                          Clusters *clustersData,
-                                          uint32_t maxClusterCount,
-                                          uint32_t exampleSetsCapacity,
-                                          uint32_t exampleSetsCount) = 0;
+  virtual void compute_parents(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                               uint32_t exampleSetCount, float tauSq) = 0;
 
   /**
-   * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
+   * \brief Computes the parameters (e.g. centroid, covariances, etc.) for and stores each selected cluster for each example set.
    *
-   * \param clusters The output cluster containers.
-   * \param setIdx   The index to the first set of interest.
-   *
-   * \return         A raw pointer to the output cluster container for set setIdx.
+   * \param exampleSets         An image containing the sets of examples to be clustered (one set per row). The width of
+   *                            the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetSizes     The number of valid examples in each example set.
+   * \param exampleSetCapacity  The maximum size of each example set.
+   * \param exampleSetCount     The number of example sets being clustered.
+   * \param clusterContainers   A pointer to the cluster containers for the example sets being clustered.
    */
-  virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr &clusters, uint32_t clusterIdx) const = 0;
+  virtual void create_selected_clusters(const ExampleType *exampleSets, const int *exampleSetSizes, uint32_t exampleSetCapacity,
+                                        uint32_t exampleSetCount, ClusterContainer *clusterContainers) = 0;
 
   /**
-   * \brief Virtual function returning a pointer to the first example of the example set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
+   * \brief Gets a raw pointer to the cluster container for the specified example set.
    *
-   * \param exampleSets The example sets.
-   * \param setIdx      The index to the first set of interest.
-   *
-   * \return            A raw pointer to the first example of the example set setIdx.
+   * \param clusterContainers The cluster containers for the example sets.
+   * \param exampleSetIdx     The index of the example set to whose cluster container we want to get a pointer.
+   * \return                  A raw pointer to the cluster container for the specified example set.
    */
-  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr &exampleSets,
-                                                        uint32_t setIdx) const = 0;
+  virtual ClusterContainer *get_pointer_to_cluster_container(const ClusterContainers_Ptr& clusterContainers, uint32_t exampleSetIdx) const = 0;
 
   /**
-   * \brief Virtual function returning a pointer to the size of the example set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
+   * \brief Gets a raw pointer to the first example of the specified example set.
    *
-   * \param exampleSetsSize The example set sizes.
-   * \param setIdx          The index to the first set of interest.
-   *
-   * \return                A raw pointer to the size of the example set setIdx.
+   * \param exampleSets   An image containing the sets of examples to be clustered (one set per row). The width of
+   *                      the image specifies the maximum number of examples that can be contained in each set.
+   * \param exampleSetIdx The index of the example set to whose first example we want to get a pointer.
+   * \return              A raw pointer to the first example of the specified example set.
    */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr &exampleSetsSize,
-                                                     uint32_t setIdx) const = 0;
+  virtual const ExampleType *get_pointer_to_example_set(const ExampleImage_CPtr& exampleSets, uint32_t exampleSetIdx) const = 0;
 
   /**
-   * \brief Analyse the tree structure to identify clusters of neighboring examples.
+   * \brief Gets a raw pointer to the size of the specified example set.
    *
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \param exampleSetSizes The size each example set.
+   * \param exampleSetIdx   The index of the example set to whose size we want to get a pointer.
+   * \return                A raw pointer to the size of the specified example set.
    */
-  virtual void identify_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
+  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t exampleSetIdx) const = 0;
 
   /**
-   * \brief Link neighboring examples in order to form a tree structure.
+   * \brief Resets the cluster containers for the example sets that are being clustered.
    *
-   * \param exampleSets         A pointer to the example sets.
-   * \param exampleSetsSizes    A pointer to the size of each example set.
-   * \param exampleSetsCapacity The maximum size of each exampleSet.
-   * \param exampleSetsCount    The number of example sets.
-   * \param tauSq               Maximum distance (squared) between examples that are to be linked.
+   * \param clusterContainers A pointer to the cluster containers to be reset.
+   * \param exampleSetCount   The number of example sets being clustered.
    */
-  virtual void link_neighbors(const ExampleType *exampleSets,
-                              const int *exampleSetsSizes,
-                              uint32_t exampleSetsCapacity,
-                              uint32_t exampleSetsCount,
-                              float tauSq) = 0;
+  virtual void reset_cluster_containers(ClusterContainer *clusterContainers, uint32_t exampleSetCount) const = 0;
 
   /**
-   * \brief Reset output cluster containers.
+   * \brief Resets the temporary variables needed during a cluster_examples call.
    *
-   * \param clustersData  Pointer to the storage for the extracted clusters.
-   * \param clustersCount Number of example sets to be clustered.
-   */
-  virtual void reset_clusters(Clusters *clustersData, uint32_t clustersCount) const = 0;
-
-  /**
-   * \brief Reset temporary values used during the clustering operation.
-   *
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
    */
   virtual void reset_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   /**
-   * \brief Selects up to maxClusterCount clusters of at least minClusterSize size for each example set.
-   *        Prefers larger clusters.
+   * \brief Selects the largest clusters for each example set (up to a maximum limit).
    *
-   * \param maxClusterCount    Maximum number of clusters to select for each example set.
-   * \param minClusterSize     Minimum size of a cluster to be selected.
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
    */
-  virtual void select_clusters(uint32_t maxClusterCount,
-                               uint32_t minClusterSize,
-                               uint32_t exampleSetCapacity,
-                               uint32_t exampleSetCount) = 0;
+  virtual void select_clusters(uint32_t exampleSetCapacity, uint32_t exampleSetCount) = 0;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Allocate memory to store the temporary data used to perform clustering.
+   * \brief Reallocates the temporary variables needed during a cluster_examples call as necessary.
    *
-   * \param exampleSetCapacity Maximum size of each example set.
-   * \param exampleSetCount    Number of example sets to be clustered.
+   * \param exampleSetCapacity The maximum size of each example set.
+   * \param exampleSetCount    The number of example sets being clustered.
    */
-  void allocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
+  void reallocate_temporaries(uint32_t exampleSetCapacity, uint32_t exampleSetCount);
 };
 
-} // namespace grove
+}
 
-#endif // H_GROVE_EXAMPLECLUSTERER
+#endif

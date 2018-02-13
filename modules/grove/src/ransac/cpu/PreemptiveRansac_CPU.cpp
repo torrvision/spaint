@@ -4,46 +4,46 @@
  */
 
 #include "ransac/cpu/PreemptiveRansac_CPU.h"
+using namespace tvgutil;
 
 #include <Eigen/Dense>
 
 #include <itmx/base/MemoryBlockFactory.h>
+using namespace itmx;
 
 #include "ransac/shared/PreemptiveRansac_Shared.h"
-
-using namespace itmx;
-using namespace tvgutil;
 
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
+PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr& settings)
+: PreemptiveRansac(settings)
 {
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_randomGenerators = mbf.make_block<CPURNG>(m_maxPoseCandidates);
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
+  m_rngs = mbf.make_block<CPURNG>(m_maxPoseCandidates);
   m_rngSeed = 42;
 
   init_random();
 }
 
-//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+//#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac_CPU::compute_and_sort_energies()
+void PreemptiveRansac_CPU::compute_energies_and_sort()
 {
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-// Compute the energy for all poses, in parallel if possible.
+// Compute the energy for all pose candidates, in parallel if possible.
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
-  for (size_t p = 0; p < nbPoseCandidates; ++p)
+  for(size_t i = 0; i < nbPoseCandidates; ++i)
   {
-    compute_pose_energy(poseCandidates[p]);
+    compute_pose_energy(poseCandidates[i]);
   }
 
-  // Sort by ascending energy using operator <
+  // Sort the candidates into non-increasing order of energy.
   std::sort(poseCandidates, poseCandidates + nbPoseCandidates);
 }
 
@@ -54,86 +54,69 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
 
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
+  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
   // Reset the number of pose candidates.
   m_poseCandidates->dataSize = 0;
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for schedule(dynamic)
+  #pragma omp parallel for schedule(dynamic)
 #endif
-  for (uint32_t candidateIdx = 0; candidateIdx < m_maxPoseCandidates; ++candidateIdx)
+  for(uint32_t candidateIdx = 0; candidateIdx < m_maxPoseCandidates; ++candidateIdx)
   {
     PoseCandidate candidate;
 
     // Try to generate a valid candidate.
-    bool valid = preemptive_ransac_generate_candidate(keypoints,
-                                                      predictions,
-                                                      imgSize,
-                                                      randomGenerators[candidateIdx],
-                                                      candidate,
-                                                      m_maxCandidateGenerationIterations,
-                                                      m_useAllModesPerLeafInPoseHypothesisGeneration,
-                                                      m_checkMinDistanceBetweenSampledModes,
-                                                      m_minSquaredDistanceBetweenSampledModes,
-                                                      m_checkRigidTransformationConstraint,
-                                                      m_maxTranslationErrorForCorrectPose);
+    bool valid = preemptive_ransac_generate_candidate(
+      keypoints, predictions, imgSize, rngs[candidateIdx], candidate, m_maxCandidateGenerationIterations, m_useAllModesPerLeafInPoseHypothesisGeneration,
+      m_checkMinDistanceBetweenSampledModes, m_minSquaredDistanceBetweenSampledModes, m_checkRigidTransformationConstraint, m_maxTranslationErrorForCorrectPose
+    );
 
-    // If we succeeded store it in the array, grabbing first a unique index.
-    if (valid)
+    // If we succeed, grab a unique index in the output array and store the candidate into the corresponding array element.
+    if(valid)
     {
-      int finalCandidateIdx;
+      size_t finalCandidateIdx;
 
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
+    #ifdef WITH_OPENMP
+      #pragma omp atomic capture
+    #endif
       finalCandidateIdx = m_poseCandidates->dataSize++;
 
       poseCandidates[finalCandidateIdx] = candidate;
     }
   }
 
-  // Run Kabsch on all candidates to estimate the rigid transformation.
+  // Run Kabsch on all candidates to estimate the rigid transformations.
   compute_candidate_poses_kabsch();
 }
 
 void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
 {
-  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
-
-  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
-  const int *inlierLinearisedIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
-
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
-  const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-
-  // Grap pointers to the output storage.
   Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
-  Mode3DColour *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
+  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
+  const int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
-    for(int inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
+    for(uint32_t inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
     {
-      preemptive_ransac_prepare_inliers_for_optimisation(keypointsData,
-                                                         predictionsData,
-                                                         inlierLinearisedIndicesData,
-                                                         nbInliers,
-                                                         poseCandidatesData,
-                                                         candidateCameraPoints,
-                                                         candidateModes,
-                                                         m_poseOptimizationInlierThreshold,
-                                                         candidateIdx,
-                                                         inlierIdx);
+      preemptive_ransac_prepare_inliers_for_optimisation(
+        keypointsImage, predictionsImage, inliersIndices, nbInliers, poseCandidates, candidateCameraPoints,
+        candidateModes, m_poseOptimisationInlierThreshold, candidateIdx, inlierIdx
+      );
     }
   }
 
   // Compute and set the actual size of the buffers.
-  const uint32_t poseOptimisationBufferSize = nbInliers * nbPoseCandidates;
+  const uint32_t poseOptimisationBufferSize = static_cast<uint32_t>(nbInliers * nbPoseCandidates);
   m_poseOptimisationCameraPoints->dataSize = poseOptimisationBufferSize;
   m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
 }
@@ -141,79 +124,71 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
 void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
-  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
-
-  int *inlierIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
-  int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
-  CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
+  int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
+  int *inliersMaskImage = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
-  for (uint32_t sampleIdx = 0; sampleIdx < m_ransacInliersPerIteration; ++sampleIdx)
+  for(uint32_t sampleIdx = 0; sampleIdx < m_ransacInliersPerIteration; ++sampleIdx)
   {
     int sampledLinearIdx = -1;
 
-    // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the
-    // mask if necessary.
-    if (useMask)
+    // Try to sample the raster index of a valid keypoint whose prediction has at least one modal cluster, using the mask if necessary.
+    if(useMask)
     {
-      sampledLinearIdx = preemptive_ransac_sample_inlier<true>(
-          keypointsData, predictionsData, imgSize, randomGenerators[sampleIdx], inlierMaskData);
+      sampledLinearIdx = preemptive_ransac_sample_inlier<true>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx], inliersMaskImage);
     }
     else
     {
-      sampledLinearIdx =
-          preemptive_ransac_sample_inlier<false>(keypointsData, predictionsData, imgSize, randomGenerators[sampleIdx]);
+      sampledLinearIdx = preemptive_ransac_sample_inlier<false>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx]);
     }
 
-    // If we succeeded grab a unique index in the output array and store the inlier raster index.
-    if (sampledLinearIdx >= 0)
+    // If we succeed, grab a unique index in the output array and store the inlier raster index into the corresponding array element.
+    if(sampledLinearIdx >= 0)
     {
       size_t inlierIdx = 0;
 
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
+    #ifdef WITH_OPENMP
+      #pragma omp atomic capture
+    #endif
       inlierIdx = m_inliersIndicesBlock->dataSize++;
 
-      inlierIndicesData[inlierIdx] = sampledLinearIdx;
+      inliersIndices[inlierIdx] = sampledLinearIdx;
     }
   }
 }
 
 void PreemptiveRansac_CPU::update_candidate_poses()
 {
-  // Just fallback on the base class implementation.
+  // Just call the base class implementation.
   PreemptiveRansac::update_candidate_poses();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
+void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate& candidate) const
 {
-  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  const int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
 
-  const int *inliersData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
-  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
-
-  const float totalEnergy = preemptive_ransac_compute_candidate_energy(
-      candidate.cameraPose, keypointsData, predictionsData, inliersData, nbInliers);
-
+  const float totalEnergy = preemptive_ransac_compute_candidate_energy(candidate.cameraPose, keypointsImage, predictionsImage, inliersIndices, nbInliers);
   candidate.energy = totalEnergy / static_cast<float>(nbInliers);
 }
 
 void PreemptiveRansac_CPU::init_random()
 {
-  CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
-
-  // Initialize random states
-  for (uint32_t i = 0; i < m_maxPoseCandidates; ++i)
+  // Initialise each random number generator based on the specified seed.
+  CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
+  for(uint32_t i = 0; i < m_maxPoseCandidates; ++i)
   {
-    randomGenerators[i].reset(m_rngSeed + i);
+    rngs[i].reset(m_rngSeed + i);
   }
 }
 
-} // namespace grove
+}

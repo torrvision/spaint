@@ -1,6 +1,6 @@
 This is the software bundle "SemanticPaint", created by:
 
-Stuart Golodetz <stuart.golodetz@eng.ox.ac.uk>
+Stuart Golodetz <smg@robots.ox.ac.uk>
 Michael Sapienza <michael.sapienza@eng.ox.ac.uk>
 Julien Valentin <julien.valentin@eng.ox.ac.uk>
 Vibhav Vineet <vibhav.vineet@gmail.com>
@@ -10,21 +10,21 @@ Stephen Hicks <stephen.hicks@ndcn.ox.ac.uk>
 Shahram Izadi <shahrami@microsoft.com>
 Philip H S Torr <philip.torr@eng.ox.ac.uk>
 
-It is built on top of InfiniTAM v2, a highly-efficient,
+It is built on top of InfiniTAM v3, a highly-efficient,
 open-source 3D reconstruction engine developed by Oxford's
-Active Vision Group. For more details about InfiniTAM v2,
+Active Vision Group. For more details about InfiniTAM v3,
 please get in touch with one of the following people:
 
 Victor Adrian Prisacariu <victor@robots.ox.ac.uk>
 Olaf Kaehler <olaf@robots.ox.ac.uk>
-Carl Yuheng Ren <carl@robots.ox.ac.uk>
+Stuart Golodetz <smg@robots.ox.ac.uk>
 
 1. Building the System
 ----------------------
 
 1.1 Overview
 
-SemanticPaint builds with CMake 2.8 and above on Windows, Ubuntu and Mac OS X.
+SemanticPaint builds with CMake 3.8.2 and above on Windows, Ubuntu and Mac OS X.
 It has been tested on recent versions of all three operating systems, but may
 require additional work to build on older versions.
 
@@ -39,7 +39,7 @@ dependencies have been included in the repository, so SemanticPaint should
 build "out of the box". However, most users will probably want to install
 the remaining optional libraries in order to enable full functionality.
 
-  - ArrayFire
+  - ArrayFire (version 3.3.2)
     Status: Optional (needed for touch interaction and median filtering)
     Default: Disabled
     Flag: WITH_ARRAYFIRE
@@ -47,7 +47,7 @@ the remaining optional libraries in order to enable full functionality.
   - Boost (version 1.56.0)
     Status: Required
 
-  - CUDA (version 6.5)
+  - CUDA (version 8.0)
     Status: Optional (needed for GPU acceleration)
     Default: Enabled
     Flag: WITH_CUDA
@@ -58,7 +58,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 2)
+  - InfiniTAM (version 3)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -71,7 +71,7 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_OVR
 
-  - OpenCV (version 2.4.9)
+  - OpenCV (version 3.1.0)
     Status: Optional (needed for feature inspection mode)
     Default: Disabled
     Flag: WITH_OPENCV
@@ -90,7 +90,7 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_OPENNI
 
-  - SDL (version 2-2.0.3)
+  - SDL (version 2-2.0.7)
     Status: Required
 
   - Vicon SDK
@@ -106,7 +106,7 @@ Common steps on all platforms:
 
   b) Clone the InfiniTAM repository into <root>/InfiniTAM.
 
-  c) Build the spaint_v2 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
+  c) Build the spaint_v3 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
 
   d) Clone SemanticPaint into <root>/spaint, e.g.
 
@@ -191,8 +191,10 @@ If you have any trouble with the build, here are some of the likely causes:
 * The CMake executable is not on your path.
 * The MSBuild executable is not on your path. (Windows)
 * The Visual C++ compiler (cl.exe) is not on your path. (Windows)
+* The latest Visual Studio updates have not been installed. (Windows)
 
 History:
 
-2015-JUL-23: initial draft
+2017-AUG-08: second public release
 2015-SEP-26: first public release
+2015-JUL-23: initial draft

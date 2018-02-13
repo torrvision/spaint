@@ -5,15 +5,9 @@
 IF(BUILD_AUXILIARY_APPS)
   IF(BUILD_EVALUATION_MODULES)
     ADD_SUBDIRECTORY(raflperf)
-    ADD_SUBDIRECTORY(relocopt)
-    ADD_SUBDIRECTORY(relocperf)
 
     IF(WITH_OPENCV)
       ADD_SUBDIRECTORY(raflvis)
-
-      IF(BUILD_RELOCVIS)
-        ADD_SUBDIRECTORY(relocvis)
-      ENDIF()
 
       IF(BUILD_SPAINT AND WITH_ARRAYFIRE)
         ADD_SUBDIRECTORY(touchtrain)
@@ -21,12 +15,31 @@ IF(BUILD_AUXILIARY_APPS)
     ENDIF()
   ENDIF()
 
-  IF(WITH_SCOREFORESTS)
-    ADD_SUBDIRECTORY(relocconverter)
+  IF(BUILD_GROVE)
+    IF(WITH_SCOREFORESTS)
+      ADD_SUBDIRECTORY(relocconverter)
+    ENDIF()
+
     IF(WITH_OPENCV)
-      ADD_SUBDIRECTORY(forestmodevis)
+      IF(WITH_VTK)
+        ADD_SUBDIRECTORY(forestmodevis)
+      ENDIF()
+
+      IF(BUILD_RELOCVIS)
+        ADD_SUBDIRECTORY(relocvis)
+      ENDIF()
+    ENDIF()
+
+    IF(BUILD_EVALUATION_MODULES)
+      ADD_SUBDIRECTORY(prepare_7scenes)
+      ADD_SUBDIRECTORY(relocopt)
+      ADD_SUBDIRECTORY(relocperf)
     ENDIF()
   ENDIF()
+ENDIF()
+
+IF(BUILD_GROVE)
+  ADD_SUBDIRECTORY(relocgui)
 ENDIF()
 
 IF(BUILD_SPAINT)

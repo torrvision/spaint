@@ -124,6 +124,11 @@ void Application::set_batch_mode_enabled(bool batchModeEnabled)
   m_paused = m_pauseBetweenFrames = !batchModeEnabled;
 }
 
+void Application::set_server_mode_enabled(bool serverModeEnabled)
+{
+  m_paused = m_pauseBetweenFrames = !serverModeEnabled;
+}
+
 void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
   m_frameDebugHook = frameDebugHook;
@@ -206,6 +211,17 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
+  // If the quote key is pressed:
+  if(keysym.sym == KEYCODE_QUOTE)
+  {
+    // Toggle whether or not supersampling is used when rendering the scene raycast.
+    m_renderer->set_supersampling_enabled(!m_renderer->get_supersampling_enabled());
+
+    // Let the pipeline know that the raycast result size may have changed.
+    const Vector2i& imgSize = get_active_subwindow().get_image()->noDims;
+    m_pipeline->update_raycast_result_size(imgSize.x * imgSize.y);
+  }
+
   // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
   // If right shift + / is pressed, toggle video recording.
   if(keysym.sym == SDLK_SLASH)
@@ -280,17 +296,20 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     }
   }
 
-  // If the H key is pressed, print out a list of keyboard controls.
+  // If the H key is pressed, print out a list of controls.
   if(keysym.sym == KEYCODE_h)
   {
-    std::cout << "\nControls:\n\n"
+    std::cout << "\nKeyboard Controls:\n\n"
               << "W = Forwards\n"
               << "S = Backwards\n"
               << "A = Strafe Left\n"
               << "D = Strafe Right\n"
               << "Q = Move Up\n"
               << "E = Move Down\n"
+              << "Shift + Q = Rotate Left\n"
+              << "Shift + E = Rotate Right\n"
               << "F = Toggle Fusion\n"
+              << "G = Set Up Vector For Active Subwindow\n"
               << "O = Toggle Segmentation Output\n"
               << "P = Toggle Pose Mirroring\n"
               << "Up = Look Down\n"
@@ -340,9 +359,19 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RCtrl + Backspace = Clear Current Label\n"
               << "RCtrl + RShift + Backspace = Reset Classifier (Clear Labels and Forest)\n"
               << "; = Toggle Median Filtering\n"
+              << "' = Toggle Supersampling\n"
               << "/ = Save Screenshot\n"
               << "LShift + / = Toggle Sequence Recording\n"
-              << "RShift + / = Toggle Video Recording\n";
+              << "RShift + / = Toggle Video Recording\n"
+              << '\n'
+              << "Joystick Controls:\n\n"
+              << "Left Analog Stick = Move Camera\n"
+              << "Right Analog Stick = Look Up/Down/Left/Right\n"
+              << "L1 = Move Up\n"
+              << "R1 = Move Down\n"
+              << "L2 = Rotate Left\n"
+              << "R2 = Rotate Right\n"
+              << "Triangle = Set Up Vector For Active Subwindow\n";
   }
 }
 
@@ -407,21 +436,54 @@ void Application::process_camera_input()
   {
     const float SPEED = 0.1f;
     const float ANGULAR_SPEED = 0.05f;
-    static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
     MoveableCamera_Ptr camera = activeSubwindow.get_camera();
 
+    // If the G key (or the triangle button on a connected PS3 controller) is pressed, set the
+    // up vector for the active subwindow based on the current orientation of the camera.
+    if(m_inputState.key_down(KEYCODE_g) || m_inputState.joystick_button_down(PS3_BUTTON_TRIANGLE))
+    {
+        activeSubwindow.set_camera_up_vector(camera->v());
+    }
+
+    // Get the up vector for the active subwindow.
+    const Eigen::Vector3f& up = activeSubwindow.get_camera_up_vector();
+
+    // Allow the user to move the camera around using the keyboard.
     if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
     if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);
     if(m_inputState.key_down(KEYCODE_d)) camera->move_u(-SPEED);
     if(m_inputState.key_down(KEYCODE_a)) camera->move_u(SPEED);
-    if(m_inputState.key_down(KEYCODE_q)) camera->move(UP, SPEED);
-    if(m_inputState.key_down(KEYCODE_e)) camera->move(UP, -SPEED);
+    if(m_inputState.key_down(KEYCODE_q) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, SPEED);
+    if(m_inputState.key_down(KEYCODE_e) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, -SPEED);
 
-    if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(UP, -ANGULAR_SPEED);
-    if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(up, -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(up, ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_q) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_e) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), ANGULAR_SPEED);
+
+    // Allow the user to move the camera around using a connected PS3 controller.
+    const float JOYSTICK_THRESHOLD = 0.1f; // to avoid analog jitter
+
+    const float translationX = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_X));
+    const float translationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_Y));
+    const float moveUp = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L1));
+    const float moveDown = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R1));
+    if(std::abs(translationX) > JOYSTICK_THRESHOLD) camera->move_u(-translationX * SPEED);
+    if(std::abs(translationY) > JOYSTICK_THRESHOLD) camera->move_n(-translationY * SPEED);
+    if(moveUp > JOYSTICK_THRESHOLD) camera->move(up, moveUp * SPEED);
+    if(moveDown > JOYSTICK_THRESHOLD) camera->move(up, -moveDown * SPEED);
+
+    const float rotationX = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_X));
+    const float rotationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_Y));
+    const float rotationZ_Left = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L2));
+    const float rotationZ_Right = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R2));
+    if(std::abs(rotationX) > JOYSTICK_THRESHOLD) camera->rotate(up, -rotationX * ANGULAR_SPEED);
+    if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * ANGULAR_SPEED);
+    if(rotationZ_Left > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
+    if(rotationZ_Right > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * ANGULAR_SPEED);
 
     // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
     // and are in free camera mode to have the same pose as this one.
@@ -496,6 +558,15 @@ bool Application::process_events()
         }
         break;
       }
+      case SDL_JOYAXISMOTION:
+        m_inputState.set_joystick_axis_state(static_cast<JoystickAxis>(event.jaxis.axis), event.jaxis.value);
+        break;
+      case SDL_JOYBUTTONDOWN:
+        m_inputState.press_joystick_button(static_cast<JoystickButton>(event.jbutton.button));
+        break;
+      case SDL_JOYBUTTONUP:
+        m_inputState.release_joystick_button(static_cast<JoystickButton>(event.jbutton.button));
+        break;
       case SDL_QUIT:
         return false;
       default:
@@ -737,8 +808,8 @@ void Application::save_mesh() const
   const std::string& sceneID = mainSubwindow.get_scene_id();
   SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-  // Construct the mesh.
-  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType()));
+  // Construct the mesh (specify a maximum number of triangles to avoid crash on the Titan Black).
+  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
   m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
   // Find the meshes directory and make sure that it exists.
@@ -746,12 +817,18 @@ void Application::save_mesh() const
   boost::filesystem::create_directories(meshesSubdir);
 
   // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".stl";
-  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
+  std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "");
+  if(meshFilename == "")
+  {
+    // Not using the default parameter of the settings->get_first_value call because
+    // experimentTag is a registered program option in main.cpp, with a default value of "".
+    meshFilename = "spaint-" + TimeUtil::get_iso_timestamp();
+  }
+  const boost::filesystem::path meshPath = meshesSubdir / (meshFilename +  ".obj");
 
   // Save the mesh to disk.
   std::cout << "Saving mesh to: " << meshPath << '\n';
-  mesh->WriteSTL(meshPath.string().c_str());
+  mesh->WriteOBJ(meshPath.string().c_str());
 }
 
 void Application::save_screenshot() const
@@ -855,8 +932,8 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
-  Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
+  const Vector2i& mainImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
+  Vector2i windowViewportSize((int)ROUND(mainImageSize.width / mainSubwindow.width()), (int)ROUND(mainImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
 }

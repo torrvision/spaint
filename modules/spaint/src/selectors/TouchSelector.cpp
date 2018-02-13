@@ -9,10 +9,12 @@
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+#include <itmx/util/CameraPoseConverter.h>
+using namespace itmx;
+
 #include <tvgutil/timing/Timer.h>
 
 #include "picking/cpu/Picker_CPU.h"
-#include "util/CameraPoseConverter.h"
 
 #ifdef WITH_CUDA
 #include "picking/cuda/Picker_CUDA.h"

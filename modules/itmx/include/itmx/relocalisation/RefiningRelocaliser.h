@@ -38,16 +38,23 @@ public:
    * \param colourImage     The colour image.
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param initialPose     A location in which to store the camera pose estimated by the inner relocaliser (if it succeeded),
-   *                        or boost::none otherwise.
+   * \param initialPoses    A location in which to store the camera poses estimated by the inner relocaliser (if it succeeded),
+   *                        or an empty vector otherwise.
    *
-   * \return  The result of the relocalisation, if successful, or boost::none otherwise.
+   * \return  The results of the relocalisation, from best to worst, or an empty vector otherwise.
    */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics, boost::optional<ORUtils::SE3Pose>& initialPose) const = 0;
+  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                         const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Gets the relocaliser whose results are being refined.
+   *
+   * \return  The relocaliser whose results are being refined.
+   */
+  const Relocaliser_Ptr& get_inner_relocaliser();
+
   /**
    * \brief Gets the relocaliser whose results are being refined.
    *

@@ -92,6 +92,27 @@ public:
 #endif
 };
 
+//#################### HELPER CUDA KERNELS ####################
+
+#ifdef __CUDACC__
+/**
+ * \brief Reinitialises a set of random number generators using known seeds.
+ *
+ * \param rngs      The random number generators.
+ * \param rngCount  The number of random number generators.
+ * \param seed      The seed for the first random number generator (the other seeds are offsets from this one).
+ */
+__global__
+static void ck_reinit_rngs(CUDARNG *rngs, uint32_t rngCount, uint32_t seed)
+{
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  if(tid < rngCount)
+  {
+    rngs[tid].reset(seed, tid);
+  }
+}
+#endif
+
 //#################### TYPEDEFS ####################
 
 typedef ORUtils::MemoryBlock<CUDARNG> CUDARNGMemoryBlock;

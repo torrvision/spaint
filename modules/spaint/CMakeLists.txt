@@ -23,6 +23,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGraphviz.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
@@ -30,10 +31,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTBB.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
 #############################
 # Specify the project files #
@@ -105,18 +106,6 @@ IF(WITH_OPENCV)
 ENDIF()
 
 ##
-SET(geometry_sources
-src/geometry/GeometryUtil.cpp
-)
-
-SET(geometry_headers
-include/spaint/geometry/DualNumber.h
-include/spaint/geometry/DualQuaternion.h
-include/spaint/geometry/GeometryUtil.h
-include/spaint/geometry/Screw.h
-)
-
-##
 SET(imageprocessing_sources)
 SET(imageprocessing_headers)
 
@@ -165,17 +154,6 @@ include/spaint/imageprocessing/shared/ImageProcessor_Shared.h
 )
 
 ##
-SET(imagesources_sources
-src/imagesources/AsyncImageSourceEngine.cpp
-src/imagesources/SingleRGBDImagePipe.cpp
-)
-
-SET(imagesources_headers
-include/spaint/imagesources/AsyncImageSourceEngine.h
-include/spaint/imagesources/SingleRGBDImagePipe.h
-)
-
-##
 SET(markers_sources
 src/markers/VoxelMarkerFactory.cpp
 )
@@ -211,15 +189,6 @@ include/spaint/markers/interface/VoxelMarker.h
 SET(markers_shared_headers
 include/spaint/markers/shared/VoxelMarker_Settings.h
 include/spaint/markers/shared/VoxelMarker_Shared.h
-)
-
-##
-SET(ocv_sources
-src/ocv/OpenCVUtil.cpp
-)
-
-SET(ocv_headers
-include/spaint/ocv/OpenCVUtil.h
 )
 
 ##
@@ -549,45 +518,13 @@ include/spaint/touch/TouchSettings.h
 )
 
 ##
-SET(trackers_sources
-src/trackers/TrackerFactory.cpp
-)
-
-SET(trackers_headers
-include/spaint/trackers/FallibleTracker.h
-include/spaint/trackers/TrackerFactory.h
-)
-
-IF(WITH_OVR)
-  SET(trackers_sources ${trackers_sources} src/trackers/RiftTracker.cpp)
-  SET(trackers_headers ${trackers_headers} include/spaint/trackers/RiftTracker.h)
-ENDIF()
-
-IF(WITH_VICON)
-  SET(trackers_sources ${trackers_sources}
-    src/trackers/RobustViconTracker.cpp
-    src/trackers/ViconTracker.cpp
-  )
-
-  SET(trackers_headers ${trackers_headers}
-    include/spaint/trackers/RobustViconTracker.h
-    include/spaint/trackers/ViconTracker.h
-  )
-ENDIF()
-
-##
 SET(util_sources
-src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
-src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
 include/spaint/util/CameraFactory.h
-include/spaint/util/CameraPoseConverter.h
-include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/LabelManager.h
-include/spaint/util/RGBDUtil.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
@@ -596,34 +533,30 @@ include/spaint/util/SpaintVoxelScene.h
 
 ##
 SET(visualisation_sources
+src/visualisation/SemanticVisualiserFactory.cpp
 src/visualisation/VisualisationGenerator.cpp
-src/visualisation/VisualiserFactory.cpp
 )
 
 SET(visualisation_headers
+include/spaint/visualisation/SemanticVisualiserFactory.h
 include/spaint/visualisation/VisualisationGenerator.h
-include/spaint/visualisation/VisualiserFactory.h
 )
 
 ##
 SET(visualisation_cpu_sources
-src/visualisation/cpu/DepthVisualiser_CPU.cpp
 src/visualisation/cpu/SemanticVisualiser_CPU.cpp
 )
 
 SET(visualisation_cpu_headers
-include/spaint/visualisation/cpu/DepthVisualiser_CPU.h
 include/spaint/visualisation/cpu/SemanticVisualiser_CPU.h
 )
 
 ##
 SET(visualisation_cuda_sources
-src/visualisation/cuda/DepthVisualiser_CUDA.cu
 src/visualisation/cuda/SemanticVisualiser_CUDA.cu
 )
 
 SET(visualisation_cuda_headers
-include/spaint/visualisation/cuda/DepthVisualiser_CUDA.h
 include/spaint/visualisation/cuda/SemanticVisualiser_CUDA.h
 )
 
@@ -633,13 +566,11 @@ src/visualisation/interface/SemanticVisualiser.cpp
 )
 
 SET(visualisation_interface_headers
-include/spaint/visualisation/interface/DepthVisualiser.h
 include/spaint/visualisation/interface/SemanticVisualiser.h
 )
 
 ##
 SET(visualisation_shared_headers
-include/spaint/visualisation/shared/DepthVisualiser_Shared.h
 include/spaint/visualisation/shared/SemanticVisualiser_Settings.h
 include/spaint/visualisation/shared/SemanticVisualiser_Shared.h
 )
@@ -653,9 +584,7 @@ ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
 ${fiducials_sources}
-${geometry_sources}
 ${imageprocessing_sources}
-${imagesources_sources}
 ${markers_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
@@ -678,7 +607,6 @@ ${slamstate_sources}
 ${smoothing_sources}
 ${smoothing_cpu_sources}
 ${smoothing_interface_sources}
-${trackers_sources}
 ${util_sources}
 ${visualisation_sources}
 ${visualisation_cpu_sources}
@@ -691,9 +619,7 @@ ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
 ${fiducials_headers}
-${geometry_headers}
 ${imageprocessing_headers}
-${imagesources_headers}
 ${markers_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
@@ -724,7 +650,6 @@ ${smoothing_headers}
 ${smoothing_cpu_headers}
 ${smoothing_interface_headers}
 ${smoothing_shared_headers}
-${trackers_headers}
 ${util_headers}
 ${visualisation_headers}
 ${visualisation_cpu_headers}
@@ -775,11 +700,6 @@ IF(WITH_CUDA)
   ENDIF()
 ENDIF()
 
-IF(WITH_OPENCV)
-  SET(sources ${sources} ${ocv_sources})
-  SET(headers ${headers} ${ocv_headers})
-ENDIF()
-
 #############################
 # Specify the source groups #
 #############################
@@ -790,19 +710,16 @@ SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_heade
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(fiducials FILES ${fiducials_sources} ${fiducials_headers})
-SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(imageprocessing FILES ${imageprocessing_sources} ${imageprocessing_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
 SOURCE_GROUP(imageprocessing\\interface FILES ${imageprocessing_interface_sources} ${imageprocessing_interface_headers})
 SOURCE_GROUP(imageprocessing\\shared FILES ${imageprocessing_shared_headers})
-SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(markers FILES ${markers_sources} ${markers_headers})
 SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
-SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
 SOURCE_GROUP(picking FILES ${picking_sources} ${picking_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
@@ -835,7 +752,6 @@ SOURCE_GROUP(smoothing\\cuda FILES ${smoothing_cuda_sources} ${smoothing_cuda_he
 SOURCE_GROUP(smoothing\\interface FILES ${smoothing_interface_sources} ${smoothing_interface_headers})
 SOURCE_GROUP(smoothing\\shared FILES ${smoothing_shared_headers})
 SOURCE_GROUP(touch FILES ${touch_sources} ${touch_headers})
-SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisation FILES ${visualisation_sources} ${visualisation_headers})
 SOURCE_GROUP(visualisation\\cpu FILES ${visualisation_cpu_sources} ${visualisation_cpu_headers})

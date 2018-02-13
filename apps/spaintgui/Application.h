@@ -6,18 +6,8 @@
 #ifndef H_SPAINTGUI_APPLICATION
 #define H_SPAINTGUI_APPLICATION
 
-#ifdef _MSC_VER
-  // Suppress some VC++ warnings that are produced by boost/asio.hpp.
-  #pragma warning(disable:4267 4996)
-#endif
-
-#include <boost/asio.hpp>
+#include <tvgutil/boost/WrappedAsio.h>
 #include <boost/function.hpp>
-
-#ifdef _MSC_VER
-  // Re-enable the VC++ warnings for the rest of the code.
-  #pragma warning(default:4267 4996)
-#endif
 
 // Prevent SDL from trying to define M_PI.
 #define HAVE_M_PI
@@ -148,6 +138,13 @@ public:
    * \param saveMeshOnExit  Whether or not to save a mesh of the scene on exiting the application.
    */
   void set_save_mesh_on_exit(bool saveMeshOnExit);
+
+  /**
+   * \brief Sets whether or not server mode is enabled.
+   *
+   * \param serverModeEnabled Whether or not server mode is enabled.
+   */
+  void set_server_mode_enabled(bool serverModeEnabled);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:

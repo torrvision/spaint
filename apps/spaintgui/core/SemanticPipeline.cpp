@@ -7,7 +7,8 @@
 using namespace spaint;
 
 #ifdef WITH_OPENCV
-#include <spaint/ocv/OpenCVUtil.h>
+#include <itmx/ocv/OpenCVUtil.h>
+using namespace itmx;
 #endif
 
 //#################### CONSTRUCTORS ####################
@@ -15,8 +16,8 @@ using namespace spaint;
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
                                    SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
-                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
-: MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount)
+                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, const itmx::MappingServer_Ptr& mappingServer)
+: MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount, mappingServer)
 {
   const std::string sceneID = Model::get_world_scene_id();
   m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));

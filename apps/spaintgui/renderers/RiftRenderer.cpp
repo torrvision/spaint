@@ -6,6 +6,7 @@
 #include "RiftRenderer.h"
 using namespace ITMLib;
 using namespace ORUtils;
+using namespace spaint;
 
 #include <iostream>
 #include <stdexcept>
@@ -37,8 +38,6 @@ using std::isnan;
 #include <rigging/SimpleCamera.h>
 using namespace rigging;
 
-#include <spaint/util/CameraPoseConverter.h>
-using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
