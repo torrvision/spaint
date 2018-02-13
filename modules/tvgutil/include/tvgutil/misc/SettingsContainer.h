@@ -23,6 +23,11 @@ namespace tvgutil {
  */
 class SettingsContainer
 {
+  //#################### CONSTANTS ####################
+public:
+  /** The value to use to indicate that a setting has not been set by the user and has no sensible default. */
+  static const std::string NOT_SET;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The key -> [value] map storing the values for the settings. */
@@ -58,7 +63,7 @@ public:
   T get_first_value(const std::string& key) const
   {
     const std::vector<std::string>& values = MapUtil::lookup(m_settings, key);
-    if(values.empty()) throw std::runtime_error("Value for " + key + " not found in the container");
+    if(values.empty() || values[0] == NOT_SET) throw std::runtime_error("Value for " + key + " not found in the container");
     return from_string<T>(values[0]);
   }
 
@@ -77,7 +82,7 @@ public:
   {
     static std::vector<std::string> defaultEmptyVector;
     const std::vector<std::string>& values = MapUtil::lookup(m_settings, key, defaultEmptyVector);
-    return values.empty() ? defaultValue : from_string<T>(values[0]);
+    return values.empty() || values[0] == NOT_SET ? defaultValue : from_string<T>(values[0]);
   }
 
   //#################### STREAM OPERATORS ####################

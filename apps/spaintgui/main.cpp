@@ -17,6 +17,7 @@
 #include <af/cuda.h>
 #endif
 
+#include <InputSource/IdleImageSourceEngine.h>
 #include <InputSource/OpenNIEngine.h>
 #ifdef WITH_REALSENSE
 #include <InputSource/RealSenseEngine.h>
@@ -74,6 +75,7 @@ struct CommandLineArguments
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
+  std::string modelSpecifier;
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
@@ -83,6 +85,7 @@ struct CommandLineArguments
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
   bool saveMeshOnExit;
+  bool saveModelsOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
   std::string subwindowConfigurationIndex;
@@ -91,6 +94,7 @@ struct CommandLineArguments
   bool trackSurfels;
 
   // Derived arguments
+  boost::optional<bf::path> modelDir;
   std::vector<bf::path> sequenceDirs;
 
   //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
@@ -112,6 +116,7 @@ struct CommandLineArguments
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
+      ADD_SETTING(modelSpecifier);
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
@@ -121,6 +126,7 @@ struct CommandLineArguments
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
       ADD_SETTING(saveMeshOnExit);
+      ADD_SETTING(saveModelsOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
       ADD_SETTING(subwindowConfigurationIndex);
@@ -290,19 +296,56 @@ std::string make_tracker_config(CommandLineArguments& args)
 }
 
 /**
+ * \brief Parses a configuration file and adds its registered options to the application's variables map
+ *        and its unregistered options to the application's settings.
+ *
+ * \param filename  The name of the configuration file.
+ * \param options   The registered options for the application.
+ * \param vm        The variables map for the application.
+ * \param settings  The settings for the application.
+ */
+void parse_configuration_file(const std::string& filename, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
+{
+  // Parse the options in the configuration file.
+  po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(filename.c_str(), options, true);
+
+  // Add any registered options to the variables map.
+  po::store(parsedConfigFileOptions, vm);
+
+  // Add any unregistered options to the settings.
+  add_unregistered_options_to_settings(parsedConfigFileOptions, settings);
+}
+
+/**
  * \brief Post-process the program's command-line arguments and add them to the application settings.
  *
  * \param args      The program's command-line arguments.
- * \param settings  The application settings.
+ * \param options   The registered options for the application.
+ * \param vm        The variables map for the application.
+ * \param settings  The settings for the application.
  * \return          true, if the program should continue after post-processing its arguments, or false otherwise.
  */
-bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& settings)
+bool postprocess_arguments(CommandLineArguments& args, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
 {
   // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
     std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
     return false;
+  }
+
+  // If the user specified a model to load, determine the model directory and parse the model's configuration file (if present).
+  if(args.modelSpecifier != "")
+  {
+    args.modelDir = bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier / Model::get_world_scene_id();
+
+    const bf::path configPath = *args.modelDir / "settings.ini";
+    if(bf::is_regular_file(configPath))
+    {
+      // Parse any additional options from the model's configuration file.
+      parse_configuration_file(configPath.string(), options, vm, settings);
+      po::notify(vm);
+    }
   }
 
   // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
@@ -441,14 +484,16 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
-    ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
+    ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
+    ("modelSpecifier,m", po::value<std::string>(&args.modelSpecifier)->default_value(""), "model specifier")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
+    ("saveModelsOnExit", po::bool_switch(&args.saveModelsOnExit), "save a model of each voxel scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
@@ -491,19 +536,13 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     // Parse additional options from the configuration file and add any registered options to the variables map.
     // These will be post-processed (if necessary) and added to the settings later. Unregistered options are
     // also allowed: we add these directly to the settings without post-processing.
-    po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
-
-    // Store registered options in the variables map.
-    po::store(parsedConfigFileOptions, vm);
-
-    // Add any unregistered options directly to the settings.
-    add_unregistered_options_to_settings(parsedConfigFileOptions, settings);
+    parse_configuration_file(vm["configFile"].as<std::string>(), options, vm, settings);
   }
 
   po::notify(vm);
 
   // Post-process any registered options and add them to the settings.
-  if(!postprocess_arguments(args, settings)) return false;
+  if(!postprocess_arguments(args, options, vm, settings)) return false;
 
   std::cout << "Global settings:\n" << *settings << '\n';
 
@@ -595,6 +634,13 @@ try
   // Construct the image source engine.
   boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
 
+  // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
+  if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
+  {
+    const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
+    imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
+  }
+
   // Add a subengine for each disk sequence specified.
   for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
   {
@@ -609,8 +655,8 @@ try
     ));
   }
 
-  // If no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
-  if(args.depthImageMasks.empty() || args.cameraAfterDisk)
+  // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+  if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
   {
     ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
     if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
@@ -637,6 +683,7 @@ try
       make_tracker_config(args),
       mappingMode,
       trackingMode,
+      args.modelDir,
       fiducialDetector,
       args.detectFiducials
     ));
@@ -653,6 +700,7 @@ try
       make_tracker_config(args),
       mappingMode,
       trackingMode,
+      args.modelDir,
       fiducialDetector,
       args.detectFiducials
     ));
@@ -683,6 +731,7 @@ try
   Application app(pipeline, args.renderFiducials);
   app.set_batch_mode_enabled(args.batch);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
+  app.set_save_models_on_exit(args.saveModelsOnExit);
   bool runSucceeded = app.run();
 
 #ifdef WITH_OVR

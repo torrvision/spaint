@@ -7,6 +7,10 @@
 
 namespace tvgutil {
 
+//#################### CONSTANTS ####################
+
+const std::string SettingsContainer::NOT_SET = "<Not Set>";
+
 //#################### DESTRUCTOR ####################
 
 SettingsContainer::~SettingsContainer() {}
