@@ -367,13 +367,36 @@ std::string make_tracker_config(CommandLineArguments& args)
 }
 
 /**
+ * \brief Parses a configuration file and adds its registered options to the application's variables map
+ *        and its unregistered options to the application's settings.
+ *
+ * \param filename  The name of the configuration file.
+ * \param options   The registered options for the application.
+ * \param vm        The variables map for the application.
+ * \param settings  The settings for the application.
+ */
+void parse_configuration_file(const std::string& filename, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
+{
+  // Parse the options in the configuration file.
+  po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(filename.c_str(), options, true);
+
+  // Add any registered options to the variables map.
+  po::store(parsedConfigFileOptions, vm);
+
+  // Add any unregistered options to the settings.
+  add_unregistered_options_to_settings(parsedConfigFileOptions, settings);
+}
+
+/**
  * \brief Post-process the program's command-line arguments and add them to the application settings.
  *
  * \param args      The program's command-line arguments.
- * \param settings  The application settings.
+ * \param options   The registered options for the application.
+ * \param vm        The variables map for the application.
+ * \param settings  The settings for the application.
  * \return          true, if the program should continue after post-processing its arguments, or false otherwise.
  */
-bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& settings)
+bool postprocess_arguments(CommandLineArguments& args, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
 {
   // If the user specifies both sequence and explicit depth/RGB/pose masks, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
@@ -382,10 +405,18 @@ bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& setti
     return false;
   }
 
-  // If the user specified a model to load, determine the model directory and record it for later use.
+  // If the user specified a model to load, determine the model directory and parse the model's configuration file (if present).
   if(args.modelSpecifier != "")
   {
     args.modelDir = (bf::is_directory(args.modelSpecifier) ? args.modelSpecifier : find_subdir_from_executable("models") / args.modelSpecifier) / Model::get_world_scene_id();
+
+    const bf::path configPath = *args.modelDir / "settings.ini";
+    if(bf::is_regular_file(configPath))
+    {
+      // Parse any additional options from the model's configuration file.
+      parse_configuration_file(configPath.string(), options, vm, settings);
+      po::notify(vm);
+    }
   }
 
   // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
@@ -611,19 +642,13 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     // Parse additional options from the configuration file and add any registered options to the variables map.
     // These will be post-processed (if necessary) and added to the settings later. Unregistered options are
     // also allowed: we add these directly to the settings without post-processing.
-    po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
-
-    // Store registered options in the variables map.
-    po::store(parsedConfigFileOptions, vm);
-
-    // Add any unregistered options directly to the settings.
-    add_unregistered_options_to_settings(parsedConfigFileOptions, settings);
+    parse_configuration_file(vm["configFile"].as<std::string>(), options, vm, settings);
   }
 
   po::notify(vm);
 
   // Post-process any registered options and add them to the settings.
-  if(!postprocess_arguments(args, settings)) return false;
+  if(!postprocess_arguments(args, options, vm, settings)) return false;
 
   std::cout << "Global settings:\n" << *settings << '\n';
 

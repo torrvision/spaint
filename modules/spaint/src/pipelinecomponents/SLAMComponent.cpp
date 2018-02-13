@@ -373,6 +373,18 @@ void SLAMComponent::save_models(const std::string& outputDir) const
   const std::string calibFilename = outputDir + "/calib.txt";
   writeRGBDCalib(calibFilename.c_str(), slamState->get_view()->calib);
 
+  // Save relevant settings to a configuration file.
+  Settings_CPtr settings = m_context->get_settings();
+  const ITMSceneParams& sceneParams = settings->sceneParams;
+  const std::string configFilename = outputDir + "/settings.ini";
+  {
+    std::ofstream fs(configFilename.c_str());
+    fs << "[SceneParams]\n";
+    fs << "mu = " << sceneParams.mu << '\n';
+    fs << "viewFrustum_max = " << sceneParams.viewFrustum_max << '\n';
+    fs << "voxelSize = " << sceneParams.voxelSize << '\n';
+  }
+
   // Save the voxel model. Note that we have to add '/' to the directory in order to force
   // InfiniTAM's saving function to save the files *inside* the specified folder.
   slamState->get_voxel_scene()->SaveToDirectory(outputDir + "/");
