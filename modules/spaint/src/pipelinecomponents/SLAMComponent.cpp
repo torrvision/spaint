@@ -358,6 +358,7 @@ void SLAMComponent::save_models(const std::string& outputDir) const
     fs << "[SceneParams]\n";
     fs << "mu = " << sceneParams.mu << '\n';
     fs << "viewFrustum_max = " << sceneParams.viewFrustum_max << '\n';
+    fs << "viewFrustum_min = " << sceneParams.viewFrustum_min << '\n';
     fs << "voxelSize = " << sceneParams.voxelSize << '\n';
   }
 
