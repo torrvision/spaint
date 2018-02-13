@@ -163,6 +163,24 @@ public:
   bool get_fusion_enabled() const;
 
   /**
+   * \brief Gets the ID of the scene being reconstructed by this SLAM component.
+   *
+   * \return  The ID of the scene being reconstructed by this SLAM component.
+   */
+  const std::string& get_scene_id() const;
+
+  /**
+   * \brief Replaces the SLAM component's voxel (and surfel model, if available) with ones loaded from the specified directory on disk.
+   *
+   * Note #1: Surfel model loading is not currently supported, but may be added in the future.
+   * Note #2: Currently, the SLAM component's surfel model is simply reset whenever load_models is called. Ultimately,
+   *          the surfel model will be replaced with one loaded from disk (if available), or reset otherwise.
+   *
+   * \param inputDir  A directory containing a voxel model (and possibly also a surfel model) for a SLAM component.
+   */
+  void load_models(const std::string& inputDir);
+
+  /**
    * \brief Makes the SLAM component mirror the pose of the specified scene, rather than using its own tracker.
    *
    * \param mirrorSceneID The ID of the scene whose pose is to be mirrored.
@@ -180,6 +198,15 @@ public:
    * \brief Resets the reconstructed scene.
    */
   void reset_scene();
+
+  /**
+   * \brief Saves the voxel model and surfel model (if any) of the reconstructed scene to the specified directory on disk.
+   *
+   * Note: Surfel model saving is not currently supported, but may be added in the future.
+   *
+   * \param outputDir The directory into which to save the models.
+   */
+  void save_models(const std::string& outputDir) const;
 
   /**
    * \brief Sets whether or not the user wants fiducials to be detected.
