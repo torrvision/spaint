@@ -21,6 +21,7 @@ public:
                const CompositeImageSourceEngine_Ptr& imageSourceEngine, const std::string& trackerConfig,
                spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS,
+               const boost::optional<boost::filesystem::path>& modelDir = boost::none,
                const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),
                bool detectFiducials = false, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr());
 

@@ -10,6 +10,8 @@ using namespace itmx;
 using namespace spaint;
 
 #include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
 
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
@@ -124,6 +126,20 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
   }
 }
 
+void MultiScenePipeline::save_models(const bf::path& outputDir) const
+{
+  // Make sure that the output directory exists.
+  bf::create_directories(outputDir);
+
+  // Save the models for each scene into a separate subdirectory.
+  for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
+  {
+    const bf::path scenePath = outputDir / it->first;
+    std::cout << "Saving models for " << it->first << " in: " << scenePath << '\n';
+    it->second->save_models(scenePath.string());
+  }
+}
+
 void MultiScenePipeline::set_detect_fiducials(const std::string& sceneID, bool detectFiducials)
 {
   MapUtil::lookup(m_slamComponents, sceneID)->set_detect_fiducials(detectFiducials);
@@ -155,4 +171,12 @@ void MultiScenePipeline::update_raycast_result_size(int raycastResultSize)
   {
     it->second->reset_voxel_samplers(raycastResultSize);
   }
+}
+
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
+void MultiScenePipeline::load_models(const SLAMComponent_Ptr& slamComponent, const std::string& inputDir)
+{
+  std::cout << "Loading models for " << slamComponent->get_scene_id() << " from: " << inputDir << std::endl;
+  slamComponent->load_models(inputDir);
 }
