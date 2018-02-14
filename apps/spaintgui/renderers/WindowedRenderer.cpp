@@ -30,6 +30,14 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
     &SDL_DestroyWindow
   ));
 
+  // If we are running in batch mode, minimize the window.
+  // Note: we don't use the SDL_WINDOW_MINIMIZED flag in the SDL_CreateWindow above because for some reason it doesn't work on Ubuntu 16.04.
+  Settings_CPtr settings = model->get_settings();
+  if(settings->get_first_value<bool>("batch", false))
+  {
+    SDL_MinimizeWindow(get_window());
+  }
+
   // Initialise the temporary image and texture used for visualising the scene.
   initialise_common();
 }
