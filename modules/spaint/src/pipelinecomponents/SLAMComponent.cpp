@@ -181,8 +181,8 @@ bool SLAMComponent::process_frame()
   {
     const SLAMState::InputStatus inputStatus = m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED;
 
-    // If no more images are expected, let the relocaliser know that no more calls will be made to its train or update functions.
-    if(inputStatus == SLAMState::IS_TERMINATED && slamState->get_input_status() != SLAMState::IS_TERMINATED)
+    // If finish training is enabled and no more images are expected, let the relocaliser know that no more calls will be made to its train or update functions.
+    if(m_finishTrainingEnabled && inputStatus == SLAMState::IS_TERMINATED && slamState->get_input_status() != SLAMState::IS_TERMINATED)
     {
       m_context->get_relocaliser(m_sceneID)->finish_training();
     }
@@ -379,6 +379,8 @@ void SLAMComponent::save_models(const std::string& outputDir) const
   const std::string configFilename = outputDir + "/settings.ini";
   {
     std::ofstream fs(configFilename.c_str());
+    fs << "relocaliserType = " << m_relocaliserType << '\n';
+    fs << '\n';
     fs << "[SceneParams]\n";
     fs << "mu = " << sceneParams.mu << '\n';
     fs << "viewFrustum_max = " << sceneParams.viewFrustum_max << '\n';
@@ -528,6 +530,7 @@ void SLAMComponent::setup_relocaliser()
   m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
 
   static const std::string settingsNamespace = "SLAMComponent.";
+  m_finishTrainingEnabled = settings->get_first_value<bool>(settingsNamespace + "finishTrainingEnabled", true);
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
 
 #ifndef WITH_GROVE
