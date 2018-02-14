@@ -209,7 +209,7 @@ try
   // Print header in the log file.
   {
     std::ofstream logStream(args.logPath.c_str());
-    logStream << "Cost;TotalTime;RelocAvg;ICPAvg;TrainingTime;RelocalisationTime;UpdateTime\n";
+    logStream << "Cost;TotalTime;RelocAvg;ICPAvg;TrainingTime;RelocalisationTime;UpdateTime;Params\n";
   }
 
   // Use the optimiser to choose a set of parameters.
