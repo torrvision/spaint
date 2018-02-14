@@ -25,43 +25,46 @@ enum
 //#################### FUNCTIONS ####################
 
 /**
- * \brief Compute the energy associated with a candidate pose. The energy represents how well the selected inliers agree
- *        with the rigid camera transformation.
+ * \brief Computes an energy sum representing how well a strided subset of a set of "inlier" keypoints agree with a candidate camera pose.
  *
- * \note  Each inlier contributes to a part of the total energy. This method can be used to compute the energy for a
- *        strided subset of inliers (used when parallelising the computation with CUDA).
+ * \note  Each "inlier" keypoint contributes a part of the total energy sum.
+ * \note  This function exists to make the energy sum computation easier to parallelise using CUDA.
  *
- * \param candidatePose  The rigid transformation from camera to world coordinates.
- * \param keypoints      The 3D keypoints extracted from a RGB-D image pair.
- * \param predictions    The SCoRe forest predictions associated to the keypoints.
- * \param inlierIndices  The linear indices of the keypoints used to compute the energy.
- * \param nbInliers      The number of inliers.
- * \param inlierStartIdx The first inlier in inlierIndices to use in the energy computation.
- * \param inlierStep     Step between the inliers that have to be used to compute the energy.
- *
- * \return The sum of energies contributed by the inliers.
+ * \param candidatePose  The candidate camera pose (a rigid transformation from camera -> world coordinates).
+ * \param keypoints      The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictions    The SCoRe forest predictions associated with the keypoints.
+ * \param inlierIndices  The raster indices of the overall set of "inlier" keypoints.
+ * \param nbInliers      The overall number of "inlier" keypoints.
+ * \param inlierStartIdx The array index of the first "inlier" keypoint in inlierIndices to use when computing the energy sum.
+ * \param inlierStep     The step between the array indices of the "inlier" keypoints to use when computing the energy sum.
+ * \return               The sum of the energies contributed by the "inlier" keypoints in the strided subset.
  */
 _CPU_AND_GPU_CODE_
-inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
-                                                        const int *inlierIndices, uint32_t nbInliers, uint32_t inlierStartIdx = 0, uint32_t inlierStep = 1)
+inline float compute_energy_sum_for_inlier_subset(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
+                                                  const int *inlierIndices, uint32_t nbInliers, uint32_t inlierStartIdx, uint32_t inlierStep)
 {
-  float localEnergy = 0.f;
+  float energySum = 0.0f;
 
-  // Strided sum loop.
+  // For each "inlier" keypoint in the strided subset:
   for(uint32_t inlierIdx = inlierStartIdx; inlierIdx < nbInliers; inlierIdx += inlierStep)
   {
-    const int linearIdx = inlierIndices[inlierIdx];
-    const Vector3f inlierCameraCoordinates = keypoints[linearIdx].position;
+    // Look up the raster index of the inlier and its position in camera space.
+    const int rasterIdx = inlierIndices[inlierIdx];
+    const Vector3f inlierCameraCoordinates = keypoints[rasterIdx].position;
+
+    // Compute the hypothesised position of the inlier in world space.
     const Vector3f inlierWorldCoordinates = candidatePose * inlierCameraCoordinates;
 
-    // Get the prediction associated to the current inlier.
-    const ScorePrediction& pred = predictions[linearIdx];
+    // Get the prediction associated with the inlier.
+    const ScorePrediction& pred = predictions[rasterIdx];
 
-    // Evaluate individual energy. First find the mode closest to the predicted world coordinates.
+    // Compute the energy for the inlier, which is based on the Mahalanobis distance between the hypothesised
+    // position of the inlier (in world space) and the position of the closest predicted mode.
     float energy;
     int argmax = score_prediction_get_best_mode_and_energy(pred, inlierWorldCoordinates, energy);
 
-    // The inlier must have at least a valid mode (made sure by the inlier sampling method). If not throw.
+    // We expect the inlier to have had at least one valid mode (this is guaranteed by the inlier sampling process).
+    // If this isn't the case for some reason, defensively throw.
     if(argmax < 0)
     {
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
@@ -72,8 +75,8 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidat
 #endif
     }
 
-    // If the best mode had no inliers throw (shouldn't be a mode, so something obviously went wrong during the
-    // clustering). The original implementation (from Valentin's paper) had a simple continue.
+    // We expect the best mode to have at least some inliers (this is guaranteed by the clustering process).
+    // If this isn't the case for some reason, defensively throw.
     if(pred.elts[argmax].nbInliers == 0)
     {
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
@@ -84,17 +87,38 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidat
 #endif
     }
 
-    // Normalise the energy.
+    // Assuming we have found a best mode and it has at least some inliers, appropriately normalise the energy.
     energy /= static_cast<float>(pred.size);
     energy /= static_cast<float>(pred.elts[argmax].nbInliers);
 
+    // Compute the negative log of the energy (after first ensuring that it isn't too small for this to work).
     if(energy < 1e-6f) energy = 1e-6f;
     energy = -log10f(energy);
 
-    localEnergy += energy;
+    // Add the resulting value to the energy sum.
+    energySum += energy;
   }
 
-  return localEnergy;
+  return energySum;
+}
+
+/**
+ * \brief Computes an energy sum representing how well a set of "inlier" keypoints agree with a candidate camera pose.
+ *
+ * \param candidatePose The candidate camera pose (a rigid transformation from camera -> world coordinates).
+ * \param keypoints     The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictions   The SCoRe forest predictions associated with the keypoints.
+ * \param inlierIndices The raster indices of the "inlier" keypoints that we will use to compute the energy sum.
+ * \param nbInliers     The number of "inlier" keypoints.
+ * \return              The sum of the energies contributed by the "inlier" keypoints.
+ */
+_CPU_AND_GPU_CODE_
+inline float compute_energy_sum_for_inliers(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
+                                            const int *inlierIndices, uint32_t nbInliers)
+{
+  const uint32_t inlierStartIdx = 0;
+  const uint32_t inlierStep = 1;
+  return compute_energy_sum_for_inlier_subset(candidatePose, keypoints, predictions, inlierIndices, nbInliers, inlierStartIdx, inlierStep);
 }
 
 /**

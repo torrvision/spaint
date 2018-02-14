@@ -28,39 +28,45 @@ namespace grove {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierRasterIndices,
+__global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inliersIndices,
                                                       uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
 {
-  const int tId = threadIdx.x;
+  const int tid = threadIdx.x;
   const int threadsPerBlock = blockDim.x;
   const int candidateIdx = blockIdx.x;
 
   if(candidateIdx >= nbCandidates)
   {
-    // Candidate has been culled.
-    // Since the entire block returns, this does not cause troubles with the following __syncthreads()
+    // The candidate has been culled, so early out. Note that since we are using each thread block to
+    // compute the energy for a single candidate, the entire block will return in this case, so the
+    // __syncthreads() call later in the kernel is safe.
     return;
   }
 
   PoseCandidate& currentCandidate = poseCandidates[candidateIdx];
 
-  // Compute the energy for a strided subset of inliers.
-  float localEnergy = preemptive_ransac_compute_candidate_energy(
-      currentCandidate.cameraPose, keypoints, predictions, inlierRasterIndices, nbInliers, tId, threadsPerBlock);
+  // For each thread in the block, first compute the sum of the energies for a strided subset of the inliers.
+  // In particular, thread tid in the block computes the sum of the energies for the inliers with array indices
+  // tid + k * threadsPerBlock.
+  float energySum = compute_energy_sum_for_inlier_subset(
+    currentCandidate.cameraPose, keypoints, predictions, inliersIndices, nbInliers, tid, threadsPerBlock
+  );
 
-  // The reduction is performed as in the following blog post:
+  // Then, add up the sums computed by the individual threads to compute the overall energy for the candidate.
+  // To do this, we perform an efficient, shuffle-based reduction as described in the following blog post:
   // https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler
 
-  // Reduce by shuffling down the local energies (localEnergy for thread 0 in the warp contains the sum for the warp).
-  for(int offset = warpSize / 2; offset > 0; offset /= 2) localEnergy += __shfl_down(localEnergy, offset);
+  // Step 1: Sum the energies in each warp using downward shuffling, storing the result in the energySum variable of the first thread in the warp.
+  for(int offset = warpSize / 2; offset > 0; offset /= 2) energySum += __shfl_down(energySum, offset);
 
-  // Thread 0 of each warp atomically updates the final energy.
-  if((threadIdx.x & (warpSize - 1)) == 0) atomicAdd(&currentCandidate.energy, localEnergy);
+  // Step 2: If this is the first thread in the warp, add the energy sum for the warp to the candidate's energy.
+  if((threadIdx.x & (warpSize - 1)) == 0) atomicAdd(&currentCandidate.energy, energySum);
 
-  __syncthreads(); // Wait for all threads in the block
+  // Step 3: Wait for all of the atomic adds to finish.
+  __syncthreads();
 
-  // tId 0 computes the final energy
-  if(tId == 0) currentCandidate.energy = currentCandidate.energy / static_cast<float>(nbInliers);
+  // Step 4: If this is the first thread in the entire block, compute the final energy for the candidate by dividing by the number of inliers.
+  if(tid == 0) currentCandidate.energy = currentCandidate.energy / static_cast<float>(nbInliers);
 }
 
 template <typename RNG>
@@ -108,13 +114,10 @@ __global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keyp
 __global__ void ck_preemptive_ransac_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(candidateIdx >= nbPoseCandidates)
+  if(candidateIdx < nbPoseCandidates)
   {
-    return;
+    poseCandidates[candidateIdx].energy = 0.0f;
   }
-
-  poseCandidates[candidateIdx].energy = 0.f;
 }
 
 template <bool useMask, typename RNG>
@@ -160,36 +163,31 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
 
 void PreemptiveRansac_CUDA::compute_energies_and_sort()
 {
-  // Number of currently sampled inlier points, used to compute the energy.
-  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
-  // Number of currently "valid" pose candidates.
-  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
-
+  const int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);    // The number of currently sampled inlier points (used to compute the energy).
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);            // The number of currently "valid" pose candidates.
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);         // The raster indices of the current sampled inlier points.
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
-  // Indices of the sampled inliers.
-  const int *inlierRasterIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
 
-  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
-
-  // First, reset the energy values.
+  // Reset the energies for all pose candidates.
   {
     dim3 blockSize(256);
     dim3 gridSize((nbPoseCandidates + blockSize.x - 1) / blockSize.x);
-    ck_preemptive_ransac_reset_candidate_energies<<<gridSize, blockSize>>>(poseCandidates, nbPoseCandidates);
+    ck_preemptive_ransac_reset_candidate_energies<<<gridSize,blockSize>>>(poseCandidates, nbPoseCandidates);
     ORcudaKernelCheck;
   }
 
-  // Then compute the energies.
+  // Compute the energies for all pose candidates.
   {
-    // Launch one block per candidate (in this way many blocks will exit immediately in later stages of P-RANSAC).
+    // Launch one block per candidate (in this way, many blocks will exit immediately in the later stages of P-RANSAC).
     dim3 blockSize(128); // Threads to compute the energy for each candidate.
     dim3 gridSize(nbPoseCandidates);
-    ck_preemptive_ransac_compute_energies<<<gridSize, blockSize>>>(keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates);
+    ck_preemptive_ransac_compute_energies<<<gridSize,blockSize>>>(keypoints, predictions, inliersIndices, nbInliers, poseCandidates, nbPoseCandidates);
     ORcudaKernelCheck;
   }
 
-  // Finally, sort candidates by ascending energy using operator <.
+  // Sort the candidates into non-increasing order of energy.
   thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
   thrust::device_ptr<PoseCandidate> candidatesEnd(poseCandidates + nbPoseCandidates);
   thrust::sort(candidatesStart, candidatesEnd);
