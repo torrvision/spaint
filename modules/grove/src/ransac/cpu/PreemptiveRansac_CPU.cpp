@@ -34,7 +34,7 @@ void PreemptiveRansac_CPU::compute_energies_and_sort()
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-// Compute the energy for all pose candidates, in parallel if possible.
+  // Compute the energies for all pose candidates.
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif

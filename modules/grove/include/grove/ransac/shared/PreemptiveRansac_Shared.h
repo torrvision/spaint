@@ -34,7 +34,7 @@ enum
  * \param candidatePose  The rigid transformation from camera to world coordinates.
  * \param keypoints      The 3D keypoints extracted from a RGB-D image pair.
  * \param predictions    The SCoRe forest predictions associated to the keypoints.
- * \param inlierIndices  The linear indices of the keypoints used to compute the energy.
+ * \param inlierIndices  The raster indices of the keypoints used to compute the energy.
  * \param nbInliers      The number of inliers.
  * \param inlierStartIdx The first inlier in inlierIndices to use in the energy computation.
  * \param inlierStep     Step between the inliers that have to be used to compute the energy.

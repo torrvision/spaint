@@ -93,7 +93,7 @@ protected:
   /** Whether or not to check for a rigid transformation when sampling modes for the pose hypothesis generation. */
   bool m_checkRigidTransformationConstraint;
 
-  /** An array that stores the indices of the candidate inliers already sampled from the input image. */
+  /** An array that stores the raster indices of the candidate inliers already sampled from the input image. */
   ITMIntMemoryBlock_Ptr m_inliersIndicesBlock;
 
   /** An image representing a mask for the already sampled inlier points. */
