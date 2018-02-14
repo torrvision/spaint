@@ -13,6 +13,7 @@ namespace bf = boost::filesystem;
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
+#include <ITMLib/Objects/Camera/ITMCalibIO.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace InputSource;
 using namespace ITMLib;
@@ -117,6 +118,44 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 bool SLAMComponent::get_fusion_enabled() const
 {
   return m_fusionEnabled;
+}
+
+const std::string& SLAMComponent::get_scene_id() const
+{
+  return m_sceneID;
+}
+
+void SLAMComponent::load_models(const std::string& inputDir)
+{
+  // Reset the scene.
+  reset_scene();
+
+  // Load the voxel model. Note that we have to add '/' to the directory in order to force
+  // InfiniTAM's loading function to load the files from *inside* the specified folder.
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  slamState->get_voxel_scene()->LoadFromDirectory(inputDir + "/");
+
+  // TODO: If we support surfel model loading at some point in the future, the surfel model should be loaded here as well.
+
+  // Load the relocaliser.
+  m_context->get_relocaliser(m_sceneID)->load_from_disk(inputDir);
+
+  // Set up the view to allow the scene to be rendered without any frames needing to be processed.
+  // We are aiming to roughly mirror what would happen if we reconstructed the scene frame-by-frame.
+  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const View_Ptr& view = slamState->get_view();
+
+  ITMView *newView = view.get();
+  inputRGBImage->Clear();
+  inputRawDepthImage->Clear();
+  const bool useBilateralFilter = false;
+  m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
+  slamState->set_view(newView);
+
+  // Set the tracking to failed and disable fusion, since we don't know where we are after loading the models.
+  slamState->get_tracking_state()->trackerResult = ITMTrackingState::TRACKING_FAILED;
+  set_fusion_enabled(false);
 }
 
 void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
@@ -298,6 +337,39 @@ void SLAMComponent::reset_scene()
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
   m_fusionEnabled = true;
+}
+
+void SLAMComponent::save_models(const std::string& outputDir) const
+{
+  // Make sure that the output directory exists.
+  bf::create_directories(outputDir);
+
+  // Save the camera calibration.
+  SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
+  const std::string calibFilename = outputDir + "/calib.txt";
+  writeRGBDCalib(calibFilename.c_str(), slamState->get_view()->calib);
+
+  // Save relevant settings to a configuration file.
+  Settings_CPtr settings = m_context->get_settings();
+  const ITMSceneParams& sceneParams = settings->sceneParams;
+  const std::string configFilename = outputDir + "/settings.ini";
+  {
+    std::ofstream fs(configFilename.c_str());
+    fs << "[SceneParams]\n";
+    fs << "mu = " << sceneParams.mu << '\n';
+    fs << "viewFrustum_max = " << sceneParams.viewFrustum_max << '\n';
+    fs << "viewFrustum_min = " << sceneParams.viewFrustum_min << '\n';
+    fs << "voxelSize = " << sceneParams.voxelSize << '\n';
+  }
+
+  // Save the voxel model. Note that we have to add '/' to the directory in order to force
+  // InfiniTAM's saving function to save the files *inside* the specified folder.
+  slamState->get_voxel_scene()->SaveToDirectory(outputDir + "/");
+
+  // TODO: If we support surfel model saving at some point in the future, the surfel model should be saved here as well.
+
+  // Save the relocaliser.
+  m_context->get_relocaliser(m_sceneID)->save_to_disk(outputDir);
 }
 
 void SLAMComponent::set_detect_fiducials(bool detectFiducials)
