@@ -98,10 +98,15 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
       static const float maxUpdateTime = 10000; // 10ms (we don't really care too much about it).
 
       static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
-      if(trainingMicroseconds < maxTrainingTime && relocalisationMicroseconds < maxRelocalisationTime && updateMicroseconds < maxUpdateTime)
+
+      // We need to negate the values because the optimiser tries to *minimise* the cost.
+      cost = useRelocAverage ? -relocWeightedAverage : -icpWeightedAverage;
+
+      // If we ran past the computation budget, penalize the cost.
+      // Normally the cost would range [-100,0], this change makes the cost for a "slow" variant of the algorithm range [0,100].
+      if(trainingMicroseconds > maxTrainingTime || relocalisationMicroseconds > maxRelocalisationTime || updateMicroseconds > maxUpdateTime)
       {
-        // We need to negate the values because the optimiser tries to *minimise* the cost.
-        cost = useRelocAverage ? -relocWeightedAverage : -icpWeightedAverage;
+        cost += 100.0f;
       }
     }
   }
