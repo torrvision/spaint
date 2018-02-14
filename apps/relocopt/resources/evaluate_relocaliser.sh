@@ -6,8 +6,8 @@
 set -e
 
 tag='Relocopt_Batch'
-# We skip chess heads and office since they are already over 99%
-sequences='fire pumpkin redkitchen stairs'
+# We skip heads because there aren't enough subsequences to split the training set in train + validation
+sequences='chess fire office pumpkin redkitchen stairs'
 # sequences='chess fire heads office pumpkin redkitchen stairs'
 # sequences='stairs'
 
@@ -32,17 +32,16 @@ relocperf_path="../../relocperf/relocperf"
 training_sequence='train'
 evaluation_sequence='validation'
 
-depth_mask='frame-%06d.depth.png'
-color_mask='frame-%06d.color.png'
-pose_mask='frame-%06d.pose.txt'
-
 # Run spaintgui on every sequence.
 for seq in $sequences; do
-  CUDA_VISIBLE_DEVICES=1 time "$spaint_path" -c "$dataset_root/calib.txt" -s "$dataset_root/$seq/$training_sequence/" -t Disk -s "$dataset_root/$seq/$evaluation_sequence/" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" # --saveMeshOnExit
+  TIMES=$(CUDA_VISIBLE_DEVICES=0 "$spaint_path" -c "$dataset_root/calib.txt" -s "$dataset_root/$seq/$training_sequence/" -t Disk -s "$dataset_root/$seq/$evaluation_sequence/" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" | tee /dev/stderr | perl -ne '/^(Training|Relocalisation|Update).*/ && s/.*? ([0-9]+) microseconds/\1/g && print')
 done
 
 # Now evaluate the run.
 $relocperf_path -d "$dataset_root" -r "$reloc_poses_path" -t "$tag" --useValidation > $output_file
+
+# Append the times to the output file.
+echo "$TIMES" >> $output_file
 
 # Remove ini file.
 rm $ini_file

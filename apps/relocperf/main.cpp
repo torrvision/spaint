@@ -500,10 +500,10 @@ int main(int argc, char *argv[])
   printWidth(finalWeightedAvg, 8);
   std::cerr << '\n';
 
-  // Print the weighted average for the parameter search algorithm (negative value since we are trying to minimise it).
+  // Print the weighted averages for the parameter search algorithm.
   if(useValidation)
   {
-    std::cout << -icpWeightedAvg << '\n';
+    std::cout << relocWeightedAvg << ' ' << icpWeightedAvg << '\n';
   }
 
   // Save results of online training-relocalization

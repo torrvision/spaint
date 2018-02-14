@@ -81,20 +81,44 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
     throw std::runtime_error("System call failed. Terminating evaluation.");
   }
 
-  // Read the cost back in from the output file.
+  // Read the results back in from the output file.
   float cost = std::numeric_limits<float>::max();
+  float relocWeightedAverage, icpWeightedAverage, trainingMicroseconds, relocalisationMicroseconds, updateMicroseconds;
 
   {
     std::ifstream fs(outputPath.string().c_str());
-    fs >> cost;
+    fs >> relocWeightedAverage >> icpWeightedAverage >> trainingMicroseconds >> relocalisationMicroseconds >> updateMicroseconds;
+
+    // If the reads were successful, compute the cost.
+    if(fs)
+    {
+      // The maximum times depend on the GPU (Titan X).
+      static const float maxTrainingTime = 10000; // 10ms
+      static const float maxRelocalisationTime = 200000; // 200ms
+      static const float maxUpdateTime = 10000; // 10ms (we don't really care too much about it).
+
+      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
+      if(trainingMicroseconds < maxTrainingTime && relocalisationMicroseconds < maxRelocalisationTime && updateMicroseconds < maxUpdateTime)
+      {
+        // We need to negate the values because the optimiser tries to *minimise* the cost.
+        cost = useRelocAverage ? -relocWeightedAverage : -icpWeightedAverage;
+      }
+    }
   }
+
+  std::ofstream logStream(args.logPath.c_str(), std::ios::app);
+  logStream << cost << ';'
+            << elapsedSeconds << ';'
+            << relocWeightedAverage << ';'
+            << icpWeightedAverage << ';'
+            << trainingMicroseconds << ';'
+            << relocalisationMicroseconds << ';'
+            << updateMicroseconds << ';'
+            << ParamSetUtil::param_set_to_string(params) << '\n';
 
   // Delete the .ini file and the output file again.
   bf::remove(iniPath);
   bf::remove(outputPath);
-
-  std::ofstream logStream(args.logPath.c_str(), std::ios::app);
-  logStream << cost << ';' << elapsedSeconds << ';' << ParamSetUtil::param_set_to_string(params) << '\n';
 
 #ifdef COST_IS_TIME
   return elapsedSeconds;
