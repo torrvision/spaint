@@ -21,7 +21,7 @@ using namespace evaluation;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
-#define COST_IS_TIME 1
+//#define COST_IS_TIME
 
 //#################### NAMESPACE ALIASES ####################
 

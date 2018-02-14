@@ -38,7 +38,7 @@ pose_mask='frame-%06d.pose.txt'
 
 # Run spaintgui on every sequence.
 for seq in $sequences; do
-  CUDA_VISIBLE_DEVICES=1 time "$spaint_path" -c "$dataset_root/calib.txt" -d "$dataset_root/$seq/$training_sequence/$depth_mask" -r "$dataset_root/$seq/$training_sequence/$color_mask" -p "$dataset_root/$seq/$training_sequence/$pose_mask" -t Disk -d "$dataset_root/$seq/$evaluation_sequence/$depth_mask" -r "$dataset_root/$seq/$evaluation_sequence/$color_mask" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" # --saveMeshOnExit
+  CUDA_VISIBLE_DEVICES=1 time "$spaint_path" -c "$dataset_root/calib.txt" -s "$dataset_root/$seq/$training_sequence/" -t Disk -s "$dataset_root/$seq/$evaluation_sequence/" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" # --saveMeshOnExit
 done
 
 # Now evaluate the run.
