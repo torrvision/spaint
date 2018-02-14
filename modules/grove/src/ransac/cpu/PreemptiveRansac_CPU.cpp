@@ -177,8 +177,8 @@ void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate& candidate) const
   const int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
   const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
 
-  const float totalEnergy = preemptive_ransac_compute_candidate_energy(candidate.cameraPose, keypointsImage, predictionsImage, inliersIndices, nbInliers);
-  candidate.energy = totalEnergy / static_cast<float>(nbInliers);
+  const float energySum = compute_energy_sum_for_inliers(candidate.cameraPose, keypointsImage, predictionsImage, inliersIndices, nbInliers);
+  candidate.energy = energySum / static_cast<float>(nbInliers);
 }
 
 void PreemptiveRansac_CPU::init_random()

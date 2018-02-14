@@ -48,7 +48,7 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
   // For each thread in the block, first compute the sum of the energies for a strided subset of the inliers.
   // In particular, thread tid in the block computes the sum of the energies for the inliers with array indices
   // tid + k * threadsPerBlock.
-  float localEnergy = preemptive_ransac_compute_candidate_energy(
+  float energySum = compute_energy_sum_for_inlier_subset(
     currentCandidate.cameraPose, keypoints, predictions, inliersIndices, nbInliers, tid, threadsPerBlock
   );
 
@@ -56,11 +56,11 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
   // To do this, we perform an efficient, shuffle-based reduction as described in the following blog post:
   // https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler
 
-  // Step 1: Sum the energies in each warp using downward shuffling, storing the result in the localEnergy variable of the first thread in the warp.
-  for(int offset = warpSize / 2; offset > 0; offset /= 2) localEnergy += __shfl_down(localEnergy, offset);
+  // Step 1: Sum the energies in each warp using downward shuffling, storing the result in the energySum variable of the first thread in the warp.
+  for(int offset = warpSize / 2; offset > 0; offset /= 2) energySum += __shfl_down(energySum, offset);
 
   // Step 2: If this is the first thread in the warp, add the energy sum for the warp to the candidate's energy.
-  if((threadIdx.x & (warpSize - 1)) == 0) atomicAdd(&currentCandidate.energy, localEnergy);
+  if((threadIdx.x & (warpSize - 1)) == 0) atomicAdd(&currentCandidate.energy, energySum);
 
   // Step 3: Wait for all of the atomic adds to finish.
   __syncthreads();

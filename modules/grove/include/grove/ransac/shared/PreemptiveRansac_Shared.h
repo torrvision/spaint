@@ -42,8 +42,8 @@ enum
  * \return The sum of energies contributed by the inliers.
  */
 _CPU_AND_GPU_CODE_
-inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
-                                                        const int *inlierIndices, uint32_t nbInliers, uint32_t inlierStartIdx = 0, uint32_t inlierStep = 1)
+inline float compute_energy_sum_for_inlier_subset(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
+                                                  const int *inlierIndices, uint32_t nbInliers, uint32_t inlierStartIdx, uint32_t inlierStep)
 {
   float localEnergy = 0.f;
 
@@ -95,6 +95,18 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f& candidat
   }
 
   return localEnergy;
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline float compute_energy_sum_for_inliers(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
+                                            const int *inlierIndices, uint32_t nbInliers)
+{
+  const uint32_t inlierStartIdx = 0;
+  const uint32_t inlierStep = 1;
+  return compute_energy_sum_for_inlier_subset(candidatePose, keypoints, predictions, inlierIndices, nbInliers, inlierStartIdx, inlierStep);
 }
 
 /**
