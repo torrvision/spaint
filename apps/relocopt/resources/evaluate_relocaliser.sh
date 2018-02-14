@@ -45,3 +45,8 @@ echo "$TIMES" >> $output_file
 
 # Remove ini file.
 rm $ini_file
+
+# Remove relocalisation poses.
+for seq in $sequences; do
+  rm -f "$reloc_poses_path/$tag"_"$seq"/*.txt
+done

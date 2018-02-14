@@ -92,7 +92,7 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
     // If the reads were successful, compute the cost.
     if(fs)
     {
-      // The maximum times depend on the GPU (Titan X).
+      // The maximum times depend on the GPU (the following values assume a Titan X is used).
       static const float maxTrainingTime = 10000; // 10ms
       static const float maxRelocalisationTime = 200000; // 200ms
       static const float maxUpdateTime = 10000; // 10ms (we don't really care too much about it).
@@ -206,6 +206,11 @@ try
   optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
   optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
 
+  // Print header in the log file.
+  {
+    std::ofstream logStream(args.logPath.c_str());
+    logStream << "Cost;TotalTime;RelocAvg;ICPAvg;TrainingTime;RelocalisationTime;UpdateTime\n";
+  }
 
   // Use the optimiser to choose a set of parameters.
   float cost;
