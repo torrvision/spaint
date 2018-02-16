@@ -64,7 +64,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 
   // Allocate memory.
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-  m_inliersIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
+  m_inlierRasterIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_maxPoseCandidates);
 
@@ -153,7 +153,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   }
 
   // Reset the number of inliers for the new pose estimation.
-  m_inliersIndicesBlock->dataSize = 0;
+  m_inlierRasterIndicesBlock->dataSize = 0;
 
   // Step 2: If necessary, aggressively cull the initial candidates to reduce the computational cost of the remaining steps.
   if(m_poseCandidates->dataSize > m_maxPoseCandidatesAfterCull)
@@ -198,7 +198,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   // Step 3: Reset the inlier mask (and inliers that might have been selected in a previous invocation of the method).
   m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once (no-op on subsequent occasions).
   m_inliersMaskImage->Clear();                              // This and the following happen every time.
-  m_inliersIndicesBlock->dataSize = 0;
+  m_inlierRasterIndicesBlock->dataSize = 0;
 
   // Step 4: Run preemptive RANSAC until only a single candidate remains.
   int iteration = 0;
@@ -336,7 +336,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   PointsForLM ptsForLM;
 
   // The current number of inlier points.
-  ptsForLM.nbPoints = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
+  ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
 
   // The linearised offset in the pose optimisation buffers.
   const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;

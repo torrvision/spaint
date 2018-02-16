@@ -341,8 +341,7 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
  */
 template <bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline int preemptive_ransac_sample_inlier(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
-                                           RNG& randomGenerator, int *inlierMaskData = NULL)
+inline int sample_inlier(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize, RNG& randomGenerator, int *inlierMaskData = NULL)
 {
   int inlierLinearIdx = -1;
 

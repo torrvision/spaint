@@ -28,7 +28,7 @@ namespace grove {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_compute_energies(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inliersIndices,
+__global__ void ck_compute_energies(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierRasterIndices,
                                     uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
 {
   const int tid = threadIdx.x;
@@ -49,7 +49,7 @@ __global__ void ck_compute_energies(const Keypoint3DColour *keypoints, const Sco
   // In particular, thread tid in the block computes the sum of the energies for the inliers with array indices
   // tid + k * threadsPerBlock.
   float energySum = compute_energy_sum_for_inlier_subset(
-    currentCandidate.cameraPose, keypoints, predictions, inliersIndices, nbInliers, tid, threadsPerBlock
+    currentCandidate.cameraPose, keypoints, predictions, inlierRasterIndices, nbInliers, tid, threadsPerBlock
   );
 
   // Then, add up the sums computed by the individual threads to compute the overall energy for the candidate.
@@ -126,9 +126,8 @@ __global__ void ck_sample_inliers(const Keypoint3DColour *keypointsData, const S
 
   if(sampleIdx >= nbMaxSamples) return;
 
-  // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask
-  // if necessary.
-  const int sampledLinearIdx = preemptive_ransac_sample_inlier<useMask>(keypointsData, predictionsData, imgSize, rngs[sampleIdx], inlierMaskData);
+  // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask if necessary.
+  const int sampledLinearIdx = sample_inlier<useMask>(keypointsData, predictionsData, imgSize, rngs[sampleIdx], inlierMaskData);
 
   // If the sampling succeeded grab a global index and store the keypoint index.
   if(sampledLinearIdx >= 0)
@@ -146,8 +145,8 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
   MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Allocate memory blocks.
-  m_nbPoseCandidates_device = mbf.make_block<int>(1); // Size 1, just to store a value that can be accessed from the GPU.
-  m_nbSampledInliers_device = mbf.make_block<int>(1); // As above.
+  m_nbInliers_device = mbf.make_block<int>(1);        // Size 1, just to store a value that can be accessed from the GPU.
+  m_nbPoseCandidates_device = mbf.make_block<int>(1); // As above.
   m_rngs = mbf.make_block<CUDARNG>(m_maxPoseCandidates);
 
   // Default random seed.
@@ -161,11 +160,11 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
 
 void PreemptiveRansac_CUDA::compute_energies_and_sort()
 {
-  const int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
+  const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);    // The number of currently sampled inlier points (used to compute the energy).
-  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);            // The number of currently "valid" pose candidates.
-  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);         // The raster indices of the current sampled inlier points.
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize); // The number of currently sampled inlier points (used to compute the energy).
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);              // The number of currently "valid" pose candidates.
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);           // The raster indices of the current sampled inlier points.
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
 
   // Reset the energies for all pose candidates.
@@ -181,7 +180,7 @@ void PreemptiveRansac_CUDA::compute_energies_and_sort()
     // Launch one block per candidate (in this way, many blocks will exit immediately in the later stages of P-RANSAC).
     dim3 blockSize(128); // Threads to compute the energy for each candidate.
     dim3 gridSize(nbPoseCandidates);
-    ck_compute_energies<<<gridSize,blockSize>>>(keypoints, predictions, inliersIndices, nbInliers, poseCandidates, nbPoseCandidates);
+    ck_compute_energies<<<gridSize,blockSize>>>(keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates);
     ORcudaKernelCheck;
   }
 
@@ -230,8 +229,8 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
 
-  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
-  const int *inlierLinearisedIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
+  const int *inlierLinearisedIndicesData = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
 
   const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
   const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
@@ -262,20 +261,19 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
 void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
-  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
-
-  int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
-  int *inlierIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
-  int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);
+  int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
+  int *inliersMaskImage = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
+  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
+  int *nbInliers_device = m_nbInliers_device->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
   CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
 
   // Only if the number of inliers (host side) is zero, we reset the device number.
   // The assumption is that the number on device memory will remain in sync with the host
   // since only this method is allowed to modify it.
-  if(m_inliersIndicesBlock->dataSize == 0)
+  if(m_inlierRasterIndicesBlock->dataSize == 0)
   {
-    ORcudaSafeCall(cudaMemsetAsync(nbInlier_device, 0, sizeof(int)));
+    ORcudaSafeCall(cudaMemsetAsync(nbInliers_device, 0, sizeof(int)));
   }
 
   dim3 blockSize(128);
@@ -284,20 +282,20 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
   if(useMask)
   {
     ck_sample_inliers<true><<<gridSize, blockSize>>>(
-      keypointsData, predictionsData, imgSize, rngs, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration, inlierMaskData
+      keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration, inliersMaskImage
     );
     ORcudaKernelCheck;
   }
   else
   {
     ck_sample_inliers<false><<<gridSize, blockSize>>>(
-      keypointsData, predictionsData, imgSize, rngs, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration
+      keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration
     );
     ORcudaKernelCheck;
   }
 
-  // Update the number of inliers
-  m_inliersIndicesBlock->dataSize = static_cast<size_t>(m_nbSampledInliers_device->GetElement(0, MEMORYDEVICE_CUDA));
+  // Update the host's record of the number of inliers.
+  m_inlierRasterIndicesBlock->dataSize = static_cast<size_t>(m_nbInliers_device->GetElement(0, MEMORYDEVICE_CUDA));
 }
 
 void PreemptiveRansac_CUDA::update_candidate_poses()
