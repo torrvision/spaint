@@ -319,7 +319,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     // Copy the camera and world space points into two Eigen matrices (one point per column in each) on which we can run the Kabsch algorithm.
     Eigen::Matrix3f cameraPoints;
     Eigen::Matrix3f worldPoints;
-    for(int i = 0; i < PoseCandidate::KABSCH_POINTS; ++i)
+    for(int i = 0; i < PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED; ++i)
     {
       cameraPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsCamera[i].v);
       worldPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsWorld[i].v);
