@@ -184,7 +184,7 @@ inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const
       if(!consistentColour) continue;
     }
 
-    // If desired, check that the mode is far enough (in world coordinates) from the modes of any previously selected correspondences.
+    // If desired, check that the current mode is far enough (in world coordinates) from the modes of any previously selected correspondences.
     if(checkMinDistanceBetweenSampledModes)
     {
       bool farEnough = true;
@@ -197,8 +197,8 @@ inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const
         const Vector3f otherWorldPt = otherPrediction.elts[otherModeIdx].position;
 
         const Vector3f diff = otherWorldPt - worldPt;
-        const float distOtherSq = dot(diff, diff);
-        if(distOtherSq < minSqDistanceBetweenSampledModes)
+        const float distSq = dot(diff, diff);
+        if(distSq < minSqDistanceBetweenSampledModes)
         {
           farEnough = false;
           break;
@@ -208,46 +208,52 @@ inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const
       if(!farEnough) continue;
     }
 
+    // If desired, check, for each previously selected correspondence, that:
+    //
+    // (i)  The current keypoint is far enough (in camera coordinates) from the keypoint of the previously selected correspondence.
+    // (ii) The distance between the current keypoint and the keypoint of the previously selected correspondence is similar enough
+    //      to the distance between the current mode and the mode of the previously selected correspondence.
+    //
+    // The purpose of these checks is to ensure that the triangle formed by the points in each space is non-degenerate,
+    // and that the transformation between the two triangles is quasi-rigid.
     if(checkRigidTransformationConstraint)
     {
-      // Check that the sampled point pairs represent a quasi rigid triangle.
       bool violatesConditions = false;
 
-      for(int m = 0; m < correspondencesFound && !violatesConditions; ++m)
+      for(int j = 0; j < correspondencesFound; ++j)
       {
-        const int otherModeIdx = selectedModeIndices[m];
-        const int otherLinearIdx = selectedRasterIndices[m];
-        const ScorePrediction& otherPrediction = predictionsData[otherLinearIdx];
+        // (i) Check that the current keypoint is far enough (in camera coordinates) from the other keypoint.
+        const int otherRasterIdx = selectedRasterIndices[j];
+        const ScorePrediction& otherPrediction = predictionsData[otherRasterIdx];
+        const Vector3f otherCameraPt = keypointsData[otherRasterIdx].position;
 
-        // First check that the current keypoint is far enough from the other keypoints, similarly to the previous check.
-        const Vector3f otherFeatureCameraPt = keypointsData[otherLinearIdx].position;
-        const Vector3f diffCamera = otherFeatureCameraPt - cameraPt;
+        const Vector3f diffCamera = otherCameraPt - cameraPt;
         const float distCameraSq = dot(diffCamera, diffCamera);
-
         if(distCameraSq < minSqDistanceBetweenSampledModes)
         {
           violatesConditions = true;
           break;
         }
 
-        // Then check that the distance between the current keypoint and the other keypoint and the distance between the
-        // current mode and the other mode are similar enough.
-        const Vector3f otherModeWorldPt = otherPrediction.elts[otherModeIdx].position;
-        const Vector3f diffWorld = otherModeWorldPt - worldPt;
+        // (ii) Check that the distance between the current keypoint and the other keypoint is similar enough to the distance
+        //      between the current mode and the other mode.
+        const int otherModeIdx = selectedModeIndices[j];
+        const Vector3f otherWorldPt = otherPrediction.elts[otherModeIdx].position;
 
+        const Vector3f diffWorld = otherWorldPt - worldPt;
         const float distWorld = length(diffWorld);
         const float distCamera = sqrtf(distCameraSq);
         if(fabsf(distCamera - distWorld) > 0.5f * maxTranslationErrorForCorrectPose)
         {
           violatesConditions = true;
+          break;
         }
       }
 
-      // If we failed try to sample another pixel.
       if(violatesConditions) continue;
     }
 
-    // We succeeded, save the current pixel raster index and the selected mode index.
+    // If we reach this point, we've found a valid correspondence, so save the raster index and mode index for later use.
     selectedRasterIndices[correspondencesFound] = rasterIdx;
     selectedModeIndices[correspondencesFound] = modeIdx;
     ++correspondencesFound;
@@ -256,24 +262,22 @@ inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const
   // If we reached the iteration limit and didn't find enough correspondences, early out.
   if(correspondencesFound != PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED) return false;
 
-  // Populate resulting pose candidate (except the actual pose that is computed on the CPU due to the Kabsch
-  // implementation which is currently CPU only).
-
-  // Reset the energy.
+  // Populate the pose candidate. The actual pose will be computed later using a CPU-based implementation of the Kabsch
+  // algorithm (we don't currently have a GPU-based implementation of Kabsch).
   poseCandidate.energy = 0.0f;
 
-  // Copy the camera and corresponding world points.
-  for(int s = 0; s < correspondencesFound; ++s)
+  // Copy the corresponding camera and world points into the pose candidate.
+  for(int i = 0; i < correspondencesFound; ++i)
   {
-    const int linearIdx = selectedRasterIndices[s];
-    const int modeIdx = selectedModeIndices[s];
+    const int rasterIdx = selectedRasterIndices[i];
+    const int modeIdx = selectedModeIndices[i];
 
-    const Keypoint3DColour& selectedKeypoint = keypointsData[linearIdx];
-    const ScorePrediction& selectedPrediction = predictionsData[linearIdx];
-    const Keypoint3DColourCluster& selectedMode = selectedPrediction.elts[modeIdx];
+    const Keypoint3DColour& keypoint = keypointsData[rasterIdx];
+    const ScorePrediction& prediction = predictionsData[rasterIdx];
+    const Keypoint3DColourCluster& mode = prediction.elts[modeIdx];
 
-    poseCandidate.pointsCamera[s] = selectedKeypoint.position;
-    poseCandidate.pointsWorld[s] = selectedMode.position;
+    poseCandidate.pointsCamera[i] = keypoint.position;
+    poseCandidate.pointsWorld[i] = mode.position;
   }
 
   return true;
