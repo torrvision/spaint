@@ -31,7 +31,7 @@ private:
   ITMIntMemoryBlock_Ptr m_nbSampledInliers_device;
 
   /** The random number generators used during the P-RANSAC process. */
-  CUDARNGMemoryBlock_Ptr m_randomGenerators;
+  CUDARNGMemoryBlock_Ptr m_rngs;
 
   /** The seed used to initialise the random number generators. */
   uint32_t m_rngSeed;
@@ -57,7 +57,7 @@ protected:
   virtual void prepare_inliers_for_optimisation();
 
   /** Override */
-  virtual void sample_inlier_candidates(bool useMask);
+  virtual void sample_inliers(bool useMask);
 
   /** Override */
   virtual void update_candidate_poses();

@@ -95,9 +95,9 @@ __global__ void ck_generate_pose_candidates(const Keypoint3DColour *keypoints, c
   }
 }
 
-__global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
-                                                                      int nbInliers, const PoseCandidate *poseCandidates, int nbPoseCandidates, Vector4f *inlierCameraPoints,
-                                                                      Keypoint3DColourCluster *inlierModes, float inlierThreshold)
+__global__ void ck_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
+                                                    int nbInliers, const PoseCandidate *poseCandidates, int nbPoseCandidates, Vector4f *inlierCameraPoints,
+                                                    Keypoint3DColourCluster *inlierModes, float inlierThreshold)
 {
   const int candidateIdx = blockIdx.y;
   const int inlierIdx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -119,8 +119,8 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates, int n
 }
 
 template <bool useMask, typename RNG>
-__global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i imgSize,
-                                                    RNG *randomGenerators, int *inlierIndices, int *inlierCount, uint32_t nbMaxSamples, int *inlierMaskData = NULL)
+__global__ void ck_sample_inliers(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i imgSize,
+                                  RNG *rngs, int *inlierIndices, int *inlierCount, uint32_t nbMaxSamples, int *inlierMaskData = NULL)
 {
   const uint32_t sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -128,7 +128,7 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
   // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask
   // if necessary.
-  const int sampledLinearIdx = preemptive_ransac_sample_inlier<useMask>(keypointsData, predictionsData, imgSize, randomGenerators[sampleIdx], inlierMaskData);
+  const int sampledLinearIdx = preemptive_ransac_sample_inlier<useMask>(keypointsData, predictionsData, imgSize, rngs[sampleIdx], inlierMaskData);
 
   // If the sampling succeeded grab a global index and store the keypoint index.
   if(sampledLinearIdx >= 0)
@@ -148,7 +148,7 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
   // Allocate memory blocks.
   m_nbPoseCandidates_device = mbf.make_block<int>(1); // Size 1, just to store a value that can be accessed from the GPU.
   m_nbSampledInliers_device = mbf.make_block<int>(1); // As above.
-  m_randomGenerators = mbf.make_block<CUDARNG>(m_maxPoseCandidates);
+  m_rngs = mbf.make_block<CUDARNG>(m_maxPoseCandidates);
 
   // Default random seed.
   m_rngSeed = 42;
@@ -197,7 +197,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
-  CUDARNG *rngs = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
+  CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
 
   // Reset the number of pose candidates (we do this on the device only at this stage, and update the corresponding host value once we are done generating).
   int *nbPoseCandidates_device = m_nbPoseCandidates_device->GetData(MEMORYDEVICE_CUDA);
@@ -243,7 +243,7 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
   dim3 blockSize(256);
   dim3 gridSize((nbInliers + blockSize.x - 1) / blockSize.x, nbPoseCandidates);
 
-  ck_preemptive_ransac_prepare_inliers_for_optimisation<<<gridSize, blockSize>>>(
+  ck_prepare_inliers_for_optimisation<<<gridSize, blockSize>>>(
     keypointsData, predictionsData, inlierLinearisedIndicesData, nbInliers, poseCandidatesData,
     nbPoseCandidates, candidateCameraPoints, candidateModes, m_poseOptimisationInlierThreshold
   );
@@ -259,7 +259,7 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
   m_poseOptimisationPredictedModes->UpdateHostFromDevice();
 }
 
-void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
+void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
@@ -268,7 +268,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
   int *inlierIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
   int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);
-  CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
+  CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
 
   // Only if the number of inliers (host side) is zero, we reset the device number.
   // The assumption is that the number on device memory will remain in sync with the host
@@ -283,15 +283,15 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 
   if(useMask)
   {
-    ck_preemptive_ransac_sample_inliers<true><<<gridSize, blockSize>>>(
-      keypointsData, predictionsData, imgSize, randomGenerators, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration, inlierMaskData
+    ck_sample_inliers<true><<<gridSize, blockSize>>>(
+      keypointsData, predictionsData, imgSize, rngs, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration, inlierMaskData
     );
     ORcudaKernelCheck;
   }
   else
   {
-    ck_preemptive_ransac_sample_inliers<false><<<gridSize, blockSize>>>(
-      keypointsData, predictionsData, imgSize, randomGenerators, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration
+    ck_sample_inliers<false><<<gridSize, blockSize>>>(
+      keypointsData, predictionsData, imgSize, rngs, inlierIndicesData, nbInlier_device, m_ransacInliersPerIteration
     );
     ORcudaKernelCheck;
   }
@@ -315,13 +315,13 @@ void PreemptiveRansac_CUDA::update_candidate_poses()
 
 void PreemptiveRansac_CUDA::init_random()
 {
-  CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
+  CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
 
   // Initialize random states
   dim3 blockSize(256);
   dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
-  ck_reinit_rngs<<<gridSize, blockSize>>>(randomGenerators, m_maxPoseCandidates, m_rngSeed);
+  ck_reinit_rngs<<<gridSize, blockSize>>>(rngs, m_maxPoseCandidates, m_rngSeed);
   ORcudaKernelCheck;
 }
 

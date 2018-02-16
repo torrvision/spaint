@@ -120,7 +120,7 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
   m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
 }
 
-void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
+void PreemptiveRansac_CPU::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);

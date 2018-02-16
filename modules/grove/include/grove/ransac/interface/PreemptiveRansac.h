@@ -216,7 +216,7 @@ protected:
    *
    * \param useMask Whether or not to store in a persistent mask the location of already sampled keypoints.
    */
-  virtual void sample_inlier_candidates(bool useMask = false) = 0;
+  virtual void sample_inliers(bool useMask = false) = 0;
 
   /**
    * \brief Perform the continuous optimisation step described in the paper to update each remaining pose hypothesis.

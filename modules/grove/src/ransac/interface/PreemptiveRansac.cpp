@@ -169,7 +169,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
       boost::timer::auto_cpu_timer t(6, "sample inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
       const bool useMask = false; // no mask for the first pass
-      sample_inlier_candidates(useMask);
+      sample_inliers(useMask);
     }
 
     // Step 2(b): Then, evaluate the candidates and sort them in non-increasing order of quality.
@@ -215,7 +215,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     // Step 4(a): Sample a set of keypoints from the input image. Record that thay have been selected in the mask image, to avoid selecting them again.
     m_timerInlierSampling[iteration].start();
     const bool useMask = true;
-    sample_inlier_candidates(useMask);
+    sample_inliers(useMask);
     m_timerInlierSampling[iteration].stop();
 
     // Step 4(b): If pose update is enabled, optimise all remaining candidates, taking into account the newly selected inliers.
@@ -249,7 +249,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   {
     // Sample some inliers.
     m_timerInlierSampling[iteration].start();
-    sample_inlier_candidates(true);
+    sample_inliers(true);
     m_timerInlierSampling[iteration].stop();
 
     // Having selected the inlier points, find the best associated modes to use during optimisation.
