@@ -152,8 +152,11 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     m_timerCandidateGeneration.stop();
   }
 
-  // Reset the number of inliers for the new pose estimation.
-  m_inlierRasterIndicesBlock->dataSize = 0;
+  // Reset the number of inliers ready for the new pose estimation.
+  {
+    const bool resetMask = false;
+    reset_inliers(resetMask);
+  }
 
   // Step 2: If necessary, aggressively cull the initial candidates to reduce the computational cost of the remaining steps.
   if(m_poseCandidates->dataSize > m_maxPoseCandidatesAfterCull)
@@ -195,10 +198,11 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   boost::timer::auto_cpu_timer t(6, "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-  // Step 3: Reset the inlier mask (and inliers that might have been selected in a previous invocation of the method).
-  m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once (no-op on subsequent occasions).
-  m_inliersMaskImage->Clear();                              // This and the following happen every time.
-  m_inlierRasterIndicesBlock->dataSize = 0;
+  // Step 3: Reset the inlier mask and clear any inliers that might have been selected in a previous invocation of the method.
+  {
+    const bool resetMask = true;
+    reset_inliers(resetMask);
+  }
 
   // Step 4: Run preemptive RANSAC until only a single candidate remains.
   int iteration = 0;
@@ -328,6 +332,17 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     // Run the Kabsch algorithm and store the resulting camera -> world transformation in the candidate's cameraPose matrix.
     Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = GeometryUtil::estimate_rigid_transform(cameraPoints, worldPoints);
   }
+}
+
+void PreemptiveRansac::reset_inliers(bool resetMask)
+{
+  if(resetMask)
+  {
+    m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // happens only once (i.e. a no-op on subsequent occasions)
+    m_inliersMaskImage->Clear();
+  }
+
+  m_inlierRasterIndicesBlock->dataSize = 0;
 }
 
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const

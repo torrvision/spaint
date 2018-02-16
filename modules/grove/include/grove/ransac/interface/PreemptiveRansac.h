@@ -270,6 +270,13 @@ protected:
   void compute_candidate_poses_kabsch();
 
   /**
+   * \brief Resets the inliers that are used to evaluate camera pose candidates.
+   *
+   * \param resetMask Whether or not to also reset the inliers mask.
+   */
+  virtual void reset_inliers(bool resetMask);
+
+  /**
    * \brief Optimise a PoseCandidate pose minimising a non-linear error term depending on the parameters of the class.
    *        See the paper for details.
    *

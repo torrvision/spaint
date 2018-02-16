@@ -57,6 +57,9 @@ protected:
   virtual void prepare_inliers_for_optimisation();
 
   /** Override */
+  virtual void reset_inliers(bool resetMask);
+
+  /** Override */
   virtual void sample_inliers(bool useMask);
 
   /** Override */

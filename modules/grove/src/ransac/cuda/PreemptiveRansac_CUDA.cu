@@ -156,7 +156,7 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
   init_random();
 }
 
-//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+//#################### PROTECTED MEMBER FUNCTIONS ####################
 
 void PreemptiveRansac_CUDA::compute_energies_and_sort()
 {
@@ -258,6 +258,12 @@ void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
   m_poseOptimisationPredictedModes->UpdateHostFromDevice();
 }
 
+void PreemptiveRansac_CUDA::reset_inliers(bool resetMask)
+{
+  PreemptiveRansac::reset_inliers(resetMask);
+  ORcudaSafeCall(cudaMemsetAsync(m_nbInliers_device->GetData(MEMORYDEVICE_CUDA), 0, sizeof(int)));
+}
+
 void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
@@ -268,27 +274,19 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
   const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
   CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
 
-  // Only if the number of inliers (host side) is zero, we reset the device number.
-  // The assumption is that the number on device memory will remain in sync with the host
-  // since only this method is allowed to modify it.
-  if(m_inlierRasterIndicesBlock->dataSize == 0)
-  {
-    ORcudaSafeCall(cudaMemsetAsync(nbInliers_device, 0, sizeof(int)));
-  }
-
   dim3 blockSize(128);
   dim3 gridSize((m_ransacInliersPerIteration + blockSize.x - 1) / blockSize.x);
 
   if(useMask)
   {
-    ck_sample_inliers<true><<<gridSize, blockSize>>>(
+    ck_sample_inliers<true><<<gridSize,blockSize>>>(
       keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration, inliersMaskImage
     );
     ORcudaKernelCheck;
   }
   else
   {
-    ck_sample_inliers<false><<<gridSize, blockSize>>>(
+    ck_sample_inliers<false><<<gridSize,blockSize>>>(
       keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration
     );
     ORcudaKernelCheck;
