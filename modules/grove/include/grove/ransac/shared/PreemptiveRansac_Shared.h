@@ -122,174 +122,162 @@ inline float compute_energy_sum_for_inliers(const Matrix4f& candidatePose, const
 }
 
 /**
- * \brief Try to generate a camera pose candidate according to the method described in the paper.
+ * \brief Tries to generate a camera pose candidate using the method described in the paper.
  *
- * \param keypointsData   The 3D keypoints extracted from a RGB-D image pair.
- * \param predictionsData Score predictions associated to the keypoints.
- * \param imgSize         The size of the input keypoint and predictions images.
- * \param randomGenerator Either a CPURNG or a CUDARNG according to the current device type.
- * \param poseCandidate   The variable where the generated pose candidate will be stored.
- * \param maxCandidateGenerationIterations             The maximum number of iterations in the candidate generation step.
- * \param useAllModesPerLeafInPoseHypothesisGeneration Whether to use all modes in the predictions when generating the
- *                                                     pose hypothesis or just the first one.
- * \param checkMinDistanceBetweenSampledModes          Whether or not to check that sampled modes have a minimum
- *                                                     distance between each other.
- * \param minSqDistanceBetweenSampledModes             The minimum (squared) distance between sampled modes if the above
- *                                                     parameter is true.
- * \param checkRigidTransformationConstraint           Whether or not to check that the selected modes define a
- *                                                     quasi-rigid transformation.
- * \param maxTranslationErrorForCorrectPose            The maximum difference between the distances of pair of points in
- *                                                     camera frame and pair of modes in world coordinates if the
- *                                                     previous check is enabled.
+ * \param keypointsData                                 The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictionsData                               The SCoRe predictions associated with the keypoints.
+ * \param imgSize                                       The size of the input keypoints and predictions images.
+ * \param rng                                           Either a CPURNG or a CUDARNG, depending on the current device type.
+ * \param poseCandidate                                 The variable in which the generated pose candidate (if any) will be stored.
+ * \param maxCandidateGenerationIterations              The maximum number of iterations in the candidate generation step.
+ * \param useAllModesPerLeafInPoseHypothesisGeneration  Whether or not to use all modes in the predictions when generating the pose hypothesis, rather than just the first one.
+ * \param checkMinDistanceBetweenSampledModes           Whether or not to check that sampled modes have a minimum distance between each other.
+ * \param minSqDistanceBetweenSampledModes              The minimum squared distance between sampled modes if the above parameter is true.
+ * \param checkRigidTransformationConstraint            Whether or not to check that the selected modes define a quasi-rigid transformation.
+ * \param maxTranslationErrorForCorrectPose             The maximum difference between the distances of a pair of points in the camera frame and a pair of modes in world coordinates
+ *                                                      if the previous check is enabled.
  *
- * \return true if a pose candidate was successfully generated.
+ * \return  true, if a pose candidate was successfully generated, or false otherwise.
  */
 template <typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline bool preemptive_ransac_generate_candidate(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
-                                                 RNG& randomGenerator, PoseCandidate& poseCandidate, uint32_t maxCandidateGenerationIterations,
-                                                 bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
-                                                 float minSqDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
-                                                 float maxTranslationErrorForCorrectPose)
+inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
+                                    RNG& rng, PoseCandidate& poseCandidate, uint32_t maxCandidateGenerationIterations,
+                                    bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
+                                    float minSqDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
+                                    float maxTranslationErrorForCorrectPose)
 {
-  int selectedPixelCount = 0;
-  int selectedPixelLinearIdx[PoseCandidate::KABSCH_POINTS];
-  int selectedPixelMode[PoseCandidate::KABSCH_POINTS];
+  int correspondencesFound = 0;
+  int selectedRasterIndices[PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED];
+  int selectedModeIndices[PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED];
 
-  // Try to generate a candidate (sample KABSCH_POINTS point pairs) for a certain number of times and return false if we
-  // fail.
-  for(uint32_t iterationIdx = 0;
-      selectedPixelCount != PoseCandidate::KABSCH_POINTS && iterationIdx < maxCandidateGenerationIterations;
-      ++iterationIdx)
+  // Try to generate correspondences for Kabsch, iterating in total at most maxCandidateGenerationIterations times.
+  for(uint32_t i = 0; correspondencesFound != PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED && i < maxCandidateGenerationIterations; ++i)
   {
     // Sample a pixel in the input image.
-    const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width - 1);
-    const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height - 1);
-    const int linearFeatureIdx = y * imgSize.width + x;
+    const int x = rng.generate_int_from_uniform(0, imgSize.width - 1);
+    const int y = rng.generate_int_from_uniform(0, imgSize.height - 1);
+    const int rasterIdx = y * imgSize.width + x;
 
-    // Grab its associated keypoint and continue only if it's valid.
-    const Keypoint3DColour& selectedKeypoint = keypointsData[linearFeatureIdx];
-    // Invalid keypoint, try again.
-    if(!selectedKeypoint.valid) continue;
+    // Look up the keypoint associated with the pixel and check whether it's valid. If not, skip this iteration of the loop and try again.
+    const Keypoint3DColour& keypoint = keypointsData[rasterIdx];
+    if(!keypoint.valid) continue;
 
-    // Grab its associated score prediction.
-    const ScorePrediction& selectedPrediction = predictionsData[linearFeatureIdx];
-    // If the prediction has no modes, try again.
-    if(selectedPrediction.size == 0) continue;
+    // Look up the SCoRe prediction associated with the pixel and check whether it has any modes. If not, skip this iteration of the loop and try again.
+    const ScorePrediction& prediction = predictionsData[rasterIdx];
+    if(prediction.size == 0) continue;
 
-    // Either use the first mode or select one randomly, depending on the parameters.
-    const int selectedModeIdx = useAllModesPerLeafInPoseHypothesisGeneration
-                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.size - 1)
-                                    : 0;
+    // Choose which mode to use, depending on the parameters specified. This will either be the first mode, or a randomly-chosen one.
+    const int modeIdx = useAllModesPerLeafInPoseHypothesisGeneration ? rng.generate_int_from_uniform(0, prediction.size - 1) : 0;
 
-    // Cache camera and world points, used for the following checks.
-    const Vector3f selectedModeWorldPt = selectedPrediction.elts[selectedModeIdx].position;
-    const Vector3f selectedFeatureCameraPt = selectedKeypoint.position;
+    // Cache the camera and world points to avoid repeated global reads (these are used multiple times in the following checks).
+    const Vector3f cameraPt = keypoint.position;
+    const Vector3f worldPt = prediction.elts[modeIdx].position;
 
-    // If this is the first pixel, check that the pixel colour corresponds with the selected mode's colour.
-    if(selectedPixelCount == 0)
+    // If this is the first correspondence, check that the keypoint's colour is consistent with the mode's colour.
+    if(correspondencesFound == 0)
     {
-      const Vector3i colourDiff =
-          selectedKeypoint.colour.toInt() - selectedPrediction.elts[selectedModeIdx].colour.toInt();
-      const bool consistentColour = abs(colourDiff.x) <= MAX_COLOUR_DELTA && abs(colourDiff.y) <= MAX_COLOUR_DELTA &&
-                                    abs(colourDiff.z) <= MAX_COLOUR_DELTA;
+      const Vector3i colourDiff = keypoint.colour.toInt() - prediction.elts[modeIdx].colour.toInt();
+      const bool consistentColour = abs(colourDiff.x) <= MAX_COLOUR_DELTA && abs(colourDiff.y) <= MAX_COLOUR_DELTA && abs(colourDiff.z) <= MAX_COLOUR_DELTA;
 
-      // If not try to sample another pixel.
+      // If not, skip this iteration of the loop and try again.
       if(!consistentColour) continue;
     }
 
+    // If desired, check that the current mode is far enough (in world coordinates) from the modes of any previously selected correspondences.
     if(checkMinDistanceBetweenSampledModes)
     {
-      // Check that this mode is far enough from the other modes in world coordinates.
       bool farEnough = true;
 
-      for(int idxOther = 0; farEnough && idxOther < selectedPixelCount; ++idxOther)
+      for(int j = 0; j < correspondencesFound; ++j)
       {
-        const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
-        const int otherModeIdx = selectedPixelMode[idxOther];
-        const ScorePrediction& otherPrediction = predictionsData[otherLinearIdx];
+        const int otherRasterIdx = selectedRasterIndices[j];
+        const int otherModeIdx = selectedModeIndices[j];
+        const ScorePrediction& otherPrediction = predictionsData[otherRasterIdx];
+        const Vector3f otherWorldPt = otherPrediction.elts[otherModeIdx].position;
 
-        const Vector3f otherModeWorldPt = otherPrediction.elts[otherModeIdx].position;
-        const Vector3f diff = otherModeWorldPt - selectedModeWorldPt;
-
-        // If they are too close, drop the current pixel and try to sample another one.
-        const float distOtherSq = dot(diff, diff);
-        if(distOtherSq < minSqDistanceBetweenSampledModes)
+        const Vector3f diff = otherWorldPt - worldPt;
+        const float distSq = dot(diff, diff);
+        if(distSq < minSqDistanceBetweenSampledModes)
         {
           farEnough = false;
+          break;
         }
       }
 
       if(!farEnough) continue;
     }
 
+    // If desired, check, for each previously selected correspondence, that:
+    //
+    // (i)  The current keypoint is far enough (in camera coordinates) from the keypoint of the previously selected correspondence.
+    // (ii) The distance between the current keypoint and the keypoint of the previously selected correspondence is similar enough
+    //      to the distance between the current mode and the mode of the previously selected correspondence.
+    //
+    // The purpose of these checks is to ensure that the triangle formed by the points in each space is non-degenerate,
+    // and that the transformation between the two triangles is quasi-rigid.
     if(checkRigidTransformationConstraint)
     {
-      // Check that the sampled point pairs represent a quasi rigid triangle.
       bool violatesConditions = false;
 
-      for(int m = 0; m < selectedPixelCount && !violatesConditions; ++m)
+      for(int j = 0; j < correspondencesFound; ++j)
       {
-        const int otherModeIdx = selectedPixelMode[m];
-        const int otherLinearIdx = selectedPixelLinearIdx[m];
-        const ScorePrediction& otherPrediction = predictionsData[otherLinearIdx];
+        // (i) Check that the current keypoint is far enough (in camera coordinates) from the other keypoint.
+        const int otherRasterIdx = selectedRasterIndices[j];
+        const ScorePrediction& otherPrediction = predictionsData[otherRasterIdx];
+        const Vector3f otherCameraPt = keypointsData[otherRasterIdx].position;
 
-        // First check that the current keypoint is far enough from the other keypoints, similarly to the previous
-        // check.
-        const Vector3f otherFeatureCameraPt = keypointsData[otherLinearIdx].position;
-        const Vector3f diffCamera = otherFeatureCameraPt - selectedFeatureCameraPt;
+        const Vector3f diffCamera = otherCameraPt - cameraPt;
         const float distCameraSq = dot(diffCamera, diffCamera);
-
         if(distCameraSq < minSqDistanceBetweenSampledModes)
         {
           violatesConditions = true;
           break;
         }
 
-        // Then check that the distance between the current keypoint and the other keypoint and the distance between the
-        // current mode and the other mode are similar enough.
-        const Vector3f otherModeWorldPt = otherPrediction.elts[otherModeIdx].position;
-        const Vector3f diffWorld = otherModeWorldPt - selectedModeWorldPt;
+        // (ii) Check that the distance between the current keypoint and the other keypoint is similar enough to the distance
+        //      between the current mode and the other mode.
+        const int otherModeIdx = selectedModeIndices[j];
+        const Vector3f otherWorldPt = otherPrediction.elts[otherModeIdx].position;
 
+        const Vector3f diffWorld = otherWorldPt - worldPt;
         const float distWorld = length(diffWorld);
         const float distCamera = sqrtf(distCameraSq);
         if(fabsf(distCamera - distWorld) > 0.5f * maxTranslationErrorForCorrectPose)
         {
           violatesConditions = true;
+          break;
         }
       }
 
-      // If we failed try to sample another pixel.
       if(violatesConditions) continue;
     }
 
-    // We succeeded, save the current pixel raster index and the selected mode index.
-    selectedPixelLinearIdx[selectedPixelCount] = linearFeatureIdx;
-    selectedPixelMode[selectedPixelCount] = selectedModeIdx;
-    ++selectedPixelCount;
+    // If we reach this point, we've found a valid correspondence, so save the raster index and mode index for later use.
+    selectedRasterIndices[correspondencesFound] = rasterIdx;
+    selectedModeIndices[correspondencesFound] = modeIdx;
+    ++correspondencesFound;
   }
 
-  // Reached limit of iterations and didn't find enough points. Early out.
-  if(selectedPixelCount != PoseCandidate::KABSCH_POINTS) return false;
+  // If we reached the iteration limit and didn't find enough correspondences, early out.
+  if(correspondencesFound != PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED) return false;
 
-  // Populate resulting pose candidate (except the actual pose that is computed on the CPU due to the Kabsch
-  // implementation which is currently CPU only).
+  // Populate the pose candidate. The actual pose will be computed later using a CPU-based implementation of the Kabsch
+  // algorithm (we don't currently have a GPU-based implementation of Kabsch).
+  poseCandidate.energy = 0.0f;
 
-  // Reset the energy.
-  poseCandidate.energy = 0.f;
-
-  // Copy the camera and corresponding world points.
-  for(int s = 0; s < selectedPixelCount; ++s)
+  // Copy the corresponding camera and world points into the pose candidate.
+  for(int i = 0; i < correspondencesFound; ++i)
   {
-    const int linearIdx = selectedPixelLinearIdx[s];
-    const int modeIdx = selectedPixelMode[s];
+    const int rasterIdx = selectedRasterIndices[i];
+    const int modeIdx = selectedModeIndices[i];
 
-    const Keypoint3DColour& selectedKeypoint = keypointsData[linearIdx];
-    const ScorePrediction& selectedPrediction = predictionsData[linearIdx];
-    const Keypoint3DColourCluster& selectedMode = selectedPrediction.elts[modeIdx];
+    const Keypoint3DColour& keypoint = keypointsData[rasterIdx];
+    const ScorePrediction& prediction = predictionsData[rasterIdx];
+    const Keypoint3DColourCluster& mode = prediction.elts[modeIdx];
 
-    poseCandidate.pointsCamera[s] = selectedKeypoint.position;
-    poseCandidate.pointsWorld[s] = selectedMode.position;
+    poseCandidate.pointsCamera[i] = keypoint.position;
+    poseCandidate.pointsWorld[i] = mode.position;
   }
 
   return true;
@@ -353,8 +341,7 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
  */
 template <bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline int preemptive_ransac_sample_inlier(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
-                                           RNG& randomGenerator, int *inlierMaskData = NULL)
+inline int sample_inlier(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize, RNG& randomGenerator, int *inlierMaskData = NULL)
 {
   int inlierLinearIdx = -1;
 

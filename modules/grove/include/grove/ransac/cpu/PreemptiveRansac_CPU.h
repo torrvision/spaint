@@ -51,7 +51,7 @@ protected:
   virtual void prepare_inliers_for_optimisation();
 
   /** Override */
-  virtual void sample_inlier_candidates(bool useMask);
+  virtual void sample_inliers(bool useMask);
 
   /** Override */
   virtual void update_candidate_poses();
