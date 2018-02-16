@@ -51,23 +51,22 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
-
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
   // Reset the number of pose candidates.
   m_poseCandidates->dataSize = 0;
 
+  // Generate at most m_maxPoseCandidates new pose candidates.
 #ifdef WITH_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
   for(uint32_t candidateIdx = 0; candidateIdx < m_maxPoseCandidates; ++candidateIdx)
   {
+    // Try to generate a valid pose candidate.
     PoseCandidate candidate;
-
-    // Try to generate a valid candidate.
-    bool valid = preemptive_ransac_generate_candidate(
+    bool valid = generate_pose_candidate(
       keypoints, predictions, imgSize, rngs[candidateIdx], candidate, m_maxCandidateGenerationIterations, m_useAllModesPerLeafInPoseHypothesisGeneration,
       m_checkMinDistanceBetweenSampledModes, m_minSquaredDistanceBetweenSampledModes, m_checkRigidTransformationConstraint, m_maxTranslationErrorForCorrectPose
     );
@@ -86,7 +85,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
     }
   }
 
-  // Run Kabsch on all candidates to estimate the rigid transformations.
+  // Run Kabsch on all the generated candidates to estimate the rigid transformations.
   compute_candidate_poses_kabsch();
 }
 

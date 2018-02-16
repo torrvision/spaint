@@ -122,49 +122,41 @@ inline float compute_energy_sum_for_inliers(const Matrix4f& candidatePose, const
 }
 
 /**
- * \brief Try to generate a camera pose candidate according to the method described in the paper.
+ * \brief Tries to generate a camera pose candidate using the method described in the paper.
  *
- * \param keypointsData   The 3D keypoints extracted from a RGB-D image pair.
- * \param predictionsData Score predictions associated to the keypoints.
- * \param imgSize         The size of the input keypoint and predictions images.
- * \param randomGenerator Either a CPURNG or a CUDARNG according to the current device type.
- * \param poseCandidate   The variable where the generated pose candidate will be stored.
- * \param maxCandidateGenerationIterations             The maximum number of iterations in the candidate generation step.
- * \param useAllModesPerLeafInPoseHypothesisGeneration Whether to use all modes in the predictions when generating the
- *                                                     pose hypothesis or just the first one.
- * \param checkMinDistanceBetweenSampledModes          Whether or not to check that sampled modes have a minimum
- *                                                     distance between each other.
- * \param minSqDistanceBetweenSampledModes             The minimum (squared) distance between sampled modes if the above
- *                                                     parameter is true.
- * \param checkRigidTransformationConstraint           Whether or not to check that the selected modes define a
- *                                                     quasi-rigid transformation.
- * \param maxTranslationErrorForCorrectPose            The maximum difference between the distances of pair of points in
- *                                                     camera frame and pair of modes in world coordinates if the
- *                                                     previous check is enabled.
+ * \param keypointsData                                 The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictionsData                               The SCoRe predictions associated with the keypoints.
+ * \param imgSize                                       The size of the input keypoints and predictions images.
+ * \param rng                                           Either a CPURNG or a CUDARNG, depending on the current device type.
+ * \param poseCandidate                                 The variable in which the generated pose candidate (if any) will be stored.
+ * \param maxCandidateGenerationIterations              The maximum number of iterations in the candidate generation step.
+ * \param useAllModesPerLeafInPoseHypothesisGeneration  Whether or not to use all modes in the predictions when generating the pose hypothesis, rather than just the first one.
+ * \param checkMinDistanceBetweenSampledModes           Whether or not to check that sampled modes have a minimum distance between each other.
+ * \param minSqDistanceBetweenSampledModes              The minimum squared distance between sampled modes if the above parameter is true.
+ * \param checkRigidTransformationConstraint            Whether or not to check that the selected modes define a quasi-rigid transformation.
+ * \param maxTranslationErrorForCorrectPose             The maximum difference between the distances of a pair of points in the camera frame and a pair of modes in world coordinates
+ *                                                      if the previous check is enabled.
  *
- * \return true if a pose candidate was successfully generated.
+ * \return  true, if a pose candidate was successfully generated, or false otherwise.
  */
 template <typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline bool preemptive_ransac_generate_candidate(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
-                                                 RNG& randomGenerator, PoseCandidate& poseCandidate, uint32_t maxCandidateGenerationIterations,
-                                                 bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
-                                                 float minSqDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
-                                                 float maxTranslationErrorForCorrectPose)
+inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize,
+                                    RNG& rng, PoseCandidate& poseCandidate, uint32_t maxCandidateGenerationIterations,
+                                    bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
+                                    float minSqDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
+                                    float maxTranslationErrorForCorrectPose)
 {
   int selectedPixelCount = 0;
   int selectedPixelLinearIdx[PoseCandidate::KABSCH_POINTS];
   int selectedPixelMode[PoseCandidate::KABSCH_POINTS];
 
-  // Try to generate a candidate (sample KABSCH_POINTS point pairs) for a certain number of times and return false if we
-  // fail.
-  for(uint32_t iterationIdx = 0;
-      selectedPixelCount != PoseCandidate::KABSCH_POINTS && iterationIdx < maxCandidateGenerationIterations;
-      ++iterationIdx)
+  // Try to generate a candidate (sample KABSCH_POINTS point pairs) for a certain number of times and return false if we fail.
+  for(uint32_t iterationIdx = 0; selectedPixelCount != PoseCandidate::KABSCH_POINTS && iterationIdx < maxCandidateGenerationIterations; ++iterationIdx)
   {
     // Sample a pixel in the input image.
-    const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width - 1);
-    const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height - 1);
+    const int x = rng.generate_int_from_uniform(0, imgSize.width - 1);
+    const int y = rng.generate_int_from_uniform(0, imgSize.height - 1);
     const int linearFeatureIdx = y * imgSize.width + x;
 
     // Grab its associated keypoint and continue only if it's valid.
@@ -179,7 +171,7 @@ inline bool preemptive_ransac_generate_candidate(const Keypoint3DColour *keypoin
 
     // Either use the first mode or select one randomly, depending on the parameters.
     const int selectedModeIdx = useAllModesPerLeafInPoseHypothesisGeneration
-                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.size - 1)
+                                    ? rng.generate_int_from_uniform(0, selectedPrediction.size - 1)
                                     : 0;
 
     // Cache camera and world points, used for the following checks.
@@ -276,7 +268,7 @@ inline bool preemptive_ransac_generate_candidate(const Keypoint3DColour *keypoin
   // implementation which is currently CPU only).
 
   // Reset the energy.
-  poseCandidate.energy = 0.f;
+  poseCandidate.energy = 0.0f;
 
   // Copy the camera and corresponding world points.
   for(int s = 0; s < selectedPixelCount; ++s)

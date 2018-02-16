@@ -28,8 +28,8 @@ namespace grove {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inliersIndices,
-                                                      uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
+__global__ void ck_compute_energies(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inliersIndices,
+                                    uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
 {
   const int tid = threadIdx.x;
   const int threadsPerBlock = blockDim.x;
@@ -70,26 +70,24 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
 }
 
 template <typename RNG>
-__global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i imgSize,
-                                                              RNG *randomGenerators, PoseCandidate *poseCandidates, int *nbPoseCandidates,
-                                                              uint32_t maxCandidateGenerationIterations, uint32_t maxPoseCandidates,
-                                                              bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
-                                                              float minDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
-                                                              float translationErrorMaxForCorrectPose)
+__global__ void ck_generate_pose_candidates(const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
+                                            const Vector2i imgSize, RNG *rngs, PoseCandidate *poseCandidates, int *nbPoseCandidates,
+                                            uint32_t maxCandidateGenerationIterations, uint32_t maxPoseCandidates,
+                                            bool useAllModesPerLeafInPoseHypothesisGeneration, bool checkMinDistanceBetweenSampledModes,
+                                            float minDistanceBetweenSampledModes, bool checkRigidTransformationConstraint,
+                                            float translationErrorMaxForCorrectPose)
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
-
   if(candidateIdx >= maxPoseCandidates) return;
 
-  // Try to generate a candidate in a local variable.
+  // Try to generate a valid pose candidate.
   PoseCandidate candidate;
-
-  bool valid = preemptive_ransac_generate_candidate(
-    keypoints, predictions, imgSize, randomGenerators[candidateIdx], candidate, maxCandidateGenerationIterations, useAllModesPerLeafInPoseHypothesisGeneration,
+  bool valid = generate_pose_candidate(
+    keypoints, predictions, imgSize, rngs[candidateIdx], candidate, maxCandidateGenerationIterations, useAllModesPerLeafInPoseHypothesisGeneration,
     checkMinDistanceBetweenSampledModes, minDistanceBetweenSampledModes, checkRigidTransformationConstraint, translationErrorMaxForCorrectPose
   );
 
-  // If we succeeded, grab an unique index and store the candidate in the array.
+  // If we succeed, grab a unique index in the output array and store the candidate into the corresponding array element.
   if(valid)
   {
     const int finalCandidateIdx = atomicAdd(nbPoseCandidates, 1);
@@ -111,7 +109,7 @@ __global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keyp
   );
 }
 
-__global__ void ck_preemptive_ransac_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
+__global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
   if(candidateIdx < nbPoseCandidates)
@@ -174,7 +172,7 @@ void PreemptiveRansac_CUDA::compute_energies_and_sort()
   {
     dim3 blockSize(256);
     dim3 gridSize((nbPoseCandidates + blockSize.x - 1) / blockSize.x);
-    ck_preemptive_ransac_reset_candidate_energies<<<gridSize,blockSize>>>(poseCandidates, nbPoseCandidates);
+    ck_reset_candidate_energies<<<gridSize,blockSize>>>(poseCandidates, nbPoseCandidates);
     ORcudaKernelCheck;
   }
 
@@ -183,7 +181,7 @@ void PreemptiveRansac_CUDA::compute_energies_and_sort()
     // Launch one block per candidate (in this way, many blocks will exit immediately in the later stages of P-RANSAC).
     dim3 blockSize(128); // Threads to compute the energy for each candidate.
     dim3 gridSize(nbPoseCandidates);
-    ck_preemptive_ransac_compute_energies<<<gridSize,blockSize>>>(keypoints, predictions, inliersIndices, nbInliers, poseCandidates, nbPoseCandidates);
+    ck_compute_energies<<<gridSize,blockSize>>>(keypoints, predictions, inliersIndices, nbInliers, poseCandidates, nbPoseCandidates);
     ORcudaKernelCheck;
   }
 
@@ -197,33 +195,33 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
-
-  CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
-  int *nbPoseCandidates_device = m_nbPoseCandidates_device->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
+  CUDARNG *rngs = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
 
+  // Reset the number of pose candidates (we do this on the device only at this stage, and update the corresponding host value once we are done generating).
+  int *nbPoseCandidates_device = m_nbPoseCandidates_device->GetData(MEMORYDEVICE_CUDA);
+  ORcudaSafeCall(cudaMemsetAsync(nbPoseCandidates_device, 0, sizeof(int)));
+
+  // Generate at most m_maxPoseCandidates new pose candidates.
   dim3 blockSize(32);
   dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
-  // Reset number of candidates (device only, the host number will be updated later, when we are done generating).
-  ORcudaSafeCall(cudaMemsetAsync(nbPoseCandidates_device, 0, sizeof(int)));
-
-  ck_preemptive_ransac_generate_pose_candidates<<<gridSize, blockSize>>>(
-    keypoints, predictions, imgSize, randomGenerators, poseCandidates, nbPoseCandidates_device, m_maxCandidateGenerationIterations,
+  ck_generate_pose_candidates<<<gridSize,blockSize>>>(
+    keypoints, predictions, imgSize, rngs, poseCandidates, nbPoseCandidates_device, m_maxCandidateGenerationIterations,
     m_maxPoseCandidates, m_useAllModesPerLeafInPoseHypothesisGeneration, m_checkMinDistanceBetweenSampledModes,
     m_minSquaredDistanceBetweenSampledModes, m_checkRigidTransformationConstraint, m_maxTranslationErrorForCorrectPose
   );
   ORcudaKernelCheck;
 
-  // Need to make the data available to the host (for Kabsch).
+  // Copy all relevant data back across to the host for use by the Kabsch algorithm.
   m_poseCandidates->dataSize = m_nbPoseCandidates_device->GetElement(0, MEMORYDEVICE_CUDA);
   m_poseCandidates->UpdateHostFromDevice();
 
-  // Now perform kabsch on all candidates.
+  // Run Kabsch on all the generated candidates to estimate the rigid transformations.
   compute_candidate_poses_kabsch();
 
-  // Make the computed poses available to device.
+  // Copy the computed rigid transformations back across to the device.
   m_poseCandidates->UpdateDeviceFromHost();
 }
 
