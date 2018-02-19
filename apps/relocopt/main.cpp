@@ -97,7 +97,8 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
       static const float maxRelocalisationTime = 200000; // 200ms
       static const float maxUpdateTime = 10000; // 10ms (we don't really care too much about it).
 
-      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
+//      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
+      static const bool useRelocAverage = false; // We want to evaluate the relocalisation results AFTER ICP.
 
       // We need to negate the values because the optimiser tries to *minimise* the cost.
       cost = useRelocAverage ? -relocWeightedAverage : -icpWeightedAverage;
