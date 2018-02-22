@@ -29,7 +29,24 @@ ORUtils::SE3Pose BaseRGBDFrameMessage::extract_pose() const
   float params[6];
   memcpy(params, &m_data[m_poseSegment.first + sizeof(Matrix4f)], 6 * sizeof(float));
 
-  pose.SetBoth(M, params);
+  // If the 6 params are valid we use them as well, this is to avoid numerical approximations
+  // when transferring poses between clients running on a PC. Since on Android we cannot easily compute
+  // those parameters we send NaNs across and we compute them here.
+
+  bool setBoth = true;
+  for(int i = 0; i < 6; ++i)
+  {
+    // isnan is c++11/C99 only
+    if(params[i] != params[i])
+    {
+      setBoth = false;
+      break;
+    }
+  }
+
+  if(setBoth) pose.SetBoth(M, params);
+  else pose.SetM(M);
+
   return pose;
 }
 
