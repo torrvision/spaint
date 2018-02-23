@@ -24,27 +24,30 @@ ORUtils::SE3Pose BaseRGBDFrameMessage::extract_pose() const
 {
   ORUtils::SE3Pose pose;
 
+  // Extract both the 4x4 matrix and the rotation/translation vector representations of the pose from the message.
   Matrix4f M = *reinterpret_cast<const Matrix4f*>(&m_data[m_poseSegment.first]);
 
   float params[6];
   memcpy(params, &m_data[m_poseSegment.first + sizeof(Matrix4f)], 6 * sizeof(float));
 
-  // If the 6 params are valid we use them as well, this is to avoid numerical approximations
-  // when transferring poses between clients running on a PC. Since on Android we cannot easily compute
-  // those parameters we send NaNs across and we compute them here.
-
-  bool setBoth = true;
+  // Check whether or not the rotation/translation vector representation of the pose is valid. Currently, PC clients
+  // send both the matrix and the rotation/translation vector representations across to the server to allow it to
+  // avoid recalculating the vectors from the matrix (which can cause a pose on the server to be slightly different
+  // to that on the client). Android clients currently only send across the matrix, since the vectors are currently
+  // not trivially available in the Android application.
+  bool vectorsValid = true;
   for(int i = 0; i < 6; ++i)
   {
-    // isnan is c++11/C99 only
+    // If one of the vectors' components is not equal to itself, it must be NaN, meaning that the vectors are invalid.
+    // We avoid using the standard isnan function to check this, since that would force us to depend on C++11.
     if(params[i] != params[i])
     {
-      setBoth = false;
+      vectorsValid = false;
       break;
     }
   }
 
-  if(setBoth) pose.SetBoth(M, params);
+  if(vectorsValid) pose.SetBoth(M, params);
   else pose.SetM(M);
 
   return pose;
