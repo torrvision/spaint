@@ -64,7 +64,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 
   // Allocate memory.
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-  m_inliersIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
+  m_inlierRasterIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_maxPoseCandidates);
 
@@ -152,8 +152,11 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     m_timerCandidateGeneration.stop();
   }
 
-  // Reset the number of inliers for the new pose estimation.
-  m_inliersIndicesBlock->dataSize = 0;
+  // Reset the number of inliers ready for the new pose estimation.
+  {
+    const bool resetMask = false;
+    reset_inliers(resetMask);
+  }
 
   // Step 2: If necessary, aggressively cull the initial candidates to reduce the computational cost of the remaining steps.
   if(m_poseCandidates->dataSize > m_maxPoseCandidatesAfterCull)
@@ -169,7 +172,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
       boost::timer::auto_cpu_timer t(6, "sample inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
       const bool useMask = false; // no mask for the first pass
-      sample_inlier_candidates(useMask);
+      sample_inliers(useMask);
     }
 
     // Step 2(b): Then, evaluate the candidates and sort them in non-increasing order of quality.
@@ -195,10 +198,11 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   boost::timer::auto_cpu_timer t(6, "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-  // Step 3: Reset the inlier mask (and inliers that might have been selected in a previous invocation of the method).
-  m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once (no-op on subsequent occasions).
-  m_inliersMaskImage->Clear();                              // This and the following happen every time.
-  m_inliersIndicesBlock->dataSize = 0;
+  // Step 3: Reset the inlier mask and clear any inliers that might have been selected in a previous invocation of the method.
+  {
+    const bool resetMask = true;
+    reset_inliers(resetMask);
+  }
 
   // Step 4: Run preemptive RANSAC until only a single candidate remains.
   int iteration = 0;
@@ -215,7 +219,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     // Step 4(a): Sample a set of keypoints from the input image. Record that thay have been selected in the mask image, to avoid selecting them again.
     m_timerInlierSampling[iteration].start();
     const bool useMask = true;
-    sample_inlier_candidates(useMask);
+    sample_inliers(useMask);
     m_timerInlierSampling[iteration].stop();
 
     // Step 4(b): If pose update is enabled, optimise all remaining candidates, taking into account the newly selected inliers.
@@ -249,7 +253,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   {
     // Sample some inliers.
     m_timerInlierSampling[iteration].start();
-    sample_inlier_candidates(true);
+    sample_inliers(true);
     m_timerInlierSampling[iteration].stop();
 
     // Having selected the inlier points, find the best associated modes to use during optimisation.
@@ -319,7 +323,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     // Copy the camera and world space points into two Eigen matrices (one point per column in each) on which we can run the Kabsch algorithm.
     Eigen::Matrix3f cameraPoints;
     Eigen::Matrix3f worldPoints;
-    for(int i = 0; i < PoseCandidate::KABSCH_POINTS; ++i)
+    for(int i = 0; i < PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED; ++i)
     {
       cameraPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsCamera[i].v);
       worldPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsWorld[i].v);
@@ -330,13 +334,24 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
   }
 }
 
+void PreemptiveRansac::reset_inliers(bool resetMask)
+{
+  if(resetMask)
+  {
+    m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // happens only once (i.e. a no-op on subsequent occasions)
+    m_inliersMaskImage->Clear();
+  }
+
+  m_inlierRasterIndicesBlock->dataSize = 0;
+}
+
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
   // Fill the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
 
   // The current number of inlier points.
-  ptsForLM.nbPoints = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
+  ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
 
   // The linearised offset in the pose optimisation buffers.
   const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;

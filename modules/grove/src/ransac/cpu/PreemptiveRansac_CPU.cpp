@@ -34,7 +34,7 @@ void PreemptiveRansac_CPU::compute_energies_and_sort()
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-// Compute the energy for all pose candidates, in parallel if possible.
+  // Compute the energies for all pose candidates.
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
@@ -51,23 +51,22 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
-
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
   // Reset the number of pose candidates.
   m_poseCandidates->dataSize = 0;
 
+  // Generate at most m_maxPoseCandidates new pose candidates.
 #ifdef WITH_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
   for(uint32_t candidateIdx = 0; candidateIdx < m_maxPoseCandidates; ++candidateIdx)
   {
+    // Try to generate a valid pose candidate.
     PoseCandidate candidate;
-
-    // Try to generate a valid candidate.
-    bool valid = preemptive_ransac_generate_candidate(
+    bool valid = generate_pose_candidate(
       keypoints, predictions, imgSize, rngs[candidateIdx], candidate, m_maxCandidateGenerationIterations, m_useAllModesPerLeafInPoseHypothesisGeneration,
       m_checkMinDistanceBetweenSampledModes, m_minSquaredDistanceBetweenSampledModes, m_checkRigidTransformationConstraint, m_maxTranslationErrorForCorrectPose
     );
@@ -86,7 +85,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
     }
   }
 
-  // Run Kabsch on all candidates to estimate the rigid transformations.
+  // Run Kabsch on all the generated candidates to estimate the rigid transformations.
   compute_candidate_poses_kabsch();
 }
 
@@ -94,9 +93,9 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
 {
   Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
   Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
-  const int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
+  const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
   const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   const PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
   const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
@@ -109,7 +108,7 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
     for(uint32_t inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
     {
       preemptive_ransac_prepare_inliers_for_optimisation(
-        keypointsImage, predictionsImage, inliersIndices, nbInliers, poseCandidates, candidateCameraPoints,
+        keypointsImage, predictionsImage, inlierRasterIndices, nbInliers, poseCandidates, candidateCameraPoints,
         candidateModes, m_poseOptimisationInlierThreshold, candidateIdx, inlierIdx
       );
     }
@@ -121,10 +120,10 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
   m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
 }
 
-void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
+void PreemptiveRansac_CPU::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
-  int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
+  int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
   int *inliersMaskImage = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
   const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
   const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
@@ -135,29 +134,22 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 #endif
   for(uint32_t sampleIdx = 0; sampleIdx < m_ransacInliersPerIteration; ++sampleIdx)
   {
-    int sampledLinearIdx = -1;
-
     // Try to sample the raster index of a valid keypoint whose prediction has at least one modal cluster, using the mask if necessary.
-    if(useMask)
-    {
-      sampledLinearIdx = preemptive_ransac_sample_inlier<true>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx], inliersMaskImage);
-    }
-    else
-    {
-      sampledLinearIdx = preemptive_ransac_sample_inlier<false>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx]);
-    }
+    int rasterIdx = -1;
+    if(useMask) rasterIdx = sample_inlier<true>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx], inliersMaskImage);
+    else rasterIdx = sample_inlier<false>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx]);
 
     // If we succeed, grab a unique index in the output array and store the inlier raster index into the corresponding array element.
-    if(sampledLinearIdx >= 0)
+    if(rasterIdx >= 0)
     {
-      size_t inlierIdx = 0;
+      size_t arrayIdx = 0;
 
     #ifdef WITH_OPENMP
       #pragma omp atomic capture
     #endif
-      inlierIdx = m_inliersIndicesBlock->dataSize++;
+      arrayIdx = m_inlierRasterIndicesBlock->dataSize++;
 
-      inliersIndices[inlierIdx] = sampledLinearIdx;
+      inlierRasterIndices[arrayIdx] = rasterIdx;
     }
   }
 }
@@ -172,13 +164,13 @@ void PreemptiveRansac_CPU::update_candidate_poses()
 
 void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate& candidate) const
 {
+  const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
   const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
   const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
-  const int *inliersIndices = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
-  const uint32_t nbInliers = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
 
-  const float totalEnergy = preemptive_ransac_compute_candidate_energy(candidate.cameraPose, keypointsImage, predictionsImage, inliersIndices, nbInliers);
-  candidate.energy = totalEnergy / static_cast<float>(nbInliers);
+  const float energySum = compute_energy_sum_for_inliers(candidate.cameraPose, keypointsImage, predictionsImage, inlierRasterIndices, nbInliers);
+  candidate.energy = energySum / static_cast<float>(nbInliers);
 }
 
 void PreemptiveRansac_CPU::init_random()

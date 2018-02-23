@@ -21,8 +21,8 @@ struct PoseCandidate
 {
   //#################### CONSTANTS ####################
 
-  /** The minimum number of points required to estimate a camera pose via the Kabsch algorithm. */
-  enum { KABSCH_POINTS = 3 };
+  /** The minimum number of point correspondences needed to estimate a camera pose via the Kabsch algorithm. */
+  enum { KABSCH_CORRESPONDENCES_NEEDED = 3 };
 
   //#################### PUBLIC VARIABLES ####################
 
@@ -33,10 +33,10 @@ struct PoseCandidate
   float energy;
 
   /** The points in the camera's reference frame that were used to estimate the camera pose. */
-  Vector3f pointsCamera[KABSCH_POINTS];
+  Vector3f pointsCamera[KABSCH_CORRESPONDENCES_NEEDED];
 
   /** The points in the world reference frame that were used to estimate the camera pose. */
-  Vector3f pointsWorld[KABSCH_POINTS];
+  Vector3f pointsWorld[KABSCH_CORRESPONDENCES_NEEDED];
 };
 
 //#################### OPERATORS ####################

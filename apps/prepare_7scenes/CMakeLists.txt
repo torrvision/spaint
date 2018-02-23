@@ -15,14 +15,6 @@ SET(targetname prepare_7scenes)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 
-############################
-# Check build requirements #
-############################
-
-IF(NOT WITH_OPENCV)
-  MESSAGE(FATAL_ERROR "prepare_7scenes needs WITH_OPENCV be enabled.")
-ENDIF()
-
 #############################
 # Specify the project files #
 #############################

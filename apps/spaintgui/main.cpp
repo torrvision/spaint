@@ -19,6 +19,9 @@
 
 #include <InputSource/IdleImageSourceEngine.h>
 #include <InputSource/OpenNIEngine.h>
+#if WITH_LIBROYALE
+#include <InputSource/PicoFlexxEngine.h>
+#endif
 #ifdef WITH_REALSENSE
 #include <InputSource/RealSenseEngine.h>
 #endif
@@ -246,6 +249,15 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
       , Vector2i(320, 240)
 #endif
     ));
+  }
+#endif
+
+#if WITH_LIBROYALE
+  // Probe for a PicoFlexx camera.
+  if(cameraSubengine == NULL)
+  {
+    std::cout << "[spaint] Probing PicoFlexx camera\n";
+    cameraSubengine = check_camera_subengine(new PicoFlexxEngine(""));
   }
 #endif
 
