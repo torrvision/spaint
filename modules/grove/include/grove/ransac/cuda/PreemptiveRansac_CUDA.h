@@ -24,14 +24,14 @@ class PreemptiveRansac_CUDA : public PreemptiveRansac
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The number of currently sampled inliers. Resides in device memory. */
+  ITMIntMemoryBlock_Ptr m_nbInliers_device;
+
   /** The number of pose candidates currently sampled. Resides in device memory. */
   ITMIntMemoryBlock_Ptr m_nbPoseCandidates_device;
 
-  /** The number of currently sampled inliers. Resides in device memory. */
-  ITMIntMemoryBlock_Ptr m_nbSampledInliers_device;
-
   /** The random number generators used during the P-RANSAC process. */
-  CUDARNGMemoryBlock_Ptr m_randomGenerators;
+  CUDARNGMemoryBlock_Ptr m_rngs;
 
   /** The seed used to initialise the random number generators. */
   uint32_t m_rngSeed;
@@ -57,7 +57,10 @@ protected:
   virtual void prepare_inliers_for_optimisation();
 
   /** Override */
-  virtual void sample_inlier_candidates(bool useMask);
+  virtual void reset_inliers(bool resetMask);
+
+  /** Override */
+  virtual void sample_inliers(bool useMask);
 
   /** Override */
   virtual void update_candidate_poses();

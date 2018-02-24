@@ -93,8 +93,8 @@ protected:
   /** Whether or not to check for a rigid transformation when sampling modes for the pose hypothesis generation. */
   bool m_checkRigidTransformationConstraint;
 
-  /** An array that stores the indices of the candidate inliers already sampled from the input image. */
-  ITMIntMemoryBlock_Ptr m_inliersIndicesBlock;
+  /** A memory block that stores the raster indices of the candidate inliers already sampled from the input image. */
+  ITMIntMemoryBlock_Ptr m_inlierRasterIndicesBlock;
 
   /** An image representing a mask for the already sampled inlier points. */
   ITMIntImage_Ptr m_inliersMaskImage;
@@ -216,7 +216,7 @@ protected:
    *
    * \param useMask Whether or not to store in a persistent mask the location of already sampled keypoints.
    */
-  virtual void sample_inlier_candidates(bool useMask = false) = 0;
+  virtual void sample_inliers(bool useMask = false) = 0;
 
   /**
    * \brief Perform the continuous optimisation step described in the paper to update each remaining pose hypothesis.
@@ -268,6 +268,13 @@ protected:
    * \note  This will probably go away as soon as we implement a proper SVD solver that can run on both the CPU and GPU.
    */
   void compute_candidate_poses_kabsch();
+
+  /**
+   * \brief Resets the inliers that are used to evaluate camera pose candidates.
+   *
+   * \param resetMask Whether or not to also reset the inliers mask.
+   */
+  virtual void reset_inliers(bool resetMask);
 
   /**
    * \brief Optimise a PoseCandidate pose minimising a non-linear error term depending on the parameters of the class.
