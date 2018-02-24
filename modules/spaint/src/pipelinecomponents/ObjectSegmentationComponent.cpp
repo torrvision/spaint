@@ -59,7 +59,7 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
 
   // Make masked versions of the depth and RGB inputs.
   View_CPtr view = slamState->get_view();
-  ITMUChar4Image_Ptr colouredDepthInput(new ITMUChar4Image(view->depth->dataSize, true, false));
+  ITMUChar4Image_Ptr colouredDepthInput(new ITMUChar4Image(view->depth->noDims, true, false));
   m_context->get_visualisation_generator()->get_depth_input(colouredDepthInput, view);
   ITMShortImage_CPtr depthInput = slamState->get_input_raw_depth_image_copy();
   ITMUChar4Image_CPtr rgbInput(slamState->get_view()->rgb, boost::serialization::null_deleter());

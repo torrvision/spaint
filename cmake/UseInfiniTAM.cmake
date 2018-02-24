@@ -2,8 +2,8 @@
 # UseInfiniTAM.cmake #
 ######################
 
-SET(InfiniTAM_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM" CACHE PATH "The InfiniTAM include directory")
-SET(InfiniTAM_BUILD_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build" CACHE PATH "The InfiniTAM build directory")
+SET(InfiniTAM_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../infinitam" CACHE PATH "The InfiniTAM include directory")
+SET(InfiniTAM_BUILD_DIR "${PROJECT_SOURCE_DIR}/../infinitam/build" CACHE PATH "The InfiniTAM build directory")
 
 FIND_LIBRARY(InfiniTAM_FernRelocLib_LIBRARY_DEBUG FernRelocLib HINTS "${InfiniTAM_BUILD_DIR}/FernRelocLib" "${InfiniTAM_BUILD_DIR}/FernRelocLib/Debug")
 FIND_LIBRARY(InfiniTAM_InputSource_LIBRARY_DEBUG InputSource HINTS "${InfiniTAM_BUILD_DIR}/InputSource" "${InfiniTAM_BUILD_DIR}/InputSource/Debug")

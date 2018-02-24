@@ -49,7 +49,7 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction& pred
   // Iterate over all the modal clusters stored in the struct.
   for(int m = 0; m < prediction.size; ++m)
   {
-    const Keypoint3DColourCluster &currentMode = prediction.elts[m];
+    const Keypoint3DColourCluster& currentMode = prediction.elts[m];
 
     const Vector3f diff = v - currentMode.position;
 
