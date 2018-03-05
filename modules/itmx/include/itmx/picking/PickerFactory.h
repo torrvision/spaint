@@ -1,16 +1,16 @@
 /**
- * spaint: PickerFactory.h
+ * itmx: PickerFactory.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_PICKERFACTORY
-#define H_SPAINT_PICKERFACTORY
+#ifndef H_ITMX_PICKERFACTORY
+#define H_ITMX_PICKERFACTORY
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "interface/Picker.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief This struct can be used to construct pickers.

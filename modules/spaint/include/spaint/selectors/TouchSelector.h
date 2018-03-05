@@ -8,8 +8,9 @@
 
 #include <Eigen/Dense>
 
+#include <itmx/picking/interface/Picker.h>
+
 #include "Selector.h"
-#include "../picking/interface/Picker.h"
 #include "../touch/TouchDetector.h"
 
 namespace spaint {
@@ -40,7 +41,7 @@ private:
   size_t m_maxKeptTouchPoints;
 
   /** The picker. */
-  boost::shared_ptr<const Picker> m_picker;
+  boost::shared_ptr<const itmx::Picker> m_picker;
 
   /** The touch detector. */
   TouchDetector_Ptr m_touchDetector;
