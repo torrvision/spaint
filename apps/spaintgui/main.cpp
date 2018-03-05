@@ -879,11 +879,14 @@ try
       const std::string& depthImageMask = args.depthImageMasks[i];
       const std::string& rgbImageMask = args.rgbImageMasks[i];
 
+      const bf::path calibrationPath = args.sequenceDirs[i] / "calib.txt";
+      const std::string calibrationFilename = bf::exists(calibrationPath) ? calibrationPath.string() : args.calibrationFilename;
+
       std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
       ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
       CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
       imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
         args.prefetchBufferCapacity
       ));
 

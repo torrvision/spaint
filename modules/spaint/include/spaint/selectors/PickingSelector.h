@@ -10,8 +10,9 @@
 
 #include <Eigen/Dense>
 
+#include <itmx/picking/interface/Picker.h>
+
 #include "Selector.h"
-#include "../picking/interface/Picker.h"
 
 namespace spaint {
 
@@ -23,7 +24,7 @@ class PickingSelector : public Selector
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker. */
-  Picker_CPtr m_picker;
+  itmx::Picker_CPtr m_picker;
 
   /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
   boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_pickPointFloatMB;

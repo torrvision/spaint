@@ -1,19 +1,19 @@
 /**
- * spaint: Picker_CUDA.h
+ * itmx: Picker_CPU.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_PICKER_CUDA
-#define H_SPAINT_PICKER_CUDA
+#ifndef H_ITMX_PICKER_CPU
+#define H_ITMX_PICKER_CPU
 
 #include "../interface/Picker.h"
 
-namespace spaint {
+namespace itmx {
 
 /**
- * \brief An instance of this class can be used to pick an individual point in the scene using CUDA.
+ * \brief An instance of this class can be used to pick an individual point in the scene using the CPU.
  */
-class Picker_CUDA : public Picker
+class Picker_CPU : public Picker
 {
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -218,43 +218,6 @@ include/spaint/ogl/WrappedGLUT.h
 )
 
 ##
-SET(picking_sources
-src/picking/PickerFactory.cpp
-)
-
-SET(picking_headers
-include/spaint/picking/PickerFactory.h
-)
-
-##
-SET(picking_cpu_sources
-src/picking/cpu/Picker_CPU.cpp
-)
-
-SET(picking_cpu_headers
-include/spaint/picking/cpu/Picker_CPU.h
-)
-
-##
-SET(picking_cuda_sources
-src/picking/cuda/Picker_CUDA.cu
-)
-
-SET(picking_cuda_headers
-include/spaint/picking/cuda/Picker_CUDA.h
-)
-
-##
-SET(picking_interface_headers
-include/spaint/picking/interface/Picker.h
-)
-
-##
-SET(picking_shared_headers
-include/spaint/picking/shared/Picker_Shared.h
-)
-
-##
 SET(pipelinecomponents_sources
 src/pipelinecomponents/CollaborativeComponent.cpp
 src/pipelinecomponents/CollaborativeContext.cpp
@@ -604,8 +567,6 @@ ${imageprocessing_sources}
 ${markers_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
-${picking_sources}
-${picking_cpu_sources}
 ${pipelinecomponents_sources}
 ${propagation_sources}
 ${propagation_cpu_sources}
@@ -642,10 +603,6 @@ ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
 ${ogl_headers}
-${picking_headers}
-${picking_cpu_headers}
-${picking_interface_headers}
-${picking_shared_headers}
 ${pipelinecomponents_headers}
 ${propagation_headers}
 ${propagation_cpu_headers}
@@ -692,7 +649,6 @@ IF(WITH_CUDA)
   SET(sources ${sources}
     ${features_cuda_sources}
     ${markers_cuda_sources}
-    ${picking_cuda_sources}
     ${propagation_cuda_sources}
     ${sampling_cuda_sources}
     ${selectiontransformers_cuda_sources}
@@ -703,7 +659,6 @@ IF(WITH_CUDA)
   SET(headers ${headers}
     ${features_cuda_headers}
     ${markers_cuda_headers}
-    ${picking_cuda_headers}
     ${propagation_cuda_headers}
     ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
@@ -739,11 +694,6 @@ SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers}
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
-SOURCE_GROUP(picking FILES ${picking_sources} ${picking_headers})
-SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
-SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
-SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
-SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
 SOURCE_GROUP(pipelinecomponents FILES ${pipelinecomponents_sources} ${pipelinecomponents_headers})
 SOURCE_GROUP(propagation FILES ${propagation_sources} ${propagation_headers})
 SOURCE_GROUP(propagation\\cpu FILES ${propagation_cpu_sources} ${propagation_cpu_headers})

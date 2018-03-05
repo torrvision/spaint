@@ -1,5 +1,5 @@
 /**
- * spaint: PickerFactory.cpp
+ * itmx: PickerFactory.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -12,7 +12,7 @@ using namespace ITMLib;
 #include "picking/cuda/Picker_CUDA.h"
 #endif
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

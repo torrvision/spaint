@@ -1,5 +1,5 @@
 /**
- * spaint: Picker_CUDA.cu
+ * itmx: Picker_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -9,7 +9,7 @@
 
 #include "picking/shared/Picker_Shared.h"
 
-namespace spaint {
+namespace itmx {
 
 //#################### CUDA KERNELS ####################
 

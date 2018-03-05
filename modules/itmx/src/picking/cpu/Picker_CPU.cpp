@@ -1,5 +1,5 @@
 /**
- * spaint: Picker_CPU.cpp
+ * itmx: Picker_CPU.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
@@ -9,7 +9,7 @@
 
 #include "picking/shared/Picker_Shared.h"
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
