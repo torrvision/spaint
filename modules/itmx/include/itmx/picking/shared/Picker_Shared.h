@@ -1,14 +1,14 @@
 /**
- * spaint: Picker_Shared.h
+ * itmx: Picker_Shared.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_PICKER_SHARED
-#define H_SPAINT_PICKER_SHARED
+#ifndef H_ITMX_PICKER_SHARED
+#define H_ITMX_PICKER_SHARED
 
 #include <ITMLib/Utils/ITMMath.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief Gets the scene point (if any) that would be picked by clicking at a specific location on the image plane.

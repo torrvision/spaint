@@ -9,16 +9,14 @@
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+#include <itmx/picking/cpu/Picker_CPU.h>
+#ifdef WITH_CUDA
+#include <itmx/picking/cuda/Picker_CUDA.h>
+#endif
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
 #include <tvgutil/timing/Timer.h>
-
-#include "picking/cpu/Picker_CPU.h"
-
-#ifdef WITH_CUDA
-#include "picking/cuda/Picker_CUDA.h"
-#endif
 
 using namespace ITMLib;
 using namespace rigging;
