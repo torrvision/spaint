@@ -1,10 +1,10 @@
 /**
- * spaint: Picker.h
+ * itmx: Picker.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_PICKER
-#define H_SPAINT_PICKER
+#ifndef H_ITMX_PICKER
+#define H_ITMX_PICKER
 
 #include <vector>
 
@@ -12,7 +12,7 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of a class deriving from this one can be used to pick an individual point in the scene.
