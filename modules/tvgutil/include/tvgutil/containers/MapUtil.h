@@ -52,6 +52,19 @@ public:
   }
 
   /**
+   * \brief Gets whether or not the map contains the specified key.
+   *
+   * \param map The map.
+   * \param key The key.
+   * \return    true, if the map contains the specified key, or false otherwise.
+   */
+  template <typename K, typename V>
+  static bool contains(const std::map<K,V>& map, typename boost::mpl::identity<const K>::type& key)
+  {
+    return map.find(key) != map.end();
+  }
+
+  /**
    * \brief Gets the value associated with a particular key in the map.
    *
    * \param map                 The map.
