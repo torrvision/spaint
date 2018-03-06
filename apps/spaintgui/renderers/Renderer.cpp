@@ -494,7 +494,7 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
 
     // Clear the colour and depth images for the chosen scene.
     colourImages[sceneIdx]->Clear();
-    depthImages[sceneIdx]->Clear();
+    depthImages[sceneIdx]->Fill(-1.0f);
 
     // If we have not yet started reconstruction for this scene, avoid rendering it and early out.
     SLAMState_CPtr slamState = m_model->get_slam_state(sceneIDs[sceneIdx]);
