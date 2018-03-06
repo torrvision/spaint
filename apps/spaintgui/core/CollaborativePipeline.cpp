@@ -21,6 +21,8 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
   // Note: A minimum of 2 labels is required (background and foreground).
 : MultiScenePipeline("collaborative", settings, resourcesDir, 2, mappingServer),
   m_collaborationStarted(false),
+  m_detectFiducials(detectFiducials),
+  m_fiducialDetector(fiducialDetector),
   m_worldIsRemote(imageSourceEngines.empty())
 {
   if(imageSourceEngines.empty())
@@ -88,9 +90,7 @@ void CollaborativePipeline::add_remote_slam_component(const std::string& sceneID
   const std::string trackerConfig = "<tracker type='remote'><params>" + boost::lexical_cast<std::string>(remoteClientID) + "</params></tracker>";
   const SLAMComponent::MappingMode mappingMode = SLAMComponent::MAP_VOXELS_ONLY;
   const SLAMComponent::TrackingMode trackingMode = SLAMComponent::TRACK_VOXELS;
-  const FiducialDetector_CPtr fiducialDetector;
-  const bool detectFiducials = false;
-  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));
+  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, m_fiducialDetector, m_detectFiducials));
 }
 
 void CollaborativePipeline::check_for_new_clients()

@@ -24,6 +24,12 @@ private:
   /** The collaborative SLAM component used to determine the relative poses between the different agents. */
   spaint::CollaborativeComponent_Ptr m_collaborativeComponent;
 
+  /** Whether or not the user wants fiducials to be detected. */
+  bool m_detectFiducials;
+
+  /** The fiducial detector to use (if any). */
+  spaint::FiducialDetector_CPtr m_fiducialDetector;
+
   /** A flag indicating whether or not the "World" scene is being fed from a remote agent. */
   bool m_worldIsRemote;
 
