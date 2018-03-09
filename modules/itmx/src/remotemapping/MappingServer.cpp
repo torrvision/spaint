@@ -388,6 +388,9 @@ void MappingServer::handle_client(int clientID, const Client_Ptr& client, const 
             boost::lock_guard<boost::mutex> lock(client->m_renderingPoseMutex);
             client->m_renderingPose = renderingPoseMsg.extract_value();
             connectionOk = write_message(sock, AckMessage());
+
+            // Force the parameters to be recomputed.
+            client->m_renderingPose->SetM(client->m_renderingPose->GetM());
           }
 
           break;

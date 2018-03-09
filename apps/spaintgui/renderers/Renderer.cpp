@@ -266,7 +266,7 @@ void Renderer::render_client_images() const
     if(!image)
     {
       // FIXME: The size shouldn't be hard-coded like this.
-      image.reset(new ITMUChar4Image(Vector2i(640,480), true, true));
+      image.reset(new ITMUChar4Image(mappingServer->get_rgb_image_size(clients[i]), true, true));
     }
 
     ORUtils::SE3Pose pose = *optionalPose;
