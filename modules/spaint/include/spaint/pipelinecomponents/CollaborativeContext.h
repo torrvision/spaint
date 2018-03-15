@@ -32,6 +32,7 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  virtual itmx::RefiningRelocaliser_Ptr& get_relocaliser(const std::string& sceneID) = 0;
   virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const = 0;
   virtual const std::vector<std::string>& get_scene_ids() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;

@@ -75,7 +75,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   bool fusionMayStillRun = update_trajectories();
   if(!fusionMayStillRun) m_mode = CM_BATCH;
 
-  if(m_frameIndex > 0 && (!fusionMayStillRun || (m_mode == CM_LIVE && m_frameIndex % 20 == 0)))
+  if(m_frameIndex > 0 && (!fusionMayStillRun || (m_mode == CM_LIVE && m_frameIndex % 50 == 0)))
   {
     // Start the collaboration timer if required.
     if(m_timeCollaboration && !m_collaborationTimer)
@@ -126,6 +126,9 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
 
 std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_random_candidates(size_t desiredCandidateCount) const
 {
+  static bool batchThisTime = true;
+  batchThisTime = !batchThisTime;
+
   std::list<CollaborativeRelocalisation> candidates;
 
   const int sceneCount = static_cast<int>(m_trajectories.size());
@@ -151,9 +154,9 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_random_c
 
     // Randomly pick a frame from scene j.
     const int frameCountJ = static_cast<int>(jt->second.size());
-    const int frameIndexJ = m_mode == CM_BATCH || slamStateJ->get_input_status() != SLAMState::IS_ACTIVE
+    const int frameIndexJ = m_mode == CM_BATCH || slamStateJ->get_input_status() == SLAMState::IS_TERMINATED || batchThisTime
       ? m_rng.generate_int_from_uniform(0, frameCountJ - 1)
-      : frameCountJ - 1;
+      : std::max(0, frameCountJ - 20);
 
     // Add a candidate to relocalise the selected frame of scene j against scene i.
     const Vector4f& depthIntrinsicsI = slamStateI->get_intrinsics().projectionParamsSimple.all;
@@ -203,7 +206,7 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
 bool CollaborativeComponent::is_verified(const CollaborativeRelocalisation& candidate) const
 {
 #ifdef WITH_OPENCV
-  return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
+  return candidate.m_meanDepthDiff(0) < 10.0f && candidate.m_targetValidFraction >= 0.5f;
 #else
   return true;
 #endif
@@ -400,7 +403,7 @@ void CollaborativeComponent::run_relocalisation()
 #endif
 
     // Attempt to relocalise the synthetic images using the relocaliser for the target scene.
-    Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
+    Relocaliser_Ptr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
     std::vector<Relocaliser::Result> results = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsI);
     boost::optional<Relocaliser::Result> result = results.empty() ? boost::none : boost::optional<Relocaliser::Result>(results[0]);
 
@@ -410,7 +413,7 @@ void CollaborativeComponent::run_relocalisation()
     // If relocalisation succeeded, verify the result by thresholding the difference between the
     // source depth image and a rendered depth image of the target scene at the relevant pose.
     bool verified = false;
-    if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
+    if(result)
     {
 #ifdef WITH_OPENCV
       // Render synthetic images of the target scene from the relevant pose.
@@ -504,6 +507,8 @@ void CollaborativeComponent::run_relocalisation()
 #endif
       m_bestCandidate.reset();
     }
+
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
   }
 }
 
@@ -524,19 +529,23 @@ void CollaborativeComponent::score_candidates(std::list<CollaborativeRelocalisat
     int largestClusterSize = largestCluster ? static_cast<int>(largestCluster->size()) : 0;
     float confidencePenalty = 1.0f * std::max(largestClusterSize - CollaborativePoseOptimiser::confidence_threshold(), 0);
 
-    // Penalise candidates that are too close to ones we've tried before.
+    // If we're in batch mode, penalise candidates that are too close to ones we've tried before.
     float homogeneityPenalty = 0.0f;
-    std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator jt = m_triedFrameIndices.find(std::make_pair(candidate.m_sceneI, candidate.m_sceneJ));
-    if(jt != m_triedFrameIndices.end())
+
+    if(m_mode == CM_BATCH)
     {
-      const std::set<int>& triedFrameIndices = jt->second;
-      for(std::set<int>::const_iterator kt = triedFrameIndices.begin(), kend = triedFrameIndices.end(); kt != kend; ++kt)
+      std::map<std::pair<std::string,std::string>,std::set<int> >::const_iterator jt = m_triedFrameIndices.find(std::make_pair(candidate.m_sceneI, candidate.m_sceneJ));
+      if(jt != m_triedFrameIndices.end())
       {
-        const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate.m_sceneJ)->second[*kt];
-        if(GeometryUtil::poses_are_similar(candidate.m_localPoseJ, triedPose, 5 * M_PI / 180))
+        const std::set<int>& triedFrameIndices = jt->second;
+        for(std::set<int>::const_iterator kt = triedFrameIndices.begin(), kend = triedFrameIndices.end(); kt != kend; ++kt)
         {
-          homogeneityPenalty = 5.0f;
-          break;
+          const ORUtils::SE3Pose& triedPose = m_trajectories.find(candidate.m_sceneJ)->second[*kt];
+          if(GeometryUtil::poses_are_similar(candidate.m_localPoseJ, triedPose, 5 * M_PI / 180))
+          {
+            homogeneityPenalty = 5.0f;
+            break;
+          }
         }
       }
     }
@@ -572,9 +581,9 @@ void CollaborativeComponent::try_schedule_relocalisation()
 #if 0
     // Print out all of the candidates for debugging purposes.
     std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
-    for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+    for(std::list<CollaborativeRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
     {
-      const SubmapRelocalisation& candidate = *it;
+      const CollaborativeRelocalisation& candidate = *it;
       std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
     }
     std::cout << "END CANDIDATES\n";
@@ -583,9 +592,12 @@ void CollaborativeComponent::try_schedule_relocalisation()
     // Schedule the best candidate for relocalisation.
     m_bestCandidate.reset(new CollaborativeRelocalisation(candidates.back()));
 
-    // Record the index of the frame we're trying in case we want to avoid frames with similar poses later.
-    std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
-    triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
+    // If we're in batch mode, record the index of the frame we're trying in case we want to avoid frames with similar poses later.
+    if(m_mode == CM_BATCH)
+    {
+      std::set<int>& triedFrameIndices = m_triedFrameIndices[std::make_pair(m_bestCandidate->m_sceneI, m_bestCandidate->m_sceneJ)];
+      triedFrameIndices.insert(m_bestCandidate->m_frameIndexJ);
+    }
   }
 
   m_readyToRelocalise.notify_one();

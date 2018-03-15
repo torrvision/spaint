@@ -184,6 +184,11 @@ std::string Model::get_world_scene_id()
 
 //#################### DISAMBIGUATORS ####################
 
+RefiningRelocaliser_Ptr& Model::get_relocaliser(const std::string& sceneID)
+{
+  return SLAMContext::get_relocaliser(sceneID);
+}
+
 RefiningRelocaliser_CPtr Model::get_relocaliser(const std::string& sceneID) const
 {
   return SLAMContext::get_relocaliser(sceneID);
