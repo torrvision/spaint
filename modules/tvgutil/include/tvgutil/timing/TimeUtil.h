@@ -27,6 +27,28 @@ struct TimeUtil
     boost::posix_time::ptime currentDateTime(boost::posix_time::second_clock::local_time());
     return boost::posix_time::to_iso_string(currentDateTime);
   }
+
+  /**
+   * \brief Gets the time since the epoch (in the specified units).
+   *
+   * \return  The time since the epoch (in the specified units).
+   */
+  template <typename Units>
+  static std::string get_timestamp()
+  {
+    return boost::lexical_cast<std::string>(get_time_since_epoch<Units>().count());
+  }
+
+  /**
+   * \brief Gets the time since the epoch (in the specified units).
+   *
+   * \return  The time since the epoch (in the specified units).
+   */
+  template <typename Units>
+  static Units get_time_since_epoch()
+  {
+    return boost::chrono::duration_cast<Units>(boost::chrono::system_clock().now().time_since_epoch());
+  }
 };
 
 }

@@ -30,6 +30,11 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
     &SDL_DestroyWindow
   ));
 
+  // If the waitForRetrace setting is false, avoid waiting for the vertical retrace (waiting prevents tearing, but can lower the frame rate).
+  const static std::string settingsNamespace = "WindowedRenderer.";
+  const bool waitForRetrace = model->get_settings()->get_first_value<bool>(settingsNamespace + "waitForRetrace", true);
+  if(!waitForRetrace) SDL_GL_SetSwapInterval(0);
+
   // Initialise the temporary image and texture used for visualising the scene.
   initialise_common();
 }

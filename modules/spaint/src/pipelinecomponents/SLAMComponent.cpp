@@ -534,7 +534,7 @@ void SLAMComponent::setup_relocaliser()
   m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
 
   static const std::string settingsNamespace = "SLAMComponent.";
-  m_finishTrainingEnabled = settings->get_first_value<bool>(settingsNamespace + "finishTrainingEnabled", true);
+  m_finishTrainingEnabled = settings->get_first_value<bool>(settingsNamespace + "finishTrainingEnabled", false);
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
 
 #ifndef WITH_GROVE

@@ -522,13 +522,6 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     return false;
   }
 
-  // If the user wants to save models on exit, try to make sure that finish training is never called on
-  // the relocaliser. (Note that this will not override any existing value this setting may have.)
-  if(args.saveModelsOnExit)
-  {
-    settings->add_value("SLAMComponent.finishTrainingEnabled", boost::lexical_cast<std::string>(false));
-  }
-
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
 
