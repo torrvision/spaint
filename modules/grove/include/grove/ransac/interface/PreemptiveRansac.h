@@ -201,17 +201,17 @@ protected:
   virtual void compute_energies_and_sort() = 0;
 
   /**
-   * \brief Generate a certain number of camera pose hypotheses according to the method described in the paper.
+   * \brief Generates a certain number of camera pose hypotheses using the method described in the paper.
    */
   virtual void generate_pose_candidates() = 0;
 
   /**
-   * \brief Compute the inlier positions in camera space and their associated modes to use during the pose optimisation step.
+   * \brief Prepares the inliers' positions in camera space and modes for use during pose optimisation.
    */
   virtual void prepare_inliers_for_optimisation() = 0;
 
   /**
-   * \brief Samples a predefined number of keypoints from the input image.
+   * \brief Samples a certain number of keypoints from the input image.
    *
    * The sampled keypoints will be used for the subsequent energy computation.
    *

@@ -104,8 +104,8 @@ __global__ void ck_prepare_inliers_for_optimisation(const Keypoint3DColour *keyp
 
   if(candidateIdx >= nbPoseCandidates || inlierIdx >= nbInliers) return;
 
-  preemptive_ransac_prepare_inliers_for_optimisation(
-    keypoints, predictions, inlierIndices, nbInliers, poseCandidates, inlierCameraPoints, inlierModes, inlierThreshold, candidateIdx, inlierIdx
+  prepare_inlier_for_optimisation(
+    candidateIdx, inlierIdx, keypoints, predictions, inlierIndices, nbInliers, poseCandidates, inlierThreshold, inlierCameraPoints, inlierModes
   );
 }
 

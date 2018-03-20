@@ -94,11 +94,11 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
   Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
   Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
   const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
-  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
   const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   const PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -107,9 +107,9 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
   {
     for(uint32_t inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
     {
-      preemptive_ransac_prepare_inliers_for_optimisation(
-        keypointsImage, predictionsImage, inlierRasterIndices, nbInliers, poseCandidates, candidateCameraPoints,
-        candidateModes, m_poseOptimisationInlierThreshold, candidateIdx, inlierIdx
+      prepare_inlier_for_optimisation(
+        candidateIdx, inlierIdx, keypoints, predictions, inlierRasterIndices, nbInliers,
+        poseCandidates, m_poseOptimisationInlierThreshold, candidateCameraPoints, candidateModes
       );
     }
   }
