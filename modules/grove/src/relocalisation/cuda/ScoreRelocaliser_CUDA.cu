@@ -26,11 +26,8 @@ namespace grove {
 //#################### CUDA KERNELS ####################
 
 template <int TREE_COUNT>
-__global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leafPredictions,
-                                                     const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-                                                     ScorePrediction *outPredictions,
-                                                     Vector2i imgSize,
-                                                     int nbMaxPredictions)
+__global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leafPredictions, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
+                                                     ScorePrediction *outPredictions, Vector2i imgSize, int nbMaxPredictions)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -43,7 +40,7 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-  : ScoreRelocaliser(settings, forestFilename)
+: ScoreRelocaliser(settings, forestFilename)
 {
   // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
@@ -111,19 +108,22 @@ void ScoreRelocaliser_CUDA::reset()
 {
   // Setup the reservoirs if they haven't been allocated yet.
   if(!m_relocaliserState->exampleReservoirs)
+  {
     m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CUDA, m_rngSeed);
+  }
 
   // Setup the predictions block.
   if(!m_relocaliserState->predictionsBlock)
+  {
     m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+  }
 
   ScoreRelocaliser::reset();
 }
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
-                                                       const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
                                                        ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
@@ -140,7 +140,8 @@ void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CP
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x, (imgSize.y + blockSize.y - 1) / blockSize.y);
 
   ck_score_relocaliser_get_predictions<<<gridSize, blockSize>>>(
-      leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount);
+    leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount
+  );
   ORcudaKernelCheck;
 }
 

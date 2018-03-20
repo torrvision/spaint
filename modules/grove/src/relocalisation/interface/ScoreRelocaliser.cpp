@@ -87,9 +87,15 @@ void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate>& poseCandidates
   m_preemptiveRansac->get_best_poses(poseCandidates);
 }
 
-Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const { return m_rgbdPatchKeypointsImage; }
+Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const
+{
+  return m_rgbdPatchKeypointsImage;
+}
 
-ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const { return m_predictionsImage; }
+ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const
+{
+  return m_predictionsImage;
+}
 
 ScoreRelocaliserState_CPtr ScoreRelocaliser::get_relocaliser_state() const
 {
@@ -101,7 +107,7 @@ ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
   return m_relocaliserState;
 }
 
-void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr &relocaliserState)
+void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState)
 {
   m_relocaliserState = relocaliserState;
 }
@@ -132,9 +138,7 @@ void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliserState->load_from_disk(inputFolder);
 }
 
-std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
-                                                              const ITMFloatImage *depthImage,
-                                                              const Vector4f &depthIntrinsics) const
+std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   std::vector<Result> results;
 
@@ -211,7 +215,7 @@ void ScoreRelocaliser::save_to_disk(const std::string& outputFolder) const
 }
 
 void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                             const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose)
+                             const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   if(!m_relocaliserState->exampleReservoirs)
   {
