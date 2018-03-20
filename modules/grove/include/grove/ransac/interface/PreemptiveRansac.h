@@ -211,10 +211,11 @@ protected:
   virtual void prepare_inliers_for_optimisation() = 0;
 
   /**
-   * \brief Sample a certain number of keypoints from the input image. Those keypoints will be used for the subsequent
-   *        energy computation.
+   * \brief Samples a predefined number of keypoints from the input image.
    *
-   * \param useMask Whether or not to store in a persistent mask the location of already sampled keypoints.
+   * The sampled keypoints will be used for the subsequent energy computation.
+   *
+   * \param useMask Whether or not to record the sampled keypoints in a persistent mask (to prevent them being sampled twice).
    */
   virtual void sample_inliers(bool useMask = false) = 0;
 

@@ -124,9 +124,9 @@ void PreemptiveRansac_CPU::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
-  int *inliersMaskImage = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
-  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  int *inliersMask = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -136,8 +136,8 @@ void PreemptiveRansac_CPU::sample_inliers(bool useMask)
   {
     // Try to sample the raster index of a valid keypoint whose prediction has at least one modal cluster, using the mask if necessary.
     int rasterIdx = -1;
-    if(useMask) rasterIdx = sample_inlier<true>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx], inliersMaskImage);
-    else rasterIdx = sample_inlier<false>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx]);
+    if(useMask) rasterIdx = sample_inlier<true>(keypoints, predictions, imgSize, rngs[sampleIdx], inliersMask);
+    else rasterIdx = sample_inlier<false>(keypoints, predictions, imgSize, rngs[sampleIdx]);
 
     // If we succeed, grab a unique index in the output array and store the inlier raster index into the corresponding array element.
     if(rasterIdx >= 0)

@@ -119,21 +119,21 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates, int n
 }
 
 template <bool useMask, typename RNG>
-__global__ void ck_sample_inliers(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i imgSize,
-                                  RNG *rngs, int *inlierIndices, int *inlierCount, uint32_t nbMaxSamples, int *inlierMaskData = NULL)
+__global__ void ck_sample_inliers(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i imgSize,
+                                  RNG *rngs, int *inlierRasterIndices, int *inlierCount, uint32_t nbMaxSamples, int *inliersMask = NULL)
 {
   const uint32_t sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
   if(sampleIdx >= nbMaxSamples) return;
 
   // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask if necessary.
-  const int sampledLinearIdx = sample_inlier<useMask>(keypointsData, predictionsData, imgSize, rngs[sampleIdx], inlierMaskData);
+  const int sampledLinearIdx = sample_inlier<useMask>(keypoints, predictions, imgSize, rngs[sampleIdx], inliersMask);
 
   // If the sampling succeeded grab a global index and store the keypoint index.
   if(sampledLinearIdx >= 0)
   {
     const int outIdx = atomicAdd(inlierCount, 1);
-    inlierIndices[outIdx] = sampledLinearIdx;
+    inlierRasterIndices[outIdx] = sampledLinearIdx;
   }
 }
 
@@ -268,10 +268,10 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
-  int *inliersMaskImage = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
-  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
+  int *inliersMask = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   int *nbInliers_device = m_nbInliers_device->GetData(MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
   CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(128);
@@ -280,14 +280,14 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
   if(useMask)
   {
     ck_sample_inliers<true><<<gridSize,blockSize>>>(
-      keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration, inliersMaskImage
+      keypoints, predictions, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration, inliersMask
     );
     ORcudaKernelCheck;
   }
   else
   {
     ck_sample_inliers<false><<<gridSize,blockSize>>>(
-      keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration
+      keypoints, predictions, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration
     );
     ORcudaKernelCheck;
   }

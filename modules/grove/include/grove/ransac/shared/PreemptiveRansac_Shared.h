@@ -283,6 +283,9 @@ inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const
   return true;
 }
 
+/**
+ * \brief TODO
+ */
 _CPU_AND_GPU_CODE_
 inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
                                                                uint32_t nbInliers, const PoseCandidate *poseCandidates, Vector4f *inlierCameraPoints,
@@ -302,10 +305,10 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
   {
     // This point should not have been selected as inlier.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-      printf("best mode idx invalid\n");
-      asm("trap;");
+    printf("best mode idx invalid\n");
+    asm("trap;");
 #else
-      throw std::runtime_error("best mode idx invalid");
+    throw std::runtime_error("best mode idx invalid");
 #endif
   }
 
@@ -327,63 +330,65 @@ inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DC
 }
 
 /**
- * \brief Try to sample the index of a keypoint which is valid and has at least one modal cluster associated.
+ * \brief Tries to sample the raster index of a valid keypoint whose prediction has at least one modal cluster.
  *
- * \param useMask Whether to use the mask to mark the sampled points. If true a point will not be sampled twice.
+ * \tparam useMask    Whether or not to record the sampled keypoints in a persistent mask (to prevent them being sampled twice).
+ * \tparam RNG        The type of random number generator use for sampling (e.g. CPURNG or CUDARNG).
  *
- * \param keypointsData   The 3D keypoints.
- * \param predictionsData The ScorePredictions associated to the keypoints.
- * \param imgSize         The size of the keypoint and predictions images.
- * \param randomGenerator A random number generator used during sampling. Can either be a CPURNG or a CUDARNG.
- * \param inlierMaskData  The mask used to avoid sampling keypoint indices twice. Can be NULL if useMask is false.
+ * \param keypoints   The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictions The SCoRe forest predictions associated with the keypoints.
+ * \param imgSize     The size of the input keypoints and predictions images.
+ * \param rng         The random number generator to use for sampling.
+ * \param inliersMask The mask used to avoid sampling keypoint indices twice. Can be NULL if useMask is false.
  *
- * \return The linear index of the sample keypoint. -1 in case no keypoint was sampled.
+ * \return            The raster index of the sampled keypoint (if any), or -1 otherwise.
  */
 template <bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline int sample_inlier(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize, RNG& randomGenerator, int *inlierMaskData = NULL)
+inline int sample_inlier(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i& imgSize, RNG& rng, int *inliersMask = NULL)
 {
-  int inlierLinearIdx = -1;
+  int inlierRasterIdx = -1;
 
-  // Limit the number of sampling attempts.
-  for(int iterationIdx = 0; inlierLinearIdx < 0 && iterationIdx < SAMPLE_INLIER_ITERATIONS; ++iterationIdx)
+  // Attempt to sample a suitable keypoint up to SAMPLE_INLIER_ITERATIONS times.
+  for(int i = 0; i < SAMPLE_INLIER_ITERATIONS; ++i)
   {
-    // Sample a keypoint index.
-    const int linearIdx = randomGenerator.generate_int_from_uniform(0, imgSize.width * imgSize.height - 1);
+    // Randomly generate a keypoint index.
+    const int rasterIdx = rng.generate_int_from_uniform(0, imgSize.width * imgSize.height - 1);
 
-    // Check that we have a valid keypoint.
-    if(!keypointsData[linearIdx].valid) continue;
+    // Check whether the corresponding keypoint is valid and has at least one modal cluster. If not, early out.
+    if(!keypoints[rasterIdx].valid || predictions[rasterIdx].size == 0) continue;
 
-    // Check that we have a prediction with a non null number of modes.
-    if(predictionsData[linearIdx].size == 0) continue;
-
-    // Finally, check the mask if necessary.
-    bool validIndex = !useMask;
+    // If we're using the mask, check whether or not the keypoint has already been sampled.
+    bool valid = !useMask;
 
     if(useMask)
     {
-      int *maskPtr = &inlierMaskData[linearIdx];
+      int *maskPtr = &inliersMask[rasterIdx];
       int maskValue = -1;
 
-// Atomically increment the mask and capture the current value.
+      // Atomically increment the relevant pixel in the mask, capturing its original value in the process.
 #ifdef __CUDACC__
       maskValue = atomicAdd(maskPtr, 1);
 #else
-
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
+    #ifdef WITH_OPENMP
+      #pragma omp atomic capture
+    #endif
       maskValue = (*maskPtr)++;
 #endif
 
-      // If the value was zero we can keep this keypoint.
-      validIndex = maskValue == 0;
+      // Accept the keypoint iff the original value of the corresponding pixel in the mask was zero.
+      valid = maskValue == 0;
     }
 
-    if(validIndex) inlierLinearIdx = linearIdx;
+    // If we're not using the mask, or the keypoint hadn't already been sampled, accept the keypoint and return it.
+    if(valid)
+    {
+      inlierRasterIdx = rasterIdx;
+      break;
+    }
   }
 
-  return inlierLinearIdx;
+  return inlierRasterIdx;
 }
 
 }
