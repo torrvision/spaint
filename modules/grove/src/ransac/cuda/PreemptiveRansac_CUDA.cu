@@ -295,12 +295,13 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
 
 void PreemptiveRansac_CUDA::update_candidate_poses()
 {
-  // The pose update is currently implemented by the base class, need to copy the relevant data to host memory.
+  // Copy the pose candidates across to the CPU so that they can be optimised.
   m_poseCandidates->UpdateHostFromDevice();
 
+  // Call the base class implementation to optimise the poses.
   PreemptiveRansac::update_candidate_poses();
 
-  // The copy the updated poses back to the device.
+  // Copy the optimised pose candidates back across to the GPU.
   m_poseCandidates->UpdateDeviceFromHost();
 }
 
