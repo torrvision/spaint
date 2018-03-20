@@ -6,6 +6,7 @@
 #ifndef H_TVGUTIL_TIMEUTIL
 #define H_TVGUTIL_TIMEUTIL
 
+#include <boost/chrono.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace tvgutil {
