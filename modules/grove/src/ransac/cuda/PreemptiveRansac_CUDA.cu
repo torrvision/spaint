@@ -119,21 +119,21 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates, int n
 }
 
 template <bool useMask, typename RNG>
-__global__ void ck_sample_inliers(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i imgSize,
-                                  RNG *rngs, int *inlierRasterIndices, int *inlierCount, uint32_t nbMaxSamples, int *inliersMask = NULL)
+__global__ void ck_sample_inliers(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i imgSize, RNG *rngs,
+                                  int *inlierRasterIndices, int *nbInliers, uint32_t ransacInliersPerIteration, int *inliersMask = NULL)
 {
   const uint32_t sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(sampleIdx >= nbMaxSamples) return;
-
-  // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask if necessary.
-  const int sampledLinearIdx = sample_inlier<useMask>(keypoints, predictions, imgSize, rngs[sampleIdx], inliersMask);
-
-  // If the sampling succeeded grab a global index and store the keypoint index.
-  if(sampledLinearIdx >= 0)
+  if(sampleIdx < ransacInliersPerIteration)
   {
-    const int outIdx = atomicAdd(inlierCount, 1);
-    inlierRasterIndices[outIdx] = sampledLinearIdx;
+    // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask if necessary.
+    const int rasterIdx = sample_inlier<useMask>(keypoints, predictions, imgSize, rngs[sampleIdx], inliersMask);
+
+    // If we succeed, grab a unique index in the output array and store the inlier raster index into the corresponding array element.
+    if(rasterIdx >= 0)
+    {
+      const int arrayIdx = atomicAdd(nbInliers, 1);
+      inlierRasterIndices[arrayIdx] = rasterIdx;
+    }
   }
 }
 
