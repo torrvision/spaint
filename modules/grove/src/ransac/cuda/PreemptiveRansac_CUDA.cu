@@ -95,18 +95,19 @@ __global__ void ck_generate_pose_candidates(const Keypoint3DColour *keypoints, c
   }
 }
 
-__global__ void ck_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
-                                                    int nbInliers, const PoseCandidate *poseCandidates, int nbPoseCandidates, Vector4f *inlierCameraPoints,
-                                                    Keypoint3DColourCluster *inlierModes, float inlierThreshold)
+__global__ void ck_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices, int nbInliers,
+                                                    const PoseCandidate *poseCandidates, int nbPoseCandidates, float inlierThreshold, Vector4f *inlierCameraPoints,
+                                                    Keypoint3DColourCluster *inlierModes)
 {
   const int candidateIdx = blockIdx.y;
   const int inlierIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if(candidateIdx >= nbPoseCandidates || inlierIdx >= nbInliers) return;
-
-  preemptive_ransac_prepare_inliers_for_optimisation(
-    keypoints, predictions, inlierIndices, nbInliers, poseCandidates, inlierCameraPoints, inlierModes, inlierThreshold, candidateIdx, inlierIdx
-  );
+  if(candidateIdx < nbPoseCandidates && inlierIdx < nbInliers)
+  {
+    prepare_inlier_for_optimisation(
+      candidateIdx, inlierIdx, keypoints, predictions, inlierIndices, nbInliers, poseCandidates, inlierThreshold, inlierCameraPoints, inlierModes
+    );
+  }
 }
 
 __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
@@ -119,21 +120,21 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates, int n
 }
 
 template <bool useMask, typename RNG>
-__global__ void ck_sample_inliers(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i imgSize,
-                                  RNG *rngs, int *inlierIndices, int *inlierCount, uint32_t nbMaxSamples, int *inlierMaskData = NULL)
+__global__ void ck_sample_inliers(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i imgSize, RNG *rngs,
+                                  int *inlierRasterIndices, int *nbInliers, uint32_t ransacInliersPerIteration, int *inliersMask = NULL)
 {
   const uint32_t sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if(sampleIdx >= nbMaxSamples) return;
-
-  // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask if necessary.
-  const int sampledLinearIdx = sample_inlier<useMask>(keypointsData, predictionsData, imgSize, rngs[sampleIdx], inlierMaskData);
-
-  // If the sampling succeeded grab a global index and store the keypoint index.
-  if(sampledLinearIdx >= 0)
+  if(sampleIdx < ransacInliersPerIteration)
   {
-    const int outIdx = atomicAdd(inlierCount, 1);
-    inlierIndices[outIdx] = sampledLinearIdx;
+    // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask if necessary.
+    const int rasterIdx = sample_inlier<useMask>(keypoints, predictions, imgSize, rngs[sampleIdx], inliersMask);
+
+    // If we succeed, grab a unique index in the output array and store the inlier raster index into the corresponding array element.
+    if(rasterIdx >= 0)
+    {
+      const int arrayIdx = atomicAdd(nbInliers, 1);
+      inlierRasterIndices[arrayIdx] = rasterIdx;
+    }
   }
 }
 
@@ -226,34 +227,30 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
 
 void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
 {
-  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
-
+  Vector4f *inlierCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
+  Keypoint3DColourCluster *inlierModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+  const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
-  const int *inlierLinearisedIndicesData = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
-
   const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
-  const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
-
-  // Grap pointers to the output storage.
-  Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
-  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+  const PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(256);
   dim3 gridSize((nbInliers + blockSize.x - 1) / blockSize.x, nbPoseCandidates);
 
   ck_prepare_inliers_for_optimisation<<<gridSize, blockSize>>>(
-    keypointsData, predictionsData, inlierLinearisedIndicesData, nbInliers, poseCandidatesData,
-    nbPoseCandidates, candidateCameraPoints, candidateModes, m_poseOptimisationInlierThreshold
+    keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates,
+    m_poseOptimisationInlierThreshold, inlierCameraPoints, inlierModes
   );
   ORcudaKernelCheck;
 
-  // Compute the actual size of the buffers to avoid unnecessary copies.
-  const uint32_t poseOptimisationBufferSize = nbInliers * nbPoseCandidates;
-  m_poseOptimisationCameraPoints->dataSize = poseOptimisationBufferSize;
-  m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
+  // Compute and set the actual size of the buffers to avoid unnecessary copies.
+  const size_t bufferSize = static_cast<size_t>(nbInliers * nbPoseCandidates);
+  m_poseOptimisationCameraPoints->dataSize = bufferSize;
+  m_poseOptimisationPredictedModes->dataSize = bufferSize;
 
-  // Make the inlier data available to the optimiser which is running on the CPU.
+  // Make the buffers available to the optimiser, which runs on the CPU.
   m_poseOptimisationCameraPoints->UpdateHostFromDevice();
   m_poseOptimisationPredictedModes->UpdateHostFromDevice();
 }
@@ -268,10 +265,10 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
-  int *inliersMaskImage = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
-  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
+  int *inliersMask = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   int *nbInliers_device = m_nbInliers_device->GetData(MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
   CUDARNG *rngs = m_rngs->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(128);
@@ -280,14 +277,14 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
   if(useMask)
   {
     ck_sample_inliers<true><<<gridSize,blockSize>>>(
-      keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration, inliersMaskImage
+      keypoints, predictions, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration, inliersMask
     );
     ORcudaKernelCheck;
   }
   else
   {
     ck_sample_inliers<false><<<gridSize,blockSize>>>(
-      keypointsImage, predictionsImage, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration
+      keypoints, predictions, imgSize, rngs, inlierRasterIndices, nbInliers_device, m_ransacInliersPerIteration
     );
     ORcudaKernelCheck;
   }
@@ -298,12 +295,13 @@ void PreemptiveRansac_CUDA::sample_inliers(bool useMask)
 
 void PreemptiveRansac_CUDA::update_candidate_poses()
 {
-  // The pose update is currently implemented by the base class, need to copy the relevant data to host memory.
+  // Copy the pose candidates across to the CPU so that they can be optimised.
   m_poseCandidates->UpdateHostFromDevice();
 
+  // Call the base class implementation to optimise the poses.
   PreemptiveRansac::update_candidate_poses();
 
-  // The copy the updated poses back to the device.
+  // Copy the optimised pose candidates back across to the GPU.
   m_poseCandidates->UpdateDeviceFromHost();
 }
 
