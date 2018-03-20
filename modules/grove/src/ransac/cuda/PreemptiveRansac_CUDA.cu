@@ -95,18 +95,19 @@ __global__ void ck_generate_pose_candidates(const Keypoint3DColour *keypoints, c
   }
 }
 
-__global__ void ck_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
-                                                    int nbInliers, const PoseCandidate *poseCandidates, int nbPoseCandidates, Vector4f *inlierCameraPoints,
-                                                    Keypoint3DColourCluster *inlierModes, float inlierThreshold)
+__global__ void ck_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices, int nbInliers,
+                                                    const PoseCandidate *poseCandidates, int nbPoseCandidates, float inlierThreshold, Vector4f *inlierCameraPoints,
+                                                    Keypoint3DColourCluster *inlierModes)
 {
   const int candidateIdx = blockIdx.y;
   const int inlierIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if(candidateIdx >= nbPoseCandidates || inlierIdx >= nbInliers) return;
-
-  prepare_inlier_for_optimisation(
-    candidateIdx, inlierIdx, keypoints, predictions, inlierIndices, nbInliers, poseCandidates, inlierThreshold, inlierCameraPoints, inlierModes
-  );
+  if(candidateIdx < nbPoseCandidates && inlierIdx < nbInliers)
+  {
+    prepare_inlier_for_optimisation(
+      candidateIdx, inlierIdx, keypoints, predictions, inlierIndices, nbInliers, poseCandidates, inlierThreshold, inlierCameraPoints, inlierModes
+    );
+  }
 }
 
 __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
@@ -226,34 +227,30 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
 
 void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
 {
-  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
-
+  Vector4f *inlierCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
+  Keypoint3DColourCluster *inlierModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+  const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
-  const int *inlierLinearisedIndicesData = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CUDA);
-
   const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
-  const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
-
-  // Grap pointers to the output storage.
-  Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
-  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+  const PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(256);
   dim3 gridSize((nbInliers + blockSize.x - 1) / blockSize.x, nbPoseCandidates);
 
   ck_prepare_inliers_for_optimisation<<<gridSize, blockSize>>>(
-    keypointsData, predictionsData, inlierLinearisedIndicesData, nbInliers, poseCandidatesData,
-    nbPoseCandidates, candidateCameraPoints, candidateModes, m_poseOptimisationInlierThreshold
+    keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates,
+    m_poseOptimisationInlierThreshold, inlierCameraPoints, inlierModes
   );
   ORcudaKernelCheck;
 
-  // Compute the actual size of the buffers to avoid unnecessary copies.
-  const uint32_t poseOptimisationBufferSize = nbInliers * nbPoseCandidates;
-  m_poseOptimisationCameraPoints->dataSize = poseOptimisationBufferSize;
-  m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
+  // Compute and set the actual size of the buffers to avoid unnecessary copies.
+  const size_t bufferSize = static_cast<size_t>(nbInliers * nbPoseCandidates);
+  m_poseOptimisationCameraPoints->dataSize = bufferSize;
+  m_poseOptimisationPredictedModes->dataSize = bufferSize;
 
-  // Make the inlier data available to the optimiser which is running on the CPU.
+  // Make the buffers available to the optimiser, which runs on the CPU.
   m_poseOptimisationCameraPoints->UpdateHostFromDevice();
   m_poseOptimisationPredictedModes->UpdateHostFromDevice();
 }

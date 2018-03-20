@@ -296,7 +296,7 @@ inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const
  * \param poseCandidates      The pose candidates.
  * \param inlierThreshold     The furthest the best mode's position can be from the inlier's position in world space for it to be usable.
  * \param inlierCameraPoints  The array into which to write the inlier's position in camera space.
- * \param inlierModes         The array into which to write the best mode.
+ * \param inlierModes         The array into which to write the best mode for the specified candidate pose and inlier.
  */
 _CPU_AND_GPU_CODE_
 inline void prepare_inlier_for_optimisation(uint32_t candidateIdx, uint32_t inlierIdx, const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierRasterIndices,

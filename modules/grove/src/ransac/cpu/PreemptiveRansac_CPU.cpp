@@ -91,8 +91,8 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 
 void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
 {
-  Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
-  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
+  Vector4f *inlierCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
+  Keypoint3DColourCluster *inlierModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
   const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
   const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
@@ -109,15 +109,15 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
     {
       prepare_inlier_for_optimisation(
         candidateIdx, inlierIdx, keypoints, predictions, inlierRasterIndices, nbInliers,
-        poseCandidates, m_poseOptimisationInlierThreshold, candidateCameraPoints, candidateModes
+        poseCandidates, m_poseOptimisationInlierThreshold, inlierCameraPoints, inlierModes
       );
     }
   }
 
   // Compute and set the actual size of the buffers.
-  const uint32_t poseOptimisationBufferSize = static_cast<uint32_t>(nbInliers * nbPoseCandidates);
-  m_poseOptimisationCameraPoints->dataSize = poseOptimisationBufferSize;
-  m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
+  const size_t bufferSize = static_cast<size_t>(nbInliers * nbPoseCandidates);
+  m_poseOptimisationCameraPoints->dataSize = bufferSize;
+  m_poseOptimisationPredictedModes->dataSize = bufferSize;
 }
 
 void PreemptiveRansac_CPU::sample_inliers(bool useMask)
