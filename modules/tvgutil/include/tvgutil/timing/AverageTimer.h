@@ -50,7 +50,7 @@ public:
    * \param name  The name of the timer.
    */
   explicit AverageTimer(const std::string& name)
-  : m_count(0), m_name(name)
+  : m_count(0), m_name(name), m_totalDuration(0)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
