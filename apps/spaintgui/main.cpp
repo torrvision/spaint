@@ -75,6 +75,7 @@ struct CommandLineArguments
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
+  bool headless;
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
@@ -94,6 +95,7 @@ struct CommandLineArguments
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
+  bool verbose;
 
   // Derived arguments
   boost::optional<bf::path> modelDir;
@@ -115,6 +117,7 @@ struct CommandLineArguments
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
+      ADD_SETTING(headless);
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
@@ -134,6 +137,7 @@ struct CommandLineArguments
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
       ADD_SETTING(trackSurfels);
+      ADD_SETTING(verbose);
     #undef ADD_SETTINGS
     #undef ADD_SETTING
   }
@@ -390,6 +394,12 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     args.detectFiducials = true;
   }
 
+  // If the user wants to run in headless mode, batch mode is implied (no way to control the application otherwise).
+  if(args.headless)
+  {
+    args.batch = true;
+  }
+
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
 
@@ -417,6 +427,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
+    ("headless", po::bool_switch(&args.headless), "headless mode")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
@@ -428,6 +439,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
+    ("verbose,v", po::bool_switch(&args.verbose), "enable verbose output")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -514,10 +526,24 @@ try
     return 0;
   }
 
-  // Initialise SDL.
-  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+  // If we are not running in headless mode, initialise the GUI subsystems.
+  if(!args.headless)
   {
-    quit("Error: Failed to initialise SDL.");
+    // Initialise SDL.
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+    {
+      quit("Error: Failed to initialise SDL.");
+    }
+
+#ifdef WITH_GLUT
+    // Initialise GLUT (used for text rendering only).
+    glutInit(&argc, argv);
+#endif
+
+#ifdef WITH_OVR
+    // If we built with Rift support, initialise the Rift SDK.
+    ovr_Initialize();
+#endif
   }
 
   // Find all available joysticks and report the number found to the user.
@@ -539,16 +565,6 @@ try
 #if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
   // Tell ArrayFire to run on the primary GPU.
   afcu::setNativeId(0);
-#endif
-
-#ifdef WITH_GLUT
-  // Initialise GLUT (used for text rendering only).
-  glutInit(&argc, argv);
-#endif
-
-#ifdef WITH_OVR
-  // If we built with Rift support, initialise the Rift SDK.
-  ovr_Initialize();
 #endif
 
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
@@ -667,8 +683,12 @@ try
   // Close all open joysticks.
   joysticks.clear();
 
-  // Shut down SDL.
-  SDL_Quit();
+  // If we are not running in headless mode, shut down the graphics subsystem.
+  if(!args.headless)
+  {
+    // Shut down SDL.
+    SDL_Quit();
+  }
 
   return runSucceeded ? EXIT_SUCCESS : EXIT_FAILURE;
 }
