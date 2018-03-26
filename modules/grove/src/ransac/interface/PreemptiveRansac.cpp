@@ -375,11 +375,11 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   // Run the optimiser.
   if(m_usePredictionCovarianceForPoseOptimization)
   {
-    alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance, Continuous3DOptimizationUsingFullCovarianceJac, call_after_each_step, &ptsForLM);
+    alglib::minlmoptimize(state, alglib_func_mahalanobis, alglib_jac_mahalanobis, alglib_rep, &ptsForLM);
   }
   else
   {
-    alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, Continuous3DOptimizationUsingL2Jac, call_after_each_step, &ptsForLM);
+    alglib::minlmoptimize(state, alglib_func_l2, alglib_jac_l2, alglib_rep, &ptsForLM);
   }
 
   // Extract the results of the optimisation.
@@ -405,95 +405,32 @@ void PreemptiveRansac::update_host_pose_candidates() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac::call_after_each_step(const alglib::real_1d_array& xi, double phi, void *ptr)
+void PreemptiveRansac::alglib_func_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
+{
+  phi[0] = compute_energy_l2(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts));
+}
+
+void PreemptiveRansac::alglib_func_mahalanobis(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
+{
+  phi[0] = compute_energy_mahalanobis(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts));
+}
+
+void PreemptiveRansac::alglib_jac_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
+{
+  phi[0] = compute_energy_l2(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts), jac[0]);
+}
+
+void PreemptiveRansac::alglib_jac_mahalanobis(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
+{
+  phi[0] = compute_energy_mahalanobis(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts), jac[0]);
+}
+
+void PreemptiveRansac::alglib_rep(const alglib::real_1d_array& xi, double phi, void *pts)
 {
   return;
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
-{
-  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi));
-}
-
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
-{
-  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi), jac[0]);
-}
-
-void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
-{
-  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi));
-}
-
-void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
-{
-  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi), jac[0]);
-}
-
-double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
-{
-  double res = 0.0;
-
-  // If we're computing the Jacobian of the 6D twist vector, initially reset it to zero.
-  if(jac)
-  {
-    for(int i = 0; i < 6; ++i)
-    {
-      jac[i] = 0.0;
-    }
-  }
-
-  // For each point under consideration:
-  for(uint32_t i = 0; i < pts.nbPoints; ++i)
-  {
-    // If the point's position in camera space is invalid, skip it.
-    if(pts.cameraPoints[i].w == 0.0f) continue;
-
-    // Compute the difference between the point's position in world space (i) as predicted by the camera
-    // pose and its position in camera space, and (ii) as predicted by the position of the chosen mode.
-    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
-    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-
-    // Based on this difference, add a Mahalanobis distance-based error term to the resulting energy.
-    // See also: https://en.wikipedia.org/wiki/Mahalanobis_distance.
-    const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
-#if 1
-    const float err = dot(diff, invCovarianceTimesDiff);        // squared Mahalanobis distance
-#else
-    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // unsquared Mahalanobis distance
-#endif
-
-    res += err;
-
-    // If we're computing the Jacobian of the 6D twist vector, update it accordingly.
-    if(jac)
-    {
-#if 1
-      const Vector3f normGradient = 2 * invCovarianceTimesDiff;   // for squared Mahalanobis distance
-#else
-      const Vector3f normGradient = invCovarianceTimesDiff / err; // for unsquared Mahalanobis distance
-#endif
-
-      const Vector3f poseGradient[6] = {
-        Vector3f(1.0f, 0.0f, 0.0f),
-        Vector3f(0.0f, 1.0f, 0.0f),
-        Vector3f(0.0f, 0.0f, 1.0f),
-        -Vector3f(0.0f, transformedPt.z, -transformedPt.y),
-        -Vector3f(-transformedPt.z, 0.0f, transformedPt.x),
-        -Vector3f(transformedPt.y, -transformedPt.x, 0.0f),
-      };
-
-      for(int i = 0; i < 6; ++i)
-      {
-        jac[i] += dot(normGradient, poseGradient[i]);
-      }
-    }
-  }
-
-  return res;
-}
-
-double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
+double PreemptiveRansac::compute_energy_l2(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac)
 {
   double res = 0.0;
 
@@ -535,6 +472,69 @@ double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingL2(const PointsFo
       const Vector3f normGradient = 2 * diff;   // for squared L2 distance
 #else
       const Vector3f normGradient = diff / err; // for unsquared L2 distance
+#endif
+
+      const Vector3f poseGradient[6] = {
+        Vector3f(1.0f, 0.0f, 0.0f),
+        Vector3f(0.0f, 1.0f, 0.0f),
+        Vector3f(0.0f, 0.0f, 1.0f),
+        -Vector3f(0.0f, transformedPt.z, -transformedPt.y),
+        -Vector3f(-transformedPt.z, 0.0f, transformedPt.x),
+        -Vector3f(transformedPt.y, -transformedPt.x, 0.0f),
+      };
+
+      for(int i = 0; i < 6; ++i)
+      {
+        jac[i] += dot(normGradient, poseGradient[i]);
+      }
+    }
+  }
+
+  return res;
+}
+
+double PreemptiveRansac::compute_energy_mahalanobis(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac)
+{
+  double res = 0.0;
+
+  // If we're computing the Jacobian of the 6D twist vector, initially reset it to zero.
+  if(jac)
+  {
+    for(int i = 0; i < 6; ++i)
+    {
+      jac[i] = 0.0;
+    }
+  }
+
+  // For each point under consideration:
+  for(uint32_t i = 0; i < pts.nbPoints; ++i)
+  {
+    // If the point's position in camera space is invalid, skip it.
+    if(pts.cameraPoints[i].w == 0.0f) continue;
+
+    // Compute the difference between the point's position in world space (i) as predicted by the camera
+    // pose and its position in camera space, and (ii) as predicted by the position of the chosen mode.
+    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
+    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
+
+    // Based on this difference, add a Mahalanobis distance-based error term to the resulting energy.
+    // See also: https://en.wikipedia.org/wiki/Mahalanobis_distance.
+    const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
+#if 1
+    const float err = dot(diff, invCovarianceTimesDiff);        // squared Mahalanobis distance
+#else
+    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // unsquared Mahalanobis distance
+#endif
+
+    res += err;
+
+    // If we're computing the Jacobian of the 6D twist vector, update it accordingly.
+    if(jac)
+    {
+#if 1
+      const Vector3f normGradient = 2 * invCovarianceTimesDiff;   // for squared Mahalanobis distance
+#else
+      const Vector3f normGradient = invCovarianceTimesDiff / err; // for unsquared Mahalanobis distance
 #endif
 
       const Vector3f poseGradient[6] = {

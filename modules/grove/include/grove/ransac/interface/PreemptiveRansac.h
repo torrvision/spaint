@@ -297,39 +297,79 @@ private:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Alglib's diagnostic function. Currently does nothing, but could print stuff.
+   * \brief A function that ALGLIB can call to compute the energy of the candidate camera pose.
+   *
+   * \note  Calls compute_energy_l2 internally.
+   *
+   * \param xi  The 6D twist vector corresponding to the candidate camera pose being optimised.
+   * \param phi A location into which to store the computed energy value.
+   * \param pts The points to use for the energy computation.
    */
-  static void call_after_each_step(const alglib::real_1d_array& xi, double phi, void *ptr);
+  static void alglib_func_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts);
 
   /**
-   * \brief Function that will be called by alglib's optimiser.
+   * \brief A function that ALGLIB can call to compute the energy of the candidate camera pose.
+   *
+   * \note  Calls compute_energy_mahalanobis internally.
+   *
+   * \param xi  The 6D twist vector corresponding to the candidate camera pose being optimised.
+   * \param phi A location into which to store the computed energy value.
+   * \param pts The points to use for the energy computation.
    */
-  static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts);
+  static void alglib_func_mahalanobis(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts);
 
   /**
-   * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
+   * \brief A function that ALGLIB can call to compute the energy and Jacobian of the candidate camera pose.
+   *
+   * \note  Calls compute_energy_l2 internally.
+   *
+   * \param xi  The 6D twist vector corresponding to the candidate camera pose being optimised.
+   * \param phi A location into which to store the computed energy value.
+   * \param jac A location into which to store the computed Jacobian.
+   * \param pts The points to use for the energy and Jacobian computations.
    */
-  static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts);
+  static void alglib_jac_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts);
 
   /**
-   * \brief Function that will be called by alglib's optimiser.
+   * \brief A function that ALGLIB can call to compute the energy and Jacobian of the candidate camera pose.
+   *
+   * \note  Calls compute_energy_mahalanobis internally.
+   *
+   * \param xi  The 6D twist vector corresponding to the candidate camera pose being optimised.
+   * \param phi A location into which to store the computed energy value.
+   * \param jac A location into which to store the computed Jacobian.
+   * \param pts The points to use for the energy and Jacobian computations.
    */
-  static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts);
+  static void alglib_jac_mahalanobis(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts);
 
   /**
-   * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
+   * \brief A function that is called by ALGLIB after each iteration of the optimisation.
+   *
+   * \note  This currently does nothing, but could be used for debugging.
+   *
+   * \param xi  The 6D twist vector corresponding to the candidate camera pose being optimised.
+   * \param phi The energy value computed for the pose during the most recent iteration of the optimisation.
+   * \param pts The points that were used for the energy computation.
    */
-  static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts);
+  static void alglib_rep(const alglib::real_1d_array& xi, double phi, void *pts);
 
   /**
-   * \brief Compute the energy using the Mahalanobis distance.
+   * \brief Computes an energy for the specified candidate camera pose based on L2 errors for a set of points.
+   *
+   * \param candidateCameraPose The candidate camera pose.
+   * \param pts                 The points.
+   * \param jac                 An optional location in which to store the Jacobian of the 6D twist vector corresponding to the pose.
    */
-  static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL);
+  static double compute_energy_l2(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac = NULL);
 
   /**
-   * \brief Compute the energy using the L2 distance between the points.
+   * \brief Computes an energy for the specified candidate camera pose based on Mahalanobis errors for a set of points.
+   *
+   * \param candidateCameraPose The candidate camera pose.
+   * \param pts                 The points.
+   * \param jac                 An optional location in which to store the Jacobian of the 6D twist vector corresponding to the pose.
    */
-  static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL);
+  static double compute_energy_mahalanobis(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac = NULL);
 
   /**
    * \brief Makes an SE3 pose that corresponds to the specified 6D twist vector.
