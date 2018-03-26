@@ -15,7 +15,7 @@ using itmx::MemoryBlockFactory;
 #include "clustering/ExampleClustererFactory.h"
 #include "features/FeatureCalculatorFactory.h"
 #include "forests/DecisionForestFactory.h"
-#include "ransac/RansacFactory.h"
+#include "ransac/PreemptiveRansacFactory.h"
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
 #include "reservoirs/ExampleReservoirsFactory.h"
 
@@ -61,7 +61,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
       m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CUDA);
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
 
   // Clear internal state (no virtual calls in the constructor).
   ScoreRelocaliser_CUDA::reset();

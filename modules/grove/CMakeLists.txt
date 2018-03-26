@@ -112,8 +112,8 @@ include/grove/numbers/CUDARNG.h
 )
 
 ##
-SET(ransac_headers include/grove/ransac/RansacFactory.h)
-SET(ransac_sources src/ransac/RansacFactory.cpp)
+SET(ransac_headers include/grove/ransac/PreemptiveRansacFactory.h)
+SET(ransac_sources src/ransac/PreemptiveRansacFactory.cpp)
 
 ##
 SET(ransac_cpu_headers include/grove/ransac/cpu/PreemptiveRansac_CPU.h)
