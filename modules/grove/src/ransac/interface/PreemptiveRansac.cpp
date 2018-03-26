@@ -347,36 +347,29 @@ void PreemptiveRansac::reset_inliers(bool resetMask)
 
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
-  // Fill the struct that will be passed to the optimiser.
+  // Fill in the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
-
-  // The current number of inlier points.
-  ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
-
-  // The linearised offset in the pose optimisation buffers.
-  const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;
-
-  // Pointers to the data for this candidate.
-  ptsForLM.cameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU) + candidateOffset;
+  ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);                          // The current number of inlier points.
+  const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;                                        // The linearised offset in the pose optimisation buffers.
+  ptsForLM.cameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU) + candidateOffset;      // Pointers to the data for this candidate.
   ptsForLM.predictedModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU) + candidateOffset;
 
-  // Assumption is that they have been already copied onto the CPU memory, the CUDA subclass should make sure of that.
-  // In the long term we will move the whole optimisation step on the GPU (as proper shared code).
+  // Look up the pose candidate. The assumption is that all of the pose candidates have already been copied
+  // across to the CPU (non-CPU subclasses must ensure this). The plan is ultimately to reimplement the
+  // optimisation using shared code, but for now everything is done on the CPU.
   PoseCandidate& poseCandidate = m_poseCandidates->GetData(MEMORYDEVICE_CPU)[candidateIdx];
 
-  // Construct an SE3 pose to optimise from the raw matrix.
-  ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
+  // Convert the candidate's current pose to a 6D twist vector that can be optimised by alglib.
+  alglib::real_1d_array xi = make_twist_from_pose(poseCandidate.cameraPose);
 
-  // Convert the 6 parameters to a format that alglib likes.
-  alglib::real_1d_array ksi_;
-  ksi_.setlength(6);
-  for(int i = 0; i < 6; ++i) ksi_[i] = static_cast<double>(candidateCameraPose.GetParams()[i]);
-
-  // Set up the optimiser.
+  // Set up the optimiser itself.
   alglib::minlmstate state;
   const double differentiationStep = 0.0001;
-  alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
-//  alglib::minlmcreatevj(6, 1, ksi_, state);
+#if 1
+  alglib::minlmcreatev(6, 1, xi, differentiationStep, state);
+#else
+  alglib::minlmcreatevj(6, 1, xi, state);
+#endif
   alglib::minlmsetcond(state, m_poseOptimisationGradientThreshold, m_poseOptimisationEnergyThreshold, m_poseOptimisationStepThreshold, m_poseOptimisationMaxIterations);
 
   // Run the optimiser.
@@ -389,20 +382,18 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
     alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, Continuous3DOptimizationUsingL2Jac, call_after_each_step, &ptsForLM);
   }
 
-  // Extract the results and update the SE3Pose accordingly.
-  alglib::minlmreport rep;
-  alglib::minlmresults(state, ksi_, rep);
-  candidateCameraPose = make_pose_from_twist(ksi_);
+  // Extract the results of the optimisation.
+  alglib::minlmreport report;
+  alglib::minlmresults(state, xi, report);
+  const bool succeeded = report.terminationtype >= 0;
 
-  // Store the updated pose iff the optimisation succeeded.
-  if(rep.terminationtype >= 0)
+  // Iff the optimisation succeeded, update the candidate's pose.
+  if(succeeded)
   {
-    poseCandidate.cameraPose = candidateCameraPose.GetM();
-    return true;
+    poseCandidate.cameraPose = make_pose_from_twist(xi).GetM();
   }
 
-  // Optimisation failed.
-  return false;
+  return succeeded;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -419,44 +410,44 @@ void PreemptiveRansac::call_after_each_step(const alglib::real_1d_array& x, doub
   return;
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
 
   // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
+  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
 
   // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
+  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
 
   // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
+  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr)
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
 
   // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
+  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
 }
 
 double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
@@ -558,6 +549,17 @@ ORUtils::SE3Pose PreemptiveRansac::make_pose_from_twist(const alglib::real_1d_ar
     static_cast<float>(xi[4]),
     static_cast<float>(xi[5])
   );
+}
+
+alglib::real_1d_array PreemptiveRansac::make_twist_from_pose(const ORUtils::SE3Pose& pose)
+{
+  alglib::real_1d_array xi;
+  xi.setlength(6);
+  for(int i = 0; i < 6; ++i)
+  {
+    xi[i] = static_cast<double>(pose.GetParams()[i]);
+  }
+  return xi;
 }
 
 void PreemptiveRansac::print_timer(const AverageTimer& timer)

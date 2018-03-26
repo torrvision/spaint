@@ -278,15 +278,12 @@ protected:
   virtual void reset_inliers(bool resetMask);
 
   /**
-   * \brief Optimise a PoseCandidate pose minimising a non-linear error term depending on the parameters of the class.
-   *        See the paper for details.
+   * \brief Attempts to update the pose of the specified candidate by minimising a non-linear error term using Levenberg-Marquardt.
    *
-   * \note  Will probably go away as soon as we implement the optimisation as shared code that can run on both CPU and
-   *        GPU.
+   * \note  This is currently done on the CPU, although the plan is ultimately to reimplement it as shared code.
    *
-   * \param candidateIdx The index of the pose candidate to optimise.
-   *
-   * \return Whether the optimisation succeeded or not.
+   * \param candidateIdx  The index of the candidate whose pose we want to optimise.
+   * \return              true, if the optimisation succeeded, or false otherwise.
    */
   bool update_candidate_pose(int candidateIdx) const;
 
@@ -307,22 +304,22 @@ private:
   /**
    * \brief Function that will be called by alglib's optimiser.
    */
-  static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr);
+  static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr);
 
   /**
    * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
    */
-  static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr);
+  static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr);
 
   /**
    * \brief Function that will be called by alglib's optimiser.
    */
-  static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr);
+  static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr);
 
   /**
    * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
    */
-  static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr);
+  static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr);
 
   /**
    * \brief Compute the energy using the Mahalanobis distance.
@@ -335,12 +332,20 @@ private:
   static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL);
 
   /**
-   * \brief Makes a pose that corresponds to the specified 6D twist vector.
+   * \brief Makes an SE3 pose that corresponds to the specified 6D twist vector.
    *
    * \param xi  The 6D twist vector.
-   * \return    The corresponding pose.
+   * \return    The corresponding SE3 pose.
    */
   static ORUtils::SE3Pose make_pose_from_twist(const alglib::real_1d_array& xi);
+
+  /**
+   * \brief Makes a 6D twist vector that corresponds to the specified SE3 pose.
+   *
+   * \param pose  The SE3 pose.
+   * \return      The corresponding 6D twist vector.
+   */
+  static alglib::real_1d_array make_twist_from_pose(const ORUtils::SE3Pose& pose);
 
   /**
    * \brief Pretty prints a timer value.
