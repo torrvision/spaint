@@ -299,27 +299,27 @@ private:
   /**
    * \brief Alglib's diagnostic function. Currently does nothing, but could print stuff.
    */
-  static void call_after_each_step(const alglib::real_1d_array& x, double func, void *ptr);
+  static void call_after_each_step(const alglib::real_1d_array& xi, double phi, void *ptr);
 
   /**
    * \brief Function that will be called by alglib's optimiser.
    */
-  static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr);
+  static void Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts);
 
   /**
    * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
    */
-  static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr);
+  static void Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts);
 
   /**
    * \brief Function that will be called by alglib's optimiser.
    */
-  static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr);
+  static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts);
 
   /**
    * \brief Function that will be called by alglib's optimiser (analytic jacobians variant).
    */
-  static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr);
+  static void Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts);
 
   /**
    * \brief Compute the energy using the Mahalanobis distance.

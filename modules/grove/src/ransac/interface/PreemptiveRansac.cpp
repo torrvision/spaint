@@ -405,87 +405,85 @@ void PreemptiveRansac::update_host_pose_candidates() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac::call_after_each_step(const alglib::real_1d_array& x, double func, void *ptr)
+void PreemptiveRansac::call_after_each_step(const alglib::real_1d_array& xi, double phi, void *ptr)
 {
   return;
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
 {
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
-
-  // Compute the current energy.
-  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
+  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi));
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
 {
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
-
-  // Compute the current energy.
-  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
+  phi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi), jac[0]);
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
 {
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
-
-  // Compute the current energy.
-  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
+  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi));
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *ptr)
+void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
 {
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose = make_pose_from_twist(xi);
-
-  // Compute the current energy.
-  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
+  phi[0] = EnergyForContinuous3DOptimizationUsingL2(*reinterpret_cast<PointsForLM*>(pts), make_pose_from_twist(xi), jac[0]);
 }
 
 double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
 {
   double res = 0.0;
 
+  // If we're computing the Jacobian of the 6D twist vector, initially reset it to zero.
   if(jac)
   {
-    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
+    for(int i = 0; i < 6; ++i)
+    {
+      jac[i] = 0.0;
+    }
   }
 
+  // For each point under consideration:
   for(uint32_t i = 0; i < pts.nbPoints; ++i)
   {
-    if(pts.cameraPoints[i].w == 0.f) continue;
+    // If the point's position in camera space is invalid, skip it.
+    if(pts.cameraPoints[i].w == 0.0f) continue;
 
+    // Compute the difference between the point's position in world space (i) as predicted by the camera
+    // pose and its position in camera space, and (ii) as predicted by the position of the chosen mode.
     const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
     const Vector3f diff = transformedPt - pts.predictedModes[i].position;
+
+    // Based on this difference, add a Mahalanobis distance-based error term to the resulting energy.
+    // See also: https://en.wikipedia.org/wiki/Mahalanobis_distance.
     const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
-//    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // Mahalanobis distance
-    const float err = dot(diff, invCovarianceTimesDiff); // sqr Mahalanobis distance
+#if 1
+    const float err = dot(diff, invCovarianceTimesDiff);        // squared Mahalanobis distance
+#else
+    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // unsquared Mahalanobis distance
+#endif
 
     res += err;
 
+    // If we're computing the Jacobian of the 6D twist vector, update it accordingly.
     if(jac)
     {
-      const Vector3f normGradient = 2 * invCovarianceTimesDiff;
-//      const Vector3f normGradient = invCovarianceTimesDiff / err;
+#if 1
+      const Vector3f normGradient = 2 * invCovarianceTimesDiff;   // for squared Mahalanobis distance
+#else
+      const Vector3f normGradient = invCovarianceTimesDiff / err; // for unsquared Mahalanobis distance
+#endif
 
       const Vector3f poseGradient[6] = {
-          Vector3f(1, 0, 0),
-          Vector3f(0, 1, 0),
-          Vector3f(0, 0, 1),
-          -Vector3f(0, transformedPt.z, -transformedPt.y),
-          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+        Vector3f(1.0f, 0.0f, 0.0f),
+        Vector3f(0.0f, 1.0f, 0.0f),
+        Vector3f(0.0f, 0.0f, 1.0f),
+        -Vector3f(0.0f, transformedPt.z, -transformedPt.y),
+        -Vector3f(-transformedPt.z, 0.0f, transformedPt.x),
+        -Vector3f(transformedPt.y, -transformedPt.x, 0.0f),
       };
 
-      for(uint32_t i = 0; i < 6; ++i)
+      for(int i = 0; i < 6; ++i)
       {
         jac[i] += dot(normGradient, poseGradient[i]);
       }
@@ -499,37 +497,56 @@ double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingL2(const PointsFo
 {
   double res = 0.0;
 
+  // If we're computing the Jacobian of the 6D twist vector, initially reset it to zero.
   if(jac)
   {
-    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
+    for(int i = 0; i < 6; ++i)
+    {
+      jac[i] = 0.0;
+    }
   }
 
+  // For each point under consideration:
   for(uint32_t i = 0; i < pts.nbPoints; ++i)
   {
-    if(pts.cameraPoints[i].w == 0.f) continue;
+    // If the point's position in camera space is invalid, skip it.
+    if(pts.cameraPoints[i].w == 0.0f) continue;
 
+    // Compute the difference between the point's position in world space (i) as predicted by the camera
+    // pose and its position in camera space, and (ii) as predicted by the position of the chosen mode.
     const Vector3f cameraPoint = pts.cameraPoints[i].toVector3();
     const Vector3f transformedPt = candidateCameraPose.GetM() * cameraPoint;
     const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-//    const double err = length(diff); // distance
-    const double err = dot(diff, diff); // sqr distance
+
+    // Based on this difference, add an L2 distance-based error term to the resulting energy.
+#if 1
+    const double err = dot(diff, diff); // squared L2 distance
+#else
+    const double err = length(diff);    // unsquared L2 distance
+#endif
+
     res += err;
 
+    // If we're computing the Jacobian of the 6D twist vector, update it as per equation (10.23) in
+    // "A tutorial on SE(3) transformation parameterizations and on-manifold optimization" (Blanco).
     if(jac)
     {
-      const Vector3f normGradient = 2 * diff;
-//      const Vector3f normGradient = diff / err;
+#if 1
+      const Vector3f normGradient = 2 * diff;   // for squared L2 distance
+#else
+      const Vector3f normGradient = diff / err; // for unsquared L2 distance
+#endif
 
       const Vector3f poseGradient[6] = {
-          Vector3f(1, 0, 0),
-          Vector3f(0, 1, 0),
-          Vector3f(0, 0, 1),
-          -Vector3f(0, transformedPt.z, -transformedPt.y),
-          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+        Vector3f(1.0f, 0.0f, 0.0f),
+        Vector3f(0.0f, 1.0f, 0.0f),
+        Vector3f(0.0f, 0.0f, 1.0f),
+        -Vector3f(0.0f, transformedPt.z, -transformedPt.y),
+        -Vector3f(-transformedPt.z, 0.0f, transformedPt.x),
+        -Vector3f(transformedPt.y, -transformedPt.x, 0.0f),
       };
 
-      for(uint32_t i = 0; i < 6; ++i)
+      for(int i = 0; i < 6; ++i)
       {
         jac[i] += dot(normGradient, poseGradient[i]);
       }
