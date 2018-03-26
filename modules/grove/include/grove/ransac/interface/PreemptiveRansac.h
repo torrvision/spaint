@@ -335,6 +335,14 @@ private:
   static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac = NULL);
 
   /**
+   * \brief Makes a pose that corresponds to the specified 6D twist vector.
+   *
+   * \param xi  The 6D twist vector.
+   * \return    The corresponding pose.
+   */
+  static ORUtils::SE3Pose make_pose_from_twist(const alglib::real_1d_array& xi);
+
+  /**
    * \brief Pretty prints a timer value.
    *
    * \param timer The timer to print.

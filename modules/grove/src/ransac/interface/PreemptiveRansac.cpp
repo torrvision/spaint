@@ -392,14 +392,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   // Extract the results and update the SE3Pose accordingly.
   alglib::minlmreport rep;
   alglib::minlmresults(state, ksi_, rep);
-  candidateCameraPose.SetFrom(
-    static_cast<float>(ksi_[0]),
-    static_cast<float>(ksi_[1]),
-    static_cast<float>(ksi_[2]),
-    static_cast<float>(ksi_[3]),
-    static_cast<float>(ksi_[4]),
-    static_cast<float>(ksi_[5])
-  );
+  candidateCameraPose = make_pose_from_twist(ksi_);
 
   // Store the updated pose iff the optimisation succeeded.
   if(rep.terminationtype >= 0)
@@ -430,7 +423,7 @@ void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib:
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
 
   // Compute the current energy.
   fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
@@ -440,7 +433,7 @@ void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const algl
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
 
   // Compute the current energy.
   fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
@@ -450,7 +443,7 @@ void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_arr
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
 
   // Compute the current energy.
   fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
@@ -460,7 +453,7 @@ void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_
 {
   // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
   const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
+  const ORUtils::SE3Pose testPose = make_pose_from_twist(ksi);
 
   // Compute the current energy.
   fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
@@ -553,6 +546,18 @@ double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingL2(const PointsFo
   }
 
   return res;
+}
+
+ORUtils::SE3Pose PreemptiveRansac::make_pose_from_twist(const alglib::real_1d_array& xi)
+{
+  return ORUtils::SE3Pose(
+    static_cast<float>(xi[0]),
+    static_cast<float>(xi[1]),
+    static_cast<float>(xi[2]),
+    static_cast<float>(xi[3]),
+    static_cast<float>(xi[4]),
+    static_cast<float>(xi[5])
+  );
 }
 
 void PreemptiveRansac::print_timer(const AverageTimer& timer)
