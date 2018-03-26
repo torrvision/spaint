@@ -16,16 +16,15 @@ using namespace itmx;
 #include "features/FeatureCalculatorFactory.h"
 #include "forests/DecisionForestFactory.h"
 #include "ransac/RansacFactory.h"
-#include "reservoirs/ExampleReservoirsFactory.h"
-
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
+#include "reservoirs/ExampleReservoirsFactory.h"
 
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename)
-  : ScoreRelocaliser(settings, forestFilename)
+: ScoreRelocaliser(settings, forestFilename)
 {
   // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
@@ -106,8 +105,7 @@ void ScoreRelocaliser_CPU::reset()
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
-                                                      const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
                                                       ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;

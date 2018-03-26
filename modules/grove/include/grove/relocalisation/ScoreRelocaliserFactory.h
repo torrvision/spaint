@@ -34,7 +34,7 @@ public:
    */
   static ScoreRelocaliser_Ptr make_score_relocaliser(ITMLib::ITMLibSettings::DeviceType deviceType,
                                                      const tvgutil::SettingsContainer_CPtr& settings,
-                                                     const std::string &forestFilename);
+                                                     const std::string& forestFilename);
 };
 
 }

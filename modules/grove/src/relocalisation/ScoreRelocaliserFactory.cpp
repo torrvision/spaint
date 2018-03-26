@@ -4,8 +4,8 @@
  */
 
 #include "relocalisation/ScoreRelocaliserFactory.h"
-#include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 
+#include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 #ifdef WITH_CUDA
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 #endif
@@ -19,7 +19,7 @@ namespace grove {
 
 ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DeviceType deviceType,
                                                                      const SettingsContainer_CPtr& settings,
-                                                                     const std::string &forestFilename)
+                                                                     const std::string& forestFilename)
 {
   ScoreRelocaliser_Ptr relocaliser;
 
