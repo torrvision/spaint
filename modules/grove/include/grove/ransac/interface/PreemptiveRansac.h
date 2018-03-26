@@ -228,18 +228,11 @@ protected:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Estimates a 6DOF pose from a set of 3D keypoints and their associated ScoreForest predictions
-   *        using a Preemptive-RANSAC technique.
+   * \brief Attempts to estimate a 6DOF pose from a set of 3D keypoints and their associated SCoRe forest predictions using a preemptive RANSAC approach.
    *
-   * \note  For details on the pose estimation process see:
-   *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
-   *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*, Julien Valentin,
-   *        Luigi Di Stefano and Philip H. S. Torr
-   *
-   * \param keypointsImage    An image representing 3D keypoints computed from an RGB-D input image pair.
-   * \param predictionsImage  An image storing ScoreForest predictions for each keypoint in keypoints.
-   *
-   * \return The estimated pose if successful, an empty optional value otherwise.
+   * \param keypointsImage    An image containing 3D keypoints computed from an RGB-D input image pair.
+   * \param predictionsImage  An image containing SCoRe forest predictions for each keypoint in the keypoints image.
+   * \return                  An estimated pose, if possible, or boost::none otherwise.
    */
   boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr& keypointsImage, const ScorePredictionsImage_CPtr& predictionsImage);
 
@@ -255,16 +248,16 @@ public:
   void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
   /**
-   * \brief Gets the minimum number of points that have to be valid for the algorithm to attempt the pose estimation.
+   * \brief Gets the minimum number of points that have to be valid for the algorithm to attempt pose estimation.
    *
-   * \return The minimum number of points that have to be valid in order to attempt pose estimation.
+   * \return The minimum number of points that have to be valid for the algorithm to attempt pose estimation.
    */
   int get_min_nb_required_points() const;
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Runs the Kabsch algorithm on the three camera/world point correspondences of each generated pose hypothesis
+   * \brief Runs the Kabsch algorithm on the three camera/world point correspondences of each generated pose candidate
    *        to obtain an estimate of the camera pose (a rigid transformation matrix from camera space to world space).
    *
    * \note  This will probably go away as soon as we implement a proper SVD solver that can run on both the CPU and GPU.
@@ -279,7 +272,7 @@ protected:
   virtual void reset_inliers(bool resetMask);
 
   /**
-   * \brief Attempts to update the pose of the specified candidate by minimising a non-linear error term using Levenberg-Marquardt.
+   * \brief Attempts to update the pose of the specified candidate by minimising a non-linear energy using Levenberg-Marquardt.
    *
    * \note  This is currently done on the CPU, although the plan is ultimately to reimplement it as shared code.
    *
@@ -291,7 +284,7 @@ protected:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Make sure that the host version of the pose candidates memory block contains up to date values.
+   * \brief Makes sure that the host version of the pose candidates memory block contains up-to-date values.
    */
   virtual void update_host_pose_candidates() const;
 
@@ -355,7 +348,7 @@ private:
   static void alglib_rep(const alglib::real_1d_array& xi, double phi, void *pts);
 
   /**
-   * \brief Computes an energy for the specified candidate camera pose based on L2 errors for a set of points.
+   * \brief Computes an energy for the specified candidate camera pose based on L2 error terms for a set of points.
    *
    * \param candidateCameraPose The candidate camera pose.
    * \param pts                 The points.
@@ -364,7 +357,7 @@ private:
   static double compute_energy_l2(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac = NULL);
 
   /**
-   * \brief Computes an energy for the specified candidate camera pose based on Mahalanobis errors for a set of points.
+   * \brief Computes an energy for the specified candidate camera pose based on Mahalanobis error terms for a set of points.
    *
    * \param candidateCameraPose The candidate camera pose.
    * \param pts                 The points.
@@ -389,9 +382,9 @@ private:
   static alglib::real_1d_array make_twist_from_pose(const ORUtils::SE3Pose& pose);
 
   /**
-   * \brief Pretty prints a timer value.
+   * \brief Pretty prints the value of a timer.
    *
-   * \param timer The timer to print.
+   * \param timer The timer.
    */
   static void print_timer(const AverageTimer& timer);
 };
