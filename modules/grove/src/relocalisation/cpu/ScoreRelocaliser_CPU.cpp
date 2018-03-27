@@ -15,7 +15,7 @@ using namespace itmx;
 #include "clustering/ExampleClustererFactory.h"
 #include "features/FeatureCalculatorFactory.h"
 #include "forests/DecisionForestFactory.h"
-#include "ransac/RansacFactory.h"
+#include "ransac/PreemptiveRansacFactory.h"
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
 #include "reservoirs/ExampleReservoirsFactory.h"
 
@@ -41,7 +41,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CPU);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CPU);
 
   // Clear internal state.
   ScoreRelocaliser_CPU::reset();

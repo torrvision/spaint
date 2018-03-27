@@ -11,7 +11,6 @@ namespace bf = boost::filesystem;
 #include <itmx/base/MemoryBlockFactory.h>
 
 #include <ORUtils/MemoryBlockPersister.h>
-using namespace ORUtils;
 
 namespace grove {
 
@@ -87,12 +86,12 @@ void ExampleReservoirs<ExampleType>::load_from_disk(const std::string& inputFold
 {
   bf::path inputPath(inputFolder);
 
-  // Load the data on the CPU.
-  MemoryBlockPersister::LoadImageFrom((inputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
-  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
-  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
+  // Load the data into memory on the CPU.
+  ORUtils::MemoryBlockPersister::LoadImageFrom((inputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
 
-  // Update everything on the GPU, NOP in case we are using the CPU version of the class.
+  // If we're using the GPU, copy the data across.
   m_reservoirs->UpdateDeviceFromHost();
   m_reservoirAddCalls->UpdateDeviceFromHost();
   m_reservoirSizes->UpdateDeviceFromHost();
@@ -114,15 +113,15 @@ void ExampleReservoirs<ExampleType>::save_to_disk(const std::string& outputFolde
 {
   bf::path outputPath(outputFolder);
 
-  // Update everything on the CPU, NOP in case we are using the CPU version of the class.
+  // If we're using the GPU, copy the data across to the CPU so that it can be saved.
   m_reservoirs->UpdateHostFromDevice();
   m_reservoirAddCalls->UpdateHostFromDevice();
   m_reservoirSizes->UpdateHostFromDevice();
 
-  // Save the data.
-  MemoryBlockPersister::SaveImage((outputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
-  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
-  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
+  // Save the data to disk.
+  ORUtils::MemoryBlockPersister::SaveImage((outputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
 
   // Call the overridable hook function to allow subclasses to perform additional saving steps.
   save_to_disk_sub(outputFolder);

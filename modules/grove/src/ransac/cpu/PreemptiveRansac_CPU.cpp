@@ -43,7 +43,7 @@ void PreemptiveRansac_CPU::compute_energies_and_sort()
     compute_pose_energy(poseCandidates[i]);
   }
 
-  // Sort the candidates into non-increasing order of energy.
+  // Sort the candidates into non-decreasing order of energy.
   std::sort(poseCandidates, poseCandidates + nbPoseCandidates);
 }
 
