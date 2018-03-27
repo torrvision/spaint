@@ -102,7 +102,7 @@ void ExampleReservoirs_CUDA<ExampleType>::load_from_disk_sub(const std::string& 
   bf::path inputPath(inputFolder);
   ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 
-  // Update them on the GPU.
+  // Copy them across to the GPU.
   m_rngs->UpdateDeviceFromHost();
 }
 
@@ -129,10 +129,10 @@ void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 template<typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::save_to_disk_sub(const std::string& outputFolder)
 {
-  // Update the RNG states on the CPU.
+  // Copy the RNG states across to the CPU so that they can be saved.
   m_rngs->UpdateHostFromDevice();
 
-  // Save the RNG states.
+  // Save them to disk.
   bf::path outputPath(outputFolder);
   ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
