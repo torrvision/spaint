@@ -162,7 +162,7 @@ public:
   /**
    * \brief Returns a specific prediction from the forest.
    *
-   * \param treeIdx The index of the tree containing the prediciton of interest.
+   * \param treeIdx The index of the tree containing the prediction of interest.
    * \param leafIdx The index of the required leaf prediction.
    *
    * \return The ScorePrediction of interest.
@@ -185,8 +185,7 @@ protected:
    *
    * \param leafIndices       Indices of the forest leafs predicted from a keypoint/descriptor pair.
    * \param leafPredictions   A memory block containing all the 3D modal clusters associated to the forest.
-   * \param outputPredictions An image wherein each element represent the modal clsters associated to the predicted
-   *                          leaves.
+   * \param outputPredictions An image wherein each element represent the modal clusters associated to the predicted leaves.
    */
   virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
                                           ScorePredictionsImage_Ptr& outputPredictions) const = 0;
