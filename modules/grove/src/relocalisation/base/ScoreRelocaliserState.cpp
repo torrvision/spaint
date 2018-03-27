@@ -15,7 +15,13 @@ using namespace ORUtils;
 
 namespace grove {
 
-//#################### MEMBER FUNCTIONS ####################
+//#################### CONSTRUCTORS ####################
+
+ScoreRelocaliserState::ScoreRelocaliserState()
+: lastFeaturesAddedStartIdx(0), reservoirUpdateStartIdx(0)
+{}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void ScoreRelocaliserState::load_from_disk(const std::string& inputFolder)
 {
@@ -58,7 +64,5 @@ void ScoreRelocaliserState::save_to_disk(const std::string& outputFolder) const
 
   if(!outFile) throw std::runtime_error("Couldn't save relocaliser data in " + dataFile);
 }
-
-
 
 }

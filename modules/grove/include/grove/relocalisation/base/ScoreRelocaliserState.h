@@ -15,24 +15,25 @@
 namespace grove {
 
 /**
- * \brief An instance of this struct holds all data required to perform training and relocalisation with a Score-based method:
- *        - example reservoirs, used when training the relocaliser.
- *        - predictions block, containing the 3D Modal clusters used for the actual camera relocalisation.
+ * \brief An instance of this struct holds all of the data required to perform training and relocalisation with a SCoRe-based relocaliser.
+ *
+ * In particular, it holds:
+ * - The example reservoirs used when training the relocaliser.
+ * - A memory block containing the 3D modal clusters used for the actual camera relocalisation.
  */
 struct ScoreRelocaliserState
 {
   //#################### TYPEDEFS ####################
-  typedef Keypoint3DColour ExampleType;
-  typedef ScorePrediction PredictionType;
 
-  typedef ExampleReservoirs<ExampleType> Reservoirs;
+  typedef ExampleReservoirs<Keypoint3DColour> Reservoirs;
   typedef boost::shared_ptr<Reservoirs> Reservoirs_Ptr;
 
-  //#################### MEMBER VARIABLES ####################
-  /** The example reservoirs associated to every leaf in the forest. */
+  //#################### PUBLIC MEMBER VARIABLES ####################
+
+  /** The example reservoirs associated with each leaf in the forest. */
   Reservoirs_Ptr exampleReservoirs;
 
-  /** A block of memory storing the 3D modal clusters associated to each leaf in the forest. */
+  /** A memory block storing the 3D modal clusters associated with each leaf in the forest. */
   ScorePredictionsMemoryBlock_Ptr predictionsBlock;
 
   // Update-related data
@@ -43,9 +44,11 @@ struct ScoreRelocaliserState
   uint32_t reservoirUpdateStartIdx;
 
   //#################### CONSTRUCTORS ####################
-  ScoreRelocaliserState() : lastFeaturesAddedStartIdx(0), reservoirUpdateStartIdx(0) {}
 
-  //#################### MEMBER FUNCTIONS ####################
+  ScoreRelocaliserState();
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+
   /**
    * \brief Loads the relocaliser state from a folder on disk.
    *
@@ -66,6 +69,7 @@ struct ScoreRelocaliserState
 };
 
 //#################### TYPEDEFS ####################
+
 typedef boost::shared_ptr<ScoreRelocaliserState> ScoreRelocaliserState_Ptr;
 typedef boost::shared_ptr<const ScoreRelocaliserState> ScoreRelocaliserState_CPtr;
 
