@@ -184,18 +184,18 @@ public:
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
   /**
-   * \brief Returns a pointer to the relocaliser state.
-   *
-   * \return A pointer to the relocaliser state.
-   */
-  ScoreRelocaliserState_CPtr get_relocaliser_state() const;
-
-  /**
    * \brief Returns a pointer to the relocaliser state (non-const variant).
    *
    * \return A pointer to the relocaliser state.
    */
   ScoreRelocaliserState_Ptr get_relocaliser_state();
+
+  /**
+   * \brief Returns a pointer to the relocaliser state.
+   *
+   * \return A pointer to the relocaliser state.
+   */
+  ScoreRelocaliserState_CPtr get_relocaliser_state() const;
 
   /**
    * \brief Sets the relocaliser state.
