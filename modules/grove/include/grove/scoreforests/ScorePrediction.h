@@ -28,30 +28,31 @@ typedef boost::shared_ptr<const ScorePredictionsMemoryBlock> ScorePredictionsMem
 //#################### FUNCTIONS ####################
 
 /**
- * \brief Given a ScorePrediction and a 3D point, find the closest 3D Mode according to the Mahalanobis distance.
+ * \brief Attempts to find the index of the mode in the specified SCoRe forest prediction whose Mahalanobis distance to the specified 3D point is smallest.
  *
- * \param prediction A ScorePrediction
- * \param v          A 3D point in world coordinates.
- * \param maxScore   Will contain the energy associated to the closest mode.
+ * \note  This version of the function also returns the energy associated with the mode found (if any).
  *
- * \return The index of the closest modal cluster. -1 if nbModes is 0.
+ * \param pt          The 3D point (in world coordinates).
+ * \param prediction  The SCoRe forest prediction.
+ * \param maxEnergy   A location in which to store the energy associated with the closest mode (if any).
+ * \return            The index of the closest mode in the prediction, if any, or -1 if the prediction does not contain any modes.
  */
 _CPU_AND_GPU_CODE_
-inline int score_prediction_get_best_mode_and_energy(const ScorePrediction& prediction, const Vector3f& v, float& maxScore)
+inline int find_closest_mode(const Vector3f& pt, const ScorePrediction& prediction, float& maxEnergy)
 {
   const float exponent = powf(2.0f * static_cast<float>(M_PI), 3);
 
   // Set to -1 only if there are no modes, we set it to 0 otherwise, to force the selection of a mode
   // in the case of a very small covariance that otherwise would cause numerical problems (large inverse covariance and small determinant).
   int argmax = prediction.size > 0 ? 0 : -1;
-  maxScore = 0.0f;
+  maxEnergy = 0.0f;
 
   // Iterate over all the modal clusters stored in the struct.
   for(int m = 0; m < prediction.size; ++m)
   {
     const Keypoint3DColourCluster& currentMode = prediction.elts[m];
 
-    const Vector3f diff = v - currentMode.position;
+    const Vector3f diff = pt - currentMode.position;
 
     // This is the textbook implementation of Mahalanobis distance
     // Helpers::MahalanobisSquared3x3 used in the scoreforests code seems wrong.
@@ -62,12 +63,12 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction& pred
     const float evalGaussian = normalization * descriptiveStatistics;
 
     const float nbPts = static_cast<float>(currentMode.nbInliers);
-    const float score = nbPts * evalGaussian;
+    const float energy = nbPts * evalGaussian;
 
     // If the point is "closer" to the center of the anisotropic gaussian associated to this mode, store its index.
-    if(score > maxScore)
+    if(energy > maxEnergy)
     {
-      maxScore = score;
+      maxEnergy = energy;
       argmax = m;
     }
   }
@@ -76,18 +77,17 @@ inline int score_prediction_get_best_mode_and_energy(const ScorePrediction& pred
 }
 
 /**
- * \brief Given a ScorePrediction and a 3D point, find the closest 3D Mode according to the Mahalanobis distance.
+ * \brief Attempts to find the index of the mode in the specified SCoRe forest prediction whose Mahalanobis distance to the specified 3D point is smallest.
  *
- * \param prediction A ScorePrediction
- * \param v          A 3D point in world coordinates.
- *
- * \return The index of the closest modal cluster. -1 if nbModes is 0.
+ * \param pt          The 3D point (in world coordinates).
+ * \param prediction  The SCoRe forest prediction.
+ * \return            The index of the closest mode in the prediction, if any, or -1 if the prediction does not contain any modes.
  */
 _CPU_AND_GPU_CODE_
-inline int score_prediction_get_best_mode(const ScorePrediction& prediction, const Vector3f& v)
+inline int find_closest_mode(const Vector3f& pt, const ScorePrediction& prediction)
 {
   float energy;
-  return score_prediction_get_best_mode_and_energy(prediction, v, energy);
+  return find_closest_mode(pt, prediction, energy);
 }
 
 }
