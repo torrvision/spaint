@@ -83,6 +83,7 @@ struct CommandLineArguments
   std::string openNIDeviceURI;
   std::string pipelineType;
   size_t prefetchBufferCapacity;
+  std::string relocaliserType;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
   bool saveMeshOnExit;
@@ -122,6 +123,7 @@ struct CommandLineArguments
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
       ADD_SETTING(prefetchBufferCapacity);
+      ADD_SETTING(relocaliserType);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
       ADD_SETTING(saveMeshOnExit);
@@ -419,6 +421,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("ferns"), "relocaliser type (ferns|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
     ("saveModelsOnExit", po::bool_switch(&args.saveModelsOnExit), "save a model of each voxel scene on exiting the application")

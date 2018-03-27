@@ -24,6 +24,7 @@ using namespace ORUtils;
 #endif
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
+#include <itmx/relocalisation/NullRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
@@ -484,9 +485,11 @@ void SLAMComponent::setup_relocaliser()
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
   // Look up the non-relocaliser-specific settings, such as the type of relocaliser to construct.
+  // Note that the relocaliser type is a primary setting, so is not in the SLAMComponent namespace.
+  m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
+
   static const std::string settingsNamespace = "SLAMComponent.";
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
-  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "ferns");
 
   // Construct a relocaliser of the specified type.
   Relocaliser_Ptr innerRelocaliser;
@@ -501,6 +504,10 @@ void SLAMComponent::setup_relocaliser()
       FernRelocaliser::get_default_num_decisions_per_fern(),
       m_relocaliseEveryFrame ? FernRelocaliser::ALWAYS_TRY_ADD : FernRelocaliser::DELAY_AFTER_RELOCALISATION
     ));
+  }
+  else if(m_relocaliserType == "none")
+  {
+    innerRelocaliser.reset(new NullRelocaliser);
   }
   else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
 
