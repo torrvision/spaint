@@ -12,8 +12,10 @@ SET(targetname grove)
 # Specify the libraries to use #
 ################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
@@ -102,8 +104,25 @@ include/grove/numbers/CUDARNG.h
 )
 
 ##
+SET(ransac_sources src/ransac/PreemptiveRansacFactory.cpp)
+SET(ransac_headers include/grove/ransac/PreemptiveRansacFactory.h)
+
+##
+SET(ransac_cpu_sources src/ransac/cpu/PreemptiveRansac_CPU.cpp)
+SET(ransac_cpu_headers include/grove/ransac/cpu/PreemptiveRansac_CPU.h)
+
+##
+SET(ransac_cuda_sources src/ransac/cuda/PreemptiveRansac_CUDA.cu)
+SET(ransac_cuda_headers include/grove/ransac/cuda/PreemptiveRansac_CUDA.h)
+
+##
+SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
+SET(ransac_interface_headers include/grove/ransac/interface/PreemptiveRansac.h)
+
+##
 SET(ransac_shared_headers
 include/grove/ransac/shared/PoseCandidate.h
+include/grove/ransac/shared/PreemptiveRansac_Shared.h
 )
 
 ##
@@ -128,6 +147,7 @@ SET(reservoirs_shared_headers include/grove/reservoirs/shared/ExampleReservoirs_
 ##
 SET(scoreforests_headers
 include/grove/scoreforests/Keypoint3DColourCluster.h
+include/grove/scoreforests/ScorePrediction.h
 )
 
 ##
@@ -140,6 +160,9 @@ SET(util_headers include/grove/util/Array.h)
 SET(sources
 ${features_sources}
 ${numbers_sources}
+${ransac_sources}
+${ransac_cpu_sources}
+${ransac_interface_sources}
 )
 
 SET(headers
@@ -158,6 +181,9 @@ ${forests_interface_headers}
 ${forests_shared_headers}
 ${keypoints_headers}
 ${numbers_headers}
+${ransac_headers}
+${ransac_cpu_headers}
+${ransac_interface_headers}
 ${ransac_shared_headers}
 ${reservoirs_headers}
 ${reservoirs_cpu_headers}
@@ -183,10 +209,15 @@ ${reservoirs_interface_templates}
 )
 
 IF(WITH_CUDA)
+  SET(sources ${sources}
+    ${ransac_cuda_sources}
+  )
+
   SET(headers ${headers}
     ${clustering_cuda_headers}
     ${features_cuda_headers}
     ${forests_cuda_headers}
+    ${ransac_cuda_headers}
     ${reservoirs_cuda_headers}
   )
 
@@ -220,6 +251,10 @@ SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_int
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
+SOURCE_GROUP(ransac FILES ${ransac_sources} ${ransac_headers})
+SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_sources} ${ransac_cpu_headers})
+SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_sources} ${ransac_cuda_headers})
+SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_sources} ${ransac_interface_headers})
 SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
