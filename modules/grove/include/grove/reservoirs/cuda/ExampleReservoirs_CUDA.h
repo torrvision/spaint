@@ -37,7 +37,7 @@ public:
    *
    * \param reservoirCount    The number of reservoirs to create.
    * \param reservoirCapacity The capacity of each reservoir.
-   * \param rngSeed           The seed for the random number generator.
+   * \param rngSeed           The seed for the random number generators.
    */
   ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed = 42);
 
@@ -55,10 +55,16 @@ private:
   template <int ReservoirIndexCount>
   void add_examples_sub(const ExampleImage_CPtr& examples, const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int,ReservoirIndexCount> > >& reservoirIndices);
 
+  /** Override */
+  virtual void load_from_disk_sub(const std::string& inputFolder);
+
   /**
    * \brief Reinitialises the random number generators using known seeds.
    */
   void reinit_rngs();
+
+  /** Override */
+  virtual void save_to_disk_sub(const std::string& outputFolder);
 
   //#################### FRIENDS ####################
 

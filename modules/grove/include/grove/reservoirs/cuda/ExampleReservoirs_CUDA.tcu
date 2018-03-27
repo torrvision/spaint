@@ -5,7 +5,12 @@
 
 #include "ExampleReservoirs_CUDA.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
+
 #include <itmx/base/MemoryBlockFactory.h>
+
+#include <ORUtils/MemoryBlockPersister.h>
 
 #include "../shared/ExampleReservoirs_Shared.h"
 
@@ -36,10 +41,13 @@ template <typename ExampleType>
 ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
+  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  m_rngs = mbf.make_block<CUDARNG>();
+
   reset();
 }
 
-//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reset()
@@ -87,16 +95,20 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples_sub(const ExampleImage_CP
   ORcudaKernelCheck;
 }
 
+template<typename ExampleType>
+void ExampleReservoirs_CUDA<ExampleType>::load_from_disk_sub(const std::string& inputFolder)
+{
+  // Load the RNG states.
+  bf::path inputPath(inputFolder);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+
+  // Copy them across to the GPU.
+  m_rngs->UpdateDeviceFromHost();
+}
+
 template <typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 {
-  // If the memory block that will hold the random number generators hasn't yet been created, create it.
-  if(!m_rngs)
-  {
-    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-    m_rngs = mbf.make_block<CUDARNG>();
-  }
-
   // If there aren't currently any random number generators to reinitialise, early out.
   // We need to check this because CUDA kernels can't be called with zero threads.
   const int rngCount = static_cast<int>(m_rngs->dataSize);
@@ -112,6 +124,17 @@ void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
     this->m_rngSeed
   );
   ORcudaKernelCheck;
+}
+
+template<typename ExampleType>
+void ExampleReservoirs_CUDA<ExampleType>::save_to_disk_sub(const std::string& outputFolder)
+{
+  // Copy the RNG states across to the CPU so that they can be saved.
+  m_rngs->UpdateHostFromDevice();
+
+  // Save them to disk.
+  bf::path outputPath(outputFolder);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 }

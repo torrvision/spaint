@@ -81,7 +81,7 @@ protected:
   /** The current size of each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
   ITMIntMemoryBlock_Ptr m_reservoirSizes;
 
-  /** The seed for the random number generator. */
+  /** The seed for the random number generators. */
   uint32_t m_rngSeed;
 
   //#################### CONSTRUCTORS ####################
@@ -91,7 +91,7 @@ protected:
    *
    * \param reservoirCount    The number of reservoirs to create.
    * \param reservoirCapacity The capacity (maximum size) of each reservoir.
-   * \param rngSeed           The seed for the random number generator.
+   * \param rngSeed           The seed for the random number generators.
    */
   ExampleReservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed);
 
@@ -110,6 +110,24 @@ private:
    * \param visitor The visitor to accept.
    */
   virtual void accept(const Visitor& visitor) = 0;
+
+  /**
+   * \brief An overridable hook function that is called at the end of load_from_disk to allow subclasses to perform additional loading steps.
+   *
+   * \param inputFolder The folder containing the reservoir state.
+   *
+   * \throws std::runtime_error If the loading fails.
+   */
+  virtual void load_from_disk_sub(const std::string& inputFolder) = 0;
+
+  /**
+   * \brief An overridable hook function that is called at the end of save_to_disk to allow subclasses to perform additional saving steps.
+   *
+   * \param outputFolder  The folder into which to save the reservoir state.
+   *
+   * \throws std::runtime_error If the saving fails.
+   */
+  virtual void save_to_disk_sub(const std::string& outputFolder) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -170,9 +188,27 @@ public:
   ITMIntMemoryBlock_CPtr get_reservoir_sizes() const;
 
   /**
-   * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
+   * \brief Loads the reservoir state from a folder on disk.
+   *
+   * \param inputFolder The folder containing the reservoir state.
+   *
+   * \throws std::runtime_error If the loading fails.
+   */
+  void load_from_disk(const std::string& inputFolder);
+
+  /**
+   * \brief Clears the reservoirs, discards all examples and reinitialises the random number generators.
    */
   virtual void reset();
+
+  /**
+   * \brief Saves the reservoir state to a folder on disk.
+   *
+   * \param outputFolder  The folder into which to save the reservoir state.
+   *
+   * \throws std::runtime_error If the saving fails.
+   */
+  void save_to_disk(const std::string& outputFolder);
 };
 
 }

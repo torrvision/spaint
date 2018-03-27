@@ -5,7 +5,12 @@
 
 #include "ExampleReservoirs_CPU.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
+
 #include <itmx/base/MemoryBlockFactory.h>
+
+#include <ORUtils/MemoryBlockPersister.h>
 
 #include "../shared/ExampleReservoirs_Shared.h"
 
@@ -17,6 +22,9 @@ template <typename ExampleType>
 ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
+  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  m_rngs = mbf.make_block<CPURNG>();
+
   reset();
 }
 
@@ -76,16 +84,17 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples_sub(const ExampleImage_CPt
   }
 }
 
+template<typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::load_from_disk_sub(const std::string& inputFolder)
+{
+  // Load the RNG states.
+  bf::path inputPath(inputFolder);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+}
+
 template <typename ExampleType>
 void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
 {
-  // If the memory block that will hold the random number generators hasn't yet been created, create it.
-  if(!m_rngs)
-  {
-    itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
-    m_rngs = mbf.make_block<CPURNG>();
-  }
-
   // Reinitialise each random number generator based on the specified seed.
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
   const uint32_t rngCount = static_cast<uint32_t>(m_rngs->dataSize);
@@ -93,6 +102,14 @@ void ExampleReservoirs_CPU<ExampleType>::reinit_rngs()
   {
     rngs[i].reset(this->m_rngSeed + i);
   }
+}
+
+template<typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::save_to_disk_sub(const std::string& outputFolder)
+{
+  // Save the RNG states.
+  bf::path outputPath(outputFolder);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 }

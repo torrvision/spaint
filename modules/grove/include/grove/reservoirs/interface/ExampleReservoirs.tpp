@@ -5,7 +5,12 @@
 
 #include "ExampleReservoirs.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
+
 #include <itmx/base/MemoryBlockFactory.h>
+
+#include <ORUtils/MemoryBlockPersister.h>
 
 namespace grove {
 
@@ -76,12 +81,50 @@ ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() con
   return m_reservoirSizes;
 }
 
+template<typename ExampleType>
+void ExampleReservoirs<ExampleType>::load_from_disk(const std::string& inputFolder)
+{
+  bf::path inputPath(inputFolder);
+
+  // Load the data into memory on the CPU.
+  ORUtils::MemoryBlockPersister::LoadImageFrom((inputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
+
+  // If we're using the GPU, copy the data across.
+  m_reservoirs->UpdateDeviceFromHost();
+  m_reservoirAddCalls->UpdateDeviceFromHost();
+  m_reservoirSizes->UpdateDeviceFromHost();
+
+  // Call the overridable hook function to allow subclasses to perform additional loading steps.
+  load_from_disk_sub(inputFolder);
+}
+
 template <typename ExampleType>
 void ExampleReservoirs<ExampleType>::reset()
 {
   // Note: There is no need to clear m_reservoirs - it is sufficient to simply reset the size of each reservoir to 0.
   m_reservoirAddCalls->Clear();
   m_reservoirSizes->Clear();
+}
+
+template<typename ExampleType>
+void ExampleReservoirs<ExampleType>::save_to_disk(const std::string& outputFolder)
+{
+  bf::path outputPath(outputFolder);
+
+  // If we're using the GPU, copy the data across to the CPU so that it can be saved.
+  m_reservoirs->UpdateHostFromDevice();
+  m_reservoirAddCalls->UpdateHostFromDevice();
+  m_reservoirSizes->UpdateHostFromDevice();
+
+  // Save the data to disk.
+  ORUtils::MemoryBlockPersister::SaveImage((outputPath / "reservoirs.bin").string(), *m_reservoirs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirAddCalls.bin").string(), *m_reservoirAddCalls, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirSizes.bin").string(), *m_reservoirSizes, MEMORYDEVICE_CPU);
+
+  // Call the overridable hook function to allow subclasses to perform additional saving steps.
+  save_to_disk_sub(outputFolder);
 }
 
 }
