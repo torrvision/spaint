@@ -81,6 +81,17 @@ ScoreRelocaliser::~ScoreRelocaliser() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void ScoreRelocaliser::finish_training()
+{
+  // First, update all clusters.
+  update_all_clusters();
+
+  // Now kill the contents of the reservoirs sicne we won't need them anymore.
+  m_relocaliserState->exampleReservoirs.reset();
+  m_relocaliserState->lastFeaturesAddedStartIdx = 0;
+  m_relocaliserState->reservoirUpdateStartIdx = 0;
+}
+
 void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate>& poseCandidates) const
 {
   // Just forward the vector to P-RANSAC.
@@ -105,31 +116,6 @@ ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
 ScoreRelocaliserState_CPtr ScoreRelocaliser::get_relocaliser_state() const
 {
   return m_relocaliserState;
-}
-
-void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState)
-{
-  m_relocaliserState = relocaliserState;
-}
-
-void ScoreRelocaliser::update_all_clusters()
-{
-  // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
-  while(m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
-  {
-    update();
-  }
-}
-
-void ScoreRelocaliser::finish_training()
-{
-  // First, update all clusters.
-  update_all_clusters();
-
-  // Now kill the contents of the reservoirs sicne we won't need them anymore.
-  m_relocaliserState->exampleReservoirs.reset();
-  m_relocaliserState->lastFeaturesAddedStartIdx = 0;
-  m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
 void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
@@ -212,6 +198,11 @@ void ScoreRelocaliser::save_to_disk(const std::string& outputFolder) const
   m_relocaliserState->save_to_disk(outputFolder);
 }
 
+void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState)
+{
+  m_relocaliserState = relocaliserState;
+}
+
 void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                              const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
@@ -266,6 +257,15 @@ void ScoreRelocaliser::update()
   );
 
   update_reservoir_start_idx();
+}
+
+void ScoreRelocaliser::update_all_clusters()
+{
+  // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
+  while(m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
+  {
+    update();
+  }
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
