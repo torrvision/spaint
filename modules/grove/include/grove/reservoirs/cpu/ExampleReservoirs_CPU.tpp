@@ -11,7 +11,6 @@ namespace bf = boost::filesystem;
 #include <itmx/base/MemoryBlockFactory.h>
 
 #include <ORUtils/MemoryBlockPersister.h>
-using namespace ORUtils;
 
 #include "../shared/ExampleReservoirs_Shared.h"
 
@@ -23,7 +22,6 @@ template <typename ExampleType>
 ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
-  // Allocate variable that will store the RNGs.
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
   m_rngs = mbf.make_block<CPURNG>();
 
@@ -91,7 +89,7 @@ void ExampleReservoirs_CPU<ExampleType>::load_from_disk_sub(const std::string& i
 {
   // Load the RNG states.
   bf::path inputPath(inputFolder);
-  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 template <typename ExampleType>
@@ -111,7 +109,7 @@ void ExampleReservoirs_CPU<ExampleType>::save_to_disk_sub(const std::string& out
 {
   // Save the RNG states.
   bf::path outputPath(outputFolder);
-  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 }
