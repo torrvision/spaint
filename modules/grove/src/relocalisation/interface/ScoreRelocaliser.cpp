@@ -19,7 +19,7 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-  : m_settings(settings)
+: m_forestFilename(forestFilename), m_settings(settings)
 {
   const std::string settingsNamespace = "ScoreRelocaliser.";
 
@@ -30,11 +30,6 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
   // Relocaliser parameters
   //
   m_maxRelocalisationsToOutput = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxRelocalisationsToOutput", 1);
-
-  //
-  // Forest
-  //
-  m_forestFilename = forestFilename;
 
   //
   // Reservoirs parameters
@@ -66,7 +61,7 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
   m_relocaliserState.reset(new ScoreRelocaliserState);
 
 
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
   m_leafIndicesImage = mbf.make_image<LeafIndices>();
@@ -85,10 +80,10 @@ void ScoreRelocaliser::finish_training()
 {
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
-  // First, update all clusters.
+  // First update all of the clusters.
   update_all_clusters();
 
-  // Now kill the contents of the reservoirs since we won't need them anymore.
+  // Then kill the contents of the reservoirs (we won't need them any more).
   m_relocaliserState->exampleReservoirs.reset();
   m_relocaliserState->lastFeaturesAddedStartIdx = 0;
   m_relocaliserState->reservoirUpdateStartIdx = 0;
