@@ -8,8 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
-
+#include <ORUtils/Math.h>
 #include <ORUtils/MemoryBlock.h>
 
 namespace grove {
