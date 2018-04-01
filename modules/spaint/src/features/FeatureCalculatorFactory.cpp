@@ -17,11 +17,11 @@ namespace spaint {
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 FeatureCalculator_CPtr FeatureCalculatorFactory::make_vop_feature_calculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount,
-                                                                             ITMLibSettings::DeviceType deviceType)
+                                                                             DeviceType deviceType)
 {
   FeatureCalculator_CPtr calculator;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     calculator.reset(new VOPFeatureCalculator_CUDA(maxVoxelLocationCount, patchSize, patchSpacing, binCount));

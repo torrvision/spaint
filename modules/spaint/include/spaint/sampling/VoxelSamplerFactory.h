@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_VOXELSAMPLERFACTORY
 #define H_SPAINT_VOXELSAMPLERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/PerLabelVoxelSampler.h"
 #include "interface/UniformVoxelSampler.h"
@@ -30,8 +30,7 @@ public:
    * \param deviceType        The device on which the sampler should operate.
    * \return                  The voxel sampler.
    */
-  static PerLabelVoxelSampler_CPtr make_per_label_sampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed,
-                                                          ITMLib::ITMLibSettings::DeviceType deviceType);
+  static PerLabelVoxelSampler_CPtr make_per_label_sampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed, DeviceType deviceType);
 
   /**
    * \brief Makes a uniform voxel sampler.
@@ -41,7 +40,7 @@ public:
    * \param deviceType        The device on which the sampler should operate.
    * \return                  The voxel sampler.
    */
-  static UniformVoxelSampler_CPtr make_uniform_sampler(int raycastResultSize, unsigned int seed, ITMLib::ITMLibSettings::DeviceType deviceType);
+  static UniformVoxelSampler_CPtr make_uniform_sampler(int raycastResultSize, unsigned int seed, DeviceType deviceType);
 };
 
 }

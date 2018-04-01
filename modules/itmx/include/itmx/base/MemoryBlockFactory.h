@@ -8,8 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Utils/ITMLibSettings.h>
-
+#include <ORUtils/DeviceType.h>
 #include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
@@ -23,7 +22,7 @@ class MemoryBlockFactory
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The type of device on which the memory blocks will primarily be used. */
-  ITMLib::ITMLibSettings::DeviceType m_deviceType;
+  DeviceType m_deviceType;
 
   //#################### SINGLETON IMPLEMENTATION ####################
 private:
@@ -51,7 +50,7 @@ public:
   template <typename T>
   boost::shared_ptr<ORUtils::MemoryBlock<T> > make_block(size_t dataSize = 0) const
   {
-    bool allocateGPU = m_deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA;
+    bool allocateGPU = m_deviceType == DEVICE_CUDA;
     return boost::shared_ptr<ORUtils::MemoryBlock<T> >(new ORUtils::MemoryBlock<T>(dataSize, true, allocateGPU));
   }
 
@@ -64,7 +63,7 @@ public:
   template <typename T>
   boost::shared_ptr<ORUtils::Image<T> > make_image(const ORUtils::Vector2<int> size = ORUtils::Vector2<int>(0, 0)) const
   {
-    bool allocateGPU = m_deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA;
+    bool allocateGPU = m_deviceType == DEVICE_CUDA;
     return boost::shared_ptr<ORUtils::Image<T> >(new ORUtils::Image<T>(size, true, allocateGPU));
   }
 
@@ -76,7 +75,7 @@ public:
    *
    * \param deviceType  The type of device on which the memory blocks made by the factory will primarily be used.
    */
-  void set_device_type(ITMLib::ITMLibSettings::DeviceType deviceType);
+  void set_device_type(DeviceType deviceType);
 };
 
 }

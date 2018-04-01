@@ -84,9 +84,9 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
       // FIXME: This is a workaround that is needed because DepthToUchar4 is currently CPU-only.
       static ITMFloatImage temp(output->noDims, true, true);
       m_surfelVisualisationEngine->RenderDepthImage(scene.get(), &pose, renderState.get(), &temp);
-      if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) temp.UpdateHostFromDevice();
+      if(m_settings->deviceType == DEVICE_CUDA) temp.UpdateHostFromDevice();
       IITMVisualisationEngine::DepthToUchar4(output.get(), &temp);
-      if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateDeviceFromHost();
+      if(m_settings->deviceType == DEVICE_CUDA) output->UpdateDeviceFromHost();
       break;
     }
     case VT_SCENE_NORMAL:
@@ -112,7 +112,7 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
     }
   }
 
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
+  if(m_settings->deviceType == DEVICE_CUDA) output->UpdateHostFromDevice();
 }
 
 void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
@@ -182,14 +182,14 @@ void VisualisationGenerator::get_default_raycast(const ITMUChar4Image_Ptr& outpu
 void VisualisationGenerator::get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
 {
   prepare_to_copy_visualisation(view->depth->noDims, output);
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->depth->UpdateHostFromDevice();
+  if(m_settings->deviceType == DEVICE_CUDA) view->depth->UpdateHostFromDevice();
   m_voxelVisualisationEngine->DepthToUchar4(output.get(), view->depth);
 }
 
 void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
 {
   prepare_to_copy_visualisation(view->rgb->noDims, output);
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
+  if(m_settings->deviceType == DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
   output->SetFrom(view->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
@@ -211,7 +211,7 @@ void VisualisationGenerator::make_postprocessed_cpu_copy(const ITMUChar4Image *i
     // Copy the input raycast to the output raycast on the relevant device (e.g. on the GPU, if that's where the input currently resides).
     outputRaycast->SetFrom(
       inputRaycast,
-      m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+      m_settings->deviceType == DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
     );
 
     // Post-process the output raycast.
@@ -225,7 +225,7 @@ void VisualisationGenerator::make_postprocessed_cpu_copy(const ITMUChar4Image *i
     // If there is no post-processing to be done, copy the input raycast directly into the CPU memory of the output raycast.
     outputRaycast->SetFrom(
       inputRaycast,
-      m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+      m_settings->deviceType == DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
     );
   }
 }
