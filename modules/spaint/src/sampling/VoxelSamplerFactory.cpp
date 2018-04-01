@@ -19,11 +19,11 @@ namespace spaint {
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 PerLabelVoxelSampler_CPtr VoxelSamplerFactory::make_per_label_sampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed,
-                                                                      ITMLibSettings::DeviceType deviceType)
+                                                                      DeviceType deviceType)
 {
   PerLabelVoxelSampler_CPtr sampler;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     sampler.reset(new PerLabelVoxelSampler_CUDA(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed));
@@ -40,11 +40,11 @@ PerLabelVoxelSampler_CPtr VoxelSamplerFactory::make_per_label_sampler(size_t max
   return sampler;
 }
 
-UniformVoxelSampler_CPtr VoxelSamplerFactory::make_uniform_sampler(int raycastResultSize, unsigned int seed, ITMLibSettings::DeviceType deviceType)
+UniformVoxelSampler_CPtr VoxelSamplerFactory::make_uniform_sampler(int raycastResultSize, unsigned int seed, DeviceType deviceType)
 {
   UniformVoxelSampler_CPtr sampler;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     sampler.reset(new UniformVoxelSampler_CUDA(raycastResultSize, seed));

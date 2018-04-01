@@ -6,7 +6,7 @@
 #ifndef H_ITMX_DEPTHVISUALISERFACTORY
 #define H_ITMX_DEPTHVISUALISERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/DepthVisualiser.h"
 
@@ -25,7 +25,7 @@ struct DepthVisualiserFactory
    * \param deviceType  The device on which the visualiser should operate.
    * \return            The visualiser.
    */
-  static DepthVisualiser_CPtr make_depth_visualiser(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static DepthVisualiser_CPtr make_depth_visualiser(DeviceType deviceType);
 };
 
 }

@@ -6,7 +6,7 @@
 #ifndef H_GROVE_PREEMPTIVERANSACFACTORY
 #define H_GROVE_PREEMPTIVERANSACFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include <tvgutil/misc/SettingsContainer.h>
 
@@ -28,7 +28,7 @@ struct PreemptiveRansacFactory
    * \param deviceType  The device on which the instance of preemptive RANSAC should operate.
    * \return            The instance of preemptive RANSAC.
    */
-  static PreemptiveRansac_Ptr make_preemptive_ransac(const tvgutil::SettingsContainer_CPtr& settings, ITMLib::ITMLibSettings::DeviceType deviceType);
+  static PreemptiveRansac_Ptr make_preemptive_ransac(const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
 };
 
 }

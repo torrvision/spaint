@@ -8,7 +8,7 @@
 
 #include <climits>
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/LabelSmoother.h"
 
@@ -29,7 +29,7 @@ struct LabelSmootherFactory
    * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if smoothing is to occur.
    * \return                                  The label smoother.
    */
-  static LabelSmoother_CPtr make_label_smoother(size_t maxLabelCount, ITMLib::ITMLibSettings::DeviceType deviceType, float maxSquaredDistanceBetweenVoxels = 10.0f * 10.0f);
+  static LabelSmoother_CPtr make_label_smoother(size_t maxLabelCount, DeviceType deviceType, float maxSquaredDistanceBetweenVoxels = 10.0f * 10.0f);
 };
 
 }

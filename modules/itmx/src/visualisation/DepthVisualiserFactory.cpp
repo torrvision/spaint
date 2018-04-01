@@ -16,11 +16,11 @@ namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-DepthVisualiser_CPtr DepthVisualiserFactory::make_depth_visualiser(ITMLibSettings::DeviceType deviceType)
+DepthVisualiser_CPtr DepthVisualiserFactory::make_depth_visualiser(DeviceType deviceType)
 {
   DepthVisualiser_CPtr visualiser;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     visualiser.reset(new DepthVisualiser_CUDA);

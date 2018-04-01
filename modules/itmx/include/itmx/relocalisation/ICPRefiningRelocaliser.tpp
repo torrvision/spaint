@@ -48,7 +48,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   // Construct the tracking controller, tracking state and view.
   m_trackingController.reset(new ITMLib::ITMTrackingController(m_tracker.get(), m_settings.get()));
   m_trackingState.reset(new ITMLib::ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
-  m_view.reset(new ITMLib::ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA));
+  m_view.reset(new ITMLib::ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == DEVICE_CUDA));
 
   // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
@@ -143,8 +143,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     const ORUtils::SE3Pose initialPose = initialResults[resultIdx].pose;
 
     // Copy the depth and RGB images into the view.
-    m_view->depth->SetFrom(depthImage, m_settings->deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
-    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
+    m_view->depth->SetFrom(depthImage, m_settings->deviceType == DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
+    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
 
     // Create a fresh render state ready for raycasting.
     // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads

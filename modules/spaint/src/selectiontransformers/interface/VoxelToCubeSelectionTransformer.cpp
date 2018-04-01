@@ -4,14 +4,13 @@
  */
 
 #include "selectiontransformers/interface/VoxelToCubeSelectionTransformer.h"
-using namespace ITMLib;
 using namespace tvginput;
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelToCubeSelectionTransformer::VoxelToCubeSelectionTransformer(int radius, ITMLibSettings::DeviceType deviceType)
+VoxelToCubeSelectionTransformer::VoxelToCubeSelectionTransformer(int radius, DeviceType deviceType)
 : SelectionTransformer(deviceType),
   m_radius(radius)
 {}
