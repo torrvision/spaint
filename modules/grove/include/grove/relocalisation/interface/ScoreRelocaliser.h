@@ -11,7 +11,7 @@
 
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
+
 #include <ORUtils/Image.h>
 #include <ORUtils/SE3Pose.h>
 

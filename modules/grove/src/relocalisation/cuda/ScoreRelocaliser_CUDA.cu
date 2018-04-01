@@ -6,7 +6,6 @@
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
 
 #include <itmx/base/MemoryBlockFactory.h>
@@ -45,23 +44,23 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
   // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
   // Features.
-  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DEVICE_CUDA);
+  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(DEVICE_CUDA);
 
   // LowLevelEngine.
-  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CUDA));
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(DEVICE_CUDA));
 
   // Forest.
-  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, ITMLibSettings::DEVICE_CUDA);
+  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, DEVICE_CUDA);
 
   // These variables have to be set here, since they depend on the forest that has just been loaded.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CUDA);
+      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, DEVICE_CUDA);
 
   // P-RANSAC.
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, DEVICE_CUDA);
 
   // Clear internal state (no virtual calls in the constructor).
   ScoreRelocaliser_CUDA::reset();
@@ -109,7 +108,7 @@ void ScoreRelocaliser_CUDA::reset()
   // Setup the reservoirs if they haven't been allocated yet.
   if(!m_relocaliserState->exampleReservoirs)
   {
-    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CUDA, m_rngSeed);
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, DEVICE_CUDA, m_rngSeed);
   }
 
   // Setup the predictions block.
