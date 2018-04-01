@@ -36,7 +36,7 @@ template struct ExampleClustererFactory<Keypoint3DColour, Keypoint3DColourCluste
 
 template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescriptor> >
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint2D,RGBDPatchDescriptor>(
-    ITMLib::ITMLibSettings::DeviceType deviceType,
+    DeviceType deviceType,
     bool depthAdaptive,
     RGBDPatchFeatureDifferenceType depthDifferenceType,
     uint32_t depthFeatureCount,
@@ -50,7 +50,7 @@ template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescri
     uint32_t rgbMaxRadius);
 template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint3DColour,RGBDPatchDescriptor> >
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint3DColour,RGBDPatchDescriptor>(
-    ITMLib::ITMLibSettings::DeviceType deviceType,
+    DeviceType deviceType,
     bool depthAdaptive,
     RGBDPatchFeatureDifferenceType depthDifferenceType,
     uint32_t depthFeatureCount,

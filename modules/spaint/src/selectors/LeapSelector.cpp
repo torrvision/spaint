@@ -148,7 +148,7 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
 
       // Record the selected voxel.
       *m_pickPointShortMB->GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();
-      if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
+      if(m_settings->deviceType == DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
 
       break;
     }

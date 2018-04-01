@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_SEMANTICVISUALISERFACTORY
 #define H_SPAINT_SEMANTICVISUALISERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/SemanticVisualiser.h"
 
@@ -26,7 +26,7 @@ struct SemanticVisualiserFactory
    * \param deviceType    The device on which the visualiser should operate.
    * \return              The visualiser.
    */
-  static SemanticVisualiser_CPtr make_semantic_visualiser(size_t maxLabelCount, ITMLib::ITMLibSettings::DeviceType deviceType);
+  static SemanticVisualiser_CPtr make_semantic_visualiser(size_t maxLabelCount, DeviceType deviceType);
 };
 
 }

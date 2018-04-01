@@ -17,11 +17,11 @@ namespace grove {
 
 template <typename ExampleType>
 typename ExampleReservoirsFactory<ExampleType>::Reservoirs_Ptr
-ExampleReservoirsFactory<ExampleType>::make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t rngSeed)
+ExampleReservoirsFactory<ExampleType>::make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, DeviceType deviceType, uint32_t rngSeed)
 {
   Reservoirs_Ptr reservoir;
 
-  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     reservoir.reset(new ExampleReservoirs_CUDA<ExampleType>(reservoirCount, reservoirCapacity, rngSeed));

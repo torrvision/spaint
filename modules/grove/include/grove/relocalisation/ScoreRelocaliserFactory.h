@@ -6,7 +6,7 @@
 #ifndef H_GROVE_SCORERELOCALISERFACTORY
 #define H_GROVE_SCORERELOCALISERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include <tvgutil/misc/SettingsContainer.h>
 
@@ -32,9 +32,7 @@ public:
    *
    * \throws std::runtime_error If the relocaliser cannot be created.
    */
-  static ScoreRelocaliser_Ptr make_score_relocaliser(ITMLib::ITMLibSettings::DeviceType deviceType,
-                                                     const tvgutil::SettingsContainer_CPtr& settings,
-                                                     const std::string& forestFilename);
+  static ScoreRelocaliser_Ptr make_score_relocaliser(DeviceType deviceType, const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
 };
 
 }

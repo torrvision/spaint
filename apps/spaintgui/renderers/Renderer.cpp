@@ -434,7 +434,7 @@ const boost::optional<VisualisationGenerator::Postprocessor>& Renderer::get_post
   {
     postprocessor.reset();
   }
-  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
+  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == DEVICE_CUDA)
   {
 #if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
     const unsigned int kernelWidth = 3;

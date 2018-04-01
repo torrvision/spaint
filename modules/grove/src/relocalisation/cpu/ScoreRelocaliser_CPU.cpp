@@ -6,7 +6,6 @@
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
 
 #include <itmx/base/MemoryBlockFactory.h>
@@ -29,19 +28,19 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
   // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
   // Features.
-  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DEVICE_CPU);
+  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(DEVICE_CPU);
 
   // LowLevelEngine.
-  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CPU));
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(DEVICE_CPU));
 
   // Forest.
-  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, ITMLibSettings::DEVICE_CPU);
+  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, DEVICE_CPU);
 
   // These variables have to be set here, since they depend on the forest.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
 
   // P-RANSAC.
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CPU);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, DEVICE_CPU);
 
   // Clear internal state.
   ScoreRelocaliser_CPU::reset();
@@ -89,12 +88,12 @@ void ScoreRelocaliser_CPU::reset()
   if(!m_exampleClusterer)
   {
     m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-        m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CPU);
+        m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, DEVICE_CPU);
   }
 
   // Setup the reservoirs if they haven't been allocated yet.
   if(!m_relocaliserState->exampleReservoirs)
-    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CPU, m_rngSeed);
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, DEVICE_CPU, m_rngSeed);
 
   // Setup the predictions block.
   if(!m_relocaliserState->predictionsBlock)
