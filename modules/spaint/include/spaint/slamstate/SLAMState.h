@@ -28,13 +28,13 @@ private:
   std::map<std::string,Fiducial_Ptr> m_fiducials;
 
   /** The mask to apply to the input images during tracking. */
-  ITMUCharImage_Ptr m_inputMask;
+  ORUCharImage_Ptr m_inputMask;
 
   /** The image into which depth input is read each frame. */
-  ITMShortImage_Ptr m_inputRawDepthImage;
+  ORShortImage_Ptr m_inputRawDepthImage;
 
   /** The image into which RGB input is read each frame. */
-  ITMUChar4Image_Ptr m_inputRGBImage;
+  ORUChar4Image_Ptr m_inputRGBImage;
 
   /** The surfel render state corresponding to the live camera pose. */
   SurfelRenderState_Ptr m_liveSurfelRenderState;
@@ -75,35 +75,35 @@ public:
    *
    * \return  The mask to apply to the input images during tracking (may be NULL).
    */
-  ITMUCharImage_CPtr get_input_mask() const;
+  ORUCharImage_CPtr get_input_mask() const;
 
   /**
    * \brief Gets the image into which depth input is read each frame.
    *
    * \return  The image into which depth input is read each frame.
    */
-  const ITMShortImage_Ptr& get_input_raw_depth_image();
+  const ORShortImage_Ptr& get_input_raw_depth_image();
 
   /**
    * \brief Gets a copy of the image into which depth input is read each frame.
    *
    * \return  A copy of the image into which depth input is read each frame.
    */
-  ITMShortImage_Ptr get_input_raw_depth_image_copy() const;
+  ORShortImage_Ptr get_input_raw_depth_image_copy() const;
 
   /**
    * \brief Gets the image into which RGB input is read each frame.
    *
    * \return  The image into which RGB input is read each frame.
    */
-  const ITMUChar4Image_Ptr& get_input_rgb_image();
+  const ORUChar4Image_Ptr& get_input_rgb_image();
 
   /**
    * \brief Gets a copy of the image into which RGB input is read each frame.
    *
    * \return        A copy of the image into which RGB input is read each frame.
    */
-  ITMUChar4Image_Ptr get_input_rgb_image_copy() const;
+  ORUChar4Image_Ptr get_input_rgb_image_copy() const;
 
   /**
    * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the scene.
@@ -201,21 +201,21 @@ public:
    *
    * \param inputMask The mask to apply to the input images during tracking (may be NULL).
    */
-  void set_input_mask(const ITMUCharImage_Ptr& inputMask);
+  void set_input_mask(const ORUCharImage_Ptr& inputMask);
 
   /**
    * \brief Sets the image into which depth input is read each frame.
    *
    * \param inputRawDepthImage  The image into which depth input is read each frame.
    */
-  void set_input_raw_depth_image(const ITMShortImage_Ptr& inputRawDepthImage);
+  void set_input_raw_depth_image(const ORShortImage_Ptr& inputRawDepthImage);
 
   /**
    * \brief Sets the image into which RGB input is read each frame.
    *
    * \param inputRGBImage The image into which RGB input is read each frame.
    */
-  void set_input_rgb_image(const ITMUChar4Image_Ptr& inputRGBImage);
+  void set_input_rgb_image(const ORUChar4Image_Ptr& inputRGBImage);
 
   /**
    * \brief Sets the surfel render state corresponding to the live camera pose.

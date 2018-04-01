@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_UNIFORMVOXELSAMPLER
 #define H_SPAINT_UNIFORMVOXELSAMPLER
 
-#include <ITMLib/Utils/ITMImageTypes.h>
+#include <ORUtils/ImageTypes.h>
 
 #include "../../util/SpaintVoxelScene.h"
 
@@ -62,7 +62,7 @@ private:
    * \param sampledVoxelCount       The number of sampled voxels.
    * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    */
-  virtual void write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t sampledVoxelCount, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const = 0;
+  virtual void write_sampled_voxel_locations(const ORFloat4Image *raycastResult, size_t sampledVoxelCount, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -75,7 +75,7 @@ public:
    * \param numVoxelsToSample       The number of voxels to sample.
    * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    */
-  void sample_voxels(const ITMFloat4Image *raycastResult, size_t numVoxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const;
+  void sample_voxels(const ORFloat4Image *raycastResult, size_t numVoxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const;
 };
 
 //#################### TYPEDEFS ####################

@@ -8,42 +8,42 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Utils/ITMImageTypes.h>
+#include <ORUtils/ImageTypes.h>
 
-typedef boost::shared_ptr<ORUtils::Image<bool> > ITMBoolImage_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<float> > ITMFloatImage_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector2f> > ITMFloat2Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector3f> > ITMFloat3Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector4f> > ITMFloat4Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<int> > ITMIntImage_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector2i> > ITMInt2Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector3i> > ITMInt3Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector4i> > ITMInt4Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<short> > ITMShortImage_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector2s> > ITMShort2Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector3s> > ITMShort3Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector4s> > ITMShort4Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<uchar> > ITMUCharImage_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<Vector4u> > ITMUChar4Image_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<uint> > ITMUIntImage_Ptr;
-typedef boost::shared_ptr<ORUtils::Image<ushort> > ITMUShortImage_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<bool> > ORBoolImage_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<float> > ORFloatImage_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector2f> > ORFloat2Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector3f> > ORFloat3Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector4f> > ORFloat4Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<int> > ORIntImage_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector2i> > ORInt2Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector3i> > ORInt3Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector4i> > ORInt4Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<short> > ORShortImage_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector2s> > ORShort2Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector3s> > ORShort3Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector4s> > ORShort4Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<uchar> > ORUCharImage_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<Vector4u> > ORUChar4Image_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<uint> > ORUIntImage_Ptr;
+typedef boost::shared_ptr<ORUtils::Image<ushort> > ORUShortImage_Ptr;
 
-typedef boost::shared_ptr<const ORUtils::Image<bool> > ITMBoolImage_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<float> > ITMFloatImage_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector2f> > ITMFloat2Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector3f> > ITMFloat3Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector4f> > ITMFloat4Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<int> > ITMIntImage_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector2i> > ITMInt2Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector3i> > ITMInt3Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector4i> > ITMInt4Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<short> > ITMShortImage_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector2s> > ITMShort2Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector3s> > ITMShort3Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector4s> > ITMShort4Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<uchar> > ITMUCharImage_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<Vector4u> > ITMUChar4Image_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<uint> > ITMUIntImage_CPtr;
-typedef boost::shared_ptr<const ORUtils::Image<ushort> > ITMUShortImage_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<bool> > ORBoolImage_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<float> > ORFloatImage_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector2f> > ORFloat2Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector3f> > ORFloat3Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector4f> > ORFloat4Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<int> > ORIntImage_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector2i> > ORInt2Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector3i> > ORInt3Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector4i> > ORInt4Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<short> > ORShortImage_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector2s> > ORShort2Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector3s> > ORShort3Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector4s> > ORShort4Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<uchar> > ORUCharImage_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<Vector4u> > ORUChar4Image_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<uint> > ORUIntImage_CPtr;
+typedef boost::shared_ptr<const ORUtils::Image<ushort> > ORUShortImage_CPtr;
 
 #endif

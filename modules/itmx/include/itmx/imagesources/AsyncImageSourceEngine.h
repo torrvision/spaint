@@ -33,10 +33,10 @@ private:
     ITMLib::ITMRGBDCalib calib;
 
     /** The depth component of the RGB-D image. */
-    ITMShortImage_Ptr rawDepth;
+    ORShortImage_Ptr rawDepth;
 
     /** The RGB component of the RGB-D image. */
-    ITMUChar4Image_Ptr rgb;
+    ORUChar4Image_Ptr rgb;
   };
 
   //#################### PRIVATE VARIABLES ####################
@@ -97,7 +97,7 @@ public:
   virtual Vector2i getDepthImageSize() const;
 
   /** Override */
-  virtual void getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
+  virtual void getImages(ORUChar4Image *rgb, ORShortImage *rawDepth);
 
   /** Override */
   virtual Vector2i getRGBImageSize() const;

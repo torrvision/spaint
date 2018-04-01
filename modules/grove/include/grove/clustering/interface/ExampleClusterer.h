@@ -74,13 +74,13 @@ protected:
   //################################################################################
 protected:
   /** An image storing the cluster index associated with each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_clusterIndices;
+  ORIntImage_Ptr m_clusterIndices;
 
   /**
    * An image storing a cluster size histogram for each example set under consideration (one histogram per row).
    * Pixel (i,j) in the image counts the number of clusters in example set i that have size j.
    */
-  ITMIntImage_Ptr m_clusterSizeHistograms;
+  ORIntImage_Ptr m_clusterSizeHistograms;
 
   /**
    * The size of each cluster (for each considered example set). Has exampleSetCount rows and exampleSets->width columns.
@@ -89,19 +89,19 @@ protected:
    * example set i, the first m_nbClustersPerExampleSet[i] pixels store the sizes of the clusters for that example set.
    * The remaining pixels on the row are ignored.
    */
-  ITMIntImage_Ptr m_clusterSizes;
+  ORIntImage_Ptr m_clusterSizes;
 
   /** An image storing the density of examples around each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
-  ITMFloatImage_Ptr m_densities;
+  ORFloatImage_Ptr m_densities;
 
   /** Stores the number of valid clusters in each example set. Has exampleSetCount elements. */
-  ITMIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
+  ORIntMemoryBlock_Ptr m_nbClustersPerExampleSet;
 
   /** Defines the cluster tree structure. Holds the index of the parent for each example in the input sets. Has exampleSetCount rows and exampleSets->width columns. */
-  ITMIntImage_Ptr m_parents;
+  ORIntImage_Ptr m_parents;
 
   /** An image storing the indices of the selected clusters in each example set. Has exampleSetCount rows and m_maxClusterCount columns. */
-  ITMIntImage_Ptr m_selectedClusters;
+  ORIntImage_Ptr m_selectedClusters;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -139,7 +139,7 @@ public:
    *
    * \throws std::invalid_argument If exampleSetStart + exampleSetCount would result in out-of-bounds access in exampleSets.
    */
-  void cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
+  void cluster_examples(const ExampleImage_CPtr& exampleSets, const ORIntMemoryBlock_CPtr& exampleSetSizes,
                         uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers);
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
@@ -226,7 +226,7 @@ private:
    * \param exampleSetIdx   The index of the example set to whose size we want to get a pointer.
    * \return                A raw pointer to the size of the specified example set.
    */
-  virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr& exampleSetSizes, uint32_t exampleSetIdx) const = 0;
+  virtual const int *get_pointer_to_example_set_size(const ORIntMemoryBlock_CPtr& exampleSetSizes, uint32_t exampleSetIdx) const = 0;
 
   /**
    * \brief Resets the cluster containers for the example sets that are being clustered.

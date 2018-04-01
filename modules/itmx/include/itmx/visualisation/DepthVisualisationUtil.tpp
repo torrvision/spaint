@@ -15,7 +15,7 @@ namespace itmx {
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 template <typename VoxelType, typename IndexType>
-void DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+void DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(const ORFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                                              const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState,
                                                                              DepthVisualiser::DepthType depthType, const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine,
                                                                              const itmx::DepthVisualiser_CPtr& depthVisualiser, const Settings_CPtr& settings)

@@ -76,7 +76,7 @@ uint32_t ExampleReservoirs<ExampleType>::get_reservoir_count() const
 }
 
 template <typename ExampleType>
-ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() const
+ORIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() const
 {
   return m_reservoirSizes;
 }
