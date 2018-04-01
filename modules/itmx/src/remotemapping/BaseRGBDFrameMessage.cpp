@@ -5,7 +5,7 @@
 
 #include "remotemapping/BaseRGBDFrameMessage.h"
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 
 namespace itmx {
 
