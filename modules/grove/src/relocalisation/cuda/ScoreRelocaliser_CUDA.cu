@@ -30,33 +30,6 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
 : ScoreRelocaliser(settings, DEVICE_CUDA, forestFilename)
 {}
 
-//#################### PUBLIC MEMBER FUNCTIONS ####################
-
-std::vector<Keypoint3DColour> ScoreRelocaliser_CUDA::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
-{
-  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
-  {
-    throw std::invalid_argument("Invalid tree or leaf index.");
-  }
-
-  const uint32_t linearReservoirIdx = leafIdx * m_scoreForest->get_nb_trees() + treeIdx;
-  const uint32_t currentReservoirSize = m_relocaliserState->exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, MEMORYDEVICE_CUDA);
-  const uint32_t reservoirCapacity = m_relocaliserState->exampleReservoirs->get_reservoir_capacity();
-
-  std::vector<Keypoint3DColour> reservoirContents;
-  reservoirContents.reserve(currentReservoirSize);
-
-  m_relocaliserState->exampleReservoirs->get_reservoirs()->UpdateHostFromDevice();
-  const Keypoint3DColour *reservoirData = m_relocaliserState->exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
-
-  for(uint32_t i = 0; i < currentReservoirSize; ++i)
-  {
-    reservoirContents.push_back(reservoirData[linearReservoirIdx * reservoirCapacity + i]);
-  }
-
-  return reservoirContents;
-}
-
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,

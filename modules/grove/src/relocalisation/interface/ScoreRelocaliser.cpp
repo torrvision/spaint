@@ -134,7 +134,7 @@ ScorePrediction ScoreRelocaliser::get_raw_prediction(uint32_t treeIdx, uint32_t 
     throw std::invalid_argument("Invalid tree or leaf index.");
   }
 
-  MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  const MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   return m_relocaliserState->predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, memoryType);
 }
 
@@ -146,6 +146,33 @@ ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
 ScoreRelocaliserState_CPtr ScoreRelocaliser::get_relocaliser_state() const
 {
   return m_relocaliserState;
+}
+
+std::vector<Keypoint3DColour> ScoreRelocaliser::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
+{
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  {
+    throw std::invalid_argument("Invalid tree or leaf index.");
+  }
+
+  const MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+
+  const uint32_t linearReservoirIdx = leafIdx * m_scoreForest->get_nb_trees() + treeIdx;
+  const uint32_t currentReservoirSize = m_relocaliserState->exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, memoryType);
+  const uint32_t reservoirCapacity = m_relocaliserState->exampleReservoirs->get_reservoir_capacity();
+
+  std::vector<Keypoint3DColour> reservoirContents;
+  reservoirContents.reserve(currentReservoirSize);
+
+  if(m_deviceType == DEVICE_CUDA) m_relocaliserState->exampleReservoirs->get_reservoirs()->UpdateHostFromDevice();
+  const Keypoint3DColour *reservoirData = m_relocaliserState->exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
+
+  for(uint32_t i = 0; i < currentReservoirSize; ++i)
+  {
+    reservoirContents.push_back(reservoirData[linearReservoirIdx * reservoirCapacity + i]);
+  }
+
+  return reservoirContents;
 }
 
 void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)

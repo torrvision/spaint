@@ -161,13 +161,6 @@ public:
    */
   virtual ~ScoreRelocaliser();
 
-  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief TODO
-   */
-  virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const = 0;
-
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
@@ -236,6 +229,11 @@ public:
    * \return A pointer to the relocaliser state.
    */
   ScoreRelocaliserState_CPtr get_relocaliser_state() const;
+
+  /**
+   * \brief TODO
+   */
+  std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
   /** Override */
   virtual void load_from_disk(const std::string& inputFolder);

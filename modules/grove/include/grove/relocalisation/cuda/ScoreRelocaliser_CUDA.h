@@ -32,11 +32,6 @@ public:
    */
   ScoreRelocaliser_CUDA(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /** Override */
-  virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
-
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /** Override */
