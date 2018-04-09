@@ -40,9 +40,6 @@ public:
   /** Override */
   virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
-  /** Override */
-  virtual void reset();
-
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /** Override */

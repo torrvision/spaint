@@ -5,16 +5,9 @@
 
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 
-#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-using namespace ITMLib;
-
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
-#include "clustering/ExampleClustererFactory.h"
-#include "features/FeatureCalculatorFactory.h"
-#include "forests/DecisionForestFactory.h"
-#include "ransac/PreemptiveRansacFactory.h"
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
 #include "reservoirs/ExampleReservoirsFactory.h"
 
@@ -23,33 +16,8 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename)
-: ScoreRelocaliser(settings, forestFilename)
-{
-  // Instantiate the sub-algorithms knowing that we are running on the GPU.
-
-  // Features.
-  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(DEVICE_CPU);
-
-  // LowLevelEngine.
-  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(DEVICE_CPU));
-
-  // Forest.
-  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, DEVICE_CPU);
-
-  // These variables have to be set here, since they depend on the forest.
-  m_reservoirsCount = m_scoreForest->get_nb_leaves();
-
-
-  // Clustering.
-  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, DEVICE_CPU);
-
-  // P-RANSAC.
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, DEVICE_CPU);
-
-  // Clear internal state.
-  ScoreRelocaliser_CPU::reset();
-}
+: ScoreRelocaliser(settings, DEVICE_CPU, forestFilename)
+{}
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
@@ -85,19 +53,6 @@ std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint3
   }
 
   return reservoirContents;
-}
-
-void ScoreRelocaliser_CPU::reset()
-{
-  // Setup the reservoirs if they haven't been allocated yet.
-  if(!m_relocaliserState->exampleReservoirs)
-    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, DEVICE_CPU, m_rngSeed);
-
-  // Setup the predictions block.
-  if(!m_relocaliserState->predictionsBlock)
-    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
-
-  ScoreRelocaliser::reset();
 }
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################

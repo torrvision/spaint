@@ -8,18 +8,29 @@
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 
+#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
+using namespace ITMLib;
+
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
+#include "clustering/ExampleClustererFactory.h"
+#include "features/FeatureCalculatorFactory.h"
+#include "forests/DecisionForestFactory.h"
+#include "ransac/PreemptiveRansacFactory.h"
+#include "reservoirs/ExampleReservoirsFactory.h"
+
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-: m_forestFilename(forestFilename), m_settings(settings)
+ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, DeviceType deviceType, const std::string& forestFilename)
+: m_deviceType(deviceType),
+  m_forestFilename(forestFilename),
+  m_settings(settings)
 {
   const std::string settingsNamespace = "ScoreRelocaliser.";
 
@@ -68,6 +79,19 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
   m_predictionsImage = mbf.make_image<ScorePrediction>();
   m_rgbdPatchDescriptorImage = mbf.make_image<DescriptorType>();
   m_rgbdPatchKeypointsImage = mbf.make_image<ExampleType>();
+
+  // Instantiate the sub-algorithms.
+  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(deviceType));
+  m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
+  m_reservoirsCount = m_scoreForest->get_nb_leaves();
+  m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
+    m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, deviceType
+  );
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, deviceType);
+
+  // Clear internal state.
+  reset();
 }
 
 //#################### DESTRUCTOR ####################
@@ -177,6 +201,18 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
 
 void ScoreRelocaliser::reset()
 {
+  // Setup the reservoirs if they haven't been allocated yet.
+  if(!m_relocaliserState->exampleReservoirs)
+  {
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, m_deviceType, m_rngSeed);
+  }
+
+  // Setup the predictions block if it hasn't been allocated yet.
+  if(!m_relocaliserState->predictionsBlock)
+  {
+    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+  }
+
   m_relocaliserState->exampleReservoirs->reset();
   m_relocaliserState->predictionsBlock->Clear();
 
