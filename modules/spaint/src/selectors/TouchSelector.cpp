@@ -39,7 +39,7 @@ TouchSelector::TouchSelector(const Settings_CPtr& itmSettings, const TouchSettin
   m_isActive = true;
 
   // Make the picker.
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(m_settings->deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     m_picker.reset(new Picker_CUDA);
