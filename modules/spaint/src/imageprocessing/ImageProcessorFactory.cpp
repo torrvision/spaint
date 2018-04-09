@@ -4,7 +4,6 @@
  */
 
 #include "imageprocessing/ImageProcessorFactory.h"
-using namespace ITMLib;
 
 #include "imageprocessing/cpu/ImageProcessor_CPU.h"
 
@@ -16,11 +15,11 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ImageProcessor_CPtr ImageProcessorFactory::make_image_processor(ITMLibSettings::DeviceType deviceType)
+ImageProcessor_CPtr ImageProcessorFactory::make_image_processor(DeviceType deviceType)
 {
   ImageProcessor_CPtr imageProcessor;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     imageProcessor.reset(new ImageProcessor_CUDA);
