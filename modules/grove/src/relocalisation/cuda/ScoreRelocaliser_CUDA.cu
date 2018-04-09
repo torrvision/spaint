@@ -6,7 +6,6 @@
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
 
 #include <itmx/base/MemoryBlockFactory.h>
@@ -15,7 +14,7 @@ using itmx::MemoryBlockFactory;
 #include "clustering/ExampleClustererFactory.h"
 #include "features/FeatureCalculatorFactory.h"
 #include "forests/DecisionForestFactory.h"
-#include "ransac/RansacFactory.h"
+#include "ransac/PreemptiveRansacFactory.h"
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
 #include "reservoirs/ExampleReservoirsFactory.h"
 
@@ -26,11 +25,8 @@ namespace grove {
 //#################### CUDA KERNELS ####################
 
 template <int TREE_COUNT>
-__global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leafPredictions,
-                                                     const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-                                                     ScorePrediction *outPredictions,
-                                                     Vector2i imgSize,
-                                                     int nbMaxPredictions)
+__global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leafPredictions, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
+                                                     ScorePrediction *outPredictions, Vector2i imgSize, int nbMaxPredictions)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -43,24 +39,24 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-  : ScoreRelocaliser(settings, forestFilename)
+: ScoreRelocaliser(settings, forestFilename)
 {
   // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
   // Features.
-  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DEVICE_CUDA);
+  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(DEVICE_CUDA);
 
   // LowLevelEngine.
-  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CUDA));
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(DEVICE_CUDA));
 
   // Forest.
-  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, ITMLibSettings::DEVICE_CUDA);
+  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(m_forestFilename, DEVICE_CUDA);
 
   // These variables have to be set here, since they depend on the forest that has just been loaded.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(m_settings, ITMLibSettings::DEVICE_CUDA);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(m_settings, DEVICE_CUDA);
 
   // Clear internal state (no virtual calls in the constructor).
   ScoreRelocaliser_CUDA::reset();
@@ -109,13 +105,13 @@ void ScoreRelocaliser_CUDA::reset()
   if(!m_exampleClusterer)
   {
     m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::Capacity>::make_clusterer(
-          m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, ITMLibSettings::DEVICE_CUDA);
+          m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, DEVICE_CUDA);
   }
 
   // Setup the reservoirs if they haven't been allocated yet.
   if(!m_relocaliserState->exampleReservoirs)
   {
-    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, ITMLibSettings::DEVICE_CUDA, m_rngSeed);
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, DEVICE_CUDA, m_rngSeed);
   }
 
   // Setup the predictions block.
@@ -129,8 +125,7 @@ void ScoreRelocaliser_CUDA::reset()
 
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices,
-                                                       const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
                                                        ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
@@ -147,7 +142,8 @@ void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CP
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x, (imgSize.y + blockSize.y - 1) / blockSize.y);
 
   ck_score_relocaliser_get_predictions<<<gridSize, blockSize>>>(
-      leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount);
+    leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount
+  );
   ORcudaKernelCheck;
 }
 

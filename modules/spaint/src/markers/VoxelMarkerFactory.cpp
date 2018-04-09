@@ -16,11 +16,11 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-VoxelMarker_CPtr VoxelMarkerFactory::make_voxel_marker(ITMLib::ITMLibSettings::DeviceType deviceType)
+VoxelMarker_CPtr VoxelMarkerFactory::make_voxel_marker(DeviceType deviceType)
 {
   VoxelMarker_CPtr marker;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     marker.reset(new VoxelMarker_CUDA);

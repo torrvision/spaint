@@ -11,7 +11,6 @@ namespace bf = boost::filesystem;
 #include <itmx/base/MemoryBlockFactory.h>
 
 #include <ORUtils/MemoryBlockPersister.h>
-using namespace ORUtils;
 
 #include "../shared/ExampleReservoirs_Shared.h"
 
@@ -42,7 +41,6 @@ template <typename ExampleType>
 ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
-  // Allocate variable that will store the RNGs.
   itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
   m_rngs = mbf.make_block<CUDARNG>();
 
@@ -102,9 +100,9 @@ void ExampleReservoirs_CUDA<ExampleType>::load_from_disk_sub(const std::string& 
 {
   // Load the RNG states.
   bf::path inputPath(inputFolder);
-  MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::LoadMemoryBlock((inputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 
-  // Update them on the GPU.
+  // Copy them across to the GPU.
   m_rngs->UpdateDeviceFromHost();
 }
 
@@ -131,12 +129,12 @@ void ExampleReservoirs_CUDA<ExampleType>::reinit_rngs()
 template<typename ExampleType>
 void ExampleReservoirs_CUDA<ExampleType>::save_to_disk_sub(const std::string& outputFolder)
 {
-  // Update the RNG states on the CPU.
+  // Copy the RNG states across to the CPU so that they can be saved.
   m_rngs->UpdateHostFromDevice();
 
-  // Save the RNG states.
+  // Save them to disk.
   bf::path outputPath(outputFolder);
-  MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
+  ORUtils::MemoryBlockPersister::SaveMemoryBlock((outputPath / "reservoirRngs.bin").string(), *m_rngs, MEMORYDEVICE_CPU);
 }
 
 }

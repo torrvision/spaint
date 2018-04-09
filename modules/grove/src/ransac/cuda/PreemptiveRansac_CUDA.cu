@@ -185,7 +185,7 @@ void PreemptiveRansac_CUDA::compute_energies_and_sort()
     ORcudaKernelCheck;
   }
 
-  // Sort the candidates into non-increasing order of energy.
+  // Sort the candidates into non-decreasing order of energy.
   thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
   thrust::device_ptr<PoseCandidate> candidatesEnd(poseCandidates + nbPoseCandidates);
   thrust::sort(candidatesStart, candidatesEnd);

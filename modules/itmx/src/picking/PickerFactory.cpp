@@ -16,11 +16,11 @@ namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-Picker_CPtr PickerFactory::make_picker(ITMLibSettings::DeviceType deviceType)
+Picker_CPtr PickerFactory::make_picker(DeviceType deviceType)
 {
   Picker_CPtr picker;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     picker.reset(new Picker_CUDA);

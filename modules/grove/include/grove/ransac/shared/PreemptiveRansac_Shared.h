@@ -61,7 +61,7 @@ inline float compute_energy_sum_for_inlier_subset(const Matrix4f& candidatePose,
     // Compute the energy for the inlier, which is based on the Mahalanobis distance between the hypothesised
     // position of the inlier (in world space) and the position of the closest predicted mode.
     float energy;
-    int argmax = score_prediction_get_best_mode_and_energy(pred, inlierWorldCoordinates, energy);
+    int argmax = find_closest_mode(inlierWorldCoordinates, pred, energy);
 
     // We expect the inlier to have had at least one valid mode (this is guaranteed by the inlier sampling process).
     // If this isn't the case for some reason, defensively throw.
@@ -311,7 +311,7 @@ inline void prepare_inlier_for_optimisation(uint32_t candidateIdx, uint32_t inli
   // inlier in world space as predicted by the specified candidate pose. (We assume the inlier itself is valid and
   // has at least one mode, since we checked that when we selected it.)
   const Vector3f inlierWorldPosition = poseCandidate.cameraPose * inlierCameraPosition;
-  const int bestModeIdx = score_prediction_get_best_mode(prediction, inlierWorldPosition);
+  const int bestModeIdx = find_closest_mode(inlierWorldPosition, prediction);
 
   // If we cannot find such a mode, it means that the inlier should never have been selected, so throw.
   // This is purely defensive, and should never happen in practice.

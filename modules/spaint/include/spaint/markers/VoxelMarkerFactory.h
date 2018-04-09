@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_VOXELMARKERFACTORY
 #define H_SPAINT_VOXELMARKERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/VoxelMarker.h"
 
@@ -25,7 +25,7 @@ struct VoxelMarkerFactory
    * \param deviceType  The device on which the voxel marker should operate.
    * \return            The voxel marker.
    */
-  static VoxelMarker_CPtr make_voxel_marker(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static VoxelMarker_CPtr make_voxel_marker(DeviceType deviceType);
 };
 
 }

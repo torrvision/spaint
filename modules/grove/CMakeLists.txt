@@ -51,9 +51,9 @@ SET(clustering_interface_templates include/grove/clustering/interface/ExampleClu
 SET(clustering_shared_headers include/grove/clustering/shared/ExampleClusterer_Shared.h)
 
 ##
+SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 SET(features_templates include/grove/features/FeatureCalculatorFactory.tpp)
-SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 
 ##
 SET(features_base_headers
@@ -112,20 +112,20 @@ include/grove/numbers/CUDARNG.h
 )
 
 ##
-SET(ransac_headers include/grove/ransac/RansacFactory.h)
-SET(ransac_sources src/ransac/RansacFactory.cpp)
+SET(ransac_sources src/ransac/PreemptiveRansacFactory.cpp)
+SET(ransac_headers include/grove/ransac/PreemptiveRansacFactory.h)
 
 ##
-SET(ransac_cpu_headers include/grove/ransac/cpu/PreemptiveRansac_CPU.h)
 SET(ransac_cpu_sources src/ransac/cpu/PreemptiveRansac_CPU.cpp)
+SET(ransac_cpu_headers include/grove/ransac/cpu/PreemptiveRansac_CPU.h)
 
 ##
-SET(ransac_cuda_headers include/grove/ransac/cuda/PreemptiveRansac_CUDA.h)
 SET(ransac_cuda_sources src/ransac/cuda/PreemptiveRansac_CUDA.cu)
+SET(ransac_cuda_headers include/grove/ransac/cuda/PreemptiveRansac_CUDA.h)
 
 ##
-SET(ransac_interface_headers include/grove/ransac/interface/PreemptiveRansac.h)
 SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
+SET(ransac_interface_headers include/grove/ransac/interface/PreemptiveRansac.h)
 
 ##
 SET(ransac_shared_headers
@@ -134,24 +134,24 @@ include/grove/ransac/shared/PreemptiveRansac_Shared.h
 )
 
 ##
-SET(relocalisation_headers include/grove/relocalisation/ScoreRelocaliserFactory.h)
 SET(relocalisation_sources src/relocalisation/ScoreRelocaliserFactory.cpp)
+SET(relocalisation_headers include/grove/relocalisation/ScoreRelocaliserFactory.h)
 
 ##
-SET(relocalisation_base_headers include/grove/relocalisation/base/ScoreRelocaliserState.h)
 SET(relocalisation_base_sources src/relocalisation/base/ScoreRelocaliserState.cpp)
+SET(relocalisation_base_headers include/grove/relocalisation/base/ScoreRelocaliserState.h)
 
 ##
-SET(relocalisation_cpu_headers include/grove/relocalisation/cpu/ScoreRelocaliser_CPU.h)
 SET(relocalisation_cpu_sources src/relocalisation/cpu/ScoreRelocaliser_CPU.cpp)
+SET(relocalisation_cpu_headers include/grove/relocalisation/cpu/ScoreRelocaliser_CPU.h)
 
 ##
-SET(relocalisation_cuda_headers include/grove/relocalisation/cuda/ScoreRelocaliser_CUDA.h)
 SET(relocalisation_cuda_sources src/relocalisation/cuda/ScoreRelocaliser_CUDA.cu)
+SET(relocalisation_cuda_headers include/grove/relocalisation/cuda/ScoreRelocaliser_CUDA.h)
 
 ##
-SET(relocalisation_interface_headers include/grove/relocalisation/interface/ScoreRelocaliser.h)
 SET(relocalisation_interface_sources src/relocalisation/interface/ScoreRelocaliser.cpp)
+SET(relocalisation_interface_headers include/grove/relocalisation/interface/ScoreRelocaliser.h)
 
 ##
 SET(relocalisation_shared_headers include/grove/relocalisation/shared/ScoreRelocaliser_Shared.h)
