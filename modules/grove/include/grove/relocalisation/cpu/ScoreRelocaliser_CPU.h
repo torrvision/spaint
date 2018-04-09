@@ -34,9 +34,6 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
-
-  /** Override */
   virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################

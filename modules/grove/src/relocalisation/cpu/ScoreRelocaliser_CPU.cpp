@@ -4,32 +4,19 @@
  */
 
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
-
-#include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
+using namespace tvgutil;
 
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
-#include "reservoirs/ExampleReservoirsFactory.h"
 
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename)
+ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
 : ScoreRelocaliser(settings, DEVICE_CPU, forestFilename)
 {}
 
-//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
-
-ScorePrediction ScoreRelocaliser_CPU::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
-{
-  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
-  {
-    throw std::invalid_argument("Invalid tree or leaf index.");
-  }
-
-  return m_relocaliserState->predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, MEMORYDEVICE_CPU);
-}
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
 {
@@ -55,7 +42,7 @@ std::vector<Keypoint3DColour> ScoreRelocaliser_CPU::get_reservoir_contents(uint3
   return reservoirContents;
 }
 
-//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+//#################### PROTECTED MEMBER FUNCTIONS ####################
 
 void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
                                                       ScorePredictionsImage_Ptr& outputPredictions) const

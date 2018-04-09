@@ -164,18 +164,6 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Returns a specific prediction from the forest.
-   *
-   * \param treeIdx The index of the tree containing the prediction of interest.
-   * \param leafIdx The index of the required leaf prediction.
-   *
-   * \return The ScorePrediction of interest.
-   *
-   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
-   */
-  virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const = 0;
-
-  /**
    * \brief TODO
    */
   virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const = 0;
@@ -222,6 +210,18 @@ public:
    * \return A pointer to an image containing the forest predictions for each pixel in the keypoint image.
    */
   ScorePredictionsImage_CPtr get_predictions_image() const;
+
+  /**
+   * \brief Returns a specific prediction from the forest.
+   *
+   * \param treeIdx The index of the tree containing the prediction of interest.
+   * \param leafIdx The index of the required leaf prediction.
+   *
+   * \return The ScorePrediction of interest.
+   *
+   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
+   */
+  ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
 
   /**
    * \brief Returns a pointer to the relocaliser state (non-const variant).

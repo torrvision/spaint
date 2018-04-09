@@ -127,6 +127,17 @@ ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const
   return m_predictionsImage;
 }
 
+ScorePrediction ScoreRelocaliser::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
+{
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  {
+    throw std::invalid_argument("Invalid tree or leaf index.");
+  }
+
+  MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  return m_relocaliserState->predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, memoryType);
+}
+
 ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
 {
   return m_relocaliserState;
