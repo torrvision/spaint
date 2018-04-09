@@ -106,7 +106,7 @@ Common steps on all platforms:
 
   b) Clone the InfiniTAM repository into <root>/InfiniTAM.
 
-  c) Build the spaint_v3 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
+  c) Build the infinitam_v3.5 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
 
   d) Clone SemanticPaint into <root>/spaint, e.g.
 
