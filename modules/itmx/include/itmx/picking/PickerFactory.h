@@ -6,7 +6,7 @@
 #ifndef H_ITMX_PICKERFACTORY
 #define H_ITMX_PICKERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/Picker.h"
 
@@ -25,7 +25,7 @@ struct PickerFactory
    * \param deviceType  The device on which the picker should operate.
    * \return            The picker.
    */
-  static Picker_CPtr make_picker(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static Picker_CPtr make_picker(DeviceType deviceType);
 };
 
 }

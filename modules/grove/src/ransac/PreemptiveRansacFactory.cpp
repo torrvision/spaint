@@ -1,10 +1,9 @@
 /**
- * grove: RansacFactory.cpp
+ * grove: PreemptiveRansacFactory.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "ransac/RansacFactory.h"
-using namespace ITMLib;
+#include "ransac/PreemptiveRansacFactory.h"
 using namespace tvgutil;
 
 #include "ransac/cpu/PreemptiveRansac_CPU.h"
@@ -17,11 +16,11 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-PreemptiveRansac_Ptr RansacFactory::make_preemptive_ransac(const SettingsContainer_CPtr& settings, ITMLibSettings::DeviceType deviceType)
+PreemptiveRansac_Ptr PreemptiveRansacFactory::make_preemptive_ransac(const SettingsContainer_CPtr& settings, DeviceType deviceType)
 {
   PreemptiveRansac_Ptr ransac;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     ransac.reset(new PreemptiveRansac_CUDA(settings));

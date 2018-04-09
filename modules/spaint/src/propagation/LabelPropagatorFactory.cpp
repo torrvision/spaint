@@ -16,13 +16,13 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-LabelPropagator_CPtr LabelPropagatorFactory::make_label_propagator(size_t raycastResultSize, ITMLibSettings::DeviceType deviceType,
+LabelPropagator_CPtr LabelPropagatorFactory::make_label_propagator(size_t raycastResultSize, DeviceType deviceType,
                                                                    float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
                                                                    float maxSquaredDistanceBetweenVoxels)
 {
   LabelPropagator_CPtr propagator;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     propagator.reset(new LabelPropagator_CUDA(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels));

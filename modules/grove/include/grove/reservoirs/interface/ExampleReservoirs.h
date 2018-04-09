@@ -81,7 +81,7 @@ protected:
   /** The current size of each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
   ITMIntMemoryBlock_Ptr m_reservoirSizes;
 
-  /** The seed for the random number generator. */
+  /** The seed for the random number generators. */
   uint32_t m_rngSeed;
 
   //#################### CONSTRUCTORS ####################
@@ -91,7 +91,7 @@ protected:
    *
    * \param reservoirCount    The number of reservoirs to create.
    * \param reservoirCapacity The capacity (maximum size) of each reservoir.
-   * \param rngSeed           The seed for the random number generator.
+   * \param rngSeed           The seed for the random number generators.
    */
   ExampleReservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed);
 
@@ -197,7 +197,7 @@ public:
   void load_from_disk(const std::string& inputFolder);
 
   /**
-   * \brief Clears the reservoirs, discards all examples and reinitialises the random number generator.
+   * \brief Clears the reservoirs, discards all examples and reinitialises the random number generators.
    */
   virtual void reset();
 

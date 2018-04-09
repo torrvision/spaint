@@ -6,7 +6,7 @@
 #ifndef H_GROVE_EXAMPLECLUSTERERFACTORY
 #define H_GROVE_EXAMPLECLUSTERERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/ExampleClusterer.h"
 
@@ -38,7 +38,7 @@ struct ExampleClustererFactory
    *
    * \throws std::invalid_argument If maxClusterCount > MaxClusters.
    */
-  static Clusterer_Ptr make_clusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, ITMLib::ITMLibSettings::DeviceType deviceType);
+  static Clusterer_Ptr make_clusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, DeviceType deviceType);
 };
 
 }
