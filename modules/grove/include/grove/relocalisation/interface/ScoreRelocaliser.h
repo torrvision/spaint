@@ -146,13 +146,14 @@ protected:
   /**
    * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
    *
-   * \param settings        Pointer to an instance of SettingsContainer used to configure the relocaliser.
-   * \param forestFilename  The path to the pretrained forest file.
-   * \param deviceType      The device on which the relocaliser should operate.
+   * \param settings           Pointer to an instance of SettingsContainer used to configure the relocaliser.
+   * \param settingsNamespace  The namespace used to read settings from the SettingsContainer.
+   * \param forestFilename     The path to the pretrained forest file.
+   * \param deviceType         The device on which the relocaliser should operate.
    *
    * \throws std::runtime_error if the forest cannot be loaded.
    */
-  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename, DeviceType deviceType);
+  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, const std::string& forestFilename, DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:

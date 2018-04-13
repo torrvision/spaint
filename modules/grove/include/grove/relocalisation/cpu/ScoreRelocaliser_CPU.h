@@ -25,11 +25,13 @@ public:
   /**
    * \brief Constructs an instance of ScoreRelocaliser_CPU, loading a pretrained forest from a file.
    *
-   * \param forestFilename The path to the pretrained forest file.
+   * \param settings           Pointer to an instance of SettingsContainer used to configure the relocaliser.
+   * \param settingsNamespace  The namespace used to read settings from the SettingsContainer.
+   * \param forestFilename     The path to the pretrained forest file.
    *
    * \throws std::runtime_error if the forest cannot be loaded.
    */
-  ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
+  ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, const std::string& forestFilename);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

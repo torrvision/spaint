@@ -26,8 +26,8 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-: ScoreRelocaliser(settings, forestFilename, DEVICE_CUDA)
+ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& settings, const std::string& settingsNamespace, const std::string& forestFilename)
+: ScoreRelocaliser(settings, settingsNamespace, forestFilename, DEVICE_CUDA)
 {}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################

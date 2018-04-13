@@ -27,13 +27,11 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename, DeviceType deviceType)
+ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& settingsNamespace, const std::string& forestFilename, DeviceType deviceType)
 : m_deviceType(deviceType),
   m_forestFilename(forestFilename),
   m_settings(settings)
 {
-  const std::string settingsNamespace = "ScoreRelocaliser.";
-
   // In this constructor we are just setting the variables, instantiation of the sub-algorithms is left to the sub class
   // in order to instantiate the appropriate version.
 
