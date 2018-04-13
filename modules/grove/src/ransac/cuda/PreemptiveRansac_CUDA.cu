@@ -140,8 +140,8 @@ __global__ void ck_sample_inliers(const Keypoint3DColour *keypoints, const Score
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& settings)
-: PreemptiveRansac(settings)
+PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& settings, const std::string& settingsNamespace)
+: PreemptiveRansac(settings, settingsNamespace)
 {
   MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 

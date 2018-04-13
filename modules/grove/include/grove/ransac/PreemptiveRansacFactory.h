@@ -24,11 +24,12 @@ struct PreemptiveRansacFactory
   /**
    * \brief Creates an instance of preemptive RANSAC.
    *
-   * \param settings    The settings to use to configure the instance of preemptive RANSAC.
-   * \param deviceType  The device on which the instance of preemptive RANSAC should operate.
-   * \return            The instance of preemptive RANSAC.
+   * \param settings           The settings to use to configure the instance of preemptive RANSAC.
+   * \param settingsNamespace  The namespace used to read settings from the SettingsContainer.
+   * \param deviceType         The device on which the instance of preemptive RANSAC should operate.
+   * \return                   The instance of preemptive RANSAC.
    */
-  static PreemptiveRansac_Ptr make_preemptive_ransac(const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
+  static PreemptiveRansac_Ptr make_preemptive_ransac(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, DeviceType deviceType);
 };
 
 }

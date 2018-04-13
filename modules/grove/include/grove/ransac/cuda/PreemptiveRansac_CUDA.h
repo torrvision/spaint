@@ -41,9 +41,10 @@ public:
   /**
    * \brief Constructs an instance of PreemptiveRansac_CUDA.
    *
-   * \param settings A pointer to the settings used to configure the algorithm.
+   * \param settings           A pointer to the settings used to configure the algorithm.
+   * \param settingsNamespace  The namespace used to read settings from the SettingsContainer.
    */
-  PreemptiveRansac_CUDA(const tvgutil::SettingsContainer_CPtr& settings);
+  PreemptiveRansac_CUDA(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

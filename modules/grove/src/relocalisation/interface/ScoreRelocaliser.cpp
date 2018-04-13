@@ -86,7 +86,7 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
   m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
     m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, deviceType
   );
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, deviceType);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, settingsNamespace + "PreemptiveRansac.", deviceType);
 
   // Clear internal state.
   reset();

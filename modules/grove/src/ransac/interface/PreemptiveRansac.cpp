@@ -28,7 +28,7 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
+PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings, const std::string& settingsNamespace)
 : m_poseCandidatesAfterCull(0),
   m_timerCandidateGeneration("Candidate Generation"),
   m_timerFirstComputeEnergy("First Energy Computation"),
@@ -36,8 +36,6 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
   m_timerTotal("P-RANSAC Total"),
   m_settings(settings)
 {
-  const std::string settingsNamespace = "PreemptiveRansac.";
-
   // By default, we set all parameters as in SCoRe forests.
   m_checkMinDistanceBetweenSampledModes = m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);                   // Whether or not to force sampled modes to have a minimum distance between them.
   m_checkRigidTransformationConstraint = m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);                     // Setting this to false speeds things up a lot, at the expense of quality.
