@@ -180,8 +180,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       refinedResult.quality = m_trackingState->trackerResult == ITMLib::ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
       refinedResult.score = m_trackingState->trackerScore;
 
-      // If the inner relocaliser produced multiple initial results, and we're trying to choose the best one after refinement:
-      if(initialResults.size() > 1 && m_chooseBestResult)
+      // If we're trying to choose the best relocalisation after refinement:
+      if(m_chooseBestResult)
       {
         // Score the refined result.
         refinedResult.score = score_result(refinedResult);
@@ -202,7 +202,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
       }
       else
       {
-        // If the inner relocaliser only produced one initial result, or we're not trying to choose the best one,
+        // If we're not trying to choose the best relocalisation,
         // simply store the initial pose and refined result without any scoring.
         initialPoses.push_back(initialPose);
         refinedResults.push_back(refinedResult);
@@ -307,7 +307,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 #if DEBUGGING
   // If we're debugging, show the real and synthetic depth images to the user (note that we need to convert them to unsigned chars for visualisation).
   // We don't use the OpenCV normalize function because we want consistent visualisations for different frames (even though there might be clamping).
-  const float scaleFactor = 100.0f;
+  const float scaleFactor = 255.0f / 5.0f;
   cv::Mat cvRealDepthVis, cvSynthDepthVis;
   cvRealDepth.convertTo(cvRealDepthVis, CV_8U, scaleFactor);
   cvSynthDepth.convertTo(cvSynthDepthVis, CV_8U, scaleFactor);
@@ -323,15 +323,17 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 
   // Compute the difference between the real and synthetic depth images, and mask it using the combined mask.
   cv::Mat cvDepthDiff, cvMaskedDepthDiff;
-  cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
+  cv::divide(cvRealDepth, cvSynthDepth, cvDepthDiff);
+  cv::absdiff(cvDepthDiff, cv::Scalar(1), cvDepthDiff);
+//  cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
   cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
 
 #if DEBUGGING
   // We need to convert the image for visualisation.
-  cv::Mat cvMaskedDepthDiffVis;
-  cvMaskedDepthDiff.convertTo(cvMaskedDepthDiffVis, CV_8U, scaleFactor);
+  cv::Mat cvMaskedDepthDiffVis = cvMaskedDepthDiff / 0.05 * 255.0;
+  cvMaskedDepthDiffVis.convertTo(cvMaskedDepthDiffVis, CV_8U);
 
-  cv::imshow("Masked Depth Difference", cvMaskedDepthDiff);
+  cv::imshow("Masked Depth Difference", cvMaskedDepthDiffVis);
   cv::waitKey(1);
 #endif
 
