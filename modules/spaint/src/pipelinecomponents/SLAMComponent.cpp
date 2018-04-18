@@ -480,7 +480,7 @@ void SLAMComponent::process_relocalisation()
     }
 
     // If the fast relocaliser is not instantiated, failed to relocalise or returned a bad relocalisation (TODO, make the score parametrisable), then use the intermediate relocaliser.
-    if(intermediateRelocaliser && (relocalisationResults.empty() || relocalisationResults[0].score > 0.025f))
+    if(intermediateRelocaliser && (relocalisationResults.empty() || relocalisationResults[0].score > 0.15f))
     {
       static int intermediateRelocalisationsCount = 0;
 
@@ -489,7 +489,7 @@ void SLAMComponent::process_relocalisation()
     }
 
     // Finally, run the normal relocaliser if all else failed.
-    if(relocalisationResults.empty() || relocalisationResults[0].score > 0.025f)
+    if(relocalisationResults.empty() || relocalisationResults[0].score > 0.15f)
     {
       static int normalRelocalisationsCount = 0;
 

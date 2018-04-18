@@ -320,13 +320,63 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::Mat cvRealMask = cvRealDepth > 0;
   cv::Mat cvSynthMask = cvSynthDepth > 0;
   cv::Mat cvCombinedMask = cvRealMask & cvSynthMask;
+  cv::erode(cvCombinedMask, cvCombinedMask, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7,7)));
 
+#define USE_DIFFERENCE
+
+#ifdef USE_DIFFERENCE
   // Compute the difference between the real and synthetic depth images, and mask it using the combined mask.
   cv::Mat cvDepthDiff, cvMaskedDepthDiff;
   cv::divide(cvRealDepth, cvSynthDepth, cvDepthDiff);
   cv::absdiff(cvDepthDiff, cv::Scalar(1), cvDepthDiff);
 //  cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
   cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
+
+  std::vector<cv::Mat> images = { cvMaskedDepthDiff };
+  std::vector<int> channels = { 0 };
+  std::vector<int> histSize = { 101 };
+  std::vector<float> ranges = { 0.0f, 1.0f };
+  cv::Mat histogram;
+
+  // Histogram the distribution of errors.
+  cv::calcHist(images, channels, cvCombinedMask, histogram, histSize, ranges);
+
+  // Count how many valid pixels are in the combined mask.
+  int validDepthsCount = cv::countNonZero(cvCombinedMask);
+
+  // We are interested in the 95th percentile.
+  int percentileCount = 0.95f * validDepthsCount;
+
+  // Find the right bin.
+  float accumulator = 0;
+  int bin = 0;
+  for(; bin < histogram.size().area(); ++bin)
+  {
+    accumulator += histogram.ptr<float>()[bin];
+    if(accumulator > percentileCount) break;
+  }
+
+  float percentileError = bin * 0.01f;
+
+//  std::cout << "95% percentile of " << validDepthsCount << " is: " << percentileCount
+//            << " - counted: " << accumulator << " at bin: " << bin << " equals error: " << percentileError << std::endl;
+
+#else
+  cv::Mat cvDepthTargetRatio;
+  cv::divide(cvRealDepth, cvSynthDepth, cvDepthTargetRatio);
+
+  cv::Mat cvDepthInRangeMask;
+  cv::inRange(cvDepthTargetRatio, cv::Scalar(0.975), cv::Scalar(1.025), cvDepthInRangeMask);
+
+  cv::Scalar depthInRangeCount = cv::countNonZero(cvDepthInRangeMask);
+  cv::Scalar validPixelsCount = cv::countNonZero(cvCombinedMask);
+
+  double depthInRangeFraction = std::min(1.0, depthInRangeCount(0) / validPixelsCount(0));
+
+#if 1 || DEBUGGING
+  std::cout << "\nDepth in range fraction: " << depthInRangeFraction << std::endl;
+#endif
+#endif
 
 #if DEBUGGING
   // We need to convert the image for visualisation.
@@ -337,11 +387,13 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::waitKey(1);
 #endif
 
+#ifdef USE_DIFFERENCE
   // Determine the mean depth difference for valid pixels in the real and synthetic depth images.
-  cv::Scalar meanDepthDiff = cv::mean(cvMaskedDepthDiff, cvCombinedMask);
+  cv::Scalar meanDepthDiff, stdDevDepthDiff;
+  cv::meanStdDev(cvMaskedDepthDiff, meanDepthDiff, stdDevDepthDiff, cvCombinedMask);
 
 #if DEBUGGING
-  std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
+  std::cout << "\nMean Depth Difference: " << meanDepthDiff(0) << " - StdDev: " << stdDevDepthDiff(0) << std::endl;
 #endif
 
   // Compute the fraction of the synthetic depth image that is valid.
@@ -351,7 +403,14 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   std::cout << "Valid Synthetic Depth Pixels: " << cv::countNonZero(cvSynthMask) << std::endl;
 #endif
 
-  return validFraction >= 0.1f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
+//  return validFraction >= 0.1f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
+  return validFraction >= 0.1f ? percentileError : static_cast<float>(INT_MAX);
+#else
+  // Compute the fraction of the synthetic depth image that is valid.
+  float validFraction = static_cast<float>(cv::countNonZero(cvSynthMask)) / (cvSynthMask.size().area());
+
+  return validFraction >= 0.1f ? static_cast<float>(depthInRangeFraction) : 0.0f;
+#endif
 #else
   return 0.0f;
 #endif
