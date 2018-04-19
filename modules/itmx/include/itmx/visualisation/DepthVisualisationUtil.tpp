@@ -38,7 +38,7 @@ void DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(con
     renderState.get(), settings->sceneParams.voxelSize, -1.0f, output
   );
 
-  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
+  if(settings->deviceType == DEVICE_CUDA) output->UpdateHostFromDevice();
 }
 
 }

@@ -30,18 +30,18 @@ enum
  * \note  Each "inlier" keypoint contributes a part of the total energy sum.
  * \note  This function exists to make the energy sum computation easier to parallelise using CUDA.
  *
- * \param candidatePose  The candidate camera pose (a rigid transformation from camera -> world coordinates).
- * \param keypoints      The 3D keypoints extracted from an RGB-D image pair.
- * \param predictions    The SCoRe forest predictions associated with the keypoints.
- * \param inlierIndices  The raster indices of the overall set of "inlier" keypoints.
- * \param nbInliers      The overall number of "inlier" keypoints.
- * \param inlierStartIdx The array index of the first "inlier" keypoint in inlierIndices to use when computing the energy sum.
- * \param inlierStep     The step between the array indices of the "inlier" keypoints to use when computing the energy sum.
- * \return               The sum of the energies contributed by the "inlier" keypoints in the strided subset.
+ * \param candidatePose       The candidate camera pose (a rigid transformation from camera -> world coordinates).
+ * \param keypoints           The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictions         The SCoRe forest predictions associated with the keypoints.
+ * \param inlierRasterIndices The raster indices of the overall set of "inlier" keypoints.
+ * \param nbInliers           The overall number of "inlier" keypoints.
+ * \param inlierStartIdx      The array index of the first "inlier" keypoint in inlierIndices to use when computing the energy sum.
+ * \param inlierStep          The step between the array indices of the "inlier" keypoints to use when computing the energy sum.
+ * \return                    The sum of the energies contributed by the "inlier" keypoints in the strided subset.
  */
 _CPU_AND_GPU_CODE_
 inline float compute_energy_sum_for_inlier_subset(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
-                                                  const int *inlierIndices, uint32_t nbInliers, uint32_t inlierStartIdx, uint32_t inlierStep)
+                                                  const int *inlierRasterIndices, uint32_t nbInliers, uint32_t inlierStartIdx, uint32_t inlierStep)
 {
   float energySum = 0.0f;
 
@@ -49,19 +49,19 @@ inline float compute_energy_sum_for_inlier_subset(const Matrix4f& candidatePose,
   for(uint32_t inlierIdx = inlierStartIdx; inlierIdx < nbInliers; inlierIdx += inlierStep)
   {
     // Look up the raster index of the inlier and its position in camera space.
-    const int rasterIdx = inlierIndices[inlierIdx];
-    const Vector3f inlierCameraCoordinates = keypoints[rasterIdx].position;
+    const int inlierRasterIdx = inlierRasterIndices[inlierIdx];
+    const Vector3f inlierCameraCoordinates = keypoints[inlierRasterIdx].position;
 
     // Compute the hypothesised position of the inlier in world space.
     const Vector3f inlierWorldCoordinates = candidatePose * inlierCameraCoordinates;
 
     // Get the prediction associated with the inlier.
-    const ScorePrediction& pred = predictions[rasterIdx];
+    const ScorePrediction& pred = predictions[inlierRasterIdx];
 
     // Compute the energy for the inlier, which is based on the Mahalanobis distance between the hypothesised
     // position of the inlier (in world space) and the position of the closest predicted mode.
     float energy;
-    int argmax = score_prediction_get_best_mode_and_energy(pred, inlierWorldCoordinates, energy);
+    int argmax = find_closest_mode(inlierWorldCoordinates, pred, energy);
 
     // We expect the inlier to have had at least one valid mode (this is guaranteed by the inlier sampling process).
     // If this isn't the case for some reason, defensively throw.
@@ -105,20 +105,20 @@ inline float compute_energy_sum_for_inlier_subset(const Matrix4f& candidatePose,
 /**
  * \brief Computes an energy sum representing how well a set of "inlier" keypoints agree with a candidate camera pose.
  *
- * \param candidatePose The candidate camera pose (a rigid transformation from camera -> world coordinates).
- * \param keypoints     The 3D keypoints extracted from an RGB-D image pair.
- * \param predictions   The SCoRe forest predictions associated with the keypoints.
- * \param inlierIndices The raster indices of the "inlier" keypoints that we will use to compute the energy sum.
- * \param nbInliers     The number of "inlier" keypoints.
- * \return              The sum of the energies contributed by the "inlier" keypoints.
+ * \param candidatePose       The candidate camera pose (a rigid transformation from camera -> world coordinates).
+ * \param keypoints           The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictions         The SCoRe forest predictions associated with the keypoints.
+ * \param inlierRasterIndices The raster indices of the "inlier" keypoints that we will use to compute the energy sum.
+ * \param nbInliers           The number of "inlier" keypoints.
+ * \return                    The sum of the energies contributed by the "inlier" keypoints.
  */
 _CPU_AND_GPU_CODE_
 inline float compute_energy_sum_for_inliers(const Matrix4f& candidatePose, const Keypoint3DColour *keypoints, const ScorePrediction *predictions,
-                                            const int *inlierIndices, uint32_t nbInliers)
+                                            const int *inlierRasterIndices, uint32_t nbInliers)
 {
   const uint32_t inlierStartIdx = 0;
   const uint32_t inlierStep = 1;
-  return compute_energy_sum_for_inlier_subset(candidatePose, keypoints, predictions, inlierIndices, nbInliers, inlierStartIdx, inlierStep);
+  return compute_energy_sum_for_inlier_subset(candidatePose, keypoints, predictions, inlierRasterIndices, nbInliers, inlierStartIdx, inlierStep);
 }
 
 /**
@@ -283,107 +283,126 @@ inline bool generate_pose_candidate(const Keypoint3DColour *keypointsData, const
   return true;
 }
 
+/**
+ * \brief Computes the best mode in world space for the specified candidate pose and "inlier" keypoint, and stores both
+ *        this mode and the inlier's position in camera space into arrays for use during pose optimisation.
+ *
+ * \param candidateIdx        The array index of the pose candidate being considered (in the pose candidates array).
+ * \param inlierIdx           The array index of the "inlier" keypoint being considered (in the inlier raster indices array).
+ * \param keypoints           The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictions         The SCoRe forest predictions associated with the keypoints.
+ * \param inlierRasterIndices The raster indices of the "inlier" keypoints that we will use to compute the energy sum.
+ * \param nbInliers           The overall number of "inlier" keypoints.
+ * \param poseCandidates      The pose candidates.
+ * \param inlierThreshold     The furthest the best mode's position can be from the inlier's position in world space for it to be usable.
+ * \param inlierCameraPoints  The array into which to write the inlier's position in camera space.
+ * \param inlierModes         The array into which to write the best mode for the specified candidate pose and inlier.
+ */
 _CPU_AND_GPU_CODE_
-inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierIndices,
-                                                               uint32_t nbInliers, const PoseCandidate *poseCandidates, Vector4f *inlierCameraPoints,
-                                                               Keypoint3DColourCluster *inlierModes, float inlierThreshold, uint32_t candidateIdx, uint32_t inlierIdx)
+inline void prepare_inlier_for_optimisation(uint32_t candidateIdx, uint32_t inlierIdx, const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const int *inlierRasterIndices,
+                                            uint32_t nbInliers, const PoseCandidate *poseCandidates, const float inlierThreshold, Vector4f *inlierCameraPoints, Keypoint3DColourCluster *inlierModes)
 {
-  const int inlierLinearIdx = inlierIndices[inlierIdx];
+  const int inlierRasterIdx = inlierRasterIndices[inlierIdx];
   const PoseCandidate& poseCandidate = poseCandidates[candidateIdx];
-  const Vector3f inlierCameraPosition = keypoints[inlierLinearIdx].position;
-  const Vector3f inlierWorldPosition = poseCandidate.cameraPose * inlierCameraPosition;
-  const ScorePrediction& prediction = predictions[inlierLinearIdx];
+  const Vector3f inlierCameraPosition = keypoints[inlierRasterIdx].position;
+  const ScorePrediction& prediction = predictions[inlierRasterIdx];
 
-  // Find the best mode, do not rely on the one stored in the inlier because for the randomly sampled inliers it will
-  // not be set.
-  // We also assume that the inlier is valid (we checked that before, when we selected it).
-  const int bestModeIdx = score_prediction_get_best_mode(prediction, inlierWorldPosition);
+  // Try to find the index of the mode associated with the inlier whose position is closest to the position of the
+  // inlier in world space as predicted by the specified candidate pose. (We assume the inlier itself is valid and
+  // has at least one mode, since we checked that when we selected it.)
+  const Vector3f inlierWorldPosition = poseCandidate.cameraPose * inlierCameraPosition;
+  const int bestModeIdx = find_closest_mode(inlierWorldPosition, prediction);
+
+  // If we cannot find such a mode, it means that the inlier should never have been selected, so throw.
+  // This is purely defensive, and should never happen in practice.
   if(bestModeIdx < 0 || bestModeIdx >= prediction.size)
   {
-    // This point should not have been selected as inlier.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-      printf("best mode idx invalid\n");
-      asm("trap;");
+    printf("Error: Could not find a best mode for the specified candidate pose and inlier keypoint\n");
+    asm("trap;");
 #else
-      throw std::runtime_error("best mode idx invalid");
+    throw std::runtime_error("Error: Could not find a best mode for the specified candidate pose and inlier keypoint");
 #endif
   }
 
   const Keypoint3DColourCluster& bestMode = prediction.elts[bestModeIdx];
 
-  uint32_t outputIdx = candidateIdx * nbInliers + inlierIdx; // The index in the row associated to the current candidate.
+  // Determine the location in the output arrays into which to write the inlier's camera position and the best mode.
+  const uint32_t outputIdx = candidateIdx * nbInliers + inlierIdx;
 
-  // We add this pair to the vector of pairs to be evaluated iff the predicted mode and the world position estimated
-  // by the current camera pose agree.
+  // If the best mode's position is too far from the inlier's position in world space, record an invalid position
+  // for the inlier in camera space, and early out.
   if(length(bestMode.position - inlierWorldPosition) >= inlierThreshold)
   {
-    inlierCameraPoints[outputIdx] = Vector4f(0.f);
+    inlierCameraPoints[outputIdx] = Vector4f(0.0f);
     return;
   }
 
-  // Store the inlier camera pose and the corresponding mode.
-  inlierCameraPoints[outputIdx] = Vector4f(inlierCameraPosition, 1.f);
+  // Otherwise, record both the inlier's position in camera space and the best mode for use during pose optimisation.
+  inlierCameraPoints[outputIdx] = Vector4f(inlierCameraPosition, 1.0f);
   inlierModes[outputIdx] = bestMode;
 }
 
 /**
- * \brief Try to sample the index of a keypoint which is valid and has at least one modal cluster associated.
+ * \brief Tries to sample the raster index of a valid keypoint whose prediction has at least one modal cluster.
  *
- * \param useMask Whether to use the mask to mark the sampled points. If true a point will not be sampled twice.
+ * \tparam useMask    Whether or not to record the sampled keypoints in a persistent mask (to prevent them being sampled twice).
+ * \tparam RNG        The type of random number generator use for sampling (e.g. CPURNG or CUDARNG).
  *
- * \param keypointsData   The 3D keypoints.
- * \param predictionsData The ScorePredictions associated to the keypoints.
- * \param imgSize         The size of the keypoint and predictions images.
- * \param randomGenerator A random number generator used during sampling. Can either be a CPURNG or a CUDARNG.
- * \param inlierMaskData  The mask used to avoid sampling keypoint indices twice. Can be NULL if useMask is false.
+ * \param keypoints   The 3D keypoints extracted from an RGB-D image pair.
+ * \param predictions The SCoRe forest predictions associated with the keypoints.
+ * \param imgSize     The size of the input keypoints and predictions images.
+ * \param rng         The random number generator to use for sampling.
+ * \param inliersMask The mask used to avoid sampling keypoint indices twice. Can be NULL if useMask is false.
  *
- * \return The linear index of the sample keypoint. -1 in case no keypoint was sampled.
+ * \return            The raster index of the sampled keypoint (if any), or -1 otherwise.
  */
 template <bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline int sample_inlier(const Keypoint3DColour *keypointsData, const ScorePrediction *predictionsData, const Vector2i& imgSize, RNG& randomGenerator, int *inlierMaskData = NULL)
+inline int sample_inlier(const Keypoint3DColour *keypoints, const ScorePrediction *predictions, const Vector2i& imgSize, RNG& rng, int *inliersMask = NULL)
 {
-  int inlierLinearIdx = -1;
+  int inlierRasterIdx = -1;
 
-  // Limit the number of sampling attempts.
-  for(int iterationIdx = 0; inlierLinearIdx < 0 && iterationIdx < SAMPLE_INLIER_ITERATIONS; ++iterationIdx)
+  // Attempt to sample a suitable keypoint up to SAMPLE_INLIER_ITERATIONS times.
+  for(int i = 0; i < SAMPLE_INLIER_ITERATIONS; ++i)
   {
-    // Sample a keypoint index.
-    const int linearIdx = randomGenerator.generate_int_from_uniform(0, imgSize.width * imgSize.height - 1);
+    // Randomly generate a keypoint index.
+    const int rasterIdx = rng.generate_int_from_uniform(0, imgSize.width * imgSize.height - 1);
 
-    // Check that we have a valid keypoint.
-    if(!keypointsData[linearIdx].valid) continue;
+    // Check whether the corresponding keypoint is valid and has at least one modal cluster. If not, early out.
+    if(!keypoints[rasterIdx].valid || predictions[rasterIdx].size == 0) continue;
 
-    // Check that we have a prediction with a non null number of modes.
-    if(predictionsData[linearIdx].size == 0) continue;
-
-    // Finally, check the mask if necessary.
-    bool validIndex = !useMask;
+    // If we're using the mask, check whether or not the keypoint has already been sampled.
+    bool valid = !useMask;
 
     if(useMask)
     {
-      int *maskPtr = &inlierMaskData[linearIdx];
+      int *maskPtr = &inliersMask[rasterIdx];
       int maskValue = -1;
 
-// Atomically increment the mask and capture the current value.
+      // Atomically increment the relevant pixel in the mask, capturing its original value in the process.
 #ifdef __CUDACC__
       maskValue = atomicAdd(maskPtr, 1);
 #else
-
-#ifdef WITH_OPENMP
-#pragma omp atomic capture
-#endif
+    #ifdef WITH_OPENMP
+      #pragma omp atomic capture
+    #endif
       maskValue = (*maskPtr)++;
 #endif
 
-      // If the value was zero we can keep this keypoint.
-      validIndex = maskValue == 0;
+      // Accept the keypoint iff the original value of the corresponding pixel in the mask was zero.
+      valid = maskValue == 0;
     }
 
-    if(validIndex) inlierLinearIdx = linearIdx;
+    // If we're not using the mask, or the keypoint hadn't already been sampled, accept the keypoint and return it.
+    if(valid)
+    {
+      inlierRasterIdx = rasterIdx;
+      break;
+    }
   }
 
-  return inlierLinearIdx;
+  return inlierRasterIdx;
 }
 
 }

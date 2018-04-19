@@ -30,14 +30,9 @@ namespace grove {
  * \param y                The y coordinate of the leaves to process.
  */
 template <int TREE_COUNT>
-_CPU_AND_GPU_CODE_TEMPLATE_ inline void
-    get_prediction_for_leaf_shared(const ScorePrediction *leafPredictions,
-                                   const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-                                   ScorePrediction *outPredictions,
-                                   Vector2i imgSize,
-                                   int nbMaxPredictions,
-                                   int x,
-                                   int y)
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void get_prediction_for_leaf_shared(const ScorePrediction *leafPredictions, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
+                                           ScorePrediction *outPredictions, Vector2i imgSize, int nbMaxPredictions, int x, int y)
 {
   // Convenience typedef.
   typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
@@ -68,7 +63,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
 
   // Merge the first nbMaxPredictions from the selected cluster arrays.
   // The assumption is that the modal clusters in leafPredictions are already sorted by descending number of inliers.
-  while (finalPrediction.size < nbMaxPredictions)
+  while(finalPrediction.size < nbMaxPredictions)
   {
     int bestTreeIdx = 0;
     int bestTreeNbInliers = 0;
@@ -89,7 +84,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
       }
 
       // The mode that we are evaluating (the first non processed mode).
-      const Keypoint3DColourCluster &currentMode = selectedPredictions[treeIdx].elts[currentModeIdx];
+      const Keypoint3DColourCluster& currentMode = selectedPredictions[treeIdx].elts[currentModeIdx];
 
       // The current mode has more inliers than the currently best mode.
       if(currentMode.nbInliers > bestTreeNbInliers)
@@ -107,8 +102,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
     }
 
     // Copy the chosen mode into the output array.
-    finalPrediction.elts[finalPrediction.size++] =
-        selectedPredictions[bestTreeIdx].elts[treeModeIdx[bestTreeIdx]];
+    finalPrediction.elts[finalPrediction.size++] = selectedPredictions[bestTreeIdx].elts[treeModeIdx[bestTreeIdx]];
 
     // Increment the starting index for the associated tree.
     treeModeIdx[bestTreeIdx]++;

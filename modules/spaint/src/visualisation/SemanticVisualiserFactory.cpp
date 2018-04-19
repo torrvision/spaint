@@ -16,11 +16,11 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-SemanticVisualiser_CPtr SemanticVisualiserFactory::make_semantic_visualiser(size_t maxLabelCount, ITMLibSettings::DeviceType deviceType)
+SemanticVisualiser_CPtr SemanticVisualiserFactory::make_semantic_visualiser(size_t maxLabelCount, DeviceType deviceType)
 {
   SemanticVisualiser_CPtr visualiser;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     visualiser.reset(new SemanticVisualiser_CUDA(maxLabelCount));

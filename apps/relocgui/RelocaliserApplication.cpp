@@ -163,7 +163,7 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
   m_trainingSequencePathGenerator = boost::make_shared<SequentialPathGenerator>(m_trainSequencePath);
 
   // We try to run everything on the GPU.
-  const ITMLibSettings::DeviceType deviceType = ITMLibSettings::DEVICE_CUDA;
+  const DeviceType deviceType = DEVICE_CUDA;
 
   // Setup the relocaliser.
   const bf::path resourcesFolder = find_subdir_from_executable("resources");

@@ -43,7 +43,7 @@ void PreemptiveRansac_CPU::compute_energies_and_sort()
     compute_pose_energy(poseCandidates[i]);
   }
 
-  // Sort the candidates into non-increasing order of energy.
+  // Sort the candidates into non-decreasing order of energy.
   std::sort(poseCandidates, poseCandidates + nbPoseCandidates);
 }
 
@@ -91,14 +91,14 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 
 void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
 {
-  Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
-  Keypoint3DColourCluster *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
+  Vector4f *inlierCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
+  Keypoint3DColourCluster *inlierModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
   const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
-  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
   const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   const PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -107,26 +107,26 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
   {
     for(uint32_t inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
     {
-      preemptive_ransac_prepare_inliers_for_optimisation(
-        keypointsImage, predictionsImage, inlierRasterIndices, nbInliers, poseCandidates, candidateCameraPoints,
-        candidateModes, m_poseOptimisationInlierThreshold, candidateIdx, inlierIdx
+      prepare_inlier_for_optimisation(
+        candidateIdx, inlierIdx, keypoints, predictions, inlierRasterIndices, nbInliers,
+        poseCandidates, m_poseOptimisationInlierThreshold, inlierCameraPoints, inlierModes
       );
     }
   }
 
   // Compute and set the actual size of the buffers.
-  const uint32_t poseOptimisationBufferSize = static_cast<uint32_t>(nbInliers * nbPoseCandidates);
-  m_poseOptimisationCameraPoints->dataSize = poseOptimisationBufferSize;
-  m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
+  const size_t bufferSize = static_cast<size_t>(nbInliers * nbPoseCandidates);
+  m_poseOptimisationCameraPoints->dataSize = bufferSize;
+  m_poseOptimisationPredictedModes->dataSize = bufferSize;
 }
 
 void PreemptiveRansac_CPU::sample_inliers(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;
   int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
-  int *inliersMaskImage = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
-  const Keypoint3DColour *keypointsImage = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsImage = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  int *inliersMask = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
   CPURNG *rngs = m_rngs->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -136,8 +136,8 @@ void PreemptiveRansac_CPU::sample_inliers(bool useMask)
   {
     // Try to sample the raster index of a valid keypoint whose prediction has at least one modal cluster, using the mask if necessary.
     int rasterIdx = -1;
-    if(useMask) rasterIdx = sample_inlier<true>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx], inliersMaskImage);
-    else rasterIdx = sample_inlier<false>(keypointsImage, predictionsImage, imgSize, rngs[sampleIdx]);
+    if(useMask) rasterIdx = sample_inlier<true>(keypoints, predictions, imgSize, rngs[sampleIdx], inliersMask);
+    else rasterIdx = sample_inlier<false>(keypoints, predictions, imgSize, rngs[sampleIdx]);
 
     // If we succeed, grab a unique index in the output array and store the inlier raster index into the corresponding array element.
     if(rasterIdx >= 0)

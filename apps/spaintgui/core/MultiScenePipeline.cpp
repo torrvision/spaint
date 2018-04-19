@@ -4,8 +4,6 @@
  */
 
 #include "MultiScenePipeline.h"
-using namespace InputSource;
-using namespace ITMLib;
 using namespace itmx;
 using namespace spaint;
 
@@ -24,10 +22,10 @@ MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_P
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
-  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(settings->deviceType == DEVICE_CUDA)
   {
     std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
-    settings->deviceType = ITMLibSettings::DEVICE_CPU;
+    settings->deviceType = DEVICE_CPU;
   }
 #endif
 

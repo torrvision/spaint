@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_IMAGEPROCESSORFACTORY
 #define H_SPAINT_IMAGEPROCESSORFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/ImageProcessor.h"
 
@@ -25,7 +25,7 @@ struct ImageProcessorFactory
    * \param deviceType  The device on which the image processor should operate.
    * \return            The image processor.
    */
-  static ImageProcessor_CPtr make_image_processor(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static ImageProcessor_CPtr make_image_processor(DeviceType deviceType);
 };
 
 }

@@ -6,7 +6,7 @@
 #ifndef H_GROVE_DECISIONFORESTFACTORY
 #define H_GROVE_DECISIONFORESTFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/DecisionForest.h"
 
@@ -38,7 +38,7 @@ struct DecisionForestFactory
    *
    * \throws std::runtime_error If the forest cannot be loaded.
    */
-  static Forest_Ptr make_forest(const std::string& filename, ITMLib::ITMLibSettings::DeviceType deviceType);
+  static Forest_Ptr make_forest(const std::string& filename, DeviceType deviceType);
 
 #ifdef WITH_SCOREFORESTS
   /**
@@ -50,7 +50,7 @@ struct DecisionForestFactory
    *
    * \throws std::runtime_error If the forest cannot be converted.
    */
-  static Forest_Ptr make_forest(const EnsembleLearner& pretrainedForest, ITMLib::ITMLibSettings::DeviceType deviceType);
+  static Forest_Ptr make_forest(const EnsembleLearner& pretrainedForest, DeviceType deviceType);
 #endif
 };
 

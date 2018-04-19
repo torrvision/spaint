@@ -15,7 +15,13 @@ using namespace ORUtils;
 
 namespace grove {
 
-//#################### MEMBER FUNCTIONS ####################
+//#################### CONSTRUCTORS ####################
+
+ScoreRelocaliserState::ScoreRelocaliserState()
+: lastFeaturesAddedStartIdx(0), reservoirUpdateStartIdx(0)
+{}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void ScoreRelocaliserState::load_from_disk(const std::string& inputFolder)
 {
@@ -27,15 +33,14 @@ void ScoreRelocaliserState::load_from_disk(const std::string& inputFolder)
   // Load the predictions.
   MemoryBlockPersister::LoadMemoryBlock((inputPath / "scorePredictions.bin").string(), *predictionsBlock, MEMORYDEVICE_CPU);
 
-  // Copy them on the GPU, NOP if CPU-only.
+  // If we're using the GPU, copy the predictions across.
   predictionsBlock->UpdateDeviceFromHost();
 
   // Load the rest of the data.
   const std::string dataFile = (inputPath / "scoreState.txt").string();
   std::ifstream inFile(dataFile.c_str());
   inFile >> lastFeaturesAddedStartIdx >> reservoirUpdateStartIdx;
-
-  if(!inFile) throw std::runtime_error("Couldn't load relocaliser data from " + dataFile);
+  if(!inFile) throw std::runtime_error("Error: Couldn't load relocaliser data from " + dataFile);
 }
 
 void ScoreRelocaliserState::save_to_disk(const std::string& outputFolder) const
@@ -45,7 +50,7 @@ void ScoreRelocaliserState::save_to_disk(const std::string& outputFolder) const
   // Save the reservoirs.
   exampleReservoirs->save_to_disk(outputFolder);
 
-  // Update the predictions on the CPU.
+  // If we're using the GPU, copy the predictions across to the CPU so that they can be saved.
   predictionsBlock->UpdateHostFromDevice();
 
   // Save the predictions.
@@ -55,10 +60,7 @@ void ScoreRelocaliserState::save_to_disk(const std::string& outputFolder) const
   const std::string dataFile = (outputPath / "scoreState.txt").string();
   std::ofstream outFile(dataFile.c_str());
   outFile << lastFeaturesAddedStartIdx << ' ' << reservoirUpdateStartIdx;
-
-  if(!outFile) throw std::runtime_error("Couldn't save relocaliser data in " + dataFile);
+  if(!outFile) throw std::runtime_error("Error: Couldn't save relocaliser data in " + dataFile);
 }
-
-
 
 }

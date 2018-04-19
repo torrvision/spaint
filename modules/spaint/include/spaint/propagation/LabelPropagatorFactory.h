@@ -8,7 +8,7 @@
 
 #include <climits>
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/LabelPropagator.h"
 
@@ -31,7 +31,7 @@ struct LabelPropagatorFactory
    * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if propagation is to occur.
    * \return                                  The label propagator.
    */
-  static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize, ITMLib::ITMLibSettings::DeviceType deviceType,
+  static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize, DeviceType deviceType,
                                                     float maxAngleBetweenNormals = static_cast<float>(2.0f * M_PI / 180.0f),
                                                     float maxSquaredDistanceBetweenColours = 50.0f * 50.0f,
                                                     float maxSquaredDistanceBetweenVoxels = 10.0f * 10.0f);
