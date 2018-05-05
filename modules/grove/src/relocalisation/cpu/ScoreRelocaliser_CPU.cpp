@@ -12,8 +12,8 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-: ScoreRelocaliser(settings, forestFilename, DEVICE_CPU)
+ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string& forestFilename, const SettingsContainer_CPtr& settings)
+: ScoreRelocaliser(forestFilename, settings, DEVICE_CPU)
 {}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################

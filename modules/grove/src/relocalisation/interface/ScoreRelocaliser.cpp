@@ -27,10 +27,8 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename, DeviceType deviceType)
-: m_deviceType(deviceType),
-  m_forestFilename(forestFilename),
-  m_settings(settings)
+ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const SettingsContainer_CPtr& settings, DeviceType deviceType)
+: m_deviceType(deviceType), m_forestFilename(forestFilename), m_settings(settings)
 {
   const std::string settingsNamespace = "ScoreRelocaliser.";
 

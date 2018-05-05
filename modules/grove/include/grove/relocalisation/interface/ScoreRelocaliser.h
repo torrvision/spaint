@@ -27,12 +27,8 @@
 namespace grove {
 
 /**
- * \brief An instance of a class derived from this one allows the relocalisation of camera pose used to acquire RGB-D
- *        image pairs, according to the method described in:
- *
- *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
- *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*,
- *        Julien Valentin, Luigi Di Stefano and Philip H. S. Torr
+ * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene, using the approach described
+ *        in "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., 2017).
  */
 class ScoreRelocaliser : public itmx::Relocaliser
 {
@@ -138,15 +134,15 @@ protected:
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
+   * \brief Constructs a SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param settings        Pointer to an instance of SettingsContainer used to configure the relocaliser.
-   * \param forestFilename  The path to the pretrained forest file.
+   * \param forestFilename  The name of the file containing the forest.
+   * \param settings        The settings used to configure the relocaliser.
    * \param deviceType      The device on which the relocaliser should operate.
    *
-   * \throws std::runtime_error if the forest cannot be loaded.
+   * \throws std::runtime_error If the forest cannot be loaded.
    */
-  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename, DeviceType deviceType);
+  ScoreRelocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:

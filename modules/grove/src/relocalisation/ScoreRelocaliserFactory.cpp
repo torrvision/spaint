@@ -23,14 +23,14 @@ ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(DeviceType 
   if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    relocaliser.reset(new ScoreRelocaliser_CUDA(settings, forestFilename));
+    relocaliser.reset(new ScoreRelocaliser_CUDA(forestFilename, settings));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
   {
-    relocaliser.reset(new ScoreRelocaliser_CPU(settings, forestFilename));
+    relocaliser.reset(new ScoreRelocaliser_CPU(forestFilename, settings));
   }
 
   return relocaliser;
