@@ -259,14 +259,14 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Computes the number of reservoirs to subject to clustering during a call to the update function.
+   * \brief Computes the number of reservoirs to subject to clustering during a train/update call.
    *
-   * \return  The number of reservoirs to subject to clustering during a call to the update function.
+   * \return  The number of reservoirs to subject to clustering during a train/update call.
    */
   uint32_t compute_nb_reservoirs_to_update() const;
 
   /**
-   * \brief Update the index of the reservoir to subject to clustering after the integration/updating steps.
+   * \brief Updates the index of the first reservoir to subject to clustering during the next train/update call.
    */
   void update_reservoir_start_idx();
 };
