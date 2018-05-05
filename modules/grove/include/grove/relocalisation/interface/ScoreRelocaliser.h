@@ -103,13 +103,10 @@ protected:
   /** The minimum size of cluster to keep (used during clustering). */
   uint32_t m_minClusterSize;
 
-  /**
-   * The class implementing the Preemptive-RANSAC algorithm, used to estimate a pose given a set of keypoints and
-   * associated modal clusters.
-   */
+  /** The Preemptive RANSAC instance, used to estimate the 6DOF camera pose from a set of 3D keypoints and their associated SCoRe forest predictions. */
   PreemptiveRansac_Ptr m_preemptiveRansac;
 
-  /** The state of the relocaliser. Can be swapped at runtime with another to relocalise (and train) in a different environment. */
+  /** The state of the relocaliser. Can be replaced at runtime to relocalise (and train) in a different environment. */
   ScoreRelocaliserState_Ptr m_relocaliserState;
 
   /** The capacity (maximum size) of each reservoir associated with a leaf in the forest. */
