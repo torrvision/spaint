@@ -9,12 +9,6 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
-#include <ITMLib/Utils/ITMImageTypes.h>
-
-#include <ORUtils/Image.h>
-#include <ORUtils/SE3Pose.h>
-
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
