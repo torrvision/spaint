@@ -231,11 +231,11 @@ public:
   virtual void save_to_disk(const std::string& outputFolder) const;
 
   /**
-   * \brief Sets the relocaliser state.
+   * \brief Replaces the relocaliser's current state with a new one.
    *
-   * \note Has to be initialised beforehand, with the right variable sizes.
+   * \note The new state must have been previously initialised with the right variable sizes.
    *
-   * \param relocaliserState The relocaliser state.
+   * \param relocaliserState  The new relocaliser state.
    */
   void set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState);
 
@@ -246,19 +246,18 @@ public:
   virtual void update();
 
   /**
-   * \brief Updates the contents of each cluster.
+   * \brief Forcibly updates the contents of every cluster in the forest.
    *
-   * \note This function is meant to be called once to update every leaf cluster.
-   *       It's computationally intensive and requires a few hundred milliseconds to terminate.
+   * \note  This is computationally intensive, and can require a few hundred milliseconds to terminate.
    */
   void update_all_clusters();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Computes the number of reservoirs to subject to clustering during the integration/updating steps.
+   * \brief Computes the number of reservoirs to subject to clustering during a call to the update function.
    *
-   * \return The number of reservoirs to subject to clustering.
+   * \return  The number of reservoirs to subject to clustering during a call to the update function.
    */
   uint32_t compute_nb_reservoirs_to_update() const;
 
