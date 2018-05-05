@@ -28,7 +28,7 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const SettingsContainer_CPtr& settings, DeviceType deviceType)
-: m_deviceType(deviceType), m_forestFilename(forestFilename), m_settings(settings)
+: m_deviceType(deviceType), m_settings(settings)
 {
   const std::string settingsNamespace = "ScoreRelocaliser.";
 
@@ -46,7 +46,7 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
 
   // Update the modes associated to this number of reservoirs for each integration/update call.
   m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxReservoirsToUpdate", 256);
-  // m_reservoirsCount is not set since that number depends on the forest that will be instantiated in the subclass.
+  // m_reservoirCount is not set since that number depends on the forest that will be instantiated in the subclass.
   m_reservoirCapacity = m_settings->get_first_value<uint32_t>(settingsNamespace + "reservoirCapacity", 1024);
   m_rngSeed = m_settings->get_first_value<uint32_t>(settingsNamespace + "rngSeed", 42);
 
@@ -82,7 +82,7 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(deviceType));
   m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
-  m_reservoirsCount = m_scoreForest->get_nb_leaves();
+  m_reservoirCount = m_scoreForest->get_nb_leaves();
   m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
     m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, deviceType
   );
@@ -240,13 +240,13 @@ void ScoreRelocaliser::reset()
   // Setup the reservoirs if they haven't been allocated yet.
   if(!m_relocaliserState->exampleReservoirs)
   {
-    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, m_deviceType, m_rngSeed);
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirCount, m_reservoirCapacity, m_deviceType, m_rngSeed);
   }
 
   // Setup the predictions block if it hasn't been allocated yet.
   if(!m_relocaliserState->predictionsBlock)
   {
-    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirCount);
   }
 
   m_relocaliserState->exampleReservoirs->reset();
@@ -340,7 +340,7 @@ void ScoreRelocaliser::update_all_clusters()
 uint32_t ScoreRelocaliser::compute_nb_reservoirs_to_update() const
 {
   // Either the standard number of reservoirs to update or the remaining group until the end of the memory block.
-  return std::min(m_maxReservoirsToUpdate, m_reservoirsCount - m_relocaliserState->reservoirUpdateStartIdx);
+  return std::min(m_maxReservoirsToUpdate, m_reservoirCount - m_relocaliserState->reservoirUpdateStartIdx);
 }
 
 void ScoreRelocaliser::update_reservoir_start_idx()
@@ -348,7 +348,7 @@ void ScoreRelocaliser::update_reservoir_start_idx()
   m_relocaliserState->reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
 
   // Restart from the first reservoir.
-  if(m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirsCount) m_relocaliserState->reservoirUpdateStartIdx = 0;
+  if(m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirCount) m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
 }

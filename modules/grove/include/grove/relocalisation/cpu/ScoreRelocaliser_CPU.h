@@ -21,7 +21,7 @@ public:
   /**
    * \brief Constructs a CPU-based SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param forestFilename  The name of the file containing the forest.
+   * \param forestFilename  The name of the file from which to load the pre-trained forest.
    * \param settings        The settings used to configure the relocaliser.
    *
    * \throws std::runtime_error If the forest cannot be loaded.

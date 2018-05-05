@@ -59,48 +59,48 @@ public:
 
 //#################### PRIVATE VARIABLES ####################
 private:
-  /** An image storing the indices of the forest leaves associated to the keypoint/descriptor pairs. */
+  /** An image that will store the indices of the forest leaves associated with the keypoint/descriptor pairs. */
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
-  /** An image storing the predictions associated to the keypoint/descriptor pairs. */
+  /** An image that will store the predictions associated with the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;
 
-  /** An image that will store the descriptors extracted from an RGB-D image pair. */
+  /** An image that will store the descriptors extracted from an RGB-D image. */
   RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
 
-  /** An image that will store the keypoints extracted from an RGB-D image pair. */
+  /** An image that will store the keypoints extracted from an RGB-D image. */
   Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
 
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** Sigma used to cluster examples in 3D modal clusters(width of the gaussian used to compute the example density). */
+  /** The sigma of the Gaussian used when computing the example densities (used during clustering). */
   float m_clustererSigma;
 
-  /** Tau used to cluster examples in modal clusters (maximum distance between examples to be in the same cluster). */
+  /** The maximum distance there can be between two examples that are part of the same cluster (used during clustering). */
   float m_clustererTau;
 
   /** The device on which the relocaliser should operate. */
   DeviceType m_deviceType;
 
-  /** The clusterer, used to compute 3D modal clusters from the examples stored in the reservoirs. */
+  /** The clusterer used to compute 3D modal clusters from the examples stored in the reservoirs. */
   Clusterer_Ptr m_exampleClusterer;
 
-  /** The feature calculator, used to extract keypoints and describe image patches. */
+  /** The feature calculator used to extract keypoints and descriptors from an RGB-D image. */
   DA_RGBDPatchFeatureCalculator_Ptr m_featureCalculator;
 
-  /** The path to the pretrained relocalisation forest structure. */
-  std::string m_forestFilename;
-
-  /** A low level engine used to perform basic image processing. */
+  /** The low-level engine used to perform basic image processing. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
-  /** The maximum number of cluster for each leaf in the forest. */
+  /** The maximum number of clusters to store in each leaf in the forest (used during clustering). */
   uint32_t m_maxClusterCount;
 
-  /** The maximum number of relocalisations to output for each call to the relocalise method. */
+  /** The maximum number of relocalisations to output for each call to the relocalise function. */
   uint32_t m_maxRelocalisationsToOutput;
 
-  /** The minimum size of cluster to be considered valid. */
+  /** The maximum number of reservoirs to subject to clustering for each call to the update function. */
+  uint32_t m_maxReservoirsToUpdate;
+
+  /** The minimum size of cluster to keep (used during clustering). */
   uint32_t m_minClusterSize;
 
   /**
@@ -112,31 +112,27 @@ protected:
   /** The state of the relocaliser. Can be swapped at runtime with another to relocalise (and train) in a different environment. */
   ScoreRelocaliserState_Ptr m_relocaliserState;
 
-  /** The maximum capacity of the reservoir associated to each leaf in the forest. */
+  /** The capacity (maximum size) of each reservoir associated with a leaf in the forest. */
   uint32_t m_reservoirCapacity;
 
-  /** The seed for a random number generator. */
+  /** The total number of example reservoirs used by the relocaliser (in practice, this is equal to the number of leaves in the forest). */
+  uint32_t m_reservoirCount;
+
+  /** The seed for the random number generators used by the example reservoirs. */
   uint32_t m_rngSeed;
 
-  /** The relocalisaton forest. */
+  /** The SCoRe forest on which the relocaliser is based. */
   ScoreForest_Ptr m_scoreForest;
 
-  /** The relocalisation settings. */
+  /** The settings used to configure the relocaliser. */
   tvgutil::SettingsContainer_CPtr m_settings;
-
-  // Update-related data
-  /** The maximum number of reservoirs to subject to clustering for each integration/update call. */
-  uint32_t m_maxReservoirsToUpdate;
-
-  /** The total number of example reservoirs in the relocaliser. */
-  uint32_t m_reservoirsCount;
 
   //#################### CONSTRUCTORS ####################
 protected:
   /**
    * \brief Constructs a SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param forestFilename  The name of the file containing the forest.
+   * \param forestFilename  The name of the file from which to load the pre-trained forest.
    * \param settings        The settings used to configure the relocaliser.
    * \param deviceType      The device on which the relocaliser should operate.
    *
@@ -147,7 +143,7 @@ protected:
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys an instance of ScoreRelocaliser.
+   * \brief Destroys the relocaliser.
    */
   virtual ~ScoreRelocaliser();
 
