@@ -200,21 +200,25 @@ public:
   ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
 
   /**
-   * \brief Returns a pointer to the relocaliser state (non-const variant).
+   * \brief Gets the state of the relocaliser.
    *
-   * \return A pointer to the relocaliser state.
+   * \return  The state of the relocaliser.
    */
   ScoreRelocaliserState_Ptr get_relocaliser_state();
 
   /**
-   * \brief Returns a pointer to the relocaliser state.
+   * \brief Gets the state of the relocaliser.
    *
-   * \return A pointer to the relocaliser state.
+   * \return  The state of the relocaliser.
    */
   ScoreRelocaliserState_CPtr get_relocaliser_state() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the contents of the reservoir associated with the specified leaf in the forest.
+   *
+   * \param treeIdx The index of the tree containing the leaf.
+   * \param leafIdx The index of the leaf.
+   * \return        The reservoir associated with the specified leaf.
    */
   std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
