@@ -93,6 +93,9 @@ protected:
   /** Tau used to cluster examples in modal clusters (maximum distance between examples to be in the same cluster). */
   float m_clustererTau;
 
+  /** The device on which the relocaliser should operate. */
+  DeviceType m_deviceType;
+
   /** The clusterer, used to compute 3D modal clusters from the examples stored in the reservoirs. */
   Clusterer_Ptr m_exampleClusterer;
 
@@ -147,12 +150,13 @@ protected:
   /**
    * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
    *
-   * \param settings       Pointer to an instance of SettingsContainer used to configure the relocaliser.
-   * \param forestFilename The path to the pretrained forest file.
+   * \param settings        Pointer to an instance of SettingsContainer used to configure the relocaliser.
+   * \param forestFilename  The path to the pretrained forest file.
+   * \param deviceType      The device on which the relocaliser should operate.
    *
    * \throws std::runtime_error if the forest cannot be loaded.
    */
-  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
+  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename, DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -160,25 +164,6 @@ public:
    * \brief Destroys an instance of ScoreRelocaliser.
    */
   virtual ~ScoreRelocaliser();
-
-  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Returns a specific prediction from the forest.
-   *
-   * \param treeIdx The index of the tree containing the prediction of interest.
-   * \param leafIdx The index of the required leaf prediction.
-   *
-   * \return The ScorePrediction of interest.
-   *
-   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
-   */
-  virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const = 0;
 
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
@@ -224,6 +209,18 @@ public:
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
   /**
+   * \brief Returns a specific prediction from the forest.
+   *
+   * \param treeIdx The index of the tree containing the prediction of interest.
+   * \param leafIdx The index of the required leaf prediction.
+   *
+   * \return The ScorePrediction of interest.
+   *
+   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
+   */
+  ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
+
+  /**
    * \brief Returns a pointer to the relocaliser state (non-const variant).
    *
    * \return A pointer to the relocaliser state.
@@ -236,6 +233,11 @@ public:
    * \return A pointer to the relocaliser state.
    */
   ScoreRelocaliserState_CPtr get_relocaliser_state() const;
+
+  /**
+   * \brief TODO
+   */
+  std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
   /** Override */
   virtual void load_from_disk(const std::string& inputFolder);

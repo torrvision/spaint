@@ -8,18 +8,29 @@
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 
+#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
+using namespace ITMLib;
+
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
+#include "clustering/ExampleClustererFactory.h"
+#include "features/FeatureCalculatorFactory.h"
+#include "forests/DecisionForestFactory.h"
+#include "ransac/PreemptiveRansacFactory.h"
+#include "reservoirs/ExampleReservoirsFactory.h"
+
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-: m_forestFilename(forestFilename), m_settings(settings)
+ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename, DeviceType deviceType)
+: m_deviceType(deviceType),
+  m_forestFilename(forestFilename),
+  m_settings(settings)
 {
   const std::string settingsNamespace = "ScoreRelocaliser.";
 
@@ -68,6 +79,16 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
   m_predictionsImage = mbf.make_image<ScorePrediction>();
   m_rgbdPatchDescriptorImage = mbf.make_image<DescriptorType>();
   m_rgbdPatchKeypointsImage = mbf.make_image<ExampleType>();
+
+  // Instantiate the sub-algorithms.
+  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(deviceType));
+  m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
+  m_reservoirsCount = m_scoreForest->get_nb_leaves();
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, deviceType);
+
+  // Clear internal state.
+  reset();
 }
 
 //#################### DESTRUCTOR ####################
@@ -108,6 +129,17 @@ ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const
   return m_predictionsImage;
 }
 
+ScorePrediction ScoreRelocaliser::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
+{
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  {
+    throw std::invalid_argument("Invalid tree or leaf index.");
+  }
+
+  const MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  return m_relocaliserState->predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, memoryType);
+}
+
 ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
 {
   return m_relocaliserState;
@@ -116,6 +148,33 @@ ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
 ScoreRelocaliserState_CPtr ScoreRelocaliser::get_relocaliser_state() const
 {
   return m_relocaliserState;
+}
+
+std::vector<Keypoint3DColour> ScoreRelocaliser::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
+{
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  {
+    throw std::invalid_argument("Invalid tree or leaf index.");
+  }
+
+  const MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+
+  const uint32_t linearReservoirIdx = leafIdx * m_scoreForest->get_nb_trees() + treeIdx;
+  const uint32_t currentReservoirSize = m_relocaliserState->exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, memoryType);
+  const uint32_t reservoirCapacity = m_relocaliserState->exampleReservoirs->get_reservoir_capacity();
+
+  std::vector<Keypoint3DColour> reservoirContents;
+  reservoirContents.reserve(currentReservoirSize);
+
+  if(m_deviceType == DEVICE_CUDA) m_relocaliserState->exampleReservoirs->get_reservoirs()->UpdateHostFromDevice();
+  const Keypoint3DColour *reservoirData = m_relocaliserState->exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
+
+  for(uint32_t i = 0; i < currentReservoirSize; ++i)
+  {
+    reservoirContents.push_back(reservoirData[linearReservoirIdx * reservoirCapacity + i]);
+  }
+
+  return reservoirContents;
 }
 
 void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
@@ -185,6 +244,26 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
 void ScoreRelocaliser::reset()
 {
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
+  // Setup the clusterer if it has not been allocated yet.
+  if(!m_exampleClusterer)
+  {
+    m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
+      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, m_deviceType
+    );
+  }
+
+  // Setup the reservoirs if they haven't been allocated yet.
+  if(!m_relocaliserState->exampleReservoirs)
+  {
+    m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirsCount, m_reservoirCapacity, m_deviceType, m_rngSeed);
+  }
+
+  // Setup the predictions block if it hasn't been allocated yet.
+  if(!m_relocaliserState->predictionsBlock)
+  {
+    m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
+  }
 
   m_relocaliserState->exampleReservoirs->reset();
   m_relocaliserState->predictionsBlock->Clear();
