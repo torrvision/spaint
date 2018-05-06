@@ -59,16 +59,16 @@ public:
 
 //#################### PRIVATE VARIABLES ####################
 private:
-  /** An image that will store the indices of the forest leaves associated with the keypoint/descriptor pairs. */
+  /** The image containing the indices of the forest leaves associated with the keypoint/descriptor pairs. */
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
-  /** An image that will store the predictions associated with the keypoint/descriptor pairs. */
+  /** The image containing the forest predictions associated with the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;
 
-  /** An image that will store the descriptors extracted from an RGB-D image. */
+  /** The image containing the descriptors extracted from the RGB-D image. */
   RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
 
-  /** An image that will store the keypoints extracted from an RGB-D image. */
+  /** The image containing the keypoints extracted from the RGB-D image. */
   Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
 
   //#################### PROTECTED VARIABLES ####################
@@ -174,16 +174,16 @@ public:
   void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
   /**
-   * \brief Returns a pointer to an image containing the keypoints used to perform the relocalisation.
+   * \brief Gets the image containing the keypoints extracted from the RGB-D image.
    *
-   * \return A pointer to an image containing the keypoints used to perform the relocalisation.
+   * \return  The image containing the keypoints extracted from the RGB-D image.
    */
   Keypoint3DColourImage_CPtr get_keypoints_image() const;
 
   /**
-   * \brief Returns a pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   * \brief Gets the image containing the forest predictions associated with the keypoint/descriptor pairs.
    *
-   * \return A pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   * \return  The image containing the forest predictions associated with the keypoint/descriptor pairs.
    */
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
