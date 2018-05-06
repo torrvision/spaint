@@ -62,11 +62,11 @@ private:
   /** The image containing the descriptors extracted from the RGB-D image. */
   RGBDPatchDescriptorImage_Ptr m_descriptorsImage;
 
-  /** The image containing the indices of the forest leaves associated with the keypoint/descriptor pairs. */
-  mutable LeafIndicesImage_Ptr m_leafIndicesImage;
-
   /** The image containing the keypoints extracted from the RGB-D image. */
   Keypoint3DColourImage_Ptr m_keypointsImage;
+
+  /** The image containing the indices of the forest leaves associated with the keypoint/descriptor pairs. */
+  mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
   /** The image containing the forest predictions associated with the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;

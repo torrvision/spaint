@@ -32,51 +32,32 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
 {
   const std::string settingsNamespace = "ScoreRelocaliser.";
 
-  // In this constructor we are just setting the variables, instantiation of the sub-algorithms is left to the sub class
-  // in order to instantiate the appropriate version.
-
-  //
-  // Relocaliser parameters
-  //
+  // Determine the top-level parameters for the relocaliser.
   m_maxRelocalisationsToOutput = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxRelocalisationsToOutput", 1);
 
-  //
-  // Reservoirs parameters
-  //
-
-  // Update the modes associated to this number of reservoirs for each integration/update call.
-  m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxReservoirsToUpdate", 256);
-  // m_reservoirCount is not set since that number depends on the forest that will be instantiated in the subclass.
+  // Determine the reservoir-related parameters.
+  m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxReservoirsToUpdate", 256);  // Update the modes associated with this number of reservoirs for each train/update call.
   m_reservoirCapacity = m_settings->get_first_value<uint32_t>(settingsNamespace + "reservoirCapacity", 1024);
   m_rngSeed = m_settings->get_first_value<uint32_t>(settingsNamespace + "rngSeed", 42);
 
-  //
-  // Clustering parameters (defaults are tentative values that seem to work)
-  //
+  // Determine the clustering-related parameters (the defaults are tentative values that seem to work).
   m_clustererSigma = m_settings->get_first_value<float>(settingsNamespace + "clustererSigma", 0.1f);
   m_clustererTau = m_settings->get_first_value<float>(settingsNamespace + "clustererTau", 0.05f);
   m_maxClusterCount = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxClusterCount", ScorePrediction::Capacity);
   m_minClusterSize = m_settings->get_first_value<uint32_t>(settingsNamespace + "minClusterSize", 20);
 
+  // Check that the maximum number of clusters to store in each leaf is within range.
   if(m_maxClusterCount > ScorePrediction::Capacity)
   {
     throw std::invalid_argument(settingsNamespace + "maxClusterCount > ScorePrediction::Capacity");
   }
 
-  //
-  // Relocaliser state.
-  // (sets up an empty relocaliser state, with the assumption that the concrete subclasses will fill it with the right-sized variables).
-  //
-  m_relocaliserState.reset(new ScoreRelocaliserState);
-
-
+  // Allocate the internal images.
   MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-
-  // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
-  m_leafIndicesImage = mbf.make_image<LeafIndices>();
-  m_predictionsImage = mbf.make_image<ScorePrediction>();
   m_descriptorsImage = mbf.make_image<DescriptorType>();
   m_keypointsImage = mbf.make_image<ExampleType>();
+  m_leafIndicesImage = mbf.make_image<LeafIndices>();
+  m_predictionsImage = mbf.make_image<ScorePrediction>();
 
   // Instantiate the sub-algorithms.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
@@ -88,7 +69,8 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
   );
   m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, deviceType);
 
-  // Clear internal state.
+  // Set up the relocaliser's internal state.
+  m_relocaliserState.reset(new ScoreRelocaliserState);
   reset();
 }
 
