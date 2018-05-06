@@ -182,13 +182,6 @@ public:
   Keypoint3DColourImage_CPtr get_keypoints_image() const;
 
   /**
-   * \brief Gets the image containing the forest predictions associated with the keypoint/descriptor pairs.
-   *
-   * \return  The image containing the forest predictions associated with the keypoint/descriptor pairs.
-   */
-  ScorePredictionsImage_CPtr get_predictions_image() const;
-
-  /**
    * \brief Gets the prediction associated with the specified leaf in the forest.
    *
    * \param treeIdx The index of the tree containing the prediction.
@@ -197,7 +190,14 @@ public:
    *
    * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
    */
-  ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
+  ScorePrediction get_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
+
+  /**
+   * \brief Gets the image containing the forest predictions associated with the keypoint/descriptor pairs.
+   *
+   * \return  The image containing the forest predictions associated with the keypoint/descriptor pairs.
+   */
+  ScorePredictionsImage_CPtr get_predictions_image() const;
 
   /**
    * \brief Gets the state of the relocaliser.
