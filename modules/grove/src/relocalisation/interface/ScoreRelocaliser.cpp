@@ -87,7 +87,7 @@ void ScoreRelocaliser::finish_training()
 
   // Then kill the contents of the reservoirs (we won't need them any more).
   m_relocaliserState->exampleReservoirs.reset();
-  m_relocaliserState->lastFeaturesAddedStartIdx = 0;
+  m_relocaliserState->lastExamplesAddedStartIdx = 0;
   m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
@@ -227,7 +227,7 @@ void ScoreRelocaliser::reset()
   }
 
   m_relocaliserState->exampleReservoirs->reset();
-  m_relocaliserState->lastFeaturesAddedStartIdx = 0;
+  m_relocaliserState->lastExamplesAddedStartIdx = 0;
   m_relocaliserState->predictionsBlock->Clear();
   m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
@@ -272,7 +272,7 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
   );
 
   // Step 5: Store the index of the first reservoir that was just updated so that we can tell when there are no more clusters to update.
-  m_relocaliserState->lastFeaturesAddedStartIdx = m_relocaliserState->reservoirUpdateStartIdx;
+  m_relocaliserState->lastExamplesAddedStartIdx = m_relocaliserState->reservoirUpdateStartIdx;
 
   // Step 6: Update the index of the first reservoir to subject to clustering during the next train/update call.
   update_reservoir_start_idx();
@@ -282,16 +282,16 @@ void ScoreRelocaliser::update()
 {
   if(!m_relocaliserState->exampleReservoirs)
   {
-    throw std::runtime_error("finish_training() has been called, cannot update the relocaliser until reset() is called.");
+    throw std::runtime_error("Error: finish_training() has been called; the relocaliser cannot be updated again until reset() is called");
   }
 
-  // We are back to the first reservoir that was updated when
-  // the last batch of features were added to the forest.
-  // No need to perform further updates, we would get the same modes.
-  // This check works only if the m_maxReservoirsToUpdate quantity
-  // remains constant throughout the whole program.
-  if(m_relocaliserState->reservoirUpdateStartIdx == m_relocaliserState->lastFeaturesAddedStartIdx) return;
+  // If we are back to the first reservoir that was updated when the last batch of examples were added to the
+  // forest, there is no need to perform further updates, since we would get the same clusters. Note that this
+  // check only works if the m_maxReservoirsToUpdate quantity remains constant throughout the whole program.
+  if(m_relocaliserState->reservoirUpdateStartIdx == m_relocaliserState->lastExamplesAddedStartIdx) return;
 
+  // Otherwise, cluster the next batch of reservoirs, and update the index of the first reservoir to subject to
+  // clustering during the next train/update call.
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
   m_exampleClusterer->cluster_examples(
     m_relocaliserState->exampleReservoirs->get_reservoirs(), m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
@@ -303,8 +303,8 @@ void ScoreRelocaliser::update()
 
 void ScoreRelocaliser::update_all_clusters()
 {
-  // Simply call update until we get back to the first reservoir that hadn't been yet updated after the last call to train() was performed.
-  while(m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastFeaturesAddedStartIdx)
+  // Repeatedly call update until we get back to the batch of reservoirs that was updated last time train() was called.
+  while(m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastExamplesAddedStartIdx)
   {
     update();
   }

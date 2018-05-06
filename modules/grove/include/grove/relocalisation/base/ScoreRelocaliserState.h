@@ -33,7 +33,7 @@ struct ScoreRelocaliserState
   Reservoirs_Ptr exampleReservoirs;
 
   /** The index of the first reservoir that was updated when the train function was last called. */
-  uint32_t lastFeaturesAddedStartIdx;
+  uint32_t lastExamplesAddedStartIdx;
 
   /** A memory block storing the 3D modal clusters associated with each leaf in the forest. */
   ScorePredictionsMemoryBlock_Ptr predictionsBlock;
