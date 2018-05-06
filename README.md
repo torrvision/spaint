@@ -8,7 +8,7 @@ This is an open-source, real-time implementation of the interactive *SemanticPai
 
 This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg).
 
-It is built on top of [InfiniTAM v3](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
+It is built on top of [InfiniTAM v3.5](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
 
 The original concept for *SemanticPaint* was developed by a large number of people both at the University of Oxford and at Microsoft Research: Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi and Philip H S Torr.
 
@@ -87,7 +87,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 3)
+  - InfiniTAM (version 3.5)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -207,15 +207,23 @@ It can be run "out of the box" from any working directory for live
 reconstruction, provided you have built with OpenNI support.
 
 If you want to reconstruct from data stored on disk (e.g. the Teddy
-sequence that is used in InfiniTAM), you can pass the same parameters
-that would normally be passed to InfiniTAM to spaintgui, e.g.:
+sequence that is used in InfiniTAM), you can call the application
+as follows:
 
 ```
-$ ./spaintgui Teddy/calib.txt Teddy/Frames/%04i.ppm Teddy/Frames/%04i.pgm
+$ ./spaintgui -c <path> Teddy/calib.txt -r <path> Teddy/Frames/%04i.ppm -d <path>Teddy/Frames/%04i.pgm
 ```
 
 The arguments specify a text file containing calibration parameters,
 and masks for the RGB and depth images in the input sequence.
+
+Note that spaintgui also supports its own saving/loading of sequences
+in the <root>/build/bin/apps/spaintgui/sequences subdirectory. These
+can be loaded straightforwardly as follows:
+
+```
+$ ./spaintgui -s <sequence name>
+```
 
 ## 3. Troubleshooting Tips
 
@@ -228,7 +236,7 @@ If you have any trouble with the build, here are some of the likely causes:
 
 # Licence
 
-SemanticPaint © 2015-2017, Torr Vision Group, The University of Oxford (the "Software")
+SemanticPaint © 2015-2018, Torr Vision Group, The University of Oxford (the "Software")
 
 The Software remains the property of the University of Oxford ("the University").
 

@@ -10,9 +10,9 @@ Stephen Hicks <stephen.hicks@ndcn.ox.ac.uk>
 Shahram Izadi <shahrami@microsoft.com>
 Philip H S Torr <philip.torr@eng.ox.ac.uk>
 
-It is built on top of InfiniTAM v3, a highly-efficient,
+It is built on top of InfiniTAM v3.5, a highly-efficient,
 open-source 3D reconstruction engine developed by Oxford's
-Active Vision Group. For more details about InfiniTAM v3,
+Active Vision Group. For more details about InfiniTAM v3.5,
 please get in touch with one of the following people:
 
 Victor Adrian Prisacariu <victor@robots.ox.ac.uk>
@@ -58,7 +58,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 3)
+  - InfiniTAM (version 3.5)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -161,13 +161,19 @@ It can be run "out of the box" from any working directory for live
 reconstruction, provided you have built with OpenNI support.
 
 If you want to reconstruct from data stored on disk (e.g. the Teddy
-sequence that is used in InfiniTAM), you can pass the same parameters
-that would normally be passed to InfiniTAM to spaintgui, e.g.:
+sequence that is used in InfiniTAM), you can call the application
+as follows:
 
-$ ./spaintgui Teddy/calib.txt Teddy/Frames/%04i.ppm Teddy/Frames/%04i.pgm
+$ ./spaintgui -c <path>/Teddy/calib.txt -r <path>/Teddy/Frames/%04i.ppm -d <path>/Teddy/Frames/%04i.pgm
 
 The arguments specify a text file containing calibration parameters,
 and masks for the RGB and depth images in the input sequence.
+
+Note that spaintgui also supports its own saving/loading of sequences
+in the <root>/build/bin/apps/spaintgui/sequences subdirectory. These
+can be loaded straightforwardly as follows:
+
+$ ./spaintgui -s <sequence name>
 
 3. Additional Documentation
 ---------------------------
@@ -178,10 +184,11 @@ found in the following paper:
 SemanticPaint: Interactive 3D Labeling and Learning at your Fingertips.
 ACM Transactions on Graphics, 34(5), August 2015.
 
-There will shortly be a technical report shipped along with this
-package to describe the details of our open-source implementation
-of the SemanticPaint framework. It is currently in the process of
-being written.
+There is also a technical report that describes this implementation of
+the SemanticPaint concept:
+
+SemanticPaint: A Framework for the Interactive Segmentation of 3D Scenes.
+arXiv e-print 1510.03727, October 2015.
 
 4. Troubleshooting Tips
 -----------------------
