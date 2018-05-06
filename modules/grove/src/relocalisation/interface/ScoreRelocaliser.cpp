@@ -93,7 +93,6 @@ void ScoreRelocaliser::finish_training()
 
 void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate>& poseCandidates) const
 {
-  // Just forward the vector to P-RANSAC.
   m_preemptiveRansac->get_best_poses(poseCandidates);
 }
 
@@ -104,11 +103,10 @@ Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const
 
 ScorePrediction ScoreRelocaliser::get_prediction(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
-  {
-    throw std::invalid_argument("Invalid tree or leaf index.");
-  }
+  // Ensure that the specified leaf is valid (throw if not).
+  ensure_valid_leaf(treeIdx, leafIdx);
 
+  // Look up the prediction associated with the leaf and return it.
   const MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   return m_relocaliserState->predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, memoryType);
 }
@@ -130,26 +128,25 @@ ScoreRelocaliserState_CPtr ScoreRelocaliser::get_relocaliser_state() const
 
 std::vector<Keypoint3DColour> ScoreRelocaliser::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
 {
-  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
-  {
-    throw std::invalid_argument("Invalid tree or leaf index.");
-  }
+  // Ensure that the specified leaf is valid (throw if not).
+  ensure_valid_leaf(treeIdx, leafIdx);
 
+  // Look up the size of the reservoir associated with the leaf.
   const MemoryDeviceType memoryType = m_deviceType == DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-
   const uint32_t linearReservoirIdx = leafIdx * m_scoreForest->get_nb_trees() + treeIdx;
-  const uint32_t currentReservoirSize = m_relocaliserState->exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, memoryType);
+  const uint32_t reservoirSize = m_relocaliserState->exampleReservoirs->get_reservoir_sizes()->GetElement(linearReservoirIdx, memoryType);
+
+  // Copy the contents of the reservoir into a suitably-sized buffer and return it.
+  if(m_deviceType == DEVICE_CUDA) m_relocaliserState->exampleReservoirs->get_reservoirs()->UpdateHostFromDevice();
+  const Keypoint3DColour *reservoirsData = m_relocaliserState->exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
   const uint32_t reservoirCapacity = m_relocaliserState->exampleReservoirs->get_reservoir_capacity();
 
   std::vector<Keypoint3DColour> reservoirContents;
-  reservoirContents.reserve(currentReservoirSize);
+  reservoirContents.reserve(reservoirSize);
 
-  if(m_deviceType == DEVICE_CUDA) m_relocaliserState->exampleReservoirs->get_reservoirs()->UpdateHostFromDevice();
-  const Keypoint3DColour *reservoirData = m_relocaliserState->exampleReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
-
-  for(uint32_t i = 0; i < currentReservoirSize; ++i)
+  for(uint32_t i = 0; i < reservoirSize; ++i)
   {
-    reservoirContents.push_back(reservoirData[linearReservoirIdx * reservoirCapacity + i]);
+    reservoirContents.push_back(reservoirsData[linearReservoirIdx * reservoirCapacity + i]);
   }
 
   return reservoirContents;
@@ -157,7 +154,7 @@ std::vector<Keypoint3DColour> ScoreRelocaliser::get_reservoir_contents(uint32_t 
 
 void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
 {
-  // Load the relocaliser state from disk.
+  // Load the relocaliser's internal state from disk.
   m_relocaliserState->load_from_disk(inputFolder);
 }
 
@@ -219,31 +216,30 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
 
 void ScoreRelocaliser::reset()
 {
-  // Setup the reservoirs if they haven't been allocated yet.
+  // Set up the reservoirs if they haven't been allocated yet.
   if(!m_relocaliserState->exampleReservoirs)
   {
     m_relocaliserState->exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(m_reservoirCount, m_reservoirCapacity, m_deviceType, m_rngSeed);
   }
 
-  // Setup the predictions block if it hasn't been allocated yet.
+  // Set up the predictions block if it hasn't been allocated yet.
   if(!m_relocaliserState->predictionsBlock)
   {
     m_relocaliserState->predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirCount);
   }
 
   m_relocaliserState->exampleReservoirs->reset();
-  m_relocaliserState->predictionsBlock->Clear();
-
   m_relocaliserState->lastFeaturesAddedStartIdx = 0;
+  m_relocaliserState->predictionsBlock->Clear();
   m_relocaliserState->reservoirUpdateStartIdx = 0;
 }
 
 void ScoreRelocaliser::save_to_disk(const std::string& outputFolder) const
 {
-  // First, make sure the output folder exists.
+  // First make sure that the output folder exists.
   bf::create_directories(outputFolder);
 
-  // The serialise the data. Everything is contained in the relocaliser state, so that's the only thing we have to serialise.
+  // Then save the relocaliser's internal state to disk.
   m_relocaliserState->save_to_disk(outputFolder);
 }
 
@@ -323,6 +319,14 @@ uint32_t ScoreRelocaliser::compute_nb_reservoirs_to_update() const
 {
   // Either the standard number of reservoirs to update or the remaining group until the end of the memory block.
   return std::min(m_maxReservoirsToUpdate, m_reservoirCount - m_relocaliserState->reservoirUpdateStartIdx);
+}
+
+void ScoreRelocaliser::ensure_valid_leaf(uint32_t treeIdx, uint32_t leafIdx) const
+{
+  if(treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  {
+    throw std::invalid_argument("Error: Invalid tree or leaf index");
+  }
 }
 
 void ScoreRelocaliser::update_reservoir_start_idx()

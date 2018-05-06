@@ -268,6 +268,16 @@ private:
   uint32_t compute_nb_reservoirs_to_update() const;
 
   /**
+   * \brief Checks whether or not the specified leaf is valid, and throws if not.
+   *
+   * \param treeIdx The index of the tree containing the leaf.
+   * \param leafIdx The index of the leaf.
+   *
+   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
+   */
+  void ensure_valid_leaf(uint32_t treeIdx, uint32_t leafIdx) const;
+
+  /**
    * \brief Updates the index of the first reservoir to subject to clustering during the next train/update call.
    */
   void update_reservoir_start_idx();
