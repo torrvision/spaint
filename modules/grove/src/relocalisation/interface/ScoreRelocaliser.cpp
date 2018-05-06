@@ -75,8 +75,8 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
   // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
   m_leafIndicesImage = mbf.make_image<LeafIndices>();
   m_predictionsImage = mbf.make_image<ScorePrediction>();
-  m_rgbdPatchDescriptorImage = mbf.make_image<DescriptorType>();
-  m_rgbdPatchKeypointsImage = mbf.make_image<ExampleType>();
+  m_descriptorsImage = mbf.make_image<DescriptorType>();
+  m_keypointsImage = mbf.make_image<ExampleType>();
 
   // Instantiate the sub-algorithms.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
@@ -117,7 +117,7 @@ void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate>& poseCandidates
 
 Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const
 {
-  return m_rgbdPatchKeypointsImage;
+  return m_keypointsImage;
 }
 
 ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const
@@ -187,16 +187,16 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
   if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
     // First: select keypoints and compute descriptors.
-    m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
+    m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, depthIntrinsics, m_keypointsImage.get(), m_descriptorsImage.get());
 
     // Second: find all the leaves associated to the keypoints.
-    m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
+    m_scoreForest->find_leaves(m_descriptorsImage, m_leafIndicesImage);
 
     // Third: merge the predictions associated to those leaves.
     get_predictions_for_leaves(m_leafIndicesImage, m_relocaliserState->predictionsBlock, m_predictionsImage);
 
     // Finally: perform RANSAC.
-    boost::optional<PoseCandidate> poseCandidate = m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
+    boost::optional<PoseCandidate> poseCandidate = m_preemptiveRansac->estimate_pose(m_keypointsImage, m_predictionsImage);
 
     // If we succeeded, grab the transformation matrix, fill the SE3Pose and return a GOOD relocalisation result.
     // We do this for the first m_maxRelocalisationsToOutput candidates estimated by P-RANSAC.
@@ -280,13 +280,13 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
 
   // First: select keypoints and compute descriptors.
   const Matrix4f invCameraPose = cameraPose.GetInvM();
-  m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, invCameraPose, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
+  m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, invCameraPose, depthIntrinsics, m_keypointsImage.get(), m_descriptorsImage.get());
 
   // Second: find the leaves associated to the keypoints.
-  m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
+  m_scoreForest->find_leaves(m_descriptorsImage, m_leafIndicesImage);
 
   // Third: add keypoints to the correct reservoirs.
-  m_relocaliserState->exampleReservoirs->add_examples(m_rgbdPatchKeypointsImage, m_leafIndicesImage);
+  m_relocaliserState->exampleReservoirs->add_examples(m_keypointsImage, m_leafIndicesImage);
 
   // Fourth: cluster some of the reservoirs.
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
