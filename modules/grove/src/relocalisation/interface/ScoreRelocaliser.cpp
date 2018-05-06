@@ -251,31 +251,30 @@ void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatIm
 {
   if(!m_relocaliserState->exampleReservoirs)
   {
-    throw std::runtime_error("finish_training() has been called, cannot train the relocaliser until reset() is called.");
+    throw std::runtime_error("Error: finish_training() has been called; the relocaliser cannot be trained again until reset() is called");
   }
 
-  // First: select keypoints and compute descriptors.
+  // Step 1: Extract keypoints from the RGB-D image and compute descriptors for them.
   const Matrix4f invCameraPose = cameraPose.GetInvM();
   m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, invCameraPose, depthIntrinsics, m_keypointsImage.get(), m_descriptorsImage.get());
 
-  // Second: find the leaves associated to the keypoints.
+  // Step 2: Find all of the leaves in the forest that are associated with the descriptors for the keypoints.
   m_scoreForest->find_leaves(m_descriptorsImage, m_leafIndicesImage);
 
-  // Third: add keypoints to the correct reservoirs.
+  // Step 3: Add the keypoints to the relevant reservoirs.
   m_relocaliserState->exampleReservoirs->add_examples(m_keypointsImage, m_leafIndicesImage);
 
-  // Fourth: cluster some of the reservoirs.
-  const uint32_t updateCount = compute_nb_reservoirs_to_update();
+  // Step 4: Cluster some of the reservoirs.
+  const uint32_t nbReservoirsToUpdate = compute_nb_reservoirs_to_update();
   m_exampleClusterer->cluster_examples(
     m_relocaliserState->exampleReservoirs->get_reservoirs(), m_relocaliserState->exampleReservoirs->get_reservoir_sizes(),
-    m_relocaliserState->reservoirUpdateStartIdx, updateCount, m_relocaliserState->predictionsBlock
+    m_relocaliserState->reservoirUpdateStartIdx, nbReservoirsToUpdate, m_relocaliserState->predictionsBlock
   );
 
-  // Fifth: save the current index to indicate that reservoirs up to such index have to be clustered to represent the
-  // examples that have just been added.
+  // Step 5: Store the index of the first reservoir that was just updated so that we can tell when there are no more clusters to update.
   m_relocaliserState->lastFeaturesAddedStartIdx = m_relocaliserState->reservoirUpdateStartIdx;
 
-  // Finally: update starting index for the next invocation of either this function or idle_update().
+  // Step 6: Update the index of the first reservoir to subject to clustering during the next train/update call.
   update_reservoir_start_idx();
 }
 
