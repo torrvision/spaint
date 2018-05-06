@@ -85,7 +85,7 @@ protected:
   /** The clusterer used to compute 3D modal clusters from the examples stored in the reservoirs. */
   Clusterer_Ptr m_exampleClusterer;
 
-  /** The feature calculator used to extract keypoints and descriptors from an RGB-D image. */
+  /** The feature calculator used to extract keypoints and descriptors from the RGB-D image. */
   DA_RGBDPatchFeatureCalculator_Ptr m_featureCalculator;
 
   /** The low-level engine used to perform basic image processing. */
@@ -164,12 +164,13 @@ public:
   virtual void finish_training();
 
   /**
-   * \brief Returns the best poses estimated by the last run of the P-RANSAC algorithm.
+   * \brief Gets all of the candidate poses that survived the initial culling process during the last run of P-RANSAC,
+   *        sorted in non-increasing order of the number of P-RANSAC iterations they survived.
    *
-   * \note  Should be called AFTER calling estimate_pose.
+   * \pre   This function should only be called after a prior call to relocalise.
+   * \note  The first entry of the vector will be the candidate (if any) returned by the last run of P-RANSAC.
    *
-   * \param poseCandidates Output array that will be filled with the best poses estimated by the relocaliser.
-   *                       Poses are sorted in descending quality order.
+   * \param poseCandidates An output array that will be filled with the candidate poses as described.
    */
   void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
@@ -188,14 +189,13 @@ public:
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
   /**
-   * \brief Returns a specific prediction from the forest.
+   * \brief Gets the prediction associated with the specified leaf in the forest.
    *
-   * \param treeIdx The index of the tree containing the prediction of interest.
-   * \param leafIdx The index of the required leaf prediction.
+   * \param treeIdx The index of the tree containing the prediction.
+   * \param leafIdx The index of the leaf.
+   * \return        The prediction associated with the specified leaf.
    *
-   * \return The ScorePrediction of interest.
-   *
-   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
+   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
    */
   ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
 
@@ -219,6 +219,8 @@ public:
    * \param treeIdx The index of the tree containing the leaf.
    * \param leafIdx The index of the leaf.
    * \return        The reservoir associated with the specified leaf.
+   *
+   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
    */
   std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
