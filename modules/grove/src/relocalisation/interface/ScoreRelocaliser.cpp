@@ -314,7 +314,7 @@ void ScoreRelocaliser::update_all_clusters()
 
 uint32_t ScoreRelocaliser::compute_nb_reservoirs_to_update() const
 {
-  // Either the standard number of reservoirs to update or the remaining group until the end of the memory block.
+  // Either the standard number of reservoirs to update, or the number remaining before the end of the memory block.
   return std::min(m_maxReservoirsToUpdate, m_reservoirCount - m_relocaliserState->reservoirUpdateStartIdx);
 }
 
@@ -330,8 +330,11 @@ void ScoreRelocaliser::update_reservoir_start_idx()
 {
   m_relocaliserState->reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
 
-  // Restart from the first reservoir.
-  if(m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirCount) m_relocaliserState->reservoirUpdateStartIdx = 0;
+  // If we go past the end of the list of reservoirs, loop back round.
+  if(m_relocaliserState->reservoirUpdateStartIdx >= m_reservoirCount)
+  {
+    m_relocaliserState->reservoirUpdateStartIdx = 0;
+  }
 }
 
 }
