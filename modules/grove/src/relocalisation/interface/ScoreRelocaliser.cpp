@@ -162,41 +162,40 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
 {
   std::vector<Result> results;
 
-  // Try to estimate a pose only if we have enough valid depth values.
+  // Iff we have enough valid depth values, try to estimate the camera pose:
   if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
-    // First: select keypoints and compute descriptors.
+    // Step 1: Extract keypoints from the RGB-D image and compute descriptors for them.
     m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, depthIntrinsics, m_keypointsImage.get(), m_descriptorsImage.get());
 
-    // Second: find all the leaves associated to the keypoints.
+    // Step 2: Find all of the leaves in the forest that are associated with the descriptors for the keypoints.
     m_scoreForest->find_leaves(m_descriptorsImage, m_leafIndicesImage);
 
-    // Third: merge the predictions associated to those leaves.
+    // Step 3: Merge the SCoRe predictions (sets of clusters) associated with each keypoint to create a single
+    //         SCoRe prediction (a single set of clusters) for each keypoint.
     get_predictions_for_leaves(m_leafIndicesImage, m_relocaliserState->predictionsBlock, m_predictionsImage);
 
-    // Finally: perform RANSAC.
+    // Step 4: Perform P-RANSAC to try to estimate the camera pose.
     boost::optional<PoseCandidate> poseCandidate = m_preemptiveRansac->estimate_pose(m_keypointsImage, m_predictionsImage);
 
-    // If we succeeded, grab the transformation matrix, fill the SE3Pose and return a GOOD relocalisation result.
-    // We do this for the first m_maxRelocalisationsToOutput candidates estimated by P-RANSAC.
+    // Step 5: If we succeeded in estimated a camera pose:
     if(poseCandidate)
     {
+      // Add the pose to the results.
       Result result;
       result.pose.SetInvM(poseCandidate->cameraPose);
       result.quality = RELOCALISATION_GOOD;
       result.score = poseCandidate->energy;
-
       results.push_back(result);
 
-      // We have to get the remaining best poses from the RANSAC pipeline.
-      // We do this only if needed, to avoid needlessly copying data.
+      // If we're outputting multiple poses:
       if(m_maxRelocalisationsToOutput > 1)
       {
+        // Get all of the candidates that survived the initial culling process during P-RANSAC.
         std::vector<PoseCandidate> candidates;
         m_preemptiveRansac->get_best_poses(candidates);
 
-        // Copy the best results in the output vector (skipping the first one,
-        // since it's the same returned by m_preemptiveRansac->estimate_pose above).
+        // Add the best candidates to the results (skipping the first one, since it's the same one returned by estimate_pose above).
         const size_t maxElements = std::min<size_t>(candidates.size(), m_maxRelocalisationsToOutput);
         for(size_t i = 1; i < maxElements; ++i)
         {
@@ -204,7 +203,6 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
           result.pose.SetInvM(candidates[i].cameraPose);
           result.quality = RELOCALISATION_GOOD;
           result.score = candidates[i].energy;
-
           results.push_back(result);
         }
       }
