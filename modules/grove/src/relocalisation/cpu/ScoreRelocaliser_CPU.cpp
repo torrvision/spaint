@@ -18,8 +18,8 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string& forestFilename, co
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                                      ScorePredictionsImage_Ptr& outputPredictions) const
+void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                                           ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
@@ -37,7 +37,7 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPt
   {
     for(int x = 0; x < imgSize.x; ++x)
     {
-      get_prediction_for_leaf_shared(leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);
+      merge_predictions_for_keypoint(x, y, leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount);
     }
   }
 }

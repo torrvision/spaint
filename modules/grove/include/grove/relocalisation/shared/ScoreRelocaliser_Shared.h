@@ -16,25 +16,26 @@
 namespace grove {
 
 /**
- * \brief Merges the SCoRe predictions associated with multiple leaves into a single SCoRe prediction.
+ * \brief Merges the SCoRe predictions associated with the specified keypoint into a single SCoRe prediction.
  *
- * \note  Merging is performed by taking the largest clusters from each leaf. The assumption is that
- *        the modal cluters in each leaf are already sorted in non-increasing order of size.
+ * \note  Each keypoint will have a SCoRe prediction (set of clusters) from each tree in the forest, obtained by passing
+ *        the keypoint's descriptor down each tree and collecting a SCoRe prediction from each resulting leaf.
+ * \note  Merging is performed by taking the largest clusters from each leaf. The assumption is that the modal cluters in
+ *        each leaf are already sorted in non-increasing order of size.
  *
+ * \param x                The x coordinate of the keypoint.
+ * \param y                The y coordinate of the keypoint.
  * \param leafPredictions  A pointer to the storage area holding all the ScorePredictions associated to forest leaves.
  * \param leafIndices      A pointer to the storage area where the leaf indices for the current example are stored.
  * \param outPredictions   A pointer to the storage area that will hold the final merged prediction.
  * \param imgSize          The dimensions of the leafIndices and outPredictions arrays.
  * \param nbMaxPredictions The maximum number of predictions to merge for each output prediction.
- * \param x                The x coordinate of the leaves to process.
- * \param y                The y coordinate of the leaves to process.
  */
 template <int TREE_COUNT>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void get_prediction_for_leaf_shared(const ScorePrediction *leafPredictions, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-                                           ScorePrediction *outPredictions, Vector2i imgSize, int nbMaxPredictions, int x, int y)
+inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *leafPredictions, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
+                                           ScorePrediction *outPredictions, Vector2i imgSize, int nbMaxPredictions)
 {
-  // Convenience typedef.
   typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
 
   // Compute the linear index to the current leaves/output prediction.

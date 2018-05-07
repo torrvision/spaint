@@ -21,7 +21,7 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
 
   if(x >= imgSize.x || y >= imgSize.y) return;
 
-  get_prediction_for_leaf_shared(leafPredictions, leafIndices, outPredictions, imgSize, nbMaxPredictions, x, y);
+  merge_predictions_for_keypoint(x, y, leafPredictions, leafIndices, outPredictions, imgSize, nbMaxPredictions);
 }
 
 //#################### CONSTRUCTORS ####################
@@ -32,8 +32,8 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string& forestFilename, 
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                                       ScorePredictionsImage_Ptr& outputPredictions) const
+void ScoreRelocaliser_CUDA::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                                            ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);

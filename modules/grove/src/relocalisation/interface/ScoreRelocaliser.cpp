@@ -173,7 +173,7 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Ima
 
     // Step 3: Merge the SCoRe predictions (sets of clusters) associated with each keypoint to create a single
     //         SCoRe prediction (a single set of clusters) for each keypoint.
-    get_predictions_for_leaves(m_leafIndicesImage, m_relocaliserState->predictionsBlock, m_predictionsImage);
+    merge_predictions_for_keypoints(m_leafIndicesImage, m_relocaliserState->predictionsBlock, m_predictionsImage);
 
     // Step 4: Perform P-RANSAC to try to estimate the camera pose.
     boost::optional<PoseCandidate> poseCandidate = m_preemptiveRansac->estimate_pose(m_keypointsImage, m_predictionsImage);

@@ -155,8 +155,8 @@ protected:
    * \param leafPredictions   A memory block containing all the 3D modal clusters associated to the forest.
    * \param outputPredictions An image wherein each element represent the modal clusters associated to the predicted leaves.
    */
-  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                          ScorePredictionsImage_Ptr& outputPredictions) const = 0;
+  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
+                                               ScorePredictionsImage_Ptr& outputPredictions) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
