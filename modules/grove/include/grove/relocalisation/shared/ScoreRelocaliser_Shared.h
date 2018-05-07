@@ -6,9 +6,6 @@
 #ifndef H_GROVE_SCORERELOCALISERSHARED
 #define H_GROVE_SCORERELOCALISERSHARED
 
-#include "../interface/ScoreRelocaliser.h"
-
-#include <ORUtils/PlatformIndependence.h>
 #include <ORUtils/Vector.h>
 
 #include "../../scoreforests/ScorePrediction.h"
@@ -23,18 +20,18 @@ namespace grove {
  * \note  Merging is performed by taking the largest clusters from each leaf. The assumption is that the modal cluters in
  *        each leaf are already sorted in non-increasing order of size.
  *
- * \param x                The x coordinate of the keypoint.
- * \param y                The y coordinate of the keypoint.
- * \param leafPredictions  A pointer to the storage area holding all the ScorePredictions associated to forest leaves.
- * \param leafIndices      A pointer to the storage area where the leaf indices for the current example are stored.
- * \param outPredictions   A pointer to the storage area that will hold the final merged prediction.
- * \param imgSize          The dimensions of the leafIndices and outPredictions arrays.
- * \param nbMaxPredictions The maximum number of predictions to merge for each output prediction.
+ * \param x                 The x coordinate of the keypoint.
+ * \param y                 The y coordinate of the keypoint.
+ * \param predictionsBlock  A pointer to the storage area holding all of the SCoRe predictions associated with the forest leaves.
+ * \param leafIndices       A pointer to the image containing the indices of the leaves (in the different trees) associated with each keypoint/descriptor pair.
+ * \param outputPredictions A pointer to the image into which to store the merged SCoRe predictions.
+ * \param imgSize           The dimensions of the leafIndices and outputPredictions images.
+ * \param nbMaxPredictions  The maximum number of predictions to merge for each output prediction.
  */
 template <int TREE_COUNT>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *leafPredictions, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-                                           ScorePrediction *outPredictions, Vector2i imgSize, int nbMaxPredictions)
+inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *predictionsBlock, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
+                                           ScorePrediction *outputPredictions, Vector2i imgSize, int nbMaxPredictions)
 {
   typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
 
@@ -55,7 +52,7 @@ inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *
   ScorePrediction selectedPredictions[TREE_COUNT];
   for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
-    selectedPredictions[treeIdx] = leafPredictions[selectedLeaves[treeIdx]];
+    selectedPredictions[treeIdx] = predictionsBlock[selectedLeaves[treeIdx]];
   }
 
   // Not using a reference to the output image to avoid global memory accesses.
@@ -110,7 +107,7 @@ inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *
   }
 
   // Finally, store the prediction in the output image.
-  outPredictions[linearIdx] = finalPrediction;
+  outputPredictions[linearIdx] = finalPrediction;
 }
 
 }

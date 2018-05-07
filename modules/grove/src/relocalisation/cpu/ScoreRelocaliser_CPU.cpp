@@ -22,12 +22,12 @@ void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImag
 {
   const Vector2i imgSize = leafIndices->noDims;
 
-  // NOP after the first time.
+  // Make sure that the output predictions image has the right size (this is a no-op after the first time).
   outputPredictions->ChangeDims(imgSize);
 
-  const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *leafPredictionsData = m_relocaliserState->predictionsBlock->GetData(MEMORYDEVICE_CPU);
-  ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CPU);
+  const LeafIndices *leafIndicesPtr = leafIndices->GetData(MEMORYDEVICE_CPU);
+  ScorePrediction *outputPredictionsPtr = outputPredictions->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictionsBlockPtr = m_relocaliserState->predictionsBlock->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -36,7 +36,7 @@ void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImag
   {
     for(int x = 0; x < imgSize.x; ++x)
     {
-      merge_predictions_for_keypoint(x, y, leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount);
+      merge_predictions_for_keypoint(x, y, predictionsBlockPtr, leafIndicesPtr, outputPredictionsPtr, imgSize, m_maxClusterCount);
     }
   }
 }
