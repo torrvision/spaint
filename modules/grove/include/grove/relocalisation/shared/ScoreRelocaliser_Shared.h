@@ -30,16 +30,16 @@ namespace grove {
  */
 template <int TREE_COUNT>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *predictionsBlock, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
+inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *predictionsBlock, const ORUtils::VectorX<int,TREE_COUNT> *leafIndices,
                                            ScorePrediction *outputPredictions, Vector2i imgSize, int nbMaxPredictions)
 {
-  typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
+  typedef ORUtils::VectorX<int,TREE_COUNT> LeafIndices;
 
-  // Compute the linear index to the current leaves/output prediction.
-  const int linearIdx = y * imgSize.width + x;
+  // Compute the raster index of the keypoint whose predictions we want to merge.
+  const int keypointRasterIdx = y * imgSize.width + x;
 
-  // Grab a copy of the relevant leaves in a local variable.
-  const LeafIndices selectedLeaves = leafIndices[linearIdx];
+  // Copy the leaf indices associated with the keypoint into a local array.
+  const LeafIndices leafIndicesForKeypoint = leafIndices[keypointRasterIdx];
 
   // Setup and zero the indices of the current mode for each prediction
   int treeModeIdx[TREE_COUNT];
@@ -48,20 +48,20 @@ inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *
     treeModeIdx[treeIdx] = 0;
   }
 
-  // Copy the selected prediction for each leaf. This is to have them contigous in memory for the following operations.
-  ScorePrediction selectedPredictions[TREE_COUNT];
+  // Copy the predictions associated with the keypoint's leaves into a contiguous local array (this makes it more efficient to access them later).
+  ScorePrediction predictionsForKeypoint[TREE_COUNT];
   for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
-    selectedPredictions[treeIdx] = predictionsBlock[selectedLeaves[treeIdx]];
+    predictionsForKeypoint[treeIdx] = predictionsBlock[leafIndicesForKeypoint[treeIdx]];
   }
 
   // Not using a reference to the output image to avoid global memory accesses.
-  ScorePrediction finalPrediction;
-  finalPrediction.size = 0;
+  ScorePrediction outputPrediction;
+  outputPrediction.size = 0;
 
   // Merge the first nbMaxPredictions from the selected cluster arrays.
   // The assumption is that the modal clusters in leafPredictions are already sorted by descending number of inliers.
-  while(finalPrediction.size < nbMaxPredictions)
+  while(outputPrediction.size < nbMaxPredictions)
   {
     int bestTreeIdx = 0;
     int bestTreeNbInliers = 0;
@@ -73,7 +73,7 @@ inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *
       const int currentModeIdx = treeModeIdx[treeIdx];
 
       // The number of modes for the prediction associated to the current tree.
-      const int predictionModeCount = selectedPredictions[treeIdx].size;
+      const int predictionModeCount = predictionsForKeypoint[treeIdx].size;
 
       // If the prediction has less modes than currentModeIdx we cannot do anything for this tree.
       if(predictionModeCount <= currentModeIdx)
@@ -82,7 +82,7 @@ inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *
       }
 
       // The mode that we are evaluating (the first non processed mode).
-      const Keypoint3DColourCluster& currentMode = selectedPredictions[treeIdx].elts[currentModeIdx];
+      const Keypoint3DColourCluster& currentMode = predictionsForKeypoint[treeIdx].elts[currentModeIdx];
 
       // The current mode has more inliers than the currently best mode.
       if(currentMode.nbInliers > bestTreeNbInliers)
@@ -100,14 +100,14 @@ inline void merge_predictions_for_keypoint(int x, int y, const ScorePrediction *
     }
 
     // Copy the chosen mode into the output array.
-    finalPrediction.elts[finalPrediction.size++] = selectedPredictions[bestTreeIdx].elts[treeModeIdx[bestTreeIdx]];
+    outputPrediction.elts[outputPrediction.size++] = predictionsForKeypoint[bestTreeIdx].elts[treeModeIdx[bestTreeIdx]];
 
     // Increment the starting index for the associated tree.
     treeModeIdx[bestTreeIdx]++;
   }
 
   // Finally, store the prediction in the output image.
-  outputPredictions[linearIdx] = finalPrediction;
+  outputPredictions[keypointRasterIdx] = outputPrediction;
 }
 
 }
