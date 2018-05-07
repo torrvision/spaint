@@ -6,8 +6,6 @@
 #ifndef H_GROVE_SCORERELOCALISERSHARED
 #define H_GROVE_SCORERELOCALISERSHARED
 
-#include <ORUtils/Vector.h>
-
 #include "../../scoreforests/ScorePrediction.h"
 
 namespace grove {
