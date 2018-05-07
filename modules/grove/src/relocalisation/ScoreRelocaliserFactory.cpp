@@ -16,7 +16,7 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(DeviceType deviceType, const SettingsContainer_CPtr& settings, const std::string& forestFilename)
+ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(const std::string& forestFilename, const SettingsContainer_CPtr& settings, DeviceType deviceType)
 {
   ScoreRelocaliser_Ptr relocaliser;
 
