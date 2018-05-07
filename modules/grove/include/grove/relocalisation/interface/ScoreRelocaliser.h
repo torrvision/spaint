@@ -151,12 +151,10 @@ protected:
    *        forest. This function merges the 3D modal clusters associated to multiple leaves coming from different trees
    *        in the forest in a single prediction for each keypoint/descriptor pair.
    *
-   * \param leafIndices       Indices of the forest leafs predicted from a keypoint/descriptor pair.
-   * \param leafPredictions   A memory block containing all the 3D modal clusters associated to the forest.
+   * \param leafIndices       Indices of the forest leaves predicted from a keypoint/descriptor pair.
    * \param outputPredictions An image wherein each element represent the modal clusters associated to the predicted leaves.
    */
-  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                               ScorePredictionsImage_Ptr& outputPredictions) const = 0;
+  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -18,16 +18,15 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string& forestFilename, co
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                                           ScorePredictionsImage_Ptr& outputPredictions) const
+void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
-  const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
-
-  const ScorePrediction *leafPredictionsData = leafPredictions->GetData(MEMORYDEVICE_CPU);
 
   // NOP after the first time.
   outputPredictions->ChangeDims(imgSize);
+
+  const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *leafPredictionsData = m_relocaliserState->predictionsBlock->GetData(MEMORYDEVICE_CPU);
   ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP

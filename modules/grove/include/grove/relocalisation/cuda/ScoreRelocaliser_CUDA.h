@@ -31,8 +31,7 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /** Override */
-  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                               ScorePredictionsImage_Ptr& outputPredictions) const;
+  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const;
 };
 
 }

@@ -33,17 +33,15 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string& forestFilename, 
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CUDA::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                                            ScorePredictionsImage_Ptr& outputPredictions) const
+void ScoreRelocaliser_CUDA::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
-  const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
-
-  // Leaf predictions
-  const ScorePrediction *leafPredictionsData = leafPredictions->GetData(MEMORYDEVICE_CUDA);
 
   // NOP after the first time.
   outputPredictions->ChangeDims(imgSize);
+
+  const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *leafPredictionsData = m_relocaliserState->predictionsBlock->GetData(MEMORYDEVICE_CUDA);
   ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CUDA);
 
   const dim3 blockSize(32, 32);
