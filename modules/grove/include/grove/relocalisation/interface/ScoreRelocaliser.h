@@ -147,12 +147,16 @@ public:
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Each keypoint/descriptor pair extracted from the input RGB-D image pairs determines a leaf in a tree of the
-   *        forest. This function merges the 3D modal clusters associated to multiple leaves coming from different trees
-   *        in the forest in a single prediction for each keypoint/descriptor pair.
+   * \brief Merges the SCoRe predictions (sets of clusters) associated with each keypoint to create a single
+   *        SCoRe prediction (a single set of clusters) for each keypoint.
    *
-   * \param leafIndices       Indices of the forest leaves predicted from a keypoint/descriptor pair.
-   * \param outputPredictions An image wherein each element represent the modal clusters associated to the predicted leaves.
+   * \note  Each keypoint/descriptor pair extracted from the input RGB-D image pairs determines a leaf in a tree of the
+   *        forest. Each such leaf contains a set of 3D modal clusters, which together constitute a SCoRe prediction.
+   *        This function merges the SCoRe predictions associated with the different leaves (from different trees) with
+   *        which each keypoint/descriptor pair is associated, thereby yielding a single SCoRe prediction for each pair.
+   *
+   * \param leafIndices       An image containing the indices of the leaves (in the different trees) associated with each keypoint/descriptor pair.
+   * \param outputPredictions An image into which to store the merged SCoRe predictions.
    */
   virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const = 0;
 
