@@ -5,8 +5,6 @@
 
 #include "relocalisation/base/ScoreRelocaliserState.h"
 
-#include <fstream>
-
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 

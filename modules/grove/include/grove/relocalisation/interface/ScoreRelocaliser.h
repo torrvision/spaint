@@ -7,15 +7,11 @@
 #define H_GROVE_SCORERELOCALISER
 
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
-#include <tvgutil/misc/SettingsContainer.h>
-
 #include "../base/ScoreRelocaliserState.h"
-
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 #include "../../forests/interface/DecisionForest.h"

@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_SCORERELOCALISERSHARED
-#define H_GROVE_SCORERELOCALISERSHARED
+#ifndef H_GROVE_SCORERELOCALISER_SHARED
+#define H_GROVE_SCORERELOCALISER_SHARED
 
 #include "../../scoreforests/ScorePrediction.h"
 
