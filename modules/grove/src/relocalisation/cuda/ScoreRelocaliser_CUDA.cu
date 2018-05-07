@@ -13,15 +13,15 @@ namespace grove {
 //#################### CUDA KERNELS ####################
 
 template <int TREE_COUNT>
-__global__ void ck_merge_predictions_for_keypoints(const ScorePrediction *predictionsBlock, const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-                                                  ScorePrediction *outputPredictions, Vector2i imgSize, int nbMaxPredictions)
+__global__ void ck_merge_predictions_for_keypoints(const ORUtils::VectorX<int,TREE_COUNT> *leafIndices, const ScorePrediction *predictionsBlock,
+                                                   Vector2i imgSize, int maxClusterCount, ScorePrediction *outputPredictions)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
 
   if(x < imgSize.x && y < imgSize.y)
   {
-    merge_predictions_for_keypoint(x, y, predictionsBlock, leafIndices, outputPredictions, imgSize, nbMaxPredictions);
+    merge_predictions_for_keypoint(x, y, leafIndices, predictionsBlock, imgSize, maxClusterCount, outputPredictions);
   }
 }
 
@@ -48,7 +48,7 @@ void ScoreRelocaliser_CUDA::merge_predictions_for_keypoints(const LeafIndicesIma
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x, (imgSize.y + blockSize.y - 1) / blockSize.y);
 
   ck_merge_predictions_for_keypoints<<<gridSize, blockSize>>>(
-    predictionsBlockPtr, leafIndicesPtr, outputPredictionsPtr, imgSize, m_maxClusterCount
+    leafIndicesPtr, predictionsBlockPtr, imgSize, m_maxClusterCount, outputPredictionsPtr
   );
   ORcudaKernelCheck;
 }

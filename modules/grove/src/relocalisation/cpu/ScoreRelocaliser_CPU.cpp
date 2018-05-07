@@ -36,7 +36,7 @@ void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImag
   {
     for(int x = 0; x < imgSize.x; ++x)
     {
-      merge_predictions_for_keypoint(x, y, predictionsBlockPtr, leafIndicesPtr, outputPredictionsPtr, imgSize, m_maxClusterCount);
+      merge_predictions_for_keypoint(x, y, leafIndicesPtr, predictionsBlockPtr, imgSize, m_maxClusterCount, outputPredictionsPtr);
     }
   }
 }
