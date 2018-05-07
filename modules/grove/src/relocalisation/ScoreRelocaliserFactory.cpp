@@ -4,13 +4,12 @@
  */
 
 #include "relocalisation/ScoreRelocaliserFactory.h"
+using namespace tvgutil;
 
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 #ifdef WITH_CUDA
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 #endif
-
-using namespace tvgutil;
 
 namespace grove {
 
