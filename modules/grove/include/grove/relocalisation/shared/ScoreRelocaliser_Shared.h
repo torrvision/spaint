@@ -16,12 +16,12 @@
 namespace grove {
 
 /**
- * \brief Merge score predictions associated to multiple leaves in a single ScorePrediction.
+ * \brief Merges the SCoRe predictions associated with multiple leaves into a single SCoRe prediction.
  *
- * \note  Merging is performed taking the largest clusters from each leaf. The assumption is that modal cluters in each
- *        leaf are already sorted by descending size.
+ * \note  Merging is performed by taking the largest clusters from each leaf. The assumption is that
+ *        the modal cluters in each leaf are already sorted in non-increasing order of size.
  *
- * \param leafPredictions  A pointer to the sotrage area holding all the ScorePredictions associated to forest leaves.
+ * \param leafPredictions  A pointer to the storage area holding all the ScorePredictions associated to forest leaves.
  * \param leafIndices      A pointer to the storage area where the leaf indices for the current example are stored.
  * \param outPredictions   A pointer to the storage area that will hold the final merged prediction.
  * \param imgSize          The dimensions of the leafIndices and outPredictions arrays.
