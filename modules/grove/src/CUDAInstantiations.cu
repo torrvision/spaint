@@ -14,8 +14,10 @@ using namespace ORUtils;
 
 namespace grove {
 
+//#################### CONSTANTS ####################
+
 namespace {
-  static const int FOREST_TREES = 5; // TODO change
+  static const int FOREST_TREES = 5;
 }
 
 //#################### EXPLICIT INSTANTIATIONS ####################
