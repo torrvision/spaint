@@ -120,7 +120,7 @@ private:
   /** The number of times the relocaliser has been trained with new data. */
   size_t m_relocaliserTrainingCount;
 
-  /** the number of frames to skip between each call to the relocaliser's train method. */
+  /** The number of frames to skip between each call to the relocaliser's train method. */
   size_t m_relocaliserTrainingSkipFrames;
 
   /** The type of relocaliser. */

@@ -12,23 +12,22 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
-: ScoreRelocaliser(settings, forestFilename, DEVICE_CPU)
+ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string& forestFilename, const SettingsContainer_CPtr& settings)
+: ScoreRelocaliser(forestFilename, settings, DEVICE_CPU)
 {}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                                      ScorePredictionsImage_Ptr& outputPredictions) const
+void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
-  const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
 
-  const ScorePrediction *leafPredictionsData = leafPredictions->GetData(MEMORYDEVICE_CPU);
-
-  // NOP after the first time.
+  // Make sure that the output predictions image has the right size (this is a no-op after the first time).
   outputPredictions->ChangeDims(imgSize);
-  ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CPU);
+
+  const LeafIndices *leafIndicesPtr = leafIndices->GetData(MEMORYDEVICE_CPU);
+  ScorePrediction *outputPredictionsPtr = outputPredictions->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictionsBlockPtr = m_relocaliserState->predictionsBlock->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -37,7 +36,7 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPt
   {
     for(int x = 0; x < imgSize.x; ++x)
     {
-      get_prediction_for_leaf_shared(leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);
+      merge_predictions_for_keypoint(x, y, leafIndicesPtr, predictionsBlockPtr, imgSize, m_maxClusterCount, outputPredictionsPtr);
     }
   }
 }

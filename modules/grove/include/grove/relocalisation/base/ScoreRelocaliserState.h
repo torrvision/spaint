@@ -32,8 +32,8 @@ struct ScoreRelocaliserState
   /** The example reservoirs associated with each leaf in the forest. */
   Reservoirs_Ptr exampleReservoirs;
 
-  /** The index of the reservoir that had been updated when the integration function has been called. */
-  uint32_t lastFeaturesAddedStartIdx;
+  /** The index of the first reservoir that was clustered when the train function was last called. */
+  uint32_t lastExamplesAddedStartIdx;
 
   /** A memory block storing the 3D modal clusters associated with each leaf in the forest. */
   ScorePredictionsMemoryBlock_Ptr predictionsBlock;
@@ -61,7 +61,7 @@ struct ScoreRelocaliserState
    *
    * \param outputFolder  The folder in which to save the relocaliser state.
    *
-   * \throws std::runtime_error  If saving the relocaliser state fails.
+   * \throws std::runtime_error If saving the relocaliser state fails.
    */
   void save_to_disk(const std::string& outputFolder) const;
 };
