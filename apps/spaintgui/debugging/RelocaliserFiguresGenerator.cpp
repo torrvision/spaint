@@ -67,7 +67,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
     // For each prediction print centroids, covariances, nbInliers
     for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
-      const ScorePrediction p = scoreRelocaliser->get_raw_prediction(treeIdx, predictionIndices[treeIdx]);
+      const ScorePrediction p = scoreRelocaliser->get_prediction(treeIdx, predictionIndices[treeIdx]);
       outFile << p.size << ' ' << predictionIndices[treeIdx] << '\n';
       for(int modeIdx = 0; modeIdx < p.size; ++modeIdx)
       {
@@ -149,7 +149,7 @@ void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
   // For each prediction print centroids, covariances, nbInliers
   for(uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
   {
-    const ScorePrediction p = scoreRelocaliser->get_raw_prediction(treeIdx, predictionIndices[treeIdx]);
+    const ScorePrediction p = scoreRelocaliser->get_prediction(treeIdx, predictionIndices[treeIdx]);
     std::cout << p.size << ' ' << predictionIndices[treeIdx] << '\n';
     for(int modeIdx = 0; modeIdx < p.size; ++modeIdx)
     {

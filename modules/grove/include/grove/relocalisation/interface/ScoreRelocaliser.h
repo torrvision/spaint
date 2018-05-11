@@ -7,22 +7,12 @@
 #define H_GROVE_SCORERELOCALISER
 
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
-
-#include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
-#include <ITMLib/Utils/ITMImageTypes.h>
-
-#include <ORUtils/Image.h>
-#include <ORUtils/SE3Pose.h>
 
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
-#include <tvgutil/misc/SettingsContainer.h>
-
 #include "../base/ScoreRelocaliserState.h"
-
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 #include "../../forests/interface/DecisionForest.h"
@@ -34,12 +24,8 @@
 namespace grove {
 
 /**
- * \brief An instance of a class derived from this one allows the relocalisation of camera pose used to acquire RGB-D
- *        image pairs, according to the method described in:
- *
- *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
- *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*,
- *        Julien Valentin, Luigi Di Stefano and Philip H. S. Torr
+ * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene, using the approach described
+ *        in "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., 2017).
  */
 class ScoreRelocaliser : public itmx::Relocaliser
 {
@@ -70,114 +56,109 @@ public:
 
 //#################### PRIVATE VARIABLES ####################
 private:
-  /** An image storing the indices of the forest leaves associated to the keypoint/descriptor pairs. */
+  /** The image containing the descriptors extracted from the RGB-D image. */
+  RGBDPatchDescriptorImage_Ptr m_descriptorsImage;
+
+  /** The image containing the keypoints extracted from the RGB-D image. */
+  Keypoint3DColourImage_Ptr m_keypointsImage;
+
+  /** The image containing the indices of the forest leaves associated with the keypoint/descriptor pairs. */
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
   /** The mutex used to synchronise access to the relocaliser in a multithreaded environment. */
   mutable boost::recursive_mutex m_mutex;
 
-  /** An image storing the predictions associated to the keypoint/descriptor pairs. */
+  /** The image containing the forest predictions associated with the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;
-
-  /** An image that will store the descriptors extracted from an RGB-D image pair. */
-  RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
-
-  /** An image that will store the keypoints extracted from an RGB-D image pair. */
-  Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
 
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** Sigma used to cluster examples in 3D modal clusters(width of the gaussian used to compute the example density). */
+  /** The sigma of the Gaussian used when computing the example densities (used during clustering). */
   float m_clustererSigma;
 
-  /** Tau used to cluster examples in modal clusters (maximum distance between examples to be in the same cluster). */
+  /** The maximum distance there can be between two examples that are part of the same cluster (used during clustering). */
   float m_clustererTau;
 
   /** The device on which the relocaliser should operate. */
   DeviceType m_deviceType;
 
-  /** The clusterer, used to compute 3D modal clusters from the examples stored in the reservoirs. */
+  /** The clusterer used to compute 3D modal clusters from the examples stored in the reservoirs. */
   Clusterer_Ptr m_exampleClusterer;
 
-  /** The feature calculator, used to extract keypoints and describe image patches. */
+  /** The feature calculator used to extract keypoints and descriptors from the RGB-D image. */
   DA_RGBDPatchFeatureCalculator_Ptr m_featureCalculator;
 
-  /** The path to the pretrained relocalisation forest structure. */
-  std::string m_forestFilename;
-
-  /** A low level engine used to perform basic image processing. */
+  /** The low-level engine used to perform basic image processing. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
-  /** The maximum number of cluster for each leaf in the forest. */
+  /** The maximum number of clusters to store in each leaf in the forest (used during clustering). */
   uint32_t m_maxClusterCount;
 
-  /** The maximum number of relocalisations to output for each call to the relocalise method. */
+  /** The maximum number of relocalisations to output for each call to the relocalise function. */
   uint32_t m_maxRelocalisationsToOutput;
 
-  /** The minimum size of cluster to be considered valid. */
-  uint32_t m_minClusterSize;
-
-  /**
-   * The class implementing the Preemptive-RANSAC algorithm, used to estimate a pose given a set of keypoints and
-   * associated modal clusters.
-   */
-  PreemptiveRansac_Ptr m_preemptiveRansac;
-
-  /** The state of the relocaliser. Can be swapped at runtime with another to relocalise (and train) in a different environment. */
-  ScoreRelocaliserState_Ptr m_relocaliserState;
-
-  /** The maximum capacity of the reservoir associated to each leaf in the forest. */
-  uint32_t m_reservoirCapacity;
-
-  /** The seed for a random number generator. */
-  uint32_t m_rngSeed;
-
-  /** The relocalisaton forest. */
-  ScoreForest_Ptr m_scoreForest;
-
-  /** The relocalisation settings. */
-  tvgutil::SettingsContainer_CPtr m_settings;
-
-  // Update-related data
-  /** The maximum number of reservoirs to subject to clustering for each integration/update call. */
+  /** The maximum number of reservoirs to subject to clustering for each call to the update function. */
   uint32_t m_maxReservoirsToUpdate;
 
-  /** The total number of example reservoirs in the relocaliser. */
-  uint32_t m_reservoirsCount;
+  /** The minimum size of cluster to keep (used during clustering). */
+  uint32_t m_minClusterSize;
+
+  /** The Preemptive RANSAC instance, used to estimate the 6DOF camera pose from a set of 3D keypoints and their associated SCoRe forest predictions. */
+  PreemptiveRansac_Ptr m_preemptiveRansac;
+
+  /** The state of the relocaliser. Can be replaced at runtime to relocalise (and train) in a different environment. */
+  ScoreRelocaliserState_Ptr m_relocaliserState;
+
+  /** The capacity (maximum size) of each reservoir associated with a leaf in the forest. */
+  uint32_t m_reservoirCapacity;
+
+  /** The total number of example reservoirs used by the relocaliser (in practice, this is equal to the number of leaves in the forest). */
+  uint32_t m_reservoirCount;
+
+  /** The seed for the random number generators used by the example reservoirs. */
+  uint32_t m_rngSeed;
+
+  /** The SCoRe forest on which the relocaliser is based. */
+  ScoreForest_Ptr m_scoreForest;
+
+  /** The settings used to configure the relocaliser. */
+  tvgutil::SettingsContainer_CPtr m_settings;
 
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
+   * \brief Constructs a SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param settings        Pointer to an instance of SettingsContainer used to configure the relocaliser.
-   * \param forestFilename  The path to the pretrained forest file.
+   * \param forestFilename  The name of the file from which to load the pre-trained forest.
+   * \param settings        The settings used to configure the relocaliser.
    * \param deviceType      The device on which the relocaliser should operate.
    *
-   * \throws std::runtime_error if the forest cannot be loaded.
+   * \throws std::runtime_error If the forest cannot be loaded.
    */
-  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename, DeviceType deviceType);
+  ScoreRelocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys an instance of ScoreRelocaliser.
+   * \brief Destroys the relocaliser.
    */
   virtual ~ScoreRelocaliser();
 
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Each keypoint/descriptor pair extracted from the input RGB-D image pairs determines a leaf in a tree of the
-   *        forest. This function merges the 3D modal clusters associated to multiple leaves coming from different trees
-   *        in the forest in a single prediction for each keypoint/descriptor pair.
+   * \brief Merges the SCoRe predictions (sets of clusters) associated with each keypoint to create a single
+   *        SCoRe prediction (a single set of clusters) for each keypoint.
    *
-   * \param leafIndices       Indices of the forest leafs predicted from a keypoint/descriptor pair.
-   * \param leafPredictions   A memory block containing all the 3D modal clusters associated to the forest.
-   * \param outputPredictions An image wherein each element represent the modal clusters associated to the predicted leaves.
+   * \note  Each keypoint/descriptor pair extracted from the input RGB-D image pairs determines a leaf in a tree of the
+   *        forest. Each such leaf contains a set of 3D modal clusters, which together constitute a SCoRe prediction.
+   *        This function merges the SCoRe predictions associated with the different leaves (from different trees) with
+   *        which each keypoint/descriptor pair is associated, thereby yielding a single SCoRe prediction for each pair.
+   *
+   * \param leafIndices       An image containing the indices of the leaves (in the different trees) associated with each keypoint/descriptor pair.
+   * \param outputPredictions An image into which to store the merged SCoRe predictions.
    */
-  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                          ScorePredictionsImage_Ptr& outputPredictions) const = 0;
+  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -185,57 +166,63 @@ public:
   virtual void finish_training();
 
   /**
-   * \brief Returns the best poses estimated by the last run of the P-RANSAC algorithm.
+   * \brief Gets all of the candidate poses that survived the initial culling process during the last run of P-RANSAC,
+   *        sorted in non-increasing order of the number of P-RANSAC iterations they survived.
    *
-   * \note  Should be called AFTER calling estimate_pose.
+   * \pre   This function should only be called after a prior call to relocalise.
+   * \note  The first entry of the vector will be the candidate (if any) returned by the last run of P-RANSAC.
    *
-   * \param poseCandidates Output array that will be filled with the best poses estimated by the relocaliser.
-   *                       Poses are sorted in descending quality order.
+   * \param poseCandidates An output array that will be filled with the candidate poses as described.
    */
   void get_best_poses(std::vector<PoseCandidate>& poseCandidates) const;
 
   /**
-   * \brief Returns a pointer to an image containing the keypoints used to perform the relocalisation.
+   * \brief Gets the image containing the keypoints extracted from the RGB-D image.
    *
-   * \return A pointer to an image containing the keypoints used to perform the relocalisation.
+   * \return  The image containing the keypoints extracted from the RGB-D image.
    */
   Keypoint3DColourImage_CPtr get_keypoints_image() const;
 
   /**
-   * \brief Returns a pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   * \brief Gets the prediction associated with the specified leaf in the forest.
    *
-   * \return A pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   * \param treeIdx The index of the tree containing the prediction.
+   * \param leafIdx The index of the leaf.
+   * \return        The prediction associated with the specified leaf.
+   *
+   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
+   */
+  ScorePrediction get_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
+
+  /**
+   * \brief Gets the image containing the forest predictions associated with the keypoint/descriptor pairs.
+   *
+   * \return  The image containing the forest predictions associated with the keypoint/descriptor pairs.
    */
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
   /**
-   * \brief Returns a specific prediction from the forest.
+   * \brief Gets the state of the relocaliser.
    *
-   * \param treeIdx The index of the tree containing the prediction of interest.
-   * \param leafIdx The index of the required leaf prediction.
-   *
-   * \return The ScorePrediction of interest.
-   *
-   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
-   */
-  ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
-
-  /**
-   * \brief Returns a pointer to the relocaliser state (non-const variant).
-   *
-   * \return A pointer to the relocaliser state.
+   * \return  The state of the relocaliser.
    */
   ScoreRelocaliserState_Ptr get_relocaliser_state();
 
   /**
-   * \brief Returns a pointer to the relocaliser state.
+   * \brief Gets the state of the relocaliser.
    *
-   * \return A pointer to the relocaliser state.
+   * \return  The state of the relocaliser.
    */
   ScoreRelocaliserState_CPtr get_relocaliser_state() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the contents of the reservoir associated with the specified leaf in the forest.
+   *
+   * \param treeIdx The index of the tree containing the leaf.
+   * \param leafIdx The index of the leaf.
+   * \return        The reservoir associated with the specified leaf.
+   *
+   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
    */
   std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
@@ -252,11 +239,11 @@ public:
   virtual void save_to_disk(const std::string& outputFolder) const;
 
   /**
-   * \brief Sets the relocaliser state.
+   * \brief Replaces the relocaliser's current state with a new one.
    *
-   * \note Has to be initialised beforehand, with the right variable sizes.
+   * \note The new state must have been previously initialised with the right variable sizes.
    *
-   * \param relocaliserState The relocaliser state.
+   * \param relocaliserState  The new relocaliser state.
    */
   void set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState);
 
@@ -267,24 +254,33 @@ public:
   virtual void update();
 
   /**
-   * \brief Updates the contents of each cluster.
+   * \brief Forcibly updates the contents of every cluster in the forest.
    *
-   * \note This function is meant to be called once to update every leaf cluster.
-   *       It's computationally intensive and requires a few hundred milliseconds to terminate.
+   * \note  This is computationally intensive, and can require a few hundred milliseconds to terminate.
    */
   void update_all_clusters();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Computes the number of reservoirs to subject to clustering during the integration/updating steps.
+   * \brief Computes the number of reservoirs to subject to clustering during a train/update call.
    *
-   * \return The number of reservoirs to subject to clustering.
+   * \return  The number of reservoirs to subject to clustering during a train/update call.
    */
   uint32_t compute_nb_reservoirs_to_update() const;
 
   /**
-   * \brief Update the index of the reservoir to subject to clustering after the integration/updating steps.
+   * \brief Checks whether or not the specified leaf is valid, and throws if not.
+   *
+   * \param treeIdx The index of the tree containing the leaf.
+   * \param leafIdx The index of the leaf.
+   *
+   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
+   */
+  void ensure_valid_leaf(uint32_t treeIdx, uint32_t leafIdx) const;
+
+  /**
+   * \brief Updates the index of the first reservoir to subject to clustering during the next train/update call.
    */
   void update_reservoir_start_idx();
 };
