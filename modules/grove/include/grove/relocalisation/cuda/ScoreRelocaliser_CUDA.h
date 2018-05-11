@@ -3,40 +3,35 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_SCORERELOCALISERCUDA
-#define H_GROVE_SCORERELOCALISERCUDA
+#ifndef H_GROVE_SCORERELOCALISER_CUDA
+#define H_GROVE_SCORERELOCALISER_CUDA
 
 #include "../interface/ScoreRelocaliser.h"
 
 namespace grove {
 
 /**
- * \brief An instance of this class allows the relocalisation of camera pose used to acquire RGB-D
- *        image pairs, on the GPU, according to the method described in:
- *
- *        "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" by
- *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*,
- *        Julien Valentin, Luigi Di Stefano and Philip H. S. Torr
+ * \brief An instance of this class can be used to relocalise a camera in a 3D scene on the GPU, using the approach described
+ *        in "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., 2017).
  */
 class ScoreRelocaliser_CUDA : public ScoreRelocaliser
 {
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of ScoreRelocaliser_CUDA, loading a pretrained forest from a file.
+   * \brief Constructs a GPU-based SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param settings       Pointer to an instance of SettingsContainer used to configure the relocaliser.
-   * \param forestFilename The path to the pretrained forest file.
+   * \param forestFilename  The name of the file from which to load the pre-trained forest.
+   * \param settings        The settings used to configure the relocaliser.
    *
-   * \throws std::runtime_error if the forest cannot be loaded.
+   * \throws std::runtime_error If the forest cannot be loaded.
    */
-  ScoreRelocaliser_CUDA(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
+  ScoreRelocaliser_CUDA(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /** Override */
-  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr& leafIndices, const ScorePredictionsMemoryBlock_CPtr& leafPredictions,
-                                          ScorePredictionsImage_Ptr& outputPredictions) const;
+  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const;
 };
 
 }

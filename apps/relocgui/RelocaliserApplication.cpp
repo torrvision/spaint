@@ -170,8 +170,7 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
   const bf::path defaultRelocalisationForestPath = resourcesFolder / "DefaultRelocalisationForest.rf";
   std::cout << "Loading relocalisation forest from: " << defaultRelocalisationForestPath << '\n';
 
-  m_relocaliser = ScoreRelocaliserFactory::make_score_relocaliser(
-      deviceType, m_settingsContainer, defaultRelocalisationForestPath.string());
+  m_relocaliser = ScoreRelocaliserFactory::make_score_relocaliser(defaultRelocalisationForestPath.string(), m_settingsContainer, deviceType);
 
   // Create a ViewBuilder to convert the depth image to float (might to it with OpenCV as well but this is easier).
   m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(m_cameraCalibration, deviceType));

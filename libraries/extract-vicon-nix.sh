@@ -37,6 +37,16 @@ else
   then
     cp vicon-setup/Client.h vicon/include/vicon
     cp vicon-setup/lib* vicon/lib
+
+    # Fix the library install names (prevents problems with finding the libraries at runtime).
+    echo "[spaint] ...Fixing library install names..."
+    cd vicon/lib
+    ls | while read f
+    do
+      install_name_tool -id "$f" "$f"
+    done
+    install_name_tool -change "/Users/SWTest/jenkins/workspace/DatastreamSDK_Mac_Release_1.3/Binary/bin/Release/libDebugServices.dylib" "libDebugServices.dylib" libViconDataStreamSDK_CPP.dylib
+    cd ../..
   else
     cp vicon-setup/ViconDataStreamSDK_1.4.0.67498/Linux64-boost-1.53.0/20140404_67498h/Release/Client.h vicon/include/vicon
     cp vicon-setup/ViconDataStreamSDK_1.4.0.67498/Linux64-boost-1.53.0/20140404_67498h/Release/lib* vicon/lib
