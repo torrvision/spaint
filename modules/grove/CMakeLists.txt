@@ -42,7 +42,7 @@ SET(clustering_cpu_templates include/grove/clustering/cpu/ExampleClusterer_CPU.t
 ##
 SET(clustering_cuda_headers include/grove/clustering/cuda/ExampleClusterer_CUDA.h)
 SET(clustering_cuda_templates include/grove/clustering/cuda/ExampleClusterer_CUDA.tcu)
-    
+
 ##
 SET(clustering_interface_headers include/grove/clustering/interface/ExampleClusterer.h)
 SET(clustering_interface_templates include/grove/clustering/interface/ExampleClusterer.tpp)
