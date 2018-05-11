@@ -24,6 +24,13 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
+SET(toplevel_sources src/CPUInstantiations.cpp)
+
+IF(WITH_CUDA)
+  SET(toplevel_sources ${toplevel_sources} src/CUDAInstantiations.cu)
+ENDIF()
+
+##
 SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
 SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
 
@@ -190,6 +197,7 @@ ${relocalisation_sources}
 ${relocalisation_base_sources}
 ${relocalisation_cpu_sources}
 ${relocalisation_interface_sources}
+${toplevel_sources}
 )
 
 SET(headers
@@ -267,6 +275,7 @@ ENDIF()
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP("" FILES ${toplevel_sources})
 SOURCE_GROUP(clustering FILES ${clustering_headers} ${clustering_templates})
 SOURCE_GROUP(clustering\\cpu FILES ${clustering_cpu_headers} ${clustering_cpu_templates})
 SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
