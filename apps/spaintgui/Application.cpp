@@ -824,8 +824,9 @@ void Application::save_mesh() const
   const std::string& sceneID = mainSubwindow.get_scene_id();
   SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-  // Construct the mesh, specifying a maximum number of triangles to avoid crashes due to limited GPU memory (e.g. on a Titan Black).
-  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
+  // Construct the mesh, specifying a maximum number of triangles so as to avoid crashes due to limited GPU memory (e.g. on a Titan Black).
+  const unsigned int maxTriangles = 1 << 24;
+  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), maxTriangles));
   m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
   // Find the meshes directory and make sure that it exists.
@@ -833,18 +834,12 @@ void Application::save_mesh() const
   boost::filesystem::create_directories(meshesSubdir);
 
   // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "");
-  if(meshFilename == "")
-  {
-    // Not using the default parameter of the settings->get_first_value call because
-    // experimentTag is a registered program option in main.cpp, with a default value of "".
-    meshFilename = "spaint-" + TimeUtil::get_iso_timestamp();
-  }
-  const boost::filesystem::path meshPath = meshesSubdir / (meshFilename +  ".obj");
+  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".ply";
+  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
 
   // Save the mesh to disk.
   std::cout << "Saving mesh to: " << meshPath << '\n';
-  mesh->WriteOBJ(meshPath.string().c_str());
+  mesh->WritePLY(meshPath.string().c_str());
 }
 
 void Application::save_models() const
