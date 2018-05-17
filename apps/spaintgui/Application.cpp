@@ -824,7 +824,7 @@ void Application::save_mesh() const
   const std::string& sceneID = mainSubwindow.get_scene_id();
   SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-  // Construct the mesh, specifying a maximum number of triangles so as to avoid crashes due to limited GPU memory (e.g. on a Titan Black).
+  // Construct the mesh, specifying a maximum number of triangles to avoid crashes on GPUs with limited memory (e.g. a Titan Black).
   const unsigned int maxTriangles = 1 << 24;
   Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), maxTriangles));
   m_meshingEngine->MeshScene(mesh.get(), scene.get());
