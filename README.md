@@ -6,9 +6,9 @@
 
 This is an open-source, real-time implementation of the interactive *SemanticPaint* system for geometric reconstruction, object-class segmentation and learning of 3D scenes, originally published in [Valentin15]. Using our system, a user can walk into a room wearing a depth camera and a virtual reality headset, and both densely reconstruct the 3D scene [Newcombe11,Niessner13,Kaehler15] and interactively segment the environment into object classes such as 'chair', 'floor' and 'table'. The user interacts *physically* with the real-world scene, touching objects and using voice commands to assign them appropriate labels. These user-generated labels are leveraged by an online random forest-based machine learning algorithm, which is used to predict labels for previously unseen parts of the scene. The entire pipeline runs in real time, and the user stays 'in the loop' throughout the process, receiving immediate feedback about the progress of the labelling and interacting with the scene as necessary to refine the predicted segmentation.
 
-This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg).
+This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg). More recently, it has been significantly extended by Tommaso Cavallari, Stuart Golodetz and Nick Lord, with the most significant change being the addition of our [Grove relocaliser](http://www.robots.ox.ac.uk/~tvg/projects/RFAdaptation/index.php).
 
-It is built on top of [InfiniTAM v3.5](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
+Our framework is built on top of [InfiniTAM v3.5](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
 
 The original concept for *SemanticPaint* was developed by a large number of people both at the University of Oxford and at Microsoft Research: Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi and Philip H S Torr.
 
@@ -43,6 +43,16 @@ If you build on this framework for your research, please consider citing both ou
   volume = {34},
   number = {5},
   year = {2015}
+}
+```
+
+If you make use of or build on our Grove relocaliser, please consider citing:
+```
+@inproceedings{Cavallari2017,
+  author = {Tommaso Cavallari and Stuart Golodetz* and Nicholas A Lord* and Julien Valentin and Luigi Di Stefano and Philip H S Torr},
+  title = {{On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation}},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year = {2017}
 }
 ```
 
