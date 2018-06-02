@@ -170,8 +170,8 @@ The arguments specify a text file containing calibration parameters,
 and masks for the RGB and depth images in the input sequence.
 
 Note that spaintgui also supports its own saving/loading of sequences
-in the <root>/build/bin/apps/spaintgui/sequences subdirectory. These
-can be loaded straightforwardly as follows:
+to/from the <root>/build/bin/apps/spaintgui/sequences subdirectory.
+These can be loaded straightforwardly via:
 
 $ ./spaintgui -s <sequence name>
 
@@ -199,6 +199,8 @@ If you have any trouble with the build, here are some of the likely causes:
 * The MSBuild executable is not on your path. (Windows)
 * The Visual C++ compiler (cl.exe) is not on your path. (Windows)
 * The latest Visual Studio updates have not been installed. (Windows)
+* You're using a version of CMake that has a CUDA compilation bug (e.g. an early version of 3.11). Try CMake 3.9 instead. (Windows)
+* You built Boost other than with the build script (which contains some bug fixes). Please use the build script :)
 
 History:
 
