@@ -18,6 +18,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
 # Specify the libraries to use #
 ################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
@@ -33,6 +34,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTBB.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
 #############################

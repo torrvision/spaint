@@ -63,9 +63,9 @@ public:
     // Set up the fixture.
     imageProcessor = ImageProcessorFactory::make_image_processor(
 #if WITH_CUDA
-      ITMLibSettings::DEVICE_CUDA
+      DEVICE_CUDA
 #else
-      ITMLibSettings::DEVICE_CPU
+      DEVICE_CPU
 #endif
     );
 
