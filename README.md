@@ -6,9 +6,9 @@
 
 This is an open-source, real-time implementation of the interactive *SemanticPaint* system for geometric reconstruction, object-class segmentation and learning of 3D scenes, originally published in [Valentin15]. Using our system, a user can walk into a room wearing a depth camera and a virtual reality headset, and both densely reconstruct the 3D scene [Newcombe11,Niessner13,Kaehler15] and interactively segment the environment into object classes such as 'chair', 'floor' and 'table'. The user interacts *physically* with the real-world scene, touching objects and using voice commands to assign them appropriate labels. These user-generated labels are leveraged by an online random forest-based machine learning algorithm, which is used to predict labels for previously unseen parts of the scene. The entire pipeline runs in real time, and the user stays 'in the loop' throughout the process, receiving immediate feedback about the progress of the labelling and interacting with the scene as necessary to refine the predicted segmentation.
 
-This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg).
+This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg). More recently, it has been significantly extended by Tommaso Cavallari, Stuart Golodetz and Nick Lord, with the most significant change being the addition of our [Grove relocaliser](http://www.robots.ox.ac.uk/~tvg/projects/RFAdaptation/index.php), as described in [Cavallari17].
 
-It is built on top of [InfiniTAM v3](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
+Our framework is built on top of [InfiniTAM v3.5](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact [Victor Adrian Prisacariu](mailto:victor@viprad.net).
 
 The original concept for *SemanticPaint* was developed by a large number of people both at the University of Oxford and at Microsoft Research: Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi and Philip H S Torr.
 
@@ -43,6 +43,16 @@ If you build on this framework for your research, please consider citing both ou
   volume = {34},
   number = {5},
   year = {2015}
+}
+```
+
+If you make use of or build on our Grove relocaliser, please consider citing:
+```
+@inproceedings{Cavallari2017,
+  author = {Tommaso Cavallari and Stuart Golodetz* and Nicholas A Lord* and Julien Valentin and Luigi Di Stefano and Philip H S Torr},
+  title = {{On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation}},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year = {2017}
 }
 ```
 
@@ -87,7 +97,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 3)
+  - InfiniTAM (version 3.5)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -207,15 +217,23 @@ It can be run "out of the box" from any working directory for live
 reconstruction, provided you have built with OpenNI support.
 
 If you want to reconstruct from data stored on disk (e.g. the Teddy
-sequence that is used in InfiniTAM), you can pass the same parameters
-that would normally be passed to InfiniTAM to spaintgui, e.g.:
+sequence that is used in InfiniTAM), you can call the application
+as follows:
 
 ```
-$ ./spaintgui Teddy/calib.txt Teddy/Frames/%04i.ppm Teddy/Frames/%04i.pgm
+$ ./spaintgui -c <path> Teddy/calib.txt -r <path> Teddy/Frames/%04i.ppm -d <path>Teddy/Frames/%04i.pgm
 ```
 
 The arguments specify a text file containing calibration parameters,
 and masks for the RGB and depth images in the input sequence.
+
+Note that spaintgui also supports its own saving/loading of sequences
+to/from the <root>/build/bin/apps/spaintgui/sequences subdirectory.
+These can be loaded straightforwardly via:
+
+```
+$ ./spaintgui -s <sequence name>
+```
 
 ## 3. Troubleshooting Tips
 
@@ -225,10 +243,12 @@ If you have any trouble with the build, here are some of the likely causes:
 * The MSBuild executable is not on your path. (Windows)
 * The Visual C++ compiler (cl.exe) is not on your path. (Windows)
 * The latest Visual Studio updates have not been installed. (Windows)
+* You're using a version of CMake that has a CUDA compilation bug (e.g. an early version of 3.11). Try CMake 3.9 instead. (Windows)
+* You built Boost other than with the build script (which contains some bug fixes). Please use the build script :)
 
 # Licence
 
-SemanticPaint © 2015-2017, Torr Vision Group, The University of Oxford (the "Software")
+SemanticPaint © 2015-2018, Torr Vision Group, The University of Oxford (the "Software")
 
 The Software remains the property of the University of Oxford ("the University").
 
@@ -257,6 +277,7 @@ Contact details are: [philip.torr@eng.ox.ac.uk](mailto:philip.torr@eng.ox.ac.uk)
 
 # References
 
+* [Cavallari17] Tommaso Cavallari, Stuart Golodetz*, Nicholas Lord*, Julien Valentin, Luigi Di Stefano and Philip Torr. On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation. CVPR, 2017.
 * [Kaehler15] Olaf Kaehler, Victor Adrian Prisacariu, Carl Yuheng Ren, Xin Sun, Philip Torr and David Murray. Very High Frame Rate Volumetric Integration of Depth Images on Mobile Devices. IEEE Transactions on Visualization and Computer Graphics, 21(11), November 2015.
 * [Newcombe11] Richard Newcombe, Shahram Izadi, Otmar Hilliges, David Molyneaux, David Kim, Andrew Davison, Pushmeet Kohli, Jamie Shotton, Steve Hodges and Andrew Fitzgibbon. KinectFusion: Real-Time Dense Surface Mapping and Tracking. ISMAR, 2011.
 * [Niessner13] Matthias Niessner, Michael Zollhoefer, Shahram Izadi, and Marc Stamminger. Real-time 3D Reconstruction at Scale using Voxel Hashing. ACM Transactions on Graphics, 32(6):169, 2013.
