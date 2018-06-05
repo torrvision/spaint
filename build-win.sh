@@ -10,17 +10,21 @@ fi
 # Check that msbuild is on the system path.
 ./require-msbuild.sh
 
-cd libraries
+boosttoolset="msvc-$1.0"
+cmakegenerator="Visual Studio $1 Win64"
+
 if [ "$1" == 15 ]
 then
-  ./build-boost_1_67_0-win.sh "msvc-14.1"
-else
-  ./build-boost_1_56_0-win.sh "msvc-$1.0"
+  boosttoolset="msvc-14.1"
+  cmakegenerator="Visual Studio 15 2017 Win64"
 fi
+
+cd libraries
+./build-boost_1_67_0-win.sh "$boosttoolset"
 ./build-glew-1.12.0-win.sh $1
-./build-lodepng-20160501-win.sh "Visual Studio $1 Win64"
-#./build-opencv-3.1.0-win.sh "Visual Studio $1 Win64"
-./build-SDL2-2.0.7-win.sh "Visual Studio $1 Win64"
+./build-lodepng-20160501-win.sh "$cmakegenerator"
+#./build-opencv-3.1.0-win.sh "$cmakegenerator"
+./build-SDL2-2.0.7-win.sh "$cmakegenerator"
 ./extract-Eigen-3.2.2.sh
 cd ..
 
@@ -33,7 +37,7 @@ then
 
   # Note: We need to configure twice to handle conditional building.
   echo "[spaint] ...Configuring using CMake..."
-  cmake -G "Visual Studio $1 Win64" ..
+  cmake -G "$cmakegenerator" ..
   cmake ..
 
   cd ..

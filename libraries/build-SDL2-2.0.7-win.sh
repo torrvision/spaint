@@ -6,9 +6,9 @@
 LOG=../../build-SDL2-2.0.7.log
 
 # Check that valid parameters have been specified.
-if [ $# -ne 1 ] || ([ "$1" != "Visual Studio 11 Win64" ] && [ "$1" != "Visual Studio 12 Win64" ])
+if [ $# -ne 1 ] || ([ "$1" != "Visual Studio 11 Win64" ] && [ "$1" != "Visual Studio 12 Win64" ] && [ "$1" != "Visual Studio 15 2017 Win64" ])
 then
-  echo "Usage: build-SDL2-2.0.7-win.sh {Visual Studio 11 Win64|Visual Studio 12 Win64}"
+  echo "Usage: build-SDL2-2.0.7-win.sh {Visual Studio 11 Win64|Visual Studio 12 Win64|Visual Studio 15 2017 Win64}"
   exit 1
 fi
 
