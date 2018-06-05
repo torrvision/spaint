@@ -1,9 +1,9 @@
 #! /bin/bash -e
 
 # Check that valid parameters have been specified.
-if [ $# -ne 2 ] || ([ "$1" != "11" ] && [ "$1" != "12" ]) || ([ "$2" != "Debug" ] && [ "$2" != "Release" ])
+if [ $# -ne 2 ] || ([ "$1" != "11" ] && [ "$1" != "12" ] && [ "$1" != "15" ]) || ([ "$2" != "Debug" ] && [ "$2" != "Release" ])
 then
-  echo "Usage: build-win.sh {11|12} {Debug|Release}"
+  echo "Usage: build-win.sh {11|12|15} {Debug|Release}"
   exit
 fi
 
@@ -11,7 +11,12 @@ fi
 ./require-msbuild.sh
 
 cd libraries
-./build-boost_1_56_0-win.sh "msvc-$1.0"
+if [ "$1" == 15 ]
+then
+  ./build-boost_1_67_0-win.sh "msvc-14.1"
+else
+  ./build-boost_1_56_0-win.sh "msvc-$1.0"
+fi
 ./build-glew-1.12.0-win.sh
 ./build-lodepng-20160501-win.sh "Visual Studio $1 Win64"
 #./build-opencv-3.1.0-win.sh "Visual Studio $1 Win64"
