@@ -39,7 +39,7 @@ else
   cd build
 
   echo "[spaint] ...Configuring using CMake..."
-  cmake -DCMAKE_INSTALL_PREFIX=../install -DDIRECTX=OFF -G "$1" .. > $LOG 2>&1
+  cmake -DCMAKE_INSTALL_PREFIX=../install -DDIRECTX=OFF -G "$1" -T v140 .. > $LOG 2>&1
 
   echo "[spaint] ...Running build..."
   cmd //c "msbuild /p:Configuration=Debug SDL2.sln >> $LOG 2>&1"

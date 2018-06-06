@@ -15,7 +15,7 @@ cmakegenerator="Visual Studio $1 Win64"
 
 if [ "$1" == 15 ]
 then
-  boosttoolset="msvc-14.1"
+  boosttoolset="msvc-14.0"
   cmakegenerator="Visual Studio 15 2017 Win64"
 fi
 
@@ -37,7 +37,7 @@ then
 
   # Note: We need to configure twice to handle conditional building.
   echo "[spaint] ...Configuring using CMake..."
-  cmake -G "$cmakegenerator" ..
+  cmake -G "$cmakegenerator" -T v140 ..
   cmake ..
 
   cd ..

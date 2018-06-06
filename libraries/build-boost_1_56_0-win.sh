@@ -3,9 +3,9 @@
 LOG=../build-boost_1_56_0.log
 
 # Check that valid parameters have been specified.
-if [ $# -ne 1 ] || ([ "$1" != "msvc-11.0" ] && [ "$1" != "msvc-12.0" ] && [ "$1" != "msvc-15.0" ])
+if [ $# -ne 1 ] || ([ "$1" != "msvc-11.0" ] && [ "$1" != "msvc-12.0" ] && [ "$1" != "msvc-14.0" ])
 then
-  echo "Usage: build-boost_1_56_0-win.sh {msvc-11.0|msvc-12.0|msvc-15.0}"
+  echo "Usage: build-boost_1_56_0-win.sh {msvc-11.0|msvc-12.0|msvc-14.0}"
   exit 1
 fi
 
