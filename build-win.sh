@@ -10,24 +10,29 @@ fi
 # Check that msbuild is on the system path.
 ./require-msbuild.sh
 
-boosttoolset="msvc-$1.0"
-cmakegenerator="Visual Studio $1 Win64"
+# Determine the toolsets and generator to use.
+BOOST_TOOLSET="msvc-$1.0"
+CMAKE_GENERATOR="Visual Studio $1 Win64"
+CMAKE_TOOLSET_STRING=""
 
 if [ "$1" == 15 ]
 then
-  boosttoolset="msvc-14.0"
-  cmakegenerator="Visual Studio 15 2017 Win64"
+  BOOST_TOOLSET="msvc-14.0"
+  CMAKE_GENERATOR="Visual Studio 15 2017 Win64"
+  CMAKE_TOOLSET_STRING="-T v140"
 fi
 
+# Build the third-party libraries.
 cd libraries
-./build-boost_1_58_0-win.sh "$boosttoolset"
+./build-boost_1_58_0-win.sh "$BOOST_TOOLSET"
 ./build-glew-1.12.0-win.sh $1
-./build-lodepng-20160501-win.sh "$cmakegenerator"
-#./build-opencv-3.1.0-win.sh "$cmakegenerator"
-./build-SDL2-2.0.7-win.sh "$cmakegenerator"
+./build-lodepng-20160501-win.sh "$CMAKE_GENERATOR"
+#./build-opencv-3.1.0-win.sh "$CMAKE_GENERATOR"
+./build-SDL2-2.0.7-win.sh "$CMAKE_GENERATOR"
 ./extract-Eigen-3.2.2.sh
 cd ..
 
+# Build spaint itself.
 echo "[spaint] Building spaint"
 
 if [ ! -d build ]
@@ -37,7 +42,7 @@ then
 
   # Note: We need to configure twice to handle conditional building.
   echo "[spaint] ...Configuring using CMake..."
-  cmake -G "$cmakegenerator" -T v140 ..
+  cmake -G "$CMAKE_GENERATOR" $CMAKE_TOOLSET_STRING ..
   cmake ..
 
   cd ..
