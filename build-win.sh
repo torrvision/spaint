@@ -15,7 +15,7 @@ BOOST_TOOLSET="msvc-$1.0"
 CMAKE_GENERATOR="Visual Studio $1 Win64"
 CMAKE_TOOLSET_STRING=""
 
-if [ "$1" == 15 ]
+if [ "$1" == "15" ]
 then
   BOOST_TOOLSET="msvc-14.0"
   CMAKE_GENERATOR="Visual Studio 15 2017 Win64"
@@ -25,7 +25,7 @@ fi
 # Build the third-party libraries.
 cd libraries
 ./build-boost_1_58_0-win.sh "$BOOST_TOOLSET"
-./build-glew-1.12.0-win.sh $1
+./build-glew-1.12.0-win.sh "$1"
 ./build-lodepng-20160501-win.sh "$CMAKE_GENERATOR"
 #./build-opencv-3.1.0-win.sh "$CMAKE_GENERATOR"
 ./build-SDL2-2.0.7-win.sh "$CMAKE_GENERATOR"
