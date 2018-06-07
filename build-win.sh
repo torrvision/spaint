@@ -20,7 +20,7 @@ then
 fi
 
 cd libraries
-./build-boost_1_67_0-win.sh "$boosttoolset"
+./build-boost_1_58_0-win.sh "$boosttoolset"
 ./build-glew-1.12.0-win.sh $1
 ./build-lodepng-20160501-win.sh "$cmakegenerator"
 #./build-opencv-3.1.0-win.sh "$cmakegenerator"
