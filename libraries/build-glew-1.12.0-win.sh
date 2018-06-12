@@ -7,14 +7,19 @@
 LOG=../../../build-glew-1.12.0.log
 
 # Check that valid parameters have been specified.
-if [ $# -ne 1 ] || ([ "$1" != "11" ] && [ "$1" != "12" ] && [ "$1" != "15" ])
+SCRIPT_NAME=`basename "$0"`
+
+if [ $# -ne 1 ] || ([ "$1" != "12" ] && [ "$1" != "15" ])
 then
-  echo "Usage: build-glew-1.12.0-win.sh {11|12|15}"
+  echo "Usage: $SCRIPT_NAME {12|15}"
   exit 1
 fi
 
+# Determine the CMake generator to use.
+CMAKE_GENERATOR=`../determine-cmakegenerator.sh $1`
+
 # Build glew.
-echo "[spaint] Building glew 1.12.0 for Visual Studio $1 Win64"
+echo "[spaint] Building glew 1.12.0 for $CMAKE_GENERATOR"
 
 if [ -d glew-1.12.0 ]
 then

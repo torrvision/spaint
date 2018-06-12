@@ -3,13 +3,24 @@
 LOG=../build-boost_1_58_0.log
 
 # Check that valid parameters have been specified.
-if [ $# -ne 1 ] || ([ "$1" != "msvc-11.0" ] && [ "$1" != "msvc-12.0" ] && [ "$1" != "msvc-14.0" ])
+SCRIPT_NAME=`basename "$0"`
+
+if [ $# -ne 1 ] || ([ "$1" != "11" ] && [ "$1" != "12" ] && [ "$1" != "14" ] && [ "$1" != "15" ])
 then
-  echo "Usage: build-boost_1_58_0-win.sh {msvc-11.0|msvc-12.0|msvc-14.0}"
+  echo "Usage: $SCRIPT_NAME {11|12|14|15}"
   exit 1
 fi
 
-echo "[spaint] Building Boost 1.58.0 for $1"
+# Determine the Visual Studio toolset to use.
+VS_TOOLSET="msvc-$1.0"
+
+if [ "$1" == "15" ]
+then
+  VS_TOOLSET="msvc-14.0"
+fi
+
+# Build the library.
+echo "[spaint] Building Boost 1.58.0 for $VS_TOOLSET"
 
 if [ -d boost_1_58_0 ]
 then
@@ -42,6 +53,6 @@ else
 fi
 
 echo "[spaint] ...Running build..."
-cmd //c "b2 -j2 --libdir=..\boost_1_58_0\lib --includedir=..\boost_1_58_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-test --with-thread --with-timer --build-type=complete --layout=tagged toolset=$1 architecture=x86 address-model=64 install >> $LOG"
+cmd //c "b2 -j2 --libdir=..\boost_1_58_0\lib --includedir=..\boost_1_58_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-test --with-thread --with-timer --build-type=complete --layout=tagged toolset=$VS_TOOLSET architecture=x86 address-model=64 install >> $LOG"
 
 echo "[spaint] ...Finished building Boost 1.58.0."
