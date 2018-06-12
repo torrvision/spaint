@@ -1,12 +1,25 @@
 #! /bin/bash -e
 
 # Check that msbuild is on the system path.
+../require-devenv.sh
 ../require-msbuild.sh
 
 LOG=../../../build-glew-1.12.0.log
 
+# Check that valid parameters have been specified.
+SCRIPT_NAME=`basename "$0"`
+
+if [ $# -ne 1 ] || ([ "$1" != "12" ] && [ "$1" != "15" ])
+then
+  echo "Usage: $SCRIPT_NAME {12|15}"
+  exit 1
+fi
+
+# Determine the CMake generator to use.
+CMAKE_GENERATOR=`../determine-cmakegenerator.sh $1`
+
 # Build glew.
-echo "[spaint] Building glew 1.12.0"
+echo "[spaint] Building glew 1.12.0 for $CMAKE_GENERATOR"
 
 if [ -d glew-1.12.0 ]
 then
@@ -23,6 +36,14 @@ else
 fi
 
 cd glew-1.12.0/build/vc12
+
+if [ $1 == "15" ]
+then
+  echo "[spaint] ...Upgrading solution..."
+  cmd //c "devenv /upgrade glew.sln > $LOG 2>&1"
+  result=`cmd //c "(vsdevcmd && set) | grep 'WindowsSDKVersion' | perl -pe 's/.*=(.*)./\1/g'"`
+  ls *.vcxproj | while read f; do perl -ibak -pe 's/<ProjectGuid>\{(.*?)\}<\/ProjectGuid>/<ProjectGuid>\{\1\}<\/ProjectGuid>\r    <WindowsTargetPlatformVersion>'$result'<\/WindowsTargetPlatformVersion>/g' "$f"; perl -ibak -pe 's/v141/v140/g' "$f"; done
+fi
 
 echo "[spaint] ...Running build..."
 cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 glew.sln >> $LOG 2>&1"
