@@ -32,6 +32,14 @@ if [ -d boost-setup ]
 then
   echo "[spaint] ...Skipping archive extraction (already extracted)"
 else
+  mkdir -p setup/boost_1_58_0
+
+  if [ ! -f setup/boost_1_58_0/boost_1_58_0.tar.gz ]
+  then
+    echo "[spaint] ...Downloading archive..."
+    curl -sL http://sourceforge.net/projects/boost/files/boost/1.58.0/boost_1_58_0.tar.gz > setup/boost_1_58_0/boost_1_58_0.tar.gz
+  fi
+
   echo "[spaint] ...Extracting archive..."
   /bin/rm -fR tmp
   mkdir tmp
