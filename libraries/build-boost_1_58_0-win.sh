@@ -55,4 +55,8 @@ fi
 echo "[spaint] ...Running build..."
 cmd //c "b2 -j2 --libdir=..\boost_1_58_0\lib --includedir=..\boost_1_58_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-test --with-thread --with-timer --build-type=complete --layout=tagged toolset=$VS_TOOLSET architecture=x86 address-model=64 install >> $LOG"
 
+echo "[spaint] ...Fixing headers..."
+perl -ibak -pe 's/#     pragma message\("Unknown compiler version/\/\/#     pragma message("Unknown compiler version/g' ../boost_1_58_0/include/boost/config/compiler/visualc.hpp
+rm ../boost_1_58_0/include/boost/config/compiler/visualc.hppbak
+
 echo "[spaint] ...Finished building Boost 1.58.0."
