@@ -68,10 +68,4 @@ fi
 echo "[spaint] ...Fixing headers..."
 perl -i -pe 's/SPT<void>/SPT<const void>/g' ../boost_1_58_0/include/boost/serialization/shared_ptr_helper.hpp
 
-if [ $PLATFORM == "mac" ]
-then
-  perl -i -pe 's/INT128__\)$/INT128__) && !defined(__CUDACC__)/g' ../boost_1_58_0/include/boost/config/compiler/clang.hpp
-  perl -i -pe 's/~this_type\(\);$/~sp_counted_impl_pda<P, D, A>();/g' ../boost_1_58_0/include/boost/smart_ptr/detail/sp_counted_impl.hpp
-fi
-
 echo "[spaint] ...Finished building Boost 1.58.0."
