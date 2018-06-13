@@ -39,10 +39,15 @@ cd glew-1.12.0/build/vc12
 
 if [ $1 == "15" ]
 then
-  echo "[spaint] ...Upgrading solution..."
-  cmd //c "devenv /upgrade glew.sln > $LOG 2>&1"
-  result=`cmd //c "(vsdevcmd && set) | grep 'WindowsSDKVersion' | perl -pe 's/.*=(.*)./\1/g'"`
-  ls *.vcxproj | while read f; do perl -ibak -pe 's/<ProjectGuid>\{(.*?)\}<\/ProjectGuid>/<ProjectGuid>\{\1\}<\/ProjectGuid>\r    <WindowsTargetPlatformVersion>'$result'<\/WindowsTargetPlatformVersion>/g' "$f"; perl -ibak -pe 's/v141/v140/g' "$f"; done
+  if [ ! -f UpgradeLog.htm ]
+  then
+    echo "[spaint] ...Upgrading solution..."
+    cmd //c "devenv /upgrade glew.sln > $LOG 2>&1"
+    result=`cmd //c "(vsdevcmd && set) | grep 'WindowsSDKVersion' | perl -pe 's/.*=(.*)./\1/g'"`
+    ls *.vcxproj | while read f; do perl -ibak -pe 's/<ProjectGuid>\{(.*?)\}<\/ProjectGuid>/<ProjectGuid>\{\1\}<\/ProjectGuid>\r    <WindowsTargetPlatformVersion>'$result'<\/WindowsTargetPlatformVersion>/g' "$f"; perl -ibak -pe 's/v141/v140/g' "$f"; done
+  else
+    echo "[spaint] ...Skipping solution upgrade (already upgraded)"
+  fi
 fi
 
 echo "[spaint] ...Running build..."
