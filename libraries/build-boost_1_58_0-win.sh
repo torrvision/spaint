@@ -69,7 +69,15 @@ then
   perl -ibak -pe 's/^(SET PATH.*)./\1;'"$MT_PATH"'/g' "$VCVARSALL_PATH"
 
   echo "[spaint] ...Fixing headers..."
+
   perl -ibak -pe 's/#     pragma message\("Unknown compiler version/\/\/#     pragma message("Unknown compiler version/g' boost/config/compiler/visualc.hpp
+
+  cd boost/asio/detail
+  head -n 223 config.hpp > temp.txt
+  echo "# elif defined(BOOST_ASIO_MSVC)" >> temp.txt
+  tail -n +226 config.hpp >> temp.txt
+  mv temp.txt config.hpp
+  cd ../../..
 fi
 
 echo "[spaint] ...Running build..."
