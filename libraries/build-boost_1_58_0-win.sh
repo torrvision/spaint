@@ -60,11 +60,19 @@ else
   cmd //c "bootstrap.bat > $LOG"
 fi
 
+if [ "$1" == "15" ]
+then
+  echo "[spaint] ...Fixing environment variables..."
+  WINSDK_BIN_PATH=`cmd //c "(vsdevcmd && set) | grep 'WindowsSdkVerBinPath' | perl -pe 's/.*=(.*)./\1/g'"`
+  MT_PATH=`echo "$WINSDK_BIN_PATH\x64" | perl -pe 's/\\\\/\\\\\\\\/g'`
+  VCVARSALL_PATH="$HOME/AppData/Local/Temp/b2_msvc_14.0_vcvarsall_x86.cmd"
+  perl -ibak -pe 's/^(SET PATH.*)./\1;'"$MT_PATH"'/g' "$VCVARSALL_PATH"
+
+  echo "[spaint] ...Fixing headers..."
+  perl -ibak -pe 's/#     pragma message\("Unknown compiler version/\/\/#     pragma message("Unknown compiler version/g' boost/config/compiler/visualc.hpp
+fi
+
 echo "[spaint] ...Running build..."
 cmd //c "b2 -j2 --libdir=..\boost_1_58_0\lib --includedir=..\boost_1_58_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-test --with-thread --with-timer --build-type=complete --layout=tagged toolset=$VS_TOOLSET architecture=x86 address-model=64 install >> $LOG"
-
-echo "[spaint] ...Fixing headers..."
-perl -ibak -pe 's/#     pragma message\("Unknown compiler version/\/\/#     pragma message("Unknown compiler version/g' ../boost_1_58_0/include/boost/config/compiler/visualc.hpp
-rm ../boost_1_58_0/include/boost/config/compiler/visualc.hppbak
 
 echo "[spaint] ...Finished building Boost 1.58.0."
