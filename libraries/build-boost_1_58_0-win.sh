@@ -62,11 +62,15 @@ fi
 
 if [ "$1" == "15" ]
 then
-  echo "[spaint] ...Fixing environment variables..."
   WINSDK_BIN_PATH=`cmd //c "(vsdevcmd && set) | grep 'WindowsSdkVerBinPath' | perl -pe 's/.*=(.*)./\1/g'"`
   MT_PATH=`echo "$WINSDK_BIN_PATH\x64" | perl -pe 's/\\\\/\\\\\\\\/g'`
   VCVARSALL_PATH="$HOME/AppData/Local/Temp/b2_msvc_14.0_vcvarsall_x86.cmd"
-  perl -ibak -pe 's/^(SET PATH.*)./\1;'"$MT_PATH"'/g' "$VCVARSALL_PATH"
+
+  if [ -f "$VCVARSALL_PATH" ]
+  then
+    echo "[spaint] ...Fixing environment variables..."
+    perl -ibak -pe 's/^(SET PATH.*)./\1;'"$MT_PATH"'/g' "$VCVARSALL_PATH"
+  fi
 
   echo "[spaint] ...Fixing headers..."
 
