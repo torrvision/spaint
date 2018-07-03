@@ -223,8 +223,10 @@ int main(int argc, char *argv[]) try
   }
 
   // Create calibration file.
+  const std::string calibrationFile = "calib.txt";
+  const bf::path calibrationFileName = datasetRoot / calibrationFile;
+
   {
-    const bf::path calibrationFileName = datasetRoot / "calib.txt";
     std::cout << "Creating calibration file: " << calibrationFileName << '\n';
 
     std::ofstream calibrationFile(calibrationFileName.string().c_str());
@@ -252,6 +254,7 @@ int main(int argc, char *argv[]) try
     // Training splits.
     const bf::path trainingPath = sequenceRoot / trainingFolderName;
     std::cout << "Preparing training sequence: " << trainingPath << '\n';
+    bf::copy_file(calibrationFileName, trainingPath / calibrationFile);
     process_splits(sequenceRoot,
                    trainingSplits[sequenceName],
                    trainingPath,
@@ -263,6 +266,7 @@ int main(int argc, char *argv[]) try
     // Testing splits.
     const bf::path testingPath = sequenceRoot / testingFolderName;
     std::cout << "Preparing testing sequence: " << testingPath << '\n';
+    bf::copy_file(calibrationFileName, testingPath / calibrationFile);
     process_splits(sequenceRoot,
                    testingSplits[sequenceName],
                    testingPath,
