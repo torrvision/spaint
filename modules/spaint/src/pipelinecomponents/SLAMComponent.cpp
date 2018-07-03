@@ -577,13 +577,13 @@ void SLAMComponent::setup_relocaliser()
     std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
 
     // Load the relocaliser from the specified file.
-    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath, "ScoreRelocaliser.");
+    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType, "ScoreRelocaliser.");
 
     // Also create a fast relocaliser from the same file.
-    innerRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath, "ScoreRelocaliser_Fast.");
+    innerRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType, "ScoreRelocaliser_Fast.");
 
     // Also create an intermediate relocaliser from the same file.
-    innerRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath, "ScoreRelocaliser_Intermediate.");
+    innerRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType, "ScoreRelocaliser_Intermediate.");
 
     // The fast and intermediate relocalisers share the state with the normal relocaliser (only the normal one will be trained and updated).
     ScoreRelocaliserState_Ptr relocaliserState = boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser)->get_relocaliser_state();
