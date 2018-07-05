@@ -30,8 +30,6 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
     &SDL_DestroyWindow
   ));
 
-  
-  
   Settings_CPtr settings = model->get_settings();
   const static std::string settingsNamespace = "WindowedRenderer.";
 
