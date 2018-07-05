@@ -56,6 +56,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
+  m_relocaliserThresholdScore_Fast(0.15f),
+  m_relocaliserThresholdScore_Intermediate(0.15f),
   m_relocaliserTrainingCount(0),
   m_relocaliserTrainingSkipFrames(0),
   m_sceneID(sceneID),
@@ -479,8 +481,8 @@ void SLAMComponent::process_relocalisation()
       relocalisationResults = fastRelocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
     }
 
-    // If the fast relocaliser is not instantiated, failed to relocalise or returned a bad relocalisation (TODO, make the score parametrisable), then use the intermediate relocaliser.
-    if(intermediateRelocaliser && (relocalisationResults.empty() || relocalisationResults[0].score > 0.15f))
+    // If the fast relocaliser is not instantiated, failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser.
+    if(intermediateRelocaliser && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Fast))
     {
       static int intermediateRelocalisationsCount = 0;
 
@@ -489,7 +491,7 @@ void SLAMComponent::process_relocalisation()
     }
 
     // Finally, run the normal relocaliser if all else failed.
-    if(relocalisationResults.empty() || relocalisationResults[0].score > 0.15f)
+    if(relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate)
     {
       static int normalRelocalisationsCount = 0;
 
@@ -581,9 +583,11 @@ void SLAMComponent::setup_relocaliser()
 
     // Also create a fast relocaliser from the same file.
     innerRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType, "ScoreRelocaliser_Fast.");
+    m_relocaliserThresholdScore_Fast = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Fast", 0.15f);
 
     // Also create an intermediate relocaliser from the same file.
     innerRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType, "ScoreRelocaliser_Intermediate.");
+    m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.15f);
 
     // The fast and intermediate relocalisers share the state with the normal relocaliser (only the normal one will be trained and updated).
     ScoreRelocaliserState_Ptr relocaliserState = boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser)->get_relocaliser_state();

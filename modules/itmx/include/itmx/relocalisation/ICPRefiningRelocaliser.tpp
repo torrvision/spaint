@@ -54,6 +54,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
   m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", false);
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
+  m_scorePercentile = m_settings->get_first_value<float>(settingsNamespace + "scorePercentile", 0.95f);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
   if(m_savePoses)
@@ -344,8 +345,8 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   // Count how many valid pixels are in the combined mask.
   int validDepthsCount = cv::countNonZero(cvCombinedMask);
 
-  // We are interested in the 95th percentile.
-  int percentileCount = 0.95f * validDepthsCount;
+  // We are interested in a certain percentile.
+  int percentileCount = m_scorePercentile * validDepthsCount;
 
   // Find the right bin.
   float accumulator = 0;

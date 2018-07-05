@@ -114,6 +114,12 @@ private:
   /** The path to the relocalisation forest. */
   std::string m_relocaliserForestPath;
 
+  /** The score threshold used when deciding if the FAST relocaliser has succeeded. */
+  float m_relocaliserThresholdScore_Fast;
+
+  /** The score threshold used when deciding if the INTERMEDIATE relocaliser has succeeded. */
+  float m_relocaliserThresholdScore_Intermediate;
+
   /** The number of times the relocaliser has been trained with new data. */
   size_t m_relocaliserTrainingCount;
 
