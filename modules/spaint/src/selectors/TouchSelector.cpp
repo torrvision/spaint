@@ -9,16 +9,14 @@
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+#include <itmx/picking/cpu/Picker_CPU.h>
+#ifdef WITH_CUDA
+#include <itmx/picking/cuda/Picker_CUDA.h>
+#endif
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
 #include <tvgutil/timing/Timer.h>
-
-#include "picking/cpu/Picker_CPU.h"
-
-#ifdef WITH_CUDA
-#include "picking/cuda/Picker_CUDA.h"
-#endif
 
 using namespace ITMLib;
 using namespace rigging;
@@ -41,7 +39,7 @@ TouchSelector::TouchSelector(const Settings_CPtr& itmSettings, const TouchSettin
   m_isActive = true;
 
   // Make the picker.
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(m_settings->deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     m_picker.reset(new Picker_CUDA);

@@ -163,15 +163,14 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
   m_trainingSequencePathGenerator = boost::make_shared<SequentialPathGenerator>(m_trainSequencePath);
 
   // We try to run everything on the GPU.
-  const ITMLibSettings::DeviceType deviceType = ITMLibSettings::DEVICE_CUDA;
+  const DeviceType deviceType = DEVICE_CUDA;
 
   // Setup the relocaliser.
   const bf::path resourcesFolder = find_subdir_from_executable("resources");
   const bf::path defaultRelocalisationForestPath = resourcesFolder / "DefaultRelocalisationForest.rf";
   std::cout << "Loading relocalisation forest from: " << defaultRelocalisationForestPath << '\n';
 
-  m_relocaliser = ScoreRelocaliserFactory::make_score_relocaliser(
-      deviceType, m_settingsContainer, defaultRelocalisationForestPath.string());
+  m_relocaliser = ScoreRelocaliserFactory::make_score_relocaliser(defaultRelocalisationForestPath.string(), m_settingsContainer, deviceType);
 
   // Create a ViewBuilder to convert the depth image to float (might to it with OpenCV as well but this is easier).
   m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(m_cameraCalibration, deviceType));

@@ -6,7 +6,7 @@ OPTION(WITH_GLUT "Build with Glut support?" OFF)
 
 IF(WITH_GLUT)
   IF(MSVC_IDE)
-    FIND_PATH(GLUT_ROOT Readme.txt HINTS "$ENV{HOMEPATH}/Downloads/freeglut")
+    FIND_PATH(GLUT_ROOT Readme.txt HINTS "${PROJECT_SOURCE_DIR}/../infinitam/freeglut")
     FIND_LIBRARY(GLUT_LIBRARY freeglut HINTS "${GLUT_ROOT}/lib/x64")
     FIND_PATH(GLUT_INCLUDE_DIR GL/glut.h HINTS "${GLUT_ROOT}/include")
   ELSEIF(APPLE)

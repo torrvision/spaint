@@ -4,11 +4,11 @@
  */
 
 #include "SemanticPipeline.h"
+using namespace itmx;
 using namespace spaint;
 
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
-using namespace itmx;
 #endif
 
 //#################### CONSTRUCTORS ####################

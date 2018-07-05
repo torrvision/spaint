@@ -443,13 +443,20 @@ void Application::process_camera_input()
   // If the active sub-window is in free camera mode, allow the user to move its camera around.
   if(activeSubwindow.get_camera_mode() == Subwindow::CM_FREE)
   {
-    const float SPEED = 0.1f;
-    const float ANGULAR_SPEED = 0.05f;
+    // Compute the linear and angular speeds to use, based on the time elapsed since we last processed camera input.
+    static boost::chrono::microseconds prevTime = TimeUtil::get_time_since_epoch<boost::chrono::microseconds>();
+    boost::chrono::microseconds curTime = TimeUtil::get_time_since_epoch<boost::chrono::microseconds>();
 
-    MoveableCamera_Ptr camera = activeSubwindow.get_camera();
+    const int canonicalFrameTimeMs = 16;
+    const float scalingFactor = (curTime.count() - prevTime.count()) / (canonicalFrameTimeMs * 1000.0f);
+    const float speed = 0.1f * scalingFactor;
+    const float angularSpeed = 0.05f * scalingFactor;
+
+    prevTime = curTime;
 
     // If the G key (or the triangle button on a connected PS3 controller) is pressed, set the
     // up vector for the active subwindow based on the current orientation of the camera.
+    MoveableCamera_Ptr camera = activeSubwindow.get_camera();
     if(m_inputState.key_down(KEYCODE_g) || m_inputState.joystick_button_down(PS3_BUTTON_TRIANGLE))
     {
         activeSubwindow.set_camera_up_vector(camera->v());
@@ -459,19 +466,19 @@ void Application::process_camera_input()
     const Eigen::Vector3f& up = activeSubwindow.get_camera_up_vector();
 
     // Allow the user to move the camera around using the keyboard.
-    if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
-    if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);
-    if(m_inputState.key_down(KEYCODE_d)) camera->move_u(-SPEED);
-    if(m_inputState.key_down(KEYCODE_a)) camera->move_u(SPEED);
-    if(m_inputState.key_down(KEYCODE_q) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, SPEED);
-    if(m_inputState.key_down(KEYCODE_e) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, -SPEED);
+    if(m_inputState.key_down(KEYCODE_w)) camera->move_n(speed);
+    if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-speed);
+    if(m_inputState.key_down(KEYCODE_d)) camera->move_u(-speed);
+    if(m_inputState.key_down(KEYCODE_a)) camera->move_u(speed);
+    if(m_inputState.key_down(KEYCODE_q) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, speed);
+    if(m_inputState.key_down(KEYCODE_e) && !m_inputState.key_down(KEYCODE_LSHIFT)) camera->move(up, -speed);
 
-    if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(up, -ANGULAR_SPEED);
-    if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(up, ANGULAR_SPEED);
-    if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
-    if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
-    if(m_inputState.key_down(KEYCODE_q) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), -ANGULAR_SPEED);
-    if(m_inputState.key_down(KEYCODE_e) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(up, -angularSpeed);
+    if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(up, angularSpeed);
+    if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), angularSpeed);
+    if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -angularSpeed);
+    if(m_inputState.key_down(KEYCODE_q) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), -angularSpeed);
+    if(m_inputState.key_down(KEYCODE_e) && m_inputState.key_down(KEYCODE_LSHIFT)) camera->rotate(camera->n(), angularSpeed);
 
     // Allow the user to move the camera around using a connected PS3 controller.
     const float JOYSTICK_THRESHOLD = 0.1f; // to avoid analog jitter
@@ -480,19 +487,19 @@ void Application::process_camera_input()
     const float translationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_LEFT_Y));
     const float moveUp = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L1));
     const float moveDown = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R1));
-    if(std::abs(translationX) > JOYSTICK_THRESHOLD) camera->move_u(-translationX * SPEED);
-    if(std::abs(translationY) > JOYSTICK_THRESHOLD) camera->move_n(-translationY * SPEED);
-    if(moveUp > JOYSTICK_THRESHOLD) camera->move(up, moveUp * SPEED);
-    if(moveDown > JOYSTICK_THRESHOLD) camera->move(up, -moveDown * SPEED);
+    if(std::abs(translationX) > JOYSTICK_THRESHOLD) camera->move_u(-translationX * speed);
+    if(std::abs(translationY) > JOYSTICK_THRESHOLD) camera->move_n(-translationY * speed);
+    if(moveUp > JOYSTICK_THRESHOLD) camera->move(up, moveUp * speed);
+    if(moveDown > JOYSTICK_THRESHOLD) camera->move(up, -moveDown * speed);
 
     const float rotationX = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_X));
     const float rotationY = InputState::normalise_joystick_axis_state_signed(m_inputState.joystick_axis_state(PS3_AXIS_ANALOG_RIGHT_Y));
     const float rotationZ_Left = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_L2));
     const float rotationZ_Right = InputState::normalise_joystick_axis_state(m_inputState.joystick_axis_state(PS3_AXIS_TRIGGER_R2));
-    if(std::abs(rotationX) > JOYSTICK_THRESHOLD) camera->rotate(up, -rotationX * ANGULAR_SPEED);
-    if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * ANGULAR_SPEED);
-    if(rotationZ_Left > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * ANGULAR_SPEED);
-    if(rotationZ_Right > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * ANGULAR_SPEED);
+    if(std::abs(rotationX) > JOYSTICK_THRESHOLD) camera->rotate(up, -rotationX * angularSpeed);
+    if(std::abs(rotationY) > JOYSTICK_THRESHOLD) camera->rotate(camera->u(), rotationY * angularSpeed);
+    if(rotationZ_Left > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), -rotationZ_Left * angularSpeed);
+    if(rotationZ_Right > JOYSTICK_THRESHOLD) camera->rotate(camera->n(), rotationZ_Right * angularSpeed);
 
     // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
     // and are in free camera mode to have the same pose as this one.
@@ -817,8 +824,9 @@ void Application::save_mesh() const
   const std::string& sceneID = mainSubwindow.get_scene_id();
   SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-  // Construct the mesh (specify a maximum number of triangles to avoid crash on the Titan Black).
-  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
+  // Construct the mesh, specifying a maximum number of triangles to avoid crashes on GPUs with limited memory (e.g. a Titan Black).
+  const unsigned int maxTriangles = 1 << 24;
+  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), maxTriangles));
   m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
   // Find the meshes directory and make sure that it exists.
@@ -826,18 +834,12 @@ void Application::save_mesh() const
   boost::filesystem::create_directories(meshesSubdir);
 
   // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "");
-  if(meshFilename == "")
-  {
-    // Not using the default parameter of the settings->get_first_value call because
-    // experimentTag is a registered program option in main.cpp, with a default value of "".
-    meshFilename = "spaint-" + TimeUtil::get_iso_timestamp();
-  }
-  const boost::filesystem::path meshPath = meshesSubdir / (meshFilename +  ".obj");
+  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".ply";
+  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
 
   // Save the mesh to disk.
   std::cout << "Saving mesh to: " << meshPath << '\n';
-  mesh->WriteOBJ(meshPath.string().c_str());
+  mesh->WritePLY(meshPath.string().c_str());
 }
 
 void Application::save_models() const

@@ -9,7 +9,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/Scene/ITMScene.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
+
+#include <ORUtils/DeviceType.h>
 
 #include <tvginput/InputState.h>
 
@@ -29,7 +30,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The device on which the transformer is operating. */
-  const ITMLib::ITMLibSettings::DeviceType m_deviceType;
+  const DeviceType m_deviceType;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -38,7 +39,7 @@ protected:
    *
    * \param deviceType  The device on which the transformer is operating.
    */
-  explicit SelectionTransformer(ITMLib::ITMLibSettings::DeviceType deviceType);
+  explicit SelectionTransformer(DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:

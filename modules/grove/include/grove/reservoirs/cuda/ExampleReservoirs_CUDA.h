@@ -37,7 +37,7 @@ public:
    *
    * \param reservoirCount    The number of reservoirs to create.
    * \param reservoirCapacity The capacity of each reservoir.
-   * \param rngSeed           The seed for the random number generator.
+   * \param rngSeed           The seed for the random number generators.
    */
   ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed = 42);
 

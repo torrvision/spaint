@@ -16,11 +16,11 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-LabelSmoother_CPtr LabelSmootherFactory::make_label_smoother(size_t maxLabelCount,  ITMLibSettings::DeviceType deviceType, float maxSquaredDistanceBetweenVoxels)
+LabelSmoother_CPtr LabelSmootherFactory::make_label_smoother(size_t maxLabelCount, DeviceType deviceType, float maxSquaredDistanceBetweenVoxels)
 {
   LabelSmoother_CPtr smoother;
 
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     smoother.reset(new LabelSmoother_CUDA(maxLabelCount, maxSquaredDistanceBetweenVoxels));

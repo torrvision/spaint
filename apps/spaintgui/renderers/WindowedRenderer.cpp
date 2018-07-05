@@ -30,13 +30,18 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
     &SDL_DestroyWindow
   ));
 
-  // If we are running in batch mode, minimize the window.
-  // Note: we don't use the SDL_WINDOW_MINIMIZED flag in the SDL_CreateWindow above because for some reason it doesn't work on Ubuntu 16.04.
+  
+  
   Settings_CPtr settings = model->get_settings();
-  if(settings->get_first_value<bool>("batch", false))
-  {
-    SDL_MinimizeWindow(get_window());
-  }
+  const static std::string settingsNamespace = "WindowedRenderer.";
+
+  // If we are running in batch mode, minimize the window. We do this as an alternative to using the SDL_WINDOW_MINIMIZED
+  // flag in the SDL_CreateWindow call above, because for some reason that doesn't work on Ubuntu 16.04.
+  if(settings->get_first_value<bool>("batch", false)) SDL_MinimizeWindow(get_window());
+
+  // If the waitForRetrace setting is false, avoid waiting for the vertical retrace (waiting prevents tearing, but can lower the frame rate).
+  const bool waitForRetrace = settings->get_first_value<bool>(settingsNamespace + "waitForRetrace", true);
+  if(!waitForRetrace) SDL_GL_SetSwapInterval(0);
 
   // Initialise the temporary image and texture used for visualising the scene.
   initialise_common();

@@ -10,13 +10,13 @@ using namespace ITMLib;
 using namespace ORUtils;
 
 #include <itmx/base/MemoryBlockFactory.h>
+#include <itmx/picking/PickerFactory.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
 
-#include "picking/PickerFactory.h"
 #include "selectiontransformers/SelectionTransformerFactory.h"
 #include "util/CameraFactory.h"
 using namespace rigging;
@@ -148,7 +148,7 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
 
       // Record the selected voxel.
       *m_pickPointShortMB->GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();
-      if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
+      if(m_settings->deviceType == DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
 
       break;
     }

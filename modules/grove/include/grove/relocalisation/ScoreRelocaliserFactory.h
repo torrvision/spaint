@@ -6,7 +6,7 @@
 #ifndef H_GROVE_SCORERELOCALISERFACTORY
 #define H_GROVE_SCORERELOCALISERFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include <tvgutil/misc/SettingsContainer.h>
 
@@ -15,26 +15,23 @@
 namespace grove {
 
 /**
- * \brief This class allows the construction of a ScoreRelocaliser.
+ * \brief This struct can be used to create SCoRe relocalisers.
  */
-class ScoreRelocaliserFactory
+struct ScoreRelocaliserFactory
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
+
   /**
-   * \brief Create a ScoreRelocaliser of the appropriate type.
+   * \brief Makes a SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param deviceType     The device type.
-   * \param settings       A pointer to the settings used to configure the relocaliser.
-   * \param forestFilename The path to a file containing the structure of a pretrained relocalisation forest.
-   *
-   * \return An instance of a ScoreRelocaliser.
+   * \param forestFilename  The name of the file from which to load the pre-trained forest.
+   * \param settings        The settings used to configure the relocaliser.
+   * \param deviceType      The device on which the relocaliser should operate.
+   * \return                The relocaliser.
    *
    * \throws std::runtime_error If the relocaliser cannot be created.
    */
-  static ScoreRelocaliser_Ptr make_score_relocaliser(ITMLib::ITMLibSettings::DeviceType deviceType,
-                                                     const tvgutil::SettingsContainer_CPtr& settings,
-                                                     const std::string &forestFilename);
+  static ScoreRelocaliser_Ptr make_score_relocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
 };
 
 }

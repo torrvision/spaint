@@ -4,7 +4,6 @@
  */
 
 #include "features/FeatureCalculatorFactory.h"
-using namespace ITMLib;
 
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
 
@@ -16,7 +15,7 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
+DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(DeviceType deviceType)
 {
   bool depthAdaptive = true;
   RGBDPatchFeatureDifferenceType differenceType = CENTRAL_DIFFERENCE;
@@ -35,7 +34,7 @@ DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_f
   );
 }
 
-RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
+RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_calculator(DeviceType deviceType)
 {
   bool depthAdaptive = false;
   RGBDPatchFeatureDifferenceType differenceType = CENTRAL_DIFFERENCE;

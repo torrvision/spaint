@@ -4,14 +4,13 @@
  */
 
 #include "base/MemoryBlockFactory.h"
-using namespace ITMLib;
 
 namespace itmx {
 
 //#################### SINGLETON IMPLEMENTATION ####################
 
 MemoryBlockFactory::MemoryBlockFactory()
-: m_deviceType(ITMLibSettings::DEVICE_CUDA)
+: m_deviceType(DEVICE_CUDA)
 {}
 
 MemoryBlockFactory& MemoryBlockFactory::instance()
@@ -22,7 +21,7 @@ MemoryBlockFactory& MemoryBlockFactory::instance()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void MemoryBlockFactory::set_device_type(ITMLibSettings::DeviceType deviceType)
+void MemoryBlockFactory::set_device_type(DeviceType deviceType)
 {
   m_deviceType = deviceType;
 }

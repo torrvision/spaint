@@ -101,8 +101,44 @@ include/itmx/persistence/PosePersister.h
 )
 
 ##
+SET(picking_sources
+src/picking/PickerFactory.cpp
+)
+
+SET(picking_headers
+include/itmx/picking/PickerFactory.h
+)
+
+##
+SET(picking_cpu_sources
+src/picking/cpu/Picker_CPU.cpp
+)
+
+SET(picking_cpu_headers
+include/itmx/picking/cpu/Picker_CPU.h
+)
+
+##
+SET(picking_cuda_sources
+src/picking/cuda/Picker_CUDA.cu
+)
+
+SET(picking_cuda_headers
+include/itmx/picking/cuda/Picker_CUDA.h
+)
+
+##
+SET(picking_interface_headers
+include/itmx/picking/interface/Picker.h
+)
+
+##
+SET(picking_shared_headers
+include/itmx/picking/shared/Picker_Shared.h
+)
+
+##
 SET(relocalisation_sources
-src/relocalisation/BackgroundRelocaliser.cpp
 src/relocalisation/FernRelocaliser.cpp
 src/relocalisation/NullRelocaliser.cpp
 src/relocalisation/RefiningRelocaliser.cpp
@@ -110,7 +146,6 @@ src/relocalisation/Relocaliser.cpp
 )
 
 SET(relocalisation_headers
-include/itmx/relocalisation/BackgroundRelocaliser.h
 include/itmx/relocalisation/FernRelocaliser.h
 include/itmx/relocalisation/ICPRefiningRelocaliser.h
 include/itmx/relocalisation/NullRelocaliser.h
@@ -121,6 +156,11 @@ include/itmx/relocalisation/Relocaliser.h
 SET(relocalisation_templates
 include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
+
+IF(WITH_CUDA)
+  SET(relocalisation_sources ${relocalisation_sources} src/relocalisation/BackgroundRelocaliser.cpp)
+  SET(relocalisation_headers ${relocalisation_headers} include/itmx/relocalisation/BackgroundRelocaliser.h)
+ENDIF()
 
 ##
 SET(remotemapping_sources
@@ -254,6 +294,8 @@ ${geometry_sources}
 ${graphviz_sources}
 ${imagesources_sources}
 ${persistence_sources}
+${picking_sources}
+${picking_cpu_sources}
 ${relocalisation_sources}
 ${remotemapping_sources}
 ${trackers_sources}
@@ -268,6 +310,10 @@ ${geometry_headers}
 ${graphviz_headers}
 ${imagesources_headers}
 ${persistence_headers}
+${picking_headers}
+${picking_cpu_headers}
+${picking_interface_headers}
+${picking_shared_headers}
 ${relocalisation_headers}
 ${remotemapping_headers}
 ${trackers_headers}
@@ -284,8 +330,15 @@ ${visualisation_templates}
 )
 
 IF(WITH_CUDA)
-  SET(sources ${sources} ${visualisation_cuda_sources})
-  SET(headers ${headers} ${visualisation_cuda_headers})
+  SET(sources ${sources}
+    ${picking_cuda_sources}
+    ${visualisation_cuda_sources}
+  )
+
+  SET(headers ${headers}
+    ${picking_cuda_headers}
+    ${visualisation_cuda_headers}
+  )
 ENDIF()
 
 IF(WITH_OPENCV)
@@ -303,6 +356,11 @@ SOURCE_GROUP(graphviz FILES ${graphviz_sources} ${graphviz_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
+SOURCE_GROUP(picking FILES ${picking_sources} ${picking_headers})
+SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
+SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
+SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
+SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
 SOURCE_GROUP(remotemapping FILES ${remotemapping_sources} ${remotemapping_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})

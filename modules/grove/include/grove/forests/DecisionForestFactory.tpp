@@ -17,11 +17,11 @@ namespace grove {
 
 template <typename DescriptorType, int TreeCount>
 typename DecisionForestFactory<DescriptorType,TreeCount>::Forest_Ptr
-DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const std::string& filename, ITMLib::ITMLibSettings::DeviceType deviceType)
+DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const std::string& filename, DeviceType deviceType)
 {
   Forest_Ptr forest;
 
-  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     forest.reset(new DecisionForest_CUDA<DescriptorType,TreeCount>(filename));
@@ -40,11 +40,11 @@ DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const std::string& 
 #ifdef WITH_SCOREFORESTS
 template <typename DescriptorType, int TreeCount>
 typename DecisionForestFactory<DescriptorType,TreeCount>::Forest_Ptr
-DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const EnsembleLearner& pretrainedForest, ITMLib::ITMLibSettings::DeviceType deviceType)
+DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const EnsembleLearner& pretrainedForest, DeviceType deviceType)
 {
   Forest_Ptr forest;
 
-  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     forest.reset(new DecisionForest_CUDA<DescriptorType,TreeCount>(pretrainedForest));

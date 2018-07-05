@@ -6,7 +6,7 @@
 #ifndef H_GROVE_EXAMPLERESERVOIRSFACTORY
 #define H_GROVE_EXAMPLERESERVOIRSFACTORY
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/ExampleReservoirs.h"
 
@@ -31,10 +31,10 @@ struct ExampleReservoirsFactory
    * \param reservoirCount    The number of reservoirs to create.
    * \param reservoirCapacity The capacity (maximum size) of each reservoir.
    * \param deviceType        The device on which the example reservoirs should be stored.
-   * \param rngSeed           The seed for the random number generator.
+   * \param rngSeed           The seed for the random number generators.
    * \return                  The set of example reservoirs.
    */
-  static Reservoirs_Ptr make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t rngSeed = 42);
+  static Reservoirs_Ptr make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, DeviceType deviceType, uint32_t rngSeed = 42);
 };
 
 }

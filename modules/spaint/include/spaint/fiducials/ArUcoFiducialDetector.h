@@ -10,8 +10,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <itmx/picking/interface/Picker.h>
+
 #include "FiducialDetector.h"
-#include "../picking/interface/Picker.h"
 
 namespace spaint {
 
@@ -23,7 +24,7 @@ class ArUcoFiducialDetector : public FiducialDetector
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker used when estimating poses from the scene raycast. */
-  mutable Picker_CPtr m_picker;
+  mutable itmx::Picker_CPtr m_picker;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;

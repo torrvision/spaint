@@ -64,7 +64,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 
   // Allocate memory.
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-  m_inliersIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
+  m_inlierRasterIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_maxPoseCandidates);
 
@@ -152,8 +152,11 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     m_timerCandidateGeneration.stop();
   }
 
-  // Reset the number of inliers for the new pose estimation.
-  m_inliersIndicesBlock->dataSize = 0;
+  // Reset the number of inliers ready for the new pose estimation.
+  {
+    const bool resetMask = false;
+    reset_inliers(resetMask);
+  }
 
   // Step 2: If necessary, aggressively cull the initial candidates to reduce the computational cost of the remaining steps.
   if(m_poseCandidates->dataSize > m_maxPoseCandidatesAfterCull)
@@ -169,7 +172,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
       boost::timer::auto_cpu_timer t(6, "sample inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
       const bool useMask = false; // no mask for the first pass
-      sample_inlier_candidates(useMask);
+      sample_inliers(useMask);
     }
 
     // Step 2(b): Then, evaluate the candidates and sort them in non-increasing order of quality.
@@ -195,10 +198,11 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   boost::timer::auto_cpu_timer t(6, "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-  // Step 3: Reset the inlier mask (and inliers that might have been selected in a previous invocation of the method).
-  m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once (no-op on subsequent occasions).
-  m_inliersMaskImage->Clear();                              // This and the following happen every time.
-  m_inliersIndicesBlock->dataSize = 0;
+  // Step 3: Reset the inlier mask and clear any inliers that might have been selected in a previous invocation of the method.
+  {
+    const bool resetMask = true;
+    reset_inliers(resetMask);
+  }
 
   // Step 4: Run preemptive RANSAC until only a single candidate remains.
   int iteration = 0;
@@ -215,7 +219,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     // Step 4(a): Sample a set of keypoints from the input image. Record that thay have been selected in the mask image, to avoid selecting them again.
     m_timerInlierSampling[iteration].start();
     const bool useMask = true;
-    sample_inlier_candidates(useMask);
+    sample_inliers(useMask);
     m_timerInlierSampling[iteration].stop();
 
     // Step 4(b): If pose update is enabled, optimise all remaining candidates, taking into account the newly selected inliers.
@@ -249,7 +253,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   {
     // Sample some inliers.
     m_timerInlierSampling[iteration].start();
-    sample_inlier_candidates(true);
+    sample_inliers(true);
     m_timerInlierSampling[iteration].stop();
 
     // Having selected the inlier points, find the best associated modes to use during optimisation.
@@ -319,7 +323,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     // Copy the camera and world space points into two Eigen matrices (one point per column in each) on which we can run the Kabsch algorithm.
     Eigen::Matrix3f cameraPoints;
     Eigen::Matrix3f worldPoints;
-    for(int i = 0; i < PoseCandidate::KABSCH_POINTS; ++i)
+    for(int i = 0; i < PoseCandidate::KABSCH_CORRESPONDENCES_NEEDED; ++i)
     {
       cameraPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsCamera[i].v);
       worldPoints.col(i) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsWorld[i].v);
@@ -330,71 +334,66 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
   }
 }
 
+void PreemptiveRansac::reset_inliers(bool resetMask)
+{
+  if(resetMask)
+  {
+    m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // happens only once (i.e. a no-op on subsequent occasions)
+    m_inliersMaskImage->Clear();
+  }
+
+  m_inlierRasterIndicesBlock->dataSize = 0;
+}
+
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
-  // Fill the struct that will be passed to the optimiser.
+  // Fill in the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
-
-  // The current number of inlier points.
-  ptsForLM.nbPoints = static_cast<uint32_t>(m_inliersIndicesBlock->dataSize);
-
-  // The linearised offset in the pose optimisation buffers.
-  const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;
-
-  // Pointers to the data for this candidate.
-  ptsForLM.cameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU) + candidateOffset;
+  ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);                          // The current number of inlier points.
+  const uint32_t candidateOffset = ptsForLM.nbPoints * candidateIdx;                                        // The linearised offset in the pose optimisation buffers.
+  ptsForLM.cameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU) + candidateOffset;      // Pointers to the data for this candidate.
   ptsForLM.predictedModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU) + candidateOffset;
 
-  // Assumption is that they have been already copied onto the CPU memory, the CUDA subclass should make sure of that.
-  // In the long term we will move the whole optimisation step on the GPU (as proper shared code).
+  // Look up the pose candidate. The assumption is that all of the pose candidates have already been copied
+  // across to the CPU (non-CPU subclasses must ensure this). The plan is ultimately to reimplement the
+  // optimisation using shared code, but for now everything is done on the CPU.
   PoseCandidate& poseCandidate = m_poseCandidates->GetData(MEMORYDEVICE_CPU)[candidateIdx];
 
-  // Construct an SE3 pose to optimise from the raw matrix.
-  ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
+  // Convert the candidate's current pose to a 6D twist vector that can be optimised by alglib.
+  alglib::real_1d_array xi = make_twist_from_pose(poseCandidate.cameraPose);
 
-  // Convert the 6 parameters to a format that alglib likes.
-  alglib::real_1d_array ksi_;
-  ksi_.setlength(6);
-  for(int i = 0; i < 6; ++i) ksi_[i] = static_cast<double>(candidateCameraPose.GetParams()[i]);
-
-  // Set up the optimiser.
+  // Set up the optimiser itself.
   alglib::minlmstate state;
   const double differentiationStep = 0.0001;
-  alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
-//  alglib::minlmcreatevj(6, 1, ksi_, state);
+#if 1
+  alglib::minlmcreatev(6, 1, xi, differentiationStep, state);
+#else
+  alglib::minlmcreatevj(6, 1, xi, state);
+#endif
   alglib::minlmsetcond(state, m_poseOptimisationGradientThreshold, m_poseOptimisationEnergyThreshold, m_poseOptimisationStepThreshold, m_poseOptimisationMaxIterations);
 
   // Run the optimiser.
   if(m_usePredictionCovarianceForPoseOptimization)
   {
-    alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance, Continuous3DOptimizationUsingFullCovarianceJac, call_after_each_step, &ptsForLM);
+    alglib::minlmoptimize(state, alglib_func_mahalanobis, alglib_jac_mahalanobis, alglib_rep, &ptsForLM);
   }
   else
   {
-    alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, Continuous3DOptimizationUsingL2Jac, call_after_each_step, &ptsForLM);
+    alglib::minlmoptimize(state, alglib_func_l2, alglib_jac_l2, alglib_rep, &ptsForLM);
   }
 
-  // Extract the results and update the SE3Pose accordingly.
-  alglib::minlmreport rep;
-  alglib::minlmresults(state, ksi_, rep);
-  candidateCameraPose.SetFrom(
-    static_cast<float>(ksi_[0]),
-    static_cast<float>(ksi_[1]),
-    static_cast<float>(ksi_[2]),
-    static_cast<float>(ksi_[3]),
-    static_cast<float>(ksi_[4]),
-    static_cast<float>(ksi_[5])
-  );
+  // Extract the results of the optimisation.
+  alglib::minlmreport report;
+  alglib::minlmresults(state, xi, report);
+  const bool succeeded = report.terminationtype >= 0;
 
-  // Store the updated pose iff the optimisation succeeded.
-  if(rep.terminationtype >= 0)
+  // Iff the optimisation succeeded, update the candidate's pose.
+  if(succeeded)
   {
-    poseCandidate.cameraPose = candidateCameraPose.GetM();
-    return true;
+    poseCandidate.cameraPose = make_pose_from_twist(xi).GetM();
   }
 
-  // Optimisation failed.
-  return false;
+  return succeeded;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -406,131 +405,85 @@ void PreemptiveRansac::update_host_pose_candidates() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void PreemptiveRansac::call_after_each_step(const alglib::real_1d_array& x, double func, void *ptr)
+void PreemptiveRansac::alglib_func_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
+{
+  phi[0] = compute_energy_l2(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts));
+}
+
+void PreemptiveRansac::alglib_func_mahalanobis(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
+{
+  phi[0] = compute_energy_mahalanobis(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts));
+}
+
+void PreemptiveRansac::alglib_jac_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
+{
+  phi[0] = compute_energy_l2(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts), jac[0]);
+}
+
+void PreemptiveRansac::alglib_jac_mahalanobis(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, alglib::real_2d_array& jac, void *pts)
+{
+  phi[0] = compute_energy_mahalanobis(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts), jac[0]);
+}
+
+void PreemptiveRansac::alglib_rep(const alglib::real_1d_array& xi, double phi, void *pts)
 {
   return;
 }
 
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovariance(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose);
-}
-
-void PreemptiveRansac::Continuous3DOptimizationUsingFullCovarianceJac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM, testPose, jac[0]);
-}
-
-void PreemptiveRansac::Continuous3DOptimizationUsingL2(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
-}
-
-void PreemptiveRansac::Continuous3DOptimizationUsingL2Jac(const alglib::real_1d_array& ksi, alglib::real_1d_array& fi, alglib::real_2d_array& jac, void *ptr)
-{
-  // Convert the void pointer in the proper data type and use the current parameters to set the pose matrix.
-  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4], ksi[5]);
-
-  // Compute the current energy.
-  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose, jac[0]);
-}
-
-double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
+double PreemptiveRansac::compute_energy_l2(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac)
 {
   double res = 0.0;
 
+  // If we're computing the Jacobian of the 6D twist vector, initially reset it to zero.
   if(jac)
   {
-    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
-  }
-
-  for(uint32_t i = 0; i < pts.nbPoints; ++i)
-  {
-    if(pts.cameraPoints[i].w == 0.f) continue;
-
-    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
-    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-    const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
-//    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // Mahalanobis distance
-    const float err = dot(diff, invCovarianceTimesDiff); // sqr Mahalanobis distance
-
-    res += err;
-
-    if(jac)
+    for(int i = 0; i < 6; ++i)
     {
-      const Vector3f normGradient = 2 * invCovarianceTimesDiff;
-//      const Vector3f normGradient = invCovarianceTimesDiff / err;
-
-      const Vector3f poseGradient[6] = {
-          Vector3f(1, 0, 0),
-          Vector3f(0, 1, 0),
-          Vector3f(0, 0, 1),
-          -Vector3f(0, transformedPt.z, -transformedPt.y),
-          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-          -Vector3f(transformedPt.y, -transformedPt.x, 0),
-      };
-
-      for(uint32_t i = 0; i < 6; ++i)
-      {
-        jac[i] += dot(normGradient, poseGradient[i]);
-      }
+      jac[i] = 0.0;
     }
   }
 
-  return res;
-}
-
-double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingL2(const PointsForLM& pts, const ORUtils::SE3Pose& candidateCameraPose, double *jac)
-{
-  double res = 0.0;
-
-  if(jac)
-  {
-    for(uint32_t i = 0; i < 6; ++i) jac[i] = 0;
-  }
-
+  // For each point under consideration:
   for(uint32_t i = 0; i < pts.nbPoints; ++i)
   {
-    if(pts.cameraPoints[i].w == 0.f) continue;
+    // If the point's position in camera space is invalid, skip it.
+    if(pts.cameraPoints[i].w == 0.0f) continue;
 
+    // Compute the difference between the point's position in world space (i) as predicted by the camera
+    // pose and its position in camera space, and (ii) as predicted by the position of the chosen mode.
     const Vector3f cameraPoint = pts.cameraPoints[i].toVector3();
     const Vector3f transformedPt = candidateCameraPose.GetM() * cameraPoint;
     const Vector3f diff = transformedPt - pts.predictedModes[i].position;
-//    const double err = length(diff); // distance
-    const double err = dot(diff, diff); // sqr distance
+
+    // Based on this difference, add an L2 distance-based error term to the resulting energy.
+#if 1
+    const double err = dot(diff, diff); // squared L2 distance
+#else
+    const double err = length(diff);    // unsquared L2 distance
+#endif
+
     res += err;
 
+    // If we're computing the Jacobian of the 6D twist vector, update it as per equation (10.23) in
+    // "A tutorial on SE(3) transformation parameterizations and on-manifold optimization" (Blanco).
     if(jac)
     {
-      const Vector3f normGradient = 2 * diff;
-//      const Vector3f normGradient = diff / err;
+#if 1
+      const Vector3f normGradient = 2 * diff;   // for squared L2 distance
+#else
+      const Vector3f normGradient = diff / err; // for unsquared L2 distance
+#endif
 
       const Vector3f poseGradient[6] = {
-          Vector3f(1, 0, 0),
-          Vector3f(0, 1, 0),
-          Vector3f(0, 0, 1),
-          -Vector3f(0, transformedPt.z, -transformedPt.y),
-          -Vector3f(-transformedPt.z, 0, transformedPt.x),
-          -Vector3f(transformedPt.y, -transformedPt.x, 0),
+        Vector3f(1.0f, 0.0f, 0.0f),
+        Vector3f(0.0f, 1.0f, 0.0f),
+        Vector3f(0.0f, 0.0f, 1.0f),
+        -Vector3f(0.0f, transformedPt.z, -transformedPt.y),
+        -Vector3f(-transformedPt.z, 0.0f, transformedPt.x),
+        -Vector3f(transformedPt.y, -transformedPt.x, 0.0f),
       };
 
-      for(uint32_t i = 0; i < 6; ++i)
+      for(int i = 0; i < 6; ++i)
       {
         jac[i] += dot(normGradient, poseGradient[i]);
       }
@@ -538,6 +491,92 @@ double PreemptiveRansac::EnergyForContinuous3DOptimizationUsingL2(const PointsFo
   }
 
   return res;
+}
+
+double PreemptiveRansac::compute_energy_mahalanobis(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac)
+{
+  double res = 0.0;
+
+  // If we're computing the Jacobian of the 6D twist vector, initially reset it to zero.
+  if(jac)
+  {
+    for(int i = 0; i < 6; ++i)
+    {
+      jac[i] = 0.0;
+    }
+  }
+
+  // For each point under consideration:
+  for(uint32_t i = 0; i < pts.nbPoints; ++i)
+  {
+    // If the point's position in camera space is invalid, skip it.
+    if(pts.cameraPoints[i].w == 0.0f) continue;
+
+    // Compute the difference between the point's position in world space (i) as predicted by the camera
+    // pose and its position in camera space, and (ii) as predicted by the position of the chosen mode.
+    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
+    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
+
+    // Based on this difference, add a Mahalanobis distance-based error term to the resulting energy.
+    // See also: https://en.wikipedia.org/wiki/Mahalanobis_distance.
+    const Vector3f invCovarianceTimesDiff = pts.predictedModes[i].positionInvCovariance * diff;
+#if 1
+    const float err = dot(diff, invCovarianceTimesDiff);        // squared Mahalanobis distance
+#else
+    const float err = sqrtf(dot(diff, invCovarianceTimesDiff)); // unsquared Mahalanobis distance
+#endif
+
+    res += err;
+
+    // If we're computing the Jacobian of the 6D twist vector, update it accordingly.
+    if(jac)
+    {
+#if 1
+      const Vector3f normGradient = 2 * invCovarianceTimesDiff;   // for squared Mahalanobis distance
+#else
+      const Vector3f normGradient = invCovarianceTimesDiff / err; // for unsquared Mahalanobis distance
+#endif
+
+      const Vector3f poseGradient[6] = {
+        Vector3f(1.0f, 0.0f, 0.0f),
+        Vector3f(0.0f, 1.0f, 0.0f),
+        Vector3f(0.0f, 0.0f, 1.0f),
+        -Vector3f(0.0f, transformedPt.z, -transformedPt.y),
+        -Vector3f(-transformedPt.z, 0.0f, transformedPt.x),
+        -Vector3f(transformedPt.y, -transformedPt.x, 0.0f),
+      };
+
+      for(int i = 0; i < 6; ++i)
+      {
+        jac[i] += dot(normGradient, poseGradient[i]);
+      }
+    }
+  }
+
+  return res;
+}
+
+ORUtils::SE3Pose PreemptiveRansac::make_pose_from_twist(const alglib::real_1d_array& xi)
+{
+  return ORUtils::SE3Pose(
+    static_cast<float>(xi[0]),
+    static_cast<float>(xi[1]),
+    static_cast<float>(xi[2]),
+    static_cast<float>(xi[3]),
+    static_cast<float>(xi[4]),
+    static_cast<float>(xi[5])
+  );
+}
+
+alglib::real_1d_array PreemptiveRansac::make_twist_from_pose(const ORUtils::SE3Pose& pose)
+{
+  alglib::real_1d_array xi;
+  xi.setlength(6);
+  for(int i = 0; i < 6; ++i)
+  {
+    xi[i] = static_cast<double>(pose.GetParams()[i]);
+  }
+  return xi;
 }
 
 void PreemptiveRansac::print_timer(const AverageTimer& timer)

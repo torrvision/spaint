@@ -19,11 +19,10 @@ using namespace ITMLib;
 
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/ocv/OpenCVUtil.h>
+#include <itmx/picking/PickerFactory.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 using namespace rigging;
-
-#include "picking/PickerFactory.h"
 
 namespace spaint {
 
@@ -46,7 +45,7 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
   cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
 
   // Detect any ArUco fiducials that are visible.
-  cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+  cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
   std::vector<std::vector<cv::Point2f> > corners;
   std::vector<int> ids;
   cv::aruco::detectMarkers(rgbImage, dictionary, corners, ids);
