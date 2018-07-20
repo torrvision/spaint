@@ -289,7 +289,7 @@ std::string make_tracker_config(CommandLineArguments& args)
           throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
         }
 
-        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
+        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + ",initialFrameNo=" + boost::lexical_cast<std::string>(args.initialFrameNumber) + "</params></tracker>";
       }
       else
       {
