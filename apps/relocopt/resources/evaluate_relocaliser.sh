@@ -40,7 +40,7 @@ update_time=0
 
 # Run spaintgui on every sequence.
 for seq in $sequences; do
-  times=$(CUDA_VISIBLE_DEVICES=0 "$spaint_path" -c "$dataset_root/calib.txt" -s "$dataset_root/$seq/$training_sequence/" -t Disk -s "$dataset_root/$seq/$evaluation_sequence/" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" | tee /dev/stderr | perl -ne '/^(Training|Relocalisation|Update).*/ && s/.*? ([0-9]+) microseconds/\1/g && print')
+  times=$(CUDA_VISIBLE_DEVICES=0 "$spaint_path" -c "$dataset_root/calib.txt" -s "$dataset_root/$seq/$training_sequence/" -t Disk -s "$dataset_root/$seq/$evaluation_sequence/" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" --headless | tee /dev/stderr | perl -ne '/^(Training|Relocalisation|Update).*/ && s/.*? ([0-9]+) microseconds/\1/g && print')
 
   times_arr=($times)
 
