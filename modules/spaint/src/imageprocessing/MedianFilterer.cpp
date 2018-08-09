@@ -4,7 +4,6 @@
  */
 
 #include "imageprocessing/MedianFilterer.h"
-using namespace ITMLib;
 
 #include "imageprocessing/ImageProcessorFactory.h"
 
@@ -12,7 +11,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-MedianFilterer::MedianFilterer(unsigned int kernelWidth, ITMLibSettings::DeviceType deviceType)
+MedianFilterer::MedianFilterer(unsigned int kernelWidth, DeviceType deviceType)
 : m_imageProcessor(ImageProcessorFactory::make_image_processor(deviceType)),
   m_kernelWidth(kernelWidth)
 {}

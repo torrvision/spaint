@@ -6,14 +6,20 @@
 LOG=../../build-alglib.log
 
 # Check that valid parameters have been specified.
-if [ $# -ne 1 ] || ([ "$1" != "Visual Studio 11 Win64" ] && [ "$1" != "Visual Studio 12 Win64" ])
+SCRIPT_NAME=`basename "$0"`
+
+if [ $# -ne 1 ] || ([ "$1" != "11" ] && [ "$1" != "12" ] && [ "$1" != "14" ] && [ "$1" != "15" ])
 then
-  echo "Usage: build-alglib-win.sh {Visual Studio 11 Win64|Visual Studio 12 Win64}"
+  echo "Usage: $SCRIPT_NAME {11|12|14|15}"
   exit 1
 fi
 
+# Determine the CMake generator and Visual Studio toolset to use.
+CMAKE_GENERATOR=`../determine-cmakegenerator.sh $1`
+VS_TOOLSET_STRING=`../determine-vstoolsetstring.sh $1`
+
 # Build ALGLIB.
-echo "[spaint] Building ALGLIB for $1"
+echo "[spaint] Building ALGLIB for $CMAKE_GENERATOR"
 
 if [ -d alglib ]
 then
@@ -39,7 +45,7 @@ else
   cd build
 
   echo "[spaint] ...Configuring using CMake..."
-  cmake -DCMAKE_INSTALL_PREFIX=../install -G "$1" .. > $LOG 2>&1
+  cmake -DCMAKE_INSTALL_PREFIX=../install -G "$CMAKE_GENERATOR" $VS_TOOLSET_STRING .. > $LOG 2>&1
 
   echo "[spaint] ...Running Debug build..."
   cmd //c "msbuild /p:Configuration=Debug alglib.sln >> $LOG 2>&1"

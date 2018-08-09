@@ -18,12 +18,12 @@ namespace grove {
 template <typename ExampleType, typename ClusterType, int MaxClusters>
 typename ExampleClustererFactory<ExampleType,ClusterType,MaxClusters>::Clusterer_Ptr
 ExampleClustererFactory<ExampleType,ClusterType,MaxClusters>::make_clusterer(
-  float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, ITMLib::ITMLibSettings::DeviceType deviceType
+  float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, DeviceType deviceType
 )
 {
   Clusterer_Ptr clusterer;
 
-  if(deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  if(deviceType == DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     clusterer.reset(new ExampleClusterer_CUDA<ExampleType,ClusterType,MaxClusters>(sigma, tau, maxClusterCount, minClusterSize));
