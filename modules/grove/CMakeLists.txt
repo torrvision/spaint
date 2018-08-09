@@ -42,7 +42,7 @@ SET(clustering_cpu_templates include/grove/clustering/cpu/ExampleClusterer_CPU.t
 ##
 SET(clustering_cuda_headers include/grove/clustering/cuda/ExampleClusterer_CUDA.h)
 SET(clustering_cuda_templates include/grove/clustering/cuda/ExampleClusterer_CUDA.tcu)
-    
+
 ##
 SET(clustering_interface_headers include/grove/clustering/interface/ExampleClusterer.h)
 SET(clustering_interface_templates include/grove/clustering/interface/ExampleClusterer.tpp)
@@ -235,44 +235,41 @@ ${util_headers}
 )
 
 SET(templates
+${clustering_templates}
 ${clustering_cpu_templates}
 ${clustering_interface_templates}
-${clustering_templates}
 ${features_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
 ${forests_templates}
 ${forests_cpu_templates}
 ${forests_interface_templates}
+${reservoirs_templates}
 ${reservoirs_cpu_templates}
 ${reservoirs_interface_templates}
-${reservoirs_templates}
 )
 
 IF(WITH_CUDA)
-  SET(headers 
-      ${headers}
-      ${clustering_cuda_headers}
-      ${features_cuda_headers}
-      ${forests_cuda_headers}
-      ${ransac_cuda_headers}
-      ${relocalisation_cuda_headers}
-      ${reservoirs_cuda_headers}
-      )
-      
-  SET(sources
-      ${sources}
-      ${ransac_cuda_sources}
-      ${relocalisation_cuda_sources}
-      )
-      
-  SET(templates
-      ${templates}
-      ${clustering_cuda_templates}
-      ${features_cuda_templates}
-      ${forests_cuda_templates}
-      ${reservoirs_cuda_templates}
-      )
+  SET(sources ${sources}
+    ${ransac_cuda_sources}
+    ${relocalisation_cuda_sources}
+  )
+
+  SET(headers ${headers}
+    ${clustering_cuda_headers}
+    ${features_cuda_headers}
+    ${forests_cuda_headers}
+    ${ransac_cuda_headers}
+    ${relocalisation_cuda_headers}
+    ${reservoirs_cuda_headers}
+  )
+
+  SET(templates ${templates}
+    ${clustering_cuda_templates}
+    ${features_cuda_templates}
+    ${forests_cuda_templates}
+    ${reservoirs_cuda_templates}
+  )
 ENDIF()
 
 #############################
@@ -298,16 +295,16 @@ SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_int
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
-SOURCE_GROUP(ransac FILES ${ransac_headers} ${ransac_sources})
-SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})
-SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_headers} ${ransac_cuda_sources})
-SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_headers} ${ransac_interface_sources})
+SOURCE_GROUP(ransac FILES ${ransac_sources} ${ransac_headers})
+SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_sources} ${ransac_cpu_headers})
+SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_sources} ${ransac_cuda_headers})
+SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_sources} ${ransac_interface_headers})
 SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
-SOURCE_GROUP(relocalisation FILES ${relocalisation_headers} ${relocalisation_sources})
-SOURCE_GROUP(relocalisation\\base FILES ${relocalisation_base_headers} ${relocalisation_base_sources})
-SOURCE_GROUP(relocalisation\\cpu FILES ${relocalisation_cpu_headers} ${relocalisation_cpu_sources})
-SOURCE_GROUP(relocalisation\\cuda FILES ${relocalisation_cuda_headers} ${relocalisation_cuda_sources})
-SOURCE_GROUP(relocalisation\\interface FILES ${relocalisation_interface_headers} ${relocalisation_interface_sources})
+SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers})
+SOURCE_GROUP(relocalisation\\base FILES ${relocalisation_base_sources} ${relocalisation_base_headers})
+SOURCE_GROUP(relocalisation\\cpu FILES ${relocalisation_cpu_sources} ${relocalisation_cpu_headers})
+SOURCE_GROUP(relocalisation\\cuda FILES ${relocalisation_cuda_sources} ${relocalisation_cuda_headers})
+SOURCE_GROUP(relocalisation\\interface FILES ${relocalisation_interface_sources} ${relocalisation_interface_headers})
 SOURCE_GROUP(relocalisation\\shared FILES ${relocalisation_shared_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
@@ -322,6 +319,7 @@ SOURCE_GROUP(util FILES ${util_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/grove)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
