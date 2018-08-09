@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 
 #include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;

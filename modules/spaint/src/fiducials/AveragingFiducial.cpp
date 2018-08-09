@@ -5,8 +5,6 @@
 
 #include "fiducials/AveragingFiducial.h"
 
-#include <ITMLib/Utils/ITMMath.h>
-
 #include <itmx/geometry/GeometryUtil.h>
 using namespace itmx;
 

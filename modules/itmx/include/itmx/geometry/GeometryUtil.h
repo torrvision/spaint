@@ -12,8 +12,7 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Utils/ITMMath.h>
-
+#include <ORUtils/Math.h>
 #include <ORUtils/SE3Pose.h>
 
 #include "DualQuaternion.h"

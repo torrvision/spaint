@@ -1,9 +1,9 @@
 #! /bin/bash -e
 
 # Check that a valid build type has been specified.
-if [ $# -ne 2 ] || ([ "$1" != "Unix Makefiles" ] && [ "$1" != "Eclipse CDT4 - Unix Makefiles" ] && [ "$1" != "Xcode" ]) || ([ $2 != "Debug" ] && [ $2 != "Release" ] && [ $2 != "RelWithDebInfo" ])
+if [ $# -ne 2 ] || ([ "$1" != "Unix Makefiles" ] && [ "$1" != "Ninja" ] && [ "$1" != "Eclipse CDT4 - Unix Makefiles" ] && [ "$1" != "Xcode" ]) || ([ $2 != "Debug" ] && [ $2 != "Release" ] && [ $2 != "RelWithDebInfo" ])
 then
-  echo "Usage: build-nix.sh {Unix Makefiles|Eclipse CDT4 - Unix Makefiles|Xcode} {Debug|Release|RelWithDebInfo}"
+  echo "Usage: build-nix.sh {Unix Makefiles|Ninja|Eclipse CDT4 - Unix Makefiles|Xcode} {Debug|Release|RelWithDebInfo}"
   exit
 fi
 
@@ -17,7 +17,7 @@ fi
 # Build/extract the libraries.
 cd libraries
 
-./build-boost_1_56_0-nix.sh
+./build-boost_1_58_0-nix.sh
 ./build-lodepng-20160501-nix.sh
 #./build-opencv-3.1.0-nix.sh
 ./extract-Eigen-3.2.2.sh
@@ -65,9 +65,9 @@ fi
 cd $BUILD_DIR
 
 echo "[spaint] ...Running build..."
-make -j2
+cmake --build . -- -j2
 
 echo "[spaint] ...Installing..."
-make install
+cmake --build . --target install
 
 echo "[spaint] ...Finished building spaint."
