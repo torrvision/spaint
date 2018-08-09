@@ -8,9 +8,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
-
 #include <ORUtils/Image.h>
+#include <ORUtils/Math.h>
 
 namespace grove {
 

@@ -81,7 +81,7 @@ core/SLAMPipeline.h
 SET(debugging_sources)
 SET(debugging_headers)
 
-IF(BUILD_GROVE)
+IF(BUILD_GROVE AND WITH_OPENCV)
   SET(debugging_sources ${debugging_sources} debugging/RelocaliserFiguresGenerator.cpp)
   SET(debugging_headers ${debugging_headers} debugging/RelocaliserFiguresGenerator.h)
 ENDIF()
