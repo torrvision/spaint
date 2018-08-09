@@ -526,7 +526,7 @@ void SLAMComponent::setup_relocaliser()
     std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
 
     // Load the relocaliser from the specified file.
-    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
+    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType);
 #endif
   }
   else if(m_relocaliserType == "ferns")

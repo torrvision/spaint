@@ -13,6 +13,7 @@ libraries/glog-0.3.4/
 libraries/lodepng*/
 libraries/opencv*/
 libraries/SDL2-2.0.*/
+libraries/setup/boost_1_58_0/
 libraries/tbb43_20150611oss/
 libraries/vicon/
 libraries/*.log
@@ -23,3 +24,5 @@ tests/mike/
 
 # QtCreator CMake
 CMakeLists.txt.user*
+
+\.idea/

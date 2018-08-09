@@ -2,6 +2,8 @@ This is the software bundle "SemanticPaint", created by:
 
 Stuart Golodetz <smg@robots.ox.ac.uk>
 Michael Sapienza <michael.sapienza@eng.ox.ac.uk>
+Tommaso Cavallari <tommaso@tommasocavallari.com>
+Nicholas A Lord <nicklord@robots.ox.ac.uk>
 Julien Valentin <julien.valentin@eng.ox.ac.uk>
 Vibhav Vineet <vibhav.vineet@gmail.com>
 Ming-Ming Cheng <cmm.thu@qq.com>
@@ -10,14 +12,15 @@ Stephen Hicks <stephen.hicks@ndcn.ox.ac.uk>
 Shahram Izadi <shahrami@microsoft.com>
 Philip H S Torr <philip.torr@eng.ox.ac.uk>
 
-It is built on top of InfiniTAM v3, a highly-efficient,
+It is built on top of InfiniTAM v3.5, a highly-efficient,
 open-source 3D reconstruction engine developed by Oxford's
-Active Vision Group. For more details about InfiniTAM v3,
+Active Vision Group. For more details about InfiniTAM v3.5,
 please get in touch with one of the following people:
 
 Victor Adrian Prisacariu <victor@robots.ox.ac.uk>
 Olaf Kaehler <olaf@robots.ox.ac.uk>
 Stuart Golodetz <smg@robots.ox.ac.uk>
+Tommaso Cavallari <tommaso@tommasocavallari.com>
 
 1. Building the System
 ----------------------
@@ -58,7 +61,7 @@ the remaining optional libraries in order to enable full functionality.
   - GLEW (version 1.12.0)
     Status: Required on Windows/Ubuntu
 
-  - InfiniTAM (version 3)
+  - InfiniTAM (version 3.5)
     Status: Required
 
   - Leap Motion SDK (version 2.2.1.24116)
@@ -106,7 +109,7 @@ Common steps on all platforms:
 
   b) Clone the InfiniTAM repository into <root>/InfiniTAM.
 
-  c) Build the spaint_v3 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
+  c) Build the infinitam_v3.5 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
 
   d) Clone SemanticPaint into <root>/spaint, e.g.
 
@@ -161,13 +164,19 @@ It can be run "out of the box" from any working directory for live
 reconstruction, provided you have built with OpenNI support.
 
 If you want to reconstruct from data stored on disk (e.g. the Teddy
-sequence that is used in InfiniTAM), you can pass the same parameters
-that would normally be passed to InfiniTAM to spaintgui, e.g.:
+sequence that is used in InfiniTAM), you can call the application
+as follows:
 
-$ ./spaintgui Teddy/calib.txt Teddy/Frames/%04i.ppm Teddy/Frames/%04i.pgm
+$ ./spaintgui -c <path>/Teddy/calib.txt -r <path>/Teddy/Frames/%04i.ppm -d <path>/Teddy/Frames/%04i.pgm
 
 The arguments specify a text file containing calibration parameters,
 and masks for the RGB and depth images in the input sequence.
+
+Note that spaintgui also supports its own saving/loading of sequences
+to/from the <root>/build/bin/apps/spaintgui/sequences subdirectory.
+These can be loaded straightforwardly via:
+
+$ ./spaintgui -s <sequence name>
 
 3. Additional Documentation
 ---------------------------
@@ -178,10 +187,11 @@ found in the following paper:
 SemanticPaint: Interactive 3D Labeling and Learning at your Fingertips.
 ACM Transactions on Graphics, 34(5), August 2015.
 
-There will shortly be a technical report shipped along with this
-package to describe the details of our open-source implementation
-of the SemanticPaint framework. It is currently in the process of
-being written.
+There is also a technical report that describes this implementation of
+the SemanticPaint concept:
+
+SemanticPaint: A Framework for the Interactive Segmentation of 3D Scenes.
+arXiv e-print 1510.03727, October 2015.
 
 4. Troubleshooting Tips
 -----------------------
@@ -192,6 +202,8 @@ If you have any trouble with the build, here are some of the likely causes:
 * The MSBuild executable is not on your path. (Windows)
 * The Visual C++ compiler (cl.exe) is not on your path. (Windows)
 * The latest Visual Studio updates have not been installed. (Windows)
+* You're using a version of CMake that has a CUDA compilation bug (e.g. an early version of 3.11). Try CMake 3.9 instead. (Windows)
+* You built Boost other than with the build script (which contains some bug fixes). Please use the build script :)
 
 History:
 

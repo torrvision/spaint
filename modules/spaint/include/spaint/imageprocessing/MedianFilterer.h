@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_MEDIANFILTERER
 #define H_SPAINT_MEDIANFILTERER
 
-#include <ITMLib/Utils/ITMLibSettings.h>
+#include <ORUtils/DeviceType.h>
 
 #include "interface/ImageProcessor.h"
 
@@ -36,7 +36,7 @@ public:
    * \param kernelWidth The kernel width to use for median filtering.
    * \param deviceType  The device on which the filterer should operate.
    */
-  MedianFilterer(unsigned int kernelWidth, ITMLib::ITMLibSettings::DeviceType deviceType);
+  MedianFilterer(unsigned int kernelWidth, DeviceType deviceType);
 
   //#################### PUBLIC OPERATORS ####################
 public:
