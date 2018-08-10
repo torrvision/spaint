@@ -14,7 +14,7 @@ using boost::assign::list_of;
 
 #include <opencv2/opencv.hpp>
 
-#include <ITMLib/Utils/ITMProjectionUtils.h>
+#include <ORUtils/ProjectionUtils.h>
 
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/relocalisation/RefiningRelocaliser.h>
