@@ -6,8 +6,8 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER
 #define H_GROVE_EXAMPLECLUSTERER
 
-#include <itmx/base/ITMImagePtrTypes.h>
-#include <itmx/base/ITMMemoryBlockPtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
+#include <orx/base/ORMemoryBlockPtrTypes.h>
 
 #include "../../util/Array.h"
 

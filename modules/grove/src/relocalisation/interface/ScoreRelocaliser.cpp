@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/interface/ScoreRelocaliser.h"
+using namespace itmx;
 
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
@@ -11,8 +12,8 @@ namespace bf = boost::filesystem;
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 using namespace ITMLib;
 
-#include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
+#include <orx/base/MemoryBlockFactory.h>
+using namespace orx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;

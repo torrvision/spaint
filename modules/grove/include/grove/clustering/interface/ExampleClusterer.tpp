@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include <itmx/base/MemoryBlockFactory.h>
+#include <orx/base/MemoryBlockFactory.h>
 
 namespace grove {
 
@@ -25,7 +25,7 @@ ExampleClusterer<ExampleType, ClusterType, MaxClusters>::ExampleClusterer(float 
 
   // Initialise the temporary variables that are used as part of a cluster_examples call.
   // Initially, all are empty. We resize them later, once we know the right sizes.
-  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
 
   m_clusterIndices = mbf.make_image<int>();
   m_clusterSizeHistograms = mbf.make_image<int>();

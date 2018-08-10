@@ -15,9 +15,9 @@ using namespace tvgutil;
 #include <omp.h>
 #endif
 
-#include <itmx/base/MemoryBlockFactory.h>
-#include <itmx/geometry/GeometryUtil.h>
-using namespace itmx;
+#include <orx/base/MemoryBlockFactory.h>
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 //#################### MACROS ####################
 
