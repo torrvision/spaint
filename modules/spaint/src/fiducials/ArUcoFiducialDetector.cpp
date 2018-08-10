@@ -14,8 +14,9 @@
 #include <opencv2/calib3d.hpp>
 
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
-#include <ITMLib/Utils/ITMProjectionUtils.h>
 using namespace ITMLib;
+
+#include <ORUtils/ProjectionUtils.h>
 
 #include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/ocv/OpenCVUtil.h>
