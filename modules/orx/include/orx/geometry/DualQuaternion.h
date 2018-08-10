@@ -1,10 +1,10 @@
 /**
- * itmx: DualQuaternion.h
+ * orx: DualQuaternion.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_ITMX_DUALQUATERNION
-#define H_ITMX_DUALQUATERNION
+#ifndef H_ORX_DUALQUATERNION
+#define H_ORX_DUALQUATERNION
 
 #include <stdexcept>
 
@@ -17,7 +17,7 @@
 #include "DualNumber.h"
 #include "Screw.h"
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of an instantiation of this class template represents a dual quaternion,

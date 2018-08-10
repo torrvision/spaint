@@ -1,10 +1,10 @@
 /**
- * itmx: ITMImagePtrTypes.h
+ * orx: ORImagePtrTypes.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_ITMX_ITMIMAGEPTRTYPES
-#define H_ITMX_ITMIMAGEPTRTYPES
+#ifndef H_ORX_ORIMAGEPTRTYPES
+#define H_ORX_ORIMAGEPTRTYPES
 
 #include <boost/shared_ptr.hpp>
 

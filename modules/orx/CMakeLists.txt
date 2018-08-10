@@ -13,11 +13,9 @@ SET(targetname orx)
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
-#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
-#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
-#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #
@@ -29,9 +27,9 @@ src/base/MemoryBlockFactory.cpp
 )
 
 SET(base_headers
-include/orx/base/ITMImagePtrTypes.h
-include/orx/base/ITMMemoryBlockPtrTypes.h
 include/orx/base/MemoryBlockFactory.h
+include/orx/base/ORImagePtrTypes.h
+include/orx/base/ORMemoryBlockPtrTypes.h
 )
 
 ##
@@ -78,8 +76,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 # Specify the target and where to put it #
 ##########################################
 
-#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDALibTarget.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetLibTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDALibTarget.cmake)
 
 #############################
 # Specify things to install #

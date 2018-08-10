@@ -1,10 +1,10 @@
 /**
- * itmx: ITMMemoryBlockPtrTypes.h
+ * orx: ORMemoryBlockPtrTypes.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_ITMX_ITMMEMORYBLOCKPTRTYPES
-#define H_ITMX_ITMMEMORYBLOCKPTRTYPES
+#ifndef H_ORX_ORMEMORYBLOCKPTRTYPES
+#define H_ORX_ORMEMORYBLOCKPTRTYPES
 
 #include <boost/shared_ptr.hpp>
 
