@@ -23,7 +23,8 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 
 namespace sl {
