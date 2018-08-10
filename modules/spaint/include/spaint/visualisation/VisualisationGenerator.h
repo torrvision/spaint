@@ -12,9 +12,10 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/visualisation/interface/DepthVisualiser.h>
+
+#include <orx/base/ORImagePtrTypes.h>
 
 #include "interface/SemanticVisualiser.h"
 #include "../util/SpaintSurfelScene.h"

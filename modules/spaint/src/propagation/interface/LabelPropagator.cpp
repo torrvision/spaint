@@ -5,8 +5,8 @@
 
 #include "propagation/interface/LabelPropagator.h"
 
-#include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 namespace spaint {
 

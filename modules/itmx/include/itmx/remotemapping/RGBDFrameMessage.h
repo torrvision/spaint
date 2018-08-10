@@ -6,8 +6,9 @@
 #ifndef H_ITMX_RGBDFRAMEMESSAGE
 #define H_ITMX_RGBDFRAMEMESSAGE
 
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "BaseRGBDFrameMessage.h"
-#include "../base/ITMImagePtrTypes.h"
 
 namespace itmx {
 

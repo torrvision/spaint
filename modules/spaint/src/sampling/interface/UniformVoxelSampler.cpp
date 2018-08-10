@@ -5,8 +5,8 @@
 
 #include "sampling/interface/UniformVoxelSampler.h"
 
-#include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 

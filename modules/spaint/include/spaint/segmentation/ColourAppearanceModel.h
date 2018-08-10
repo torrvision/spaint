@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_COLOURAPPEARANCEMODEL
 #define H_SPAINT_COLOURAPPEARANCEMODEL
 
-#include <itmx/base/ITMImagePtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
 
 #include <tvgutil/statistics/ProbabilityMassFunction.h>
 

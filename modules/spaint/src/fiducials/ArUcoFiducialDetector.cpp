@@ -18,12 +18,14 @@ using namespace ITMLib;
 
 #include <ORUtils/ProjectionUtils.h>
 
-#include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/ocv/OpenCVUtil.h>
 #include <itmx/picking/PickerFactory.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 using namespace rigging;
+
+#include <orx/base/MemoryBlockFactory.h>
+using namespace orx;
 
 namespace spaint {
 

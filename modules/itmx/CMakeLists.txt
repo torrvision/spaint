@@ -353,6 +353,7 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/itmx)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
