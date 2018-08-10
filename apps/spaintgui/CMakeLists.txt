@@ -169,6 +169,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 
 # Note: spaint needs to precede rafl on Linux.
 TARGET_LINK_LIBRARIES(${targetname} spaint itmx rafl rigging tvginput tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkALGLIB.cmake)
@@ -177,8 +179,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLUT.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLibRoyale.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLodePNG.cmake)
