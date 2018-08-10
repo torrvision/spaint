@@ -7,7 +7,8 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 
-#include "../geometry/GeometryUtil.h"
+#include <orx/geometry/GeometryUtil.h>
+
 #include "../util/CameraPoseConverter.h"
 
 namespace itmx {

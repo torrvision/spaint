@@ -9,11 +9,11 @@
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 using namespace ITMLib;
 
-#include <itmx/geometry/GeometryUtil.h>
 #include <itmx/util/CameraPoseConverter.h>
 #include <itmx/visualisation/DepthVisualisationUtil.tpp>
 #include <itmx/visualisation/DepthVisualiserFactory.h>
 using namespace itmx;
+using namespace orx;
 using namespace rigging;
 
 #include "visualisation/SemanticVisualiserFactory.h"
