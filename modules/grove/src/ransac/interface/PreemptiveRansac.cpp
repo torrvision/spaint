@@ -293,7 +293,7 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates
   }
 }
 
-int PreemptiveRansac::get_min_nb_required_points() const
+uint32_t PreemptiveRansac::get_min_nb_required_points() const
 {
   // We need at least the number of inliers required for a RANSAC iteration.
   return m_ransacInliersPerIteration;
