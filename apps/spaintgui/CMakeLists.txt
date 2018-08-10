@@ -88,11 +88,13 @@ ENDIF()
 
 ##
 SET(renderers_sources
+renderers/NullRenderer.cpp
 renderers/Renderer.cpp
 renderers/WindowedRenderer.cpp
 )
 
 SET(renderers_headers
+renderers/NullRenderer.h
 renderers/Renderer.h
 renderers/WindowedRenderer.h
 )

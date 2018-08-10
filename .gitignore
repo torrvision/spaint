@@ -24,3 +24,5 @@ tests/mike/
 
 # QtCreator CMake
 CMakeLists.txt.user*
+
+\.idea/
