@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include <itmx/base/MemoryBlockFactory.h>
+#include <orx/base/MemoryBlockFactory.h>
 
 namespace grove {
 
@@ -43,7 +43,7 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalcula
     throw std::invalid_argument("rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT");
 
   // Set up the memory blocks used to specify the features.
-  const itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  const orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
   m_depthOffsets = mbf.make_block<Vector4i>(m_depthFeatureCount);
   m_rgbChannels = mbf.make_block<uchar>(m_rgbFeatureCount);
   m_rgbOffsets = mbf.make_block<Vector4i>(m_rgbFeatureCount);

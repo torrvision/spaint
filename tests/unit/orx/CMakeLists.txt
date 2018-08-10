@@ -1,19 +1,21 @@
-################################
-# CMakeLists.txt for unit/itmx #
-################################
+###############################
+# CMakeLists.txt for unit/orx #
+###############################
 
 ###############################
 # Specify the test suite name #
 ###############################
 
-SET(suitename itmx)
+SET(suitename orx)
 
 ##########################
 # Specify the test names #
 ##########################
 
 SET(testnames
-ColourConversion
+DualNumber
+DualQuaternion
+GeometryUtil
 )
 
 FOREACH(testname ${testnames})
@@ -28,7 +30,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
 # Specify the project files #
@@ -48,7 +49,6 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
@@ -63,7 +63,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAUnitTestTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} itmx orx rigging tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} orx tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)

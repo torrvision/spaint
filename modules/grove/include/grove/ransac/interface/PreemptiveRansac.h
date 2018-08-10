@@ -12,8 +12,8 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
-#include <itmx/base/ITMMemoryBlockPtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
+#include <orx/base/ORMemoryBlockPtrTypes.h>
 
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/AverageTimer.h>
@@ -252,7 +252,7 @@ public:
    *
    * \return The minimum number of points that have to be valid for the algorithm to attempt pose estimation.
    */
-  int get_min_nb_required_points() const;
+  uint32_t get_min_nb_required_points() const;
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

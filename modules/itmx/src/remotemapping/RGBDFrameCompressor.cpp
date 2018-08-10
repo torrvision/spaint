@@ -13,7 +13,8 @@
 #include <opencv2/imgproc.hpp>
 #endif
 
-#include "base/MemoryBlockFactory.h"
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 namespace itmx {
 

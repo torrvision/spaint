@@ -6,7 +6,8 @@
 #ifndef H_ITMX_REMOTEIMAGESOURCEENGINE
 #define H_ITMX_REMOTEIMAGESOURCEENGINE
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 #include "../remotemapping/MappingServer.h"
 

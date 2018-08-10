@@ -11,11 +11,12 @@
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 
+#include <orx/base/ORImagePtrTypes.h>
+
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 
-#include "../base/ITMImagePtrTypes.h"
 #include "../persistence/PosePersister.h"
 #include "../visualisation/DepthVisualisationUtil.tpp"
 #include "../visualisation/DepthVisualiserFactory.h"

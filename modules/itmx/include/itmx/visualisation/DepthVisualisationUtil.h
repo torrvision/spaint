@@ -6,7 +6,8 @@
 #ifndef H_ITMX_DEPTHVISUALISATIONUTIL
 #define H_ITMX_DEPTHVISUALISATIONUTIL
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 #include "interface/DepthVisualiser.h"
 

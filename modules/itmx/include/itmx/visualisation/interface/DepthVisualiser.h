@@ -8,7 +8,7 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
-#include "../../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
 
 namespace itmx {
 

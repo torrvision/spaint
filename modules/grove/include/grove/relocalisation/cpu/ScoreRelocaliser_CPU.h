@@ -31,6 +31,9 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /** Override */
+  virtual uint32_t count_valid_depths(const ORFloatImage *depthImage) const;
+
+  /** Override */
   virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const;
 };
 

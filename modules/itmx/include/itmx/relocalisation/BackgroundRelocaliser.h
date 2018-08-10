@@ -8,8 +8,9 @@
 
 #include <boost/atomic.hpp>
 
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "Relocaliser.h"
-#include "../base/ITMImagePtrTypes.h"
 
 namespace itmx {
 

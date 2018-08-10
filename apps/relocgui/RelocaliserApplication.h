@@ -16,11 +16,12 @@
 
 #include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
+#include <ORUtils/SE3Pose.h>
+
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
-#include <ORUtils/SE3Pose.h>
+#include <orx/base/ORImagePtrTypes.h>
 
 #include <tvgutil/misc/SettingsContainer.h>
 

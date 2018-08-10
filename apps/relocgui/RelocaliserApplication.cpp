@@ -17,8 +17,9 @@
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 
-#include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/persistence/PosePersister.h>
+
+#include <orx/base/MemoryBlockFactory.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/AverageTimer.h>
@@ -29,6 +30,7 @@ namespace bf = boost::filesystem;
 using namespace grove;
 using namespace ITMLib;
 using namespace itmx;
+using namespace orx;
 using namespace tvgutil;
 
 namespace relocgui {

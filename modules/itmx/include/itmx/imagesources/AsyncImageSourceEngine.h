@@ -10,7 +10,8 @@
 
 #include <boost/thread.hpp>
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 
 namespace itmx {

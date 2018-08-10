@@ -7,7 +7,8 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 
-#include "../geometry/GeometryUtil.h"
+#include <orx/geometry/GeometryUtil.h>
+
 #include "../util/CameraPoseConverter.h"
 
 namespace itmx {
@@ -34,7 +35,7 @@ void DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(con
 
   const rigging::SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
   depthVisualiser->render_depth(
-    depthType, GeometryUtil::to_itm(camera.p()), GeometryUtil::to_itm(camera.n()),
+    depthType, orx::GeometryUtil::to_itm(camera.p()), orx::GeometryUtil::to_itm(camera.n()),
     renderState.get(), settings->sceneParams.voxelSize, -1.0f, output
   );
 
