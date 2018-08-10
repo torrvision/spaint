@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_LABELPROPAGATOR
 #define H_SPAINT_LABELPROPAGATOR
 
-#include <ITMLib/Utils/ITMImageTypes.h>
+#include <ORUtils/ImageTypes.h>
 
 #include "../../util/SpaintVoxelScene.h"
 
@@ -58,7 +58,7 @@ private:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void calculate_normals(const ITMFloat4Image *raycastResult, const SpaintVoxelScene *scene) const = 0;
+  virtual void calculate_normals(const ORFloat4Image *raycastResult, const SpaintVoxelScene *scene) const = 0;
 
   /**
    * \brief Performs the propagation of the specified label across the scene in a device-specific way.
@@ -67,7 +67,7 @@ private:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const = 0;
+  virtual void perform_propagation(SpaintVoxel::Label label, const ORFloat4Image *raycastResult, SpaintVoxelScene *scene) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -78,7 +78,7 @@ public:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const;
+  void propagate_label(SpaintVoxel::Label label, const ORFloat4Image *raycastResult, SpaintVoxelScene *scene) const;
 };
 
 //#################### TYPEDEFS ####################

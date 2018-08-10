@@ -45,7 +45,7 @@ public:
    * \return                    The loaded image.
    * \throws std::runtime_error If the image could not be loaded.
    */
-  static ITMUChar4Image_Ptr load_rgba_image(const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
+  static ORUChar4Image_Ptr load_rgba_image(const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
    * \brief Attempts to save a short image to a file.
@@ -55,7 +55,7 @@ public:
    * \param fileType            The image file type.
    * \throws std::runtime_error If the image could not be saved.
    */
-  static void save_image(const ITMShortImage_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
+  static void save_image(const ORShortImage_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
    * \brief Attempts to save an RGBA image to a file.
@@ -65,7 +65,7 @@ public:
    * \param fileType            The image file type.
    * \throws std::runtime_error If the image could not be saved.
    */
-  static void save_image(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
+  static void save_image(const ORUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
    * \brief Attempts to save an image to a file on a separate thread.
@@ -137,7 +137,7 @@ private:
    * \param path    The name of the file from which the buffer was originally loaded (if known).
    * \return        The decoded image.
    */
-  static ITMUChar4Image_Ptr decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path);
+  static ORUChar4Image_Ptr decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path);
 
   /**
    * \brief Attempts to deduce an image file's type based on its file extension.
@@ -153,7 +153,7 @@ private:
    * \param image   The image to encode.
    * \param buffer  The buffer into which to write the encoded image.
    */
-  static void encode_png(const ITMUChar4Image_CPtr& image, std::vector<unsigned char>& buffer);
+  static void encode_png(const ORUChar4Image_CPtr& image, std::vector<unsigned char>& buffer);
 };
 
 }

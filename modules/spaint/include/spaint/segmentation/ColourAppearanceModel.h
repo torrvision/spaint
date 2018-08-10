@@ -69,7 +69,7 @@ public:
    * \param image       An image containing the object and its background.
    * \param objectMask  A binary mask specifying which pixels in the image are object and which are background.
    */
-  void train(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask);
+  void train(const ORUChar4Image_CPtr& image, const ORUCharImage_CPtr& objectMask);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

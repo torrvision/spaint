@@ -76,10 +76,10 @@ protected:
   ReservoirsImage_Ptr m_reservoirs;
 
   /** The number of times the insertion of an example has been attempted for each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
-  ITMIntMemoryBlock_Ptr m_reservoirAddCalls;
+  ORIntMemoryBlock_Ptr m_reservoirAddCalls;
 
   /** The current size of each reservoir. Has an element for each reservoir (i.e. row in m_reservoirs). */
-  ITMIntMemoryBlock_Ptr m_reservoirSizes;
+  ORIntMemoryBlock_Ptr m_reservoirSizes;
 
   /** The seed for the random number generators. */
   uint32_t m_rngSeed;
@@ -185,7 +185,7 @@ public:
    *
    * \return A memory block containing the current size of each example reservoir.
    */
-  ITMIntMemoryBlock_CPtr get_reservoir_sizes() const;
+  ORIntMemoryBlock_CPtr get_reservoir_sizes() const;
 
   /**
    * \brief Loads the reservoir state from a folder on disk.

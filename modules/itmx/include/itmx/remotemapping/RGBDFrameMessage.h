@@ -51,28 +51,28 @@ public:
    *
    * \param depthImage  The destination image into which to write the message's depth image.
    */
-  void extract_depth_image(ITMShortImage *depthImage) const;
+  void extract_depth_image(ORShortImage *depthImage) const;
 
   /**
    * \brief Extracts the RGB image from the message and writes it into the specified destination image.
    *
    * \param rgbImage  The destination image into which to write the message's RGB image.
    */
-  void extract_rgb_image(ITMUChar4Image *rgbImage) const;
+  void extract_rgb_image(ORUChar4Image *rgbImage) const;
 
   /**
    * \brief Copies a depth image into the appropriate byte segment in the message.
    *
    * \param depthImage  The depth image.
    */
-  void set_depth_image(const ITMShortImage_CPtr& depthImage);
+  void set_depth_image(const ORShortImage_CPtr& depthImage);
 
   /**
    * \brief Copies an RGB image into the appropriate byte segment in the message.
    *
    * \param rgbImage  The RGB image.
    */
-  void set_rgb_image(const ITMUChar4Image_CPtr& rgbImage);
+  void set_rgb_image(const ORUChar4Image_CPtr& rgbImage);
 };
 
 //#################### TYPEDEFS ####################

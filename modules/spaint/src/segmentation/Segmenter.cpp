@@ -10,7 +10,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 Segmenter::Segmenter(const View_CPtr& view)
-: m_targetMask(new ITMUCharImage(view->rgb->noDims, true, false)), m_view(view)
+: m_targetMask(new ORUCharImage(view->rgb->noDims, true, false)), m_view(view)
 {}
 
 //#################### DESTRUCTOR ####################

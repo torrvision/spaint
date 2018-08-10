@@ -73,7 +73,7 @@ Vector2i MappingServer::get_depth_image_size(int clientID) const
   return client ? client->get_depth_image_size() : Vector2i();
 }
 
-void MappingServer::get_images(int clientID, ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void MappingServer::get_images(int clientID, ORUChar4Image *rgb, ORShortImage *rawDepth)
 {
   // Look up the client whose images we want to get. If it is no longer active, early out.
   Client_Ptr client = get_client(clientID);
@@ -308,7 +308,7 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
         std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
       #ifdef WITH_OPENCV
-        static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
+        static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->m_rgbImageSize, true, false));
         msg.extract_rgb_image(rgbImage.get());
         cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
         cv::imshow("RGB", cvRGB);

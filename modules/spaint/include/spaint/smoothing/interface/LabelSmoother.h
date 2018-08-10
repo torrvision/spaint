@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_LABELSMOOTHER
 #define H_SPAINT_LABELSMOOTHER
 
-#include <ITMLib/Utils/ITMImageTypes.h>
+#include <ORUtils/ImageTypes.h>
 
 #include "../../util/SpaintVoxelScene.h"
 
@@ -50,7 +50,7 @@ public:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void smooth_labels(const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const = 0;
+  virtual void smooth_labels(const ORFloat4Image *raycastResult, SpaintVoxelScene *scene) const = 0;
 };
 
 //#################### TYPEDEFS ####################

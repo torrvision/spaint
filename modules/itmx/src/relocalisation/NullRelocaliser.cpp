@@ -14,7 +14,7 @@ void NullRelocaliser::load_from_disk(const std::string& inputFolder)
   // No-op
 }
 
-std::vector<Relocaliser::Result> NullRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> NullRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   // A null relocaliser always fails to relocalise.
   return std::vector<Relocaliser::Result>();
@@ -30,7 +30,7 @@ void NullRelocaliser::save_to_disk(const std::string& outputFolder) const
   // No-op
 }
 
-void NullRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
+void NullRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   // No-op
 }

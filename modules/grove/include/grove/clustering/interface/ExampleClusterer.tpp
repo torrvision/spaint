@@ -45,7 +45,7 @@ ExampleClusterer<ExampleType,ClusterType,MaxClusters>::~ExampleClusterer()
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MaxClusters>
-void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
+void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::cluster_examples(const ExampleImage_CPtr& exampleSets, const ORIntMemoryBlock_CPtr& exampleSetSizes,
                                                                              uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers)
 {
   const uint32_t nbExampleSets = exampleSets->noDims.height;

@@ -28,7 +28,7 @@ class VisualisationGenerator
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
+  typedef boost::function<void(const ORUChar4Image_CPtr&,const ORUChar4Image_Ptr&)> Postprocessor;
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VoxelVisualisationEngine_CPtr;
 
@@ -102,7 +102,7 @@ public:
    * \param renderState The render state to use for intermediate storage (can be null, in which case a new one will be created).
    * \param depthType   The type of depth calculation to use.
    */
-  void generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+  void generate_depth_from_voxels(const ORFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                   const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, itmx::DepthVisualiser::DepthType depthType) const;
 
   /**
@@ -115,7 +115,7 @@ public:
    * \param renderState       The render state to use for intermediate storage (can be null, in which case a new one will be created).
    * \param visualisationType The type of visualisation to generate.
    */
-  void generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+  void generate_surfel_visualisation(const ORUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                      const ITMLib::ITMIntrinsics& intrinsics, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const;
 
   /**
@@ -131,7 +131,7 @@ public:
    *
    * \throws std::runtime_error If supports_semantics() is false and we try to generate a semantic visualisation of the scene.
    */
-  void generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+  void generate_voxel_visualisation(const ORUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                     const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
                                     const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
@@ -142,7 +142,7 @@ public:
    * \param liveRenderState The render state corresponding to the live camera pose for the voxel scene.
    * \param postprocessor   An optional function with which to postprocess the raycast before returning it.
    */
-  void get_default_raycast(const ITMUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
+  void get_default_raycast(const ORUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets the depth image from the most recently processed frame for a scene.
@@ -150,7 +150,7 @@ public:
    * \param output  The location into which to put the output image.
    * \param view    The current view of the scene.
    */
-  void get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const;
+  void get_depth_input(const ORUChar4Image_Ptr& output, const View_CPtr& view) const;
 
   /**
    * \brief Gets the RGB image from the most recently processed frame for a scene.
@@ -158,7 +158,7 @@ public:
    * \param output  The location into which to put the output image.
    * \param view    The current view of the scene.
    */
-  void get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const;
+  void get_rgb_input(const ORUChar4Image_Ptr& output, const View_CPtr& view) const;
 
   /**
    * \brief Gets whether or not this visualisation generator can generate semantic visualisations.
@@ -176,7 +176,7 @@ private:
    * \param postprocessor An optional function with which to postprocess the output raycast.
    * \param outputRaycast The output raycast (guaranteed to be accessible on the CPU).
    */
-  void make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const ITMUChar4Image_Ptr& outputRaycast) const;
+  void make_postprocessed_cpu_copy(const ORUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const ORUChar4Image_Ptr& outputRaycast) const;
 
   /**
    * \brief Prepares to copy a visualisation image into the specified output image.
@@ -184,7 +184,7 @@ private:
    * \param input   The size of the visualisation image to be copied.
    * \param output  The output image to which the visualisation image will be copied.
    */
-  void prepare_to_copy_visualisation(const Vector2i& inputSize, const ITMUChar4Image_Ptr& output) const;
+  void prepare_to_copy_visualisation(const Vector2i& inputSize, const ORUChar4Image_Ptr& output) const;
 };
 
 //#################### TYPEDEFS ####################

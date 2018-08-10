@@ -40,7 +40,7 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
   std::map<std::string,FiducialMeasurement> result;
 
   // Convert the current colour input image to OpenCV format.
-  const ITMUChar4Image *rgb = view->rgb;
+  const ORUChar4Image *rgb = view->rgb;
   rgb->UpdateHostFromDevice();
   cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
 

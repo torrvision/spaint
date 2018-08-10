@@ -23,7 +23,7 @@ SemanticVisualiser::~SemanticVisualiser() {}
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void SemanticVisualiser::render(const SpaintVoxelScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
-                                const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const
+                                const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha, ORUChar4Image *outputImage) const
 {
   // Update the label colours in the memory block.
   Vector3u *labelColoursData = m_labelColoursMB->GetData(MEMORYDEVICE_CPU);
