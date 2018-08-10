@@ -12,12 +12,14 @@ using namespace ORUtils;
 #include <boost/bind.hpp>
 using boost::bind;
 
-#include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
+
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 #define DEBUGGING 0
 

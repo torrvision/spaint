@@ -8,8 +8,9 @@
 
 #include <map>
 
-#include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMObjectPtrTypes.h>
+
+#include <orx/base/ORImagePtrTypes.h>
 
 #include "../fiducials/Fiducial.h"
 #include "../util/SpaintSurfelScene.h"

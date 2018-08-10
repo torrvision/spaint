@@ -1,11 +1,11 @@
 /**
- * itmx: MemoryBlockFactory.cpp
+ * orx: MemoryBlockFactory.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "base/MemoryBlockFactory.h"
 
-namespace itmx {
+namespace orx {
 
 //#################### SINGLETON IMPLEMENTATION ####################
 

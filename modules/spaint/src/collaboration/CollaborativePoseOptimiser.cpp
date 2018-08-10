@@ -16,8 +16,6 @@ using namespace ORUtils;
 #include <MiniSlamGraphLib/SlamGraphErrorFunction.h>
 using namespace MiniSlamGraph;
 
-#include <itmx/geometry/GeometryUtil.h>
-
 #ifdef WITH_GRAPHVIZ
 #include <itmx/graphviz/GraphVisualiser.h>
 #endif
@@ -26,10 +24,13 @@ using namespace MiniSlamGraph;
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
 
+#include <orx/geometry/GeometryUtil.h>
+
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
 
 using namespace itmx;
+using namespace orx;
 using namespace tvgutil;
 
 namespace bf = boost::filesystem;

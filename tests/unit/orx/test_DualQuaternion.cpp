@@ -7,8 +7,8 @@
 #include <ORUtils/SE3Pose.h>
 using namespace ORUtils;
 
-#include <itmx/geometry/DualQuaternion.h>
-using namespace itmx;
+#include <orx/geometry/DualQuaternion.h>
+using namespace orx;
 
 //#################### TESTS ####################
 

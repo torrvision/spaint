@@ -168,6 +168,7 @@ SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
@@ -185,9 +186,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} spaint itmx rafl rigging tvginput tvgutil)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
+TARGET_LINK_LIBRARIES(${targetname} spaint itmx orx rafl rigging tvginput tvgutil)
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
@@ -195,7 +197,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLUT.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLibRoyale.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLodePNG.cmake)

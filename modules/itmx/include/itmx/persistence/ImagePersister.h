@@ -11,9 +11,9 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 
-#include <tvgutil/misc/ThreadPool.h>
+#include <orx/base/ORImagePtrTypes.h>
 
-#include "../base/ITMImagePtrTypes.h"
+#include <tvgutil/misc/ThreadPool.h>
 
 namespace itmx {
 

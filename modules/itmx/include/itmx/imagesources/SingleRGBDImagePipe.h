@@ -6,7 +6,8 @@
 #ifndef H_ITMX_SINGLERGBDIMAGEPIPE
 #define H_ITMX_SINGLERGBDIMAGEPIPE
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 
 namespace itmx {

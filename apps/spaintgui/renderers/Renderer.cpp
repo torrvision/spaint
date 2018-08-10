@@ -8,9 +8,11 @@ using namespace ITMLib;
 using namespace ORUtils;
 using namespace rigging;
 
-#include <itmx/geometry/GeometryUtil.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
+
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 #include <spaint/ogl/CameraRenderer.h>
 #include <spaint/ogl/QuadricRenderer.h>

@@ -6,8 +6,8 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR
 
-#include <itmx/base/ITMImagePtrTypes.h>
-#include <itmx/base/ITMMemoryBlockPtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
+#include <orx/base/ORMemoryBlockPtrTypes.h>
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 

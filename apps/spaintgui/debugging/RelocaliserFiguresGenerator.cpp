@@ -16,13 +16,15 @@ using boost::assign::list_of;
 
 #include <ORUtils/ProjectionUtils.h>
 
-#include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/relocalisation/RefiningRelocaliser.h>
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
 #include <grove/relocalisation/interface/ScoreRelocaliser.h>
 using namespace grove;
+
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 using namespace tvgutil;

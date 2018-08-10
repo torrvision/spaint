@@ -11,7 +11,7 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
 
 namespace spaint {
 
