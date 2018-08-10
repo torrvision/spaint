@@ -134,11 +134,11 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                          const Vector4f& depthIntrinsics) const;
 
   /** Override */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const;
 
   /** Override */
@@ -148,7 +148,7 @@ public:
   virtual void save_to_disk(const std::string& outputFolder) const;
 
   /** Override */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                      const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
 
   /** Override */

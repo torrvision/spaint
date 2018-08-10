@@ -13,7 +13,7 @@
 #include <Learner.hpp>
 #endif
 
-#include <itmx/base/MemoryBlockFactory.h>
+#include <orx/base/MemoryBlockFactory.h>
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
@@ -49,7 +49,7 @@ DecisionForest<DescriptorType, TreeCount>::DecisionForest(const EnsembleLearner&
   }
 
   // Allocate the texture to store the nodes.
-  const itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  const orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
   m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
   m_nodeImage->Clear();
 
@@ -174,7 +174,7 @@ void DecisionForest<DescriptorType,TreeCount>::load_structure_from_file(const st
   }
 
   // Allocate and clear the node image.
-  const itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  const orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
   m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
   m_nodeImage->Clear();
 

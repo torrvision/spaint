@@ -12,11 +12,13 @@
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace ITMLib;
 
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
+
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/persistence/PropertyUtil.h>
 using namespace tvgutil;
 
-#include "geometry/GeometryUtil.h"
 #include "trackers/GlobalTracker.h"
 #include "trackers/RemoteTracker.h"
 

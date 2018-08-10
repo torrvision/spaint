@@ -11,7 +11,7 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
 
 namespace spaint {
 
@@ -28,7 +28,7 @@ protected:
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** The most recent target mask produced by the segmentation process. */
-  ITMUCharImage_Ptr m_targetMask;
+  ORUCharImage_Ptr m_targetMask;
 
   /** The current view of the scene. */
   View_CPtr m_view;
@@ -63,7 +63,7 @@ public:
    * \param renderState The render state corresponding to the camera.
    * \return            The target mask produced by the segmentation process.
    */
-  virtual ITMUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const = 0;
+  virtual ORUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const = 0;
 
   /**
    * \brief Trains the segmenter.
@@ -72,7 +72,7 @@ public:
    * \param renderState The render state corresponding to the camera.
    * \return            A visualisation of the training process to enable the user to see what's going on.
    */
-  virtual ITMUChar4Image_CPtr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
+  virtual ORUChar4Image_CPtr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
 };
 
 //#################### TYPEDEFS ####################

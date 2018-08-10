@@ -192,7 +192,7 @@ public:
    * \param rgb       An image into which to copy the next RGB image from the client.
    * \param rawDepth  An image into which to copy the next depth image from the client.
    */
-  void get_images(int clientID, ITMUChar4Image *rgb, ITMShortImage *rawDepth);
+  void get_images(int clientID, ORUChar4Image *rgb, ORShortImage *rawDepth);
 
   /**
    * \brief Attempts to get the next pose from the specified client.

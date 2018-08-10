@@ -8,8 +8,9 @@
 
 #include <boost/atomic.hpp>
 
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "Relocaliser.h"
-#include "../base/ITMImagePtrTypes.h"
 
 namespace itmx {
 
@@ -25,13 +26,13 @@ private:
    * An internal image in which to store a copy of a colour image that we are trying to pass to the decorated relocaliser.
    * This internal image will be accessible from the GPU on which relocalisation calls will be performed.
    */
-  mutable ITMUChar4Image_Ptr m_colourImage;
+  mutable ORUChar4Image_Ptr m_colourImage;
 
   /**
    * An internal image in which to store a copy of a depth image that we are trying to pass to the decorated relocaliser.
    * This internal image will be accessible from the GPU on which relocalisation calls will be performed.
    */
-  mutable ITMFloatImage_Ptr m_depthImage;
+  mutable ORFloatImage_Ptr m_depthImage;
 
   /** The ID of the old GPU on which calls were previously being performed, so that it can be restored later. */
   mutable int m_oldDevice;
@@ -68,7 +69,7 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual void reset();
@@ -77,7 +78,7 @@ public:
   virtual void save_to_disk(const std::string& outputFolder) const;
 
   /** Override */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                      const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
 
   /** Override */
@@ -93,7 +94,7 @@ private:
    * \param colourImage The colour image to copy.
    * \param depthImage  The depth image to copy.
    */
-  void copy_images(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage) const;
+  void copy_images(const ORUChar4Image *colourImage, const ORFloatImage *depthImage) const;
 
   /**
    * \brief Sets the current GPU to the one on which calls were previously being performed.

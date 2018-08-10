@@ -7,10 +7,8 @@
 
 #include <stdexcept>
 
-#include <ORUtils/Math.h>
-
-#include <itmx/geometry/GeometryUtil.h>
-using namespace itmx;
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 namespace spaint {
 

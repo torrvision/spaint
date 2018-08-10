@@ -8,8 +8,8 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <itmx/geometry/GeometryUtil.h>
-using namespace itmx;
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 #include <spaint/collaboration/CollaborativePoseOptimiser.h>
 using namespace spaint;
