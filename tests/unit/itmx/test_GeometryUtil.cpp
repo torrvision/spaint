@@ -4,7 +4,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/list.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 using namespace ORUtils;
 
 #include <itmx/geometry/GeometryUtil.h>
