@@ -369,8 +369,8 @@ void CollaborativeComponent::run_relocalisation()
     const SLAMState_CPtr slamStateJ = m_context->get_slam_state(m_bestCandidate->m_sceneJ);
     const View_CPtr viewI = slamStateI->get_view();
 
-    ITMFloatImage_Ptr depth(new ITMFloatImage(slamStateI->get_depth_image_size(), true, true));
-    ITMUChar4Image_Ptr rgb(new ITMUChar4Image(slamStateI->get_rgb_image_size(), true, true));
+    ORFloatImage_Ptr depth(new ORFloatImage(slamStateI->get_depth_image_size(), true, true));
+    ORUChar4Image_Ptr rgb(new ORUChar4Image(slamStateI->get_rgb_image_size(), true, true));
 
     VoxelRenderState_Ptr& renderStateD = m_depthRenderStates[m_bestCandidate->m_sceneI];
     m_visualisationGenerator->generate_depth_from_voxels(

@@ -52,7 +52,7 @@ public:
    * \param outputImage       The image into which to write the depth visualisation of the scene.
    */
   virtual void render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::ITMRenderState *renderState,
-                            float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const = 0;
+                            float voxelSize, float invalidDepthValue, const ORFloatImage_Ptr& outputImage) const = 0;
 };
 
 //#################### TYPEDEFS ####################

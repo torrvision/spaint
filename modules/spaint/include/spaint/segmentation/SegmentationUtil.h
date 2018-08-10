@@ -30,7 +30,7 @@ public:
    * \return                A masked version of the input image.
    */
   template <typename T>
-  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ITMUCharImage_CPtr& mask, const boost::shared_ptr<ORUtils::Image<T> >& image,
+  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ORUCharImage_CPtr& mask, const boost::shared_ptr<ORUtils::Image<T> >& image,
                                                           const typename boost::mpl::identity<T>::type& backgroundValue)
   {
     return apply_mask(mask, boost::shared_ptr<const ORUtils::Image<T> >(image), backgroundValue);
@@ -45,7 +45,7 @@ public:
    * \return                A masked version of the input image.
    */
   template <typename T>
-  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ITMUCharImage_CPtr& mask, const boost::shared_ptr<const ORUtils::Image<T> >& image,
+  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ORUCharImage_CPtr& mask, const boost::shared_ptr<const ORUtils::Image<T> >& image,
                                                           const typename boost::mpl::identity<T>::type& backgroundValue)
   {
     boost::shared_ptr<ORUtils::Image<T> > maskedImage(new ORUtils::Image<T>(image->noDims, true, true));
@@ -72,7 +72,7 @@ public:
    * \param mask  The mask to invert.
    * \return      An inverted version of the mask.
    */
-  static ITMUCharImage_Ptr invert_mask(const ITMUCharImage_CPtr& mask);
+  static ORUCharImage_Ptr invert_mask(const ORUCharImage_CPtr& mask);
 };
 
 }

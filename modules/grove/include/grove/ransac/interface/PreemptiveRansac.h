@@ -97,10 +97,10 @@ protected:
   bool m_checkRigidTransformationConstraint;
 
   /** A memory block that stores the raster indices of the candidate inliers already sampled from the input image. */
-  ITMIntMemoryBlock_Ptr m_inlierRasterIndicesBlock;
+  ORIntMemoryBlock_Ptr m_inlierRasterIndicesBlock;
 
   /** A mask recording which inlier points have already been sampled. */
-  ITMIntImage_Ptr m_inliersMaskImage;
+  ORIntImage_Ptr m_inliersMaskImage;
 
   /** An image storing the keypoints extracted from the input image during relocalisation. Not owned by this class. */
   Keypoint3DColourImage_CPtr m_keypointsImage;
@@ -137,7 +137,7 @@ protected:
   uint32_t m_poseCandidatesAfterCull;
 
   /** The camera points used for the pose optimisation step. Each row represents the points for a pose candidate. */
-  ITMFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
+  ORFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
 
   /** The energy value that, if reached, will cause the pose optimisation (which is trying to decrease this value) to terminate. */
   double m_poseOptimisationEnergyThreshold;

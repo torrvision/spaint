@@ -230,7 +230,7 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual void reset();
@@ -248,7 +248,7 @@ public:
   void set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState);
 
   /** Override */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
+  virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
 
   /** Override */
   virtual void update();

@@ -160,7 +160,7 @@ void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliserState->load_from_disk(inputFolder);
 }
 
-std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
@@ -260,7 +260,7 @@ void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr& re
   m_relocaliserState = relocaliserState;
 }
 
-void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                              const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);

@@ -110,7 +110,7 @@ public:
    *
    * \return  The screenshot.
    */
-  ITMUChar4Image_CPtr capture_screenshot() const;
+  ORUChar4Image_CPtr capture_screenshot() const;
 
   /**
    * \brief Computes the fractional position of point (x,y) in the window.
@@ -239,7 +239,7 @@ private:
    * \param visualisationType The type of visualisation to generate.
    * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
    */
-  void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
+  void generate_visualisation(const ORUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
                               VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
                               const ITMLib::ITMIntrinsics& intrinsics, spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const;
 
@@ -265,14 +265,14 @@ private:
    * \param image             The colour image.
    * \param useAlphaBlending  Whether or not to use alpha blending.
    */
-  void render_image(const ITMUChar4Image_CPtr& image, bool useAlphaBlending = false) const;
+  void render_image(const ORUChar4Image_CPtr& image, bool useAlphaBlending = false) const;
 
   /**
    * \brief Renders a semi-transparent colour overlay over the existing scene.
    *
    * \param overlay The colour overlay.
    */
-  void render_overlay(const ITMUChar4Image_CPtr& overlay) const;
+  void render_overlay(const ORUChar4Image_CPtr& overlay) const;
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
   /**

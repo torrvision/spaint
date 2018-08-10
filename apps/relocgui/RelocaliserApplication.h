@@ -176,13 +176,13 @@ private:
   // it's expensive on the GPU.
   //
   /** The current depth image in metres. */
-  ITMFloatImage_Ptr m_currentDepthImage;
+  ORFloatImage_Ptr m_currentDepthImage;
 
   /** The current depth image in short format. */
-  ITMShortImage_Ptr m_currentRawDepthImage;
+  ORShortImage_Ptr m_currentRawDepthImage;
 
   /** The current colour image. */
-  ITMUChar4Image_Ptr m_currentRgbImage;
+  ORUChar4Image_Ptr m_currentRgbImage;
 };
 
 }
