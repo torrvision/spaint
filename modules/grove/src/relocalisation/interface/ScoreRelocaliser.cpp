@@ -8,9 +8,6 @@
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 
-#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-using namespace ITMLib;
-
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
@@ -61,7 +58,6 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
 
   // Instantiate the sub-algorithms.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
-  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(deviceType));
   m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
   m_reservoirCount = m_scoreForest->get_nb_leaves();
   m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
@@ -163,7 +159,7 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Imag
   std::vector<Result> results;
 
   // Iff we have enough valid depth values, try to estimate the camera pose:
-  if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
+  if(count_valid_depths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
     // Step 1: Extract keypoints from the RGB-D image and compute descriptors for them.
     m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, depthIntrinsics, m_keypointsImage.get(), m_descriptorsImage.get());

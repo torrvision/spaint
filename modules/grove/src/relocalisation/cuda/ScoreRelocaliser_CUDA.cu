@@ -6,9 +6,26 @@
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 using namespace tvgutil;
 
+#include <thrust/count.h>
+#include <thrust/device_ptr.h>
+
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
 
 namespace grove {
+
+//#################### ANONYMOUS STRUCTS ####################
+namespace
+{
+
+struct ValidDepth
+{
+  _CPU_AND_GPU_CODE_ bool operator()(const float &x)
+  {
+    return x > 0.0f;
+  }
+};
+
+}
 
 //#################### CUDA KERNELS ####################
 
@@ -32,6 +49,20 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string& forestFilename, 
 {}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
+
+uint32_t ScoreRelocaliser_CUDA::count_valid_depths(const ORFloatImage *depthImage) const
+{
+  uint32_t validDepths = 0;
+
+  const int imgArea = depthImage->noDims.width * depthImage->noDims.height;
+  const float *depths = depthImage->GetData(MEMORYDEVICE_CUDA);
+
+  thrust::device_ptr<const float> depthsStart(depths);
+  thrust::device_ptr<const float> depthsEnd(depths + imgArea);
+
+  // Do the counting.
+  return validDepths = thrust::count_if(depthsStart, depthsEnd, ValidDepth());
+}
 
 void ScoreRelocaliser_CUDA::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const
 {

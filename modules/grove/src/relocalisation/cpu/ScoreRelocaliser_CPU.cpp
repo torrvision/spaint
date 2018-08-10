@@ -18,6 +18,25 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string& forestFilename, co
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
+uint32_t ScoreRelocaliser_CPU::count_valid_depths(const ORFloatImage *depthImage) const
+{
+  uint32_t validDepths = 0;
+
+  const int imgArea = depthImage->noDims.width * depthImage->noDims.height;
+  const float *depths = depthImage->GetData(MEMORYDEVICE_CPU);
+
+  // Count the number of pixels having a valid (positive) depth measurement. In parallel if possible.
+#ifdef WITH_OPENMP
+  #pragma omp parallel for reduction(+:validDepths)
+#endif
+  for(int i = 0; i < imgArea; ++i)
+  {
+    validDepths += depths[i] > 0.0f;
+  }
+
+  return validDepths;
+}
+
 void ScoreRelocaliser_CPU::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const
 {
   const Vector2i imgSize = leafIndices->noDims;
