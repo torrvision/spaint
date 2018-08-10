@@ -5,8 +5,8 @@
 
 #include "propagation/interface/LabelPropagator.h"
 
-#include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 namespace spaint {
 
@@ -25,7 +25,7 @@ LabelPropagator::~LabelPropagator() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const
+void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ORFloat4Image *raycastResult, SpaintVoxelScene *scene) const
 {
   // Calculate the normals of the voxels in the raycast result.
   calculate_normals(raycastResult, scene);

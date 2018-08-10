@@ -34,7 +34,7 @@ void FernRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliser->LoadFromDirectory(inputFolder + "/");
 }
 
-std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   std::vector<Relocaliser::Result> results;
 
@@ -88,7 +88,7 @@ void FernRelocaliser::save_to_disk(const std::string& outputFolder) const
   m_relocaliser->SaveToDirectory(outputFolder + "/");
 }
 
-void FernRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+void FernRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                             const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   // If this function is being called, the assumption is that tracking succeeded and that we could

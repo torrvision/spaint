@@ -6,7 +6,8 @@
 #ifndef H_ITMX_SINGLERGBDIMAGEPIPE
 #define H_ITMX_SINGLERGBDIMAGEPIPE
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 
 namespace itmx {
@@ -23,13 +24,13 @@ private:
   ITMLib::ITMRGBDCalib m_calib;
 
   /** The current depth image being fed through the pipe. */
-  ITMShortImage_CPtr m_depthImage;
+  ORShortImage_CPtr m_depthImage;
 
   /** The size of depth image being fed through the pipe. */
   Vector2i m_depthImageSize;
 
   /** The current RGB image being fed through the pipe. */
-  ITMUChar4Image_CPtr m_rgbImage;
+  ORUChar4Image_CPtr m_rgbImage;
 
   /** The size of RGB image being fed through the pipe. */
   Vector2i m_rgbImageSize;
@@ -52,7 +53,7 @@ public:
   virtual Vector2i getDepthImageSize() const;
 
   /** Override */
-  virtual void getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
+  virtual void getImages(ORUChar4Image *rgb, ORShortImage *rawDepth);
 
   /** Override */
   virtual Vector2i getRGBImageSize() const;
@@ -66,7 +67,7 @@ public:
    * \param rgbImage    The current RGB image to feed through the pipe.
    * \param depthImage  The current depth image to feed through the pipe.
    */
-  void set_images(const ITMUChar4Image_CPtr& rgbImage, const ITMShortImage_CPtr& depthImage);
+  void set_images(const ORUChar4Image_CPtr& rgbImage, const ORShortImage_CPtr& depthImage);
 };
 
 //#################### TYPEDEFS ####################

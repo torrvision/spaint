@@ -36,7 +36,7 @@ private:
   mutable boost::mutex m_interactionMutex;
 
   /** TODO */
-  mutable ITMUChar4Image_Ptr m_remoteImage;
+  mutable ORUChar4Image_Ptr m_remoteImage;
 
   /** The TCP stream used as a wrapper around the connection to the server. */
   mutable boost::asio::ip::tcp::iostream m_stream;
@@ -62,7 +62,7 @@ public:
   /**
    * \brief TODO
    */
-  ITMUChar4Image_CPtr get_remote_image() const;
+  ORUChar4Image_CPtr get_remote_image() const;
 
   /**
    * \brief Sends a calibration message to the server.

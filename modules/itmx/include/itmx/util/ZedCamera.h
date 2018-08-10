@@ -108,7 +108,7 @@ public:
    * \param rgb       An image into which to copy the next RGB image from the Zed camera.
    * \param rawDepth  An image into which to copy the next depth image from the Zed camera.
    */
-  void get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
+  void get_images(ORUChar4Image *rgb, ORShortImage *rawDepth);
 
   /**
    * \brief Gets the size of the colour images being produced by the Zed camera.

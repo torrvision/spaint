@@ -15,9 +15,9 @@ using namespace tvgutil;
 #include <omp.h>
 #endif
 
-#include <itmx/base/MemoryBlockFactory.h>
-#include <itmx/geometry/GeometryUtil.h>
-using namespace itmx;
+#include <orx/base/MemoryBlockFactory.h>
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 //#################### MACROS ####################
 
@@ -293,7 +293,7 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates
   }
 }
 
-int PreemptiveRansac::get_min_nb_required_points() const
+uint32_t PreemptiveRansac::get_min_nb_required_points() const
 {
   // We need at least the number of inliers required for a RANSAC iteration.
   return m_ransacInliersPerIteration;

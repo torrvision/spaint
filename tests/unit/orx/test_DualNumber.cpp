@@ -3,8 +3,8 @@
 
 #include <boost/mpl/list.hpp>
 
-#include <itmx/geometry/DualNumber.h>
-using namespace itmx;
+#include <orx/geometry/DualNumber.h>
+using namespace orx;
 
 //#################### TESTS ####################
 

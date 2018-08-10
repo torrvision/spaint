@@ -28,7 +28,7 @@ public:
 private:
   /** Override */
   virtual void render_internal(const SpaintVoxelScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
-                               LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const;
+                               LightingType lightingType, float labelAlpha, ORUChar4Image *outputImage) const;
 };
 
 }

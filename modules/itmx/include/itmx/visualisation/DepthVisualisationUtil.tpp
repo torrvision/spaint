@@ -7,7 +7,8 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 
-#include "../geometry/GeometryUtil.h"
+#include <orx/geometry/GeometryUtil.h>
+
 #include "../util/CameraPoseConverter.h"
 
 namespace itmx {
@@ -15,7 +16,7 @@ namespace itmx {
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 template <typename VoxelType, typename IndexType>
-void DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+void DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(const ORFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                                              const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState,
                                                                              DepthVisualiser::DepthType depthType, const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine,
                                                                              const itmx::DepthVisualiser_CPtr& depthVisualiser, const Settings_CPtr& settings)
@@ -34,7 +35,7 @@ void DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(con
 
   const rigging::SimpleCamera camera = CameraPoseConverter::pose_to_camera(pose);
   depthVisualiser->render_depth(
-    depthType, GeometryUtil::to_itm(camera.p()), GeometryUtil::to_itm(camera.n()),
+    depthType, orx::GeometryUtil::to_itm(camera.p()), orx::GeometryUtil::to_itm(camera.n()),
     renderState.get(), settings->sceneParams.voxelSize, -1.0f, output
   );
 

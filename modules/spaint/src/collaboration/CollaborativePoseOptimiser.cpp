@@ -16,8 +16,6 @@ using namespace ORUtils;
 #include <MiniSlamGraphLib/SlamGraphErrorFunction.h>
 using namespace MiniSlamGraph;
 
-#include <itmx/geometry/GeometryUtil.h>
-
 #ifdef WITH_GRAPHVIZ
 #include <itmx/graphviz/GraphVisualiser.h>
 #endif
@@ -26,10 +24,13 @@ using namespace MiniSlamGraph;
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
 
+#include <orx/geometry/GeometryUtil.h>
+
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
 
 using namespace itmx;
+using namespace orx;
 using namespace tvgutil;
 
 namespace bf = boost::filesystem;
@@ -355,7 +356,7 @@ void CollaborativePoseOptimiser::run_pose_graph_optimisation()
 
 #if defined(WITH_GRAPHVIZ) && defined(WITH_OPENCV) && DEBUGGING
       static GraphVisualiser gv;
-      ITMUChar4Image_Ptr img = gv.generate_visualisation("digraph { node [ shape=rectangle, style=filled, fillcolor=white];\n" + nodeDesc + edgeDesc + " }");
+      ORUChar4Image_Ptr img = gv.generate_visualisation("digraph { node [ shape=rectangle, style=filled, fillcolor=white];\n" + nodeDesc + edgeDesc + " }");
       cv::Mat3b cvImg = OpenCVUtil::make_rgb_image(img->GetData(MEMORYDEVICE_CPU), img->noDims.x, img->noDims.y);
       cv::imshow("Pose Graph", cvImg);
       cv::waitKey(1);

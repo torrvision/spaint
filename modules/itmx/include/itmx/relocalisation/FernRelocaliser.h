@@ -84,7 +84,7 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual void reset();
@@ -93,7 +93,7 @@ public:
   virtual void save_to_disk(const std::string& outputFolder) const;
 
   /** Override */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                      const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

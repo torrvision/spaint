@@ -4,11 +4,11 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/list.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 using namespace ORUtils;
 
-#include <itmx/geometry/GeometryUtil.h>
-using namespace itmx;
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 //#################### TESTS ####################
 

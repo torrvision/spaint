@@ -35,6 +35,7 @@ using namespace spaint;
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
+#include "renderers/NullRenderer.h"
 #ifdef WITH_OVR
 #include "renderers/RiftRenderer.h"
 #endif
@@ -60,8 +61,18 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
   setup_meshing();
 
   const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-  int subwindowConfigurationIndex = settings->get_first_value<int>("subwindowConfigurationIndex");
-  switch_to_windowed_renderer(subwindowConfigurationIndex);
+  bool headless = settings->get_first_value<bool>("headless");
+
+  if(headless)
+  {
+    bool verbose = settings->get_first_value<bool>("verbose");
+    m_renderer.reset(new NullRenderer(m_pipeline->get_model(), verbose));
+  }
+  else
+  {
+    int subwindowConfigurationIndex = settings->get_first_value<int>("subwindowConfigurationIndex");
+    switch_to_windowed_renderer(subwindowConfigurationIndex);
+  }
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -29,28 +29,9 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 #############################
 
 ##
-SET(base_sources
-src/base/MemoryBlockFactory.cpp
-)
-
 SET(base_headers
-include/itmx/base/ITMImagePtrTypes.h
-include/itmx/base/ITMMemoryBlockPtrTypes.h
 include/itmx/base/ITMObjectPtrTypes.h
-include/itmx/base/MemoryBlockFactory.h
 include/itmx/base/Settings.h
-)
-
-##
-SET(geometry_sources
-src/geometry/GeometryUtil.cpp
-)
-
-SET(geometry_headers
-include/itmx/geometry/DualNumber.h
-include/itmx/geometry/DualQuaternion.h
-include/itmx/geometry/GeometryUtil.h
-include/itmx/geometry/Screw.h
 )
 
 ##
@@ -292,8 +273,6 @@ include/itmx/visualisation/shared/DepthVisualiser_Shared.h
 #################################################################
 
 SET(sources
-${base_sources}
-${geometry_sources}
 ${graphviz_sources}
 ${imagesources_sources}
 ${persistence_sources}
@@ -309,7 +288,6 @@ ${visualisation_cpu_sources}
 
 SET(headers
 ${base_headers}
-${geometry_headers}
 ${graphviz_headers}
 ${imagesources_headers}
 ${persistence_headers}
@@ -353,8 +331,7 @@ ENDIF()
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
-SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
+SOURCE_GROUP(base FILES ${base_headers})
 SOURCE_GROUP(graphviz FILES ${graphviz_sources} ${graphviz_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
@@ -379,6 +356,7 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/itmx)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 

@@ -56,12 +56,12 @@ const Eigen::Vector3f& Subwindow::get_camera_up_vector() const
   return m_cameraUpVector;
 }
 
-const ITMUChar4Image_Ptr& Subwindow::get_image()
+const ORUChar4Image_Ptr& Subwindow::get_image()
 {
   return m_image;
 }
 
-ITMUChar4Image_CPtr Subwindow::get_image() const
+ORUChar4Image_CPtr Subwindow::get_image() const
 {
   return m_image;
 }
@@ -124,7 +124,7 @@ void Subwindow::reset_camera()
 
 void Subwindow::resize_image(const Vector2i& newImgSize)
 {
-  m_image.reset(new ITMUChar4Image(newImgSize, true, true));
+  m_image.reset(new ORUChar4Image(newImgSize, true, true));
   m_voxelRenderStates.clear();
   m_surfelRenderStates.clear();
 }

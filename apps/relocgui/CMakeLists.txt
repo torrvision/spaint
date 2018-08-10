@@ -57,6 +57,7 @@ SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvginput/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
@@ -70,9 +71,9 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} itmx tvginput tvgutil)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
+TARGET_LINK_LIBRARIES(${targetname} itmx orx tvginput tvgutil)
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)

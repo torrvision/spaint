@@ -67,8 +67,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Set up the RGB and raw depth images into which input is to be read each frame.
   const SLAMState_Ptr& slamState = context->get_slam_state(sceneID);
-  slamState->set_input_rgb_image(ITMUChar4Image_Ptr(new ITMUChar4Image(rgbImageSize, true, true)));
-  slamState->set_input_raw_depth_image(ITMShortImage_Ptr(new ITMShortImage(depthImageSize, true, true)));
+  slamState->set_input_rgb_image(ORUChar4Image_Ptr(new ORUChar4Image(rgbImageSize, true, true)));
+  slamState->set_input_raw_depth_image(ORShortImage_Ptr(new ORShortImage(depthImageSize, true, true)));
 
   // Set up the low-level engine.
   const Settings_CPtr& settings = context->get_settings();
@@ -148,8 +148,8 @@ void SLAMComponent::load_models(const std::string& inputDir)
 
   // Set up the view to allow the scene to be rendered without any frames needing to be processed.
   // We are aiming to roughly mirror what would happen if we reconstructed the scene frame-by-frame.
-  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
-  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const ORShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  const ORUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const View_Ptr& view = slamState->get_view();
 
   ITMView *newView = view.get();
@@ -192,8 +192,8 @@ bool SLAMComponent::process_frame()
     return false;
   }
 
-  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
-  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const ORShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  const ORUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const SurfelRenderState_Ptr& liveSurfelRenderState = slamState->get_live_surfel_render_state();
   const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
   const SpaintSurfelScene_Ptr& surfelScene = slamState->get_surfel_scene();
@@ -209,12 +209,12 @@ bool SLAMComponent::process_frame()
   slamState->set_view(newView);
 
   // If there's an active input mask of the right size, apply it to the depth image.
-  ITMFloatImage_Ptr maskedDepthImage;
-  ITMUCharImage_CPtr inputMask = m_context->get_slam_state(m_sceneID)->get_input_mask();
+  ORFloatImage_Ptr maskedDepthImage;
+  ORUCharImage_CPtr inputMask = m_context->get_slam_state(m_sceneID)->get_input_mask();
   if(inputMask && inputMask->noDims == view->depth->noDims)
   {
     view->depth->UpdateHostFromDevice();
-    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter()), -1.0f);
+    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ORFloatImage_CPtr(view->depth, boost::serialization::null_deleter()), -1.0f);
     maskedDepthImage->UpdateDeviceFromHost();
     view->depth->Swap(*maskedDepthImage);
   }

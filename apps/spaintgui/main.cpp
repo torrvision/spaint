@@ -38,13 +38,14 @@
 #include <spaint/fiducials/ArUcoFiducialDetector.h>
 #endif
 
-#include <itmx/base/MemoryBlockFactory.h>
-#include <itmx/geometry/GeometryUtil.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #include <itmx/imagesources/RemoteImageSourceEngine.h>
 #ifdef WITH_ZED
 #include <itmx/imagesources/ZedImageSourceEngine.h>
 #endif
+
+#include <orx/base/MemoryBlockFactory.h>
+#include <orx/geometry/GeometryUtil.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 
@@ -57,6 +58,7 @@ using namespace InputSource;
 using namespace ITMLib;
 
 using namespace itmx;
+using namespace orx;
 using namespace spaint;
 using namespace tvgutil;
 
@@ -80,6 +82,7 @@ struct CommandLineArguments
   bool detectFiducials;
   std::string experimentTag;
   std::string globalPosesSpecifier;
+  bool headless;
   std::string host;
   int initialFrameNumber;
   std::string leapFiducialID;
@@ -104,6 +107,7 @@ struct CommandLineArguments
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
+  bool verbose;
 
   // Derived arguments
   boost::optional<bf::path> modelDir;
@@ -127,6 +131,7 @@ struct CommandLineArguments
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
       ADD_SETTING(globalPosesSpecifier);
+      ADD_SETTING(headless);
       ADD_SETTING(host);
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
@@ -151,6 +156,7 @@ struct CommandLineArguments
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
       ADD_SETTING(trackSurfels);
+      ADD_SETTING(verbose);
     #undef ADD_SETTINGS
     #undef ADD_SETTING
   }
@@ -357,7 +363,7 @@ std::string make_tracker_config(CommandLineArguments& args)
         }
 
         // Specify the creation of a file-based tracker that reads poses from disk.
-        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
+        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + ",initialFrameNo=" + boost::lexical_cast<std::string>(args.initialFrameNumber) + "</params></tracker>";
 
         // If we're using global poses for the scenes, add the necessary closing tag for the global tracker.
         if(!globalPoses.empty()) result += "</tracker>";
@@ -503,6 +509,10 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     args.detectFiducials = true;
   }
 
+  // If the user wants to run in headless mode, make sure that batch mode is also enabled
+  // (there is no way to control the application without the UI anyway).
+  if(args.headless) args.batch = true;
+
   // If the user wants to use a collaborative pipeline, but doesn't specify any disk sequences,
   // make sure a mapping server is started.
   if(args.pipelineType == "collaborative" && args.sequenceSpecifiers.empty())
@@ -599,6 +609,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
     ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
+    ("headless", po::bool_switch(&args.headless), "headless mode")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
@@ -615,6 +626,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
+    ("verbose,v", po::bool_switch(&args.verbose), "enable verbose output")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -703,10 +715,24 @@ try
     return 0;
   }
 
-  // Initialise SDL.
-  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+  // If we are not running in headless mode, initialise the GUI subsystems.
+  if(!args.headless)
   {
-    quit("Error: Failed to initialise SDL.");
+    // Initialise SDL.
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+    {
+      quit("Error: Failed to initialise SDL.");
+    }
+
+#ifdef WITH_GLUT
+    // Initialise GLUT (used for text rendering only).
+    glutInit(&argc, argv);
+#endif
+
+#ifdef WITH_OVR
+    // If we built with Rift support, initialise the Rift SDK.
+    ovr_Initialize();
+#endif
   }
 
   // Find all available joysticks and report the number found to the user.
@@ -728,16 +754,6 @@ try
 #if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
   // Tell ArrayFire to run on the primary GPU.
   afcu::setNativeId(0);
-#endif
-
-#ifdef WITH_GLUT
-  // Initialise GLUT (used for text rendering only).
-  glutInit(&argc, argv);
-#endif
-
-#ifdef WITH_OVR
-  // If we built with Rift support, initialise the Rift SDK.
-  ovr_Initialize();
 #endif
 
   // Set scene parameters from configuration.
@@ -947,8 +963,12 @@ try
   // Close all open joysticks.
   joysticks.clear();
 
-  // Shut down SDL.
-  SDL_Quit();
+  // If we are not running in headless mode, shut down the graphics subsystem.
+  if(!args.headless)
+  {
+    // Shut down SDL.
+    SDL_Quit();
+  }
 
   return runSucceeded ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -31,7 +31,7 @@ MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr MappingClient::begin_push_
   return m_frameMessageQueue.begin_push();
 }
 
-ITMUChar4Image_CPtr MappingClient::get_remote_image() const
+ORUChar4Image_CPtr MappingClient::get_remote_image() const
 {
   AckMessage ackMsg;
   InteractionTypeMessage interactionTypeMsg(IT_GETRENDEREDIMAGE);
@@ -53,14 +53,14 @@ ITMUChar4Image_CPtr MappingClient::get_remote_image() const
         const Vector2i depthImageSize(640,480);
         RGBDFrameMessage uncompressedFrameMsg(rgbImageSize, depthImageSize);
         m_frameCompressor->uncompress_rgbd_frame(frameMsg, uncompressedFrameMsg);
-        if(!m_remoteImage) m_remoteImage.reset(new ITMUChar4Image(rgbImageSize, true, false));
+        if(!m_remoteImage) m_remoteImage.reset(new ORUChar4Image(rgbImageSize, true, false));
         uncompressedFrameMsg.extract_rgb_image(m_remoteImage.get());
         return m_remoteImage;
       }
     }
   }
 
-  return ITMUChar4Image_CPtr();
+  return ORUChar4Image_CPtr();
 }
 
 void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
