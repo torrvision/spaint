@@ -197,7 +197,7 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
   SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
 
   // Render RGB
-  ITMUChar4Image_Ptr renderedRGB = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
+  ORUChar4Image_Ptr renderedRGB = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
 
   model->get_visualisation_generator()->get_rgb_input(renderedRGB, view);
 
@@ -208,7 +208,7 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
   std::vector<PoseCandidate> candidates;
   scoreRelocaliser->get_best_poses(candidates);
 
-  ITMUChar4Image_Ptr rendered = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
+  ORUChar4Image_Ptr rendered = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
 
   std::vector<cv::Mat> rgbWithPoints;
   std::vector<cv::Mat> raycastedPoses;
