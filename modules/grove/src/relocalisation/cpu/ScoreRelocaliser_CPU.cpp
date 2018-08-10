@@ -22,16 +22,16 @@ uint32_t ScoreRelocaliser_CPU::count_valid_depths(const ORFloatImage *depthImage
 {
   uint32_t validDepths = 0;
 
-  const int imgArea = depthImage->noDims.width * depthImage->noDims.height;
   const float *depths = depthImage->GetData(MEMORYDEVICE_CPU);
+  const int pixelCount = depthImage->noDims.width * depthImage->noDims.height;
 
-  // Count the number of pixels having a valid (positive) depth measurement. In parallel if possible.
+  // Count the number of pixels having a valid (positive) depth measurement.
 #ifdef WITH_OPENMP
   #pragma omp parallel for reduction(+:validDepths)
 #endif
-  for(int i = 0; i < imgArea; ++i)
+  for(int i = 0; i < pixelCount; ++i)
   {
-    validDepths += depths[i] > 0.0f;
+    if(depths[i] > 0.0f) ++validDepths;
   }
 
   return validDepths;

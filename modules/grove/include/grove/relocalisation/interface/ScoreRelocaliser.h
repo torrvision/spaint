@@ -141,11 +141,11 @@ public:
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Counts the number of pixels that contain a valid depth value.
+   * \brief Counts the number of pixels in the specified depth image that contain a valid depth value.
    *
-   * \param depthImage  A depth image.
+   * \param depthImage  The depth image.
    *
-   * \return  The number of pixels with a valid depth measurement.
+   * \return  The number of pixels in the depth image that contain a valid depth value.
    */
   virtual uint32_t count_valid_depths(const ORFloatImage *depthImage) const = 0;
 
