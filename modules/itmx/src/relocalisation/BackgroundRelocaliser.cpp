@@ -41,7 +41,7 @@ void BackgroundRelocaliser::load_from_disk(const std::string& inputFolder)
   to_old_gpu();
 }
 
-std::vector<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   // Prevent training and updating of the decorated relocaliser during a relocalisation.
   m_relocaliserRunning = true;
@@ -92,7 +92,7 @@ void BackgroundRelocaliser::save_to_disk(const std::string& outputFolder) const
   to_old_gpu();
 }
 
-void BackgroundRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+void BackgroundRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                   const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   // If a relocalisation is in progress, avoid trying to train the decorated relocaliser.
@@ -132,19 +132,19 @@ void BackgroundRelocaliser::update()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void BackgroundRelocaliser::copy_images(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage) const
+void BackgroundRelocaliser::copy_images(const ORUChar4Image *colourImage, const ORFloatImage *depthImage) const
 {
   // If the internal images do not yet exist, create them.
-  if(!m_colourImage) m_colourImage.reset(new ITMUChar4Image(colourImage->noDims, true, true));
-  if(!m_depthImage) m_depthImage.reset(new ITMFloatImage(depthImage->noDims, true, true));
+  if(!m_colourImage) m_colourImage.reset(new ORUChar4Image(colourImage->noDims, true, true));
+  if(!m_depthImage) m_depthImage.reset(new ORFloatImage(depthImage->noDims, true, true));
 
   // Make sure that the internal images have the same size as the input images we are trying to copy into them.
   m_colourImage->ChangeDims(colourImage->noDims);
   m_depthImage->ChangeDims(depthImage->noDims);
 
   // Copy the input images into the internal images on the CPU.
-  m_colourImage->SetFrom(colourImage, ITMUChar4Image::CPU_TO_CPU);
-  m_depthImage->SetFrom(depthImage, ITMFloatImage::CPU_TO_CPU);
+  m_colourImage->SetFrom(colourImage, ORUChar4Image::CPU_TO_CPU);
+  m_depthImage->SetFrom(depthImage, ORFloatImage::CPU_TO_CPU);
 
   // Copy the contents of the internal images across to the GPU.
   m_colourImage->UpdateDeviceFromHost();

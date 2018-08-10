@@ -6,7 +6,8 @@
 #ifndef H_ITMX_DEPTHVISUALISATIONUTIL
 #define H_ITMX_DEPTHVISUALISATIONUTIL
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 #include "interface/DepthVisualiser.h"
 
@@ -42,7 +43,7 @@ struct DepthVisualisationUtil
    * \param depthVisualiser           The depth visualiser.
    * \param settings                  The settings to use for InfiniTAM.
    */
-  static void generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+  static void generate_depth_from_voxels(const ORFloatImage_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                          const ITMLib::ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType,
                                          const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const itmx::DepthVisualiser_CPtr& depthVisualiser,
                                          const Settings_CPtr& settings);

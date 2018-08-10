@@ -12,9 +12,10 @@
 #include <opencv2/core/core.hpp>
 #endif
 
-#include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
+
+#include <orx/base/ORImagePtrTypes.h>
 
 namespace spaint {
 

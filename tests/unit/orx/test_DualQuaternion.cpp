@@ -3,13 +3,12 @@
 
 #include <boost/mpl/list.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
-
+#include <ORUtils/Math.h>
 #include <ORUtils/SE3Pose.h>
 using namespace ORUtils;
 
-#include <itmx/geometry/DualQuaternion.h>
-using namespace itmx;
+#include <orx/geometry/DualQuaternion.h>
+using namespace orx;
 
 //#################### TESTS ####################
 

@@ -48,7 +48,7 @@ private:
   Eigen::Vector3f m_cameraUpVector;
 
   /** The image in which to store the scene visualisation for the sub-window. */
-  ITMUChar4Image_Ptr m_image;
+  ORUChar4Image_Ptr m_image;
 
   /** The original size of the image in which to store the scene visualisation for the sub-window. */
   Vector2i m_originalImgSize;
@@ -126,14 +126,14 @@ public:
    *
    * \return  The image in which to store the scene visualisation for the sub-window.
    */
-  const ITMUChar4Image_Ptr& get_image();
+  const ORUChar4Image_Ptr& get_image();
 
   /**
    * \brief Gets the image in which to store the scene visualisation for the sub-window.
    *
    * \return  The image in which to store the scene visualisation for the sub-window.
    */
-  ITMUChar4Image_CPtr get_image() const;
+  ORUChar4Image_CPtr get_image() const;
 
   /**
    * \brief Gets the original size of the image in which to store the scene visualisation for the sub-window.

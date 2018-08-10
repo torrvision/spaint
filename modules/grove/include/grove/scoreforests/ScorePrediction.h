@@ -6,7 +6,7 @@
 #ifndef H_GROVE_SCOREPREDICTION
 #define H_GROVE_SCOREPREDICTION
 
-#include <itmx/base/ITMImagePtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
 
 #include "Keypoint3DColourCluster.h"
 #include "../util/Array.h"

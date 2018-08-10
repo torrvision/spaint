@@ -6,9 +6,11 @@
 #include "selectors/PickingSelector.h"
 using namespace tvginput;
 
-#include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/picking/PickerFactory.h>
 using namespace itmx;
+
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 namespace spaint {
 

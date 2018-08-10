@@ -240,6 +240,18 @@ struct SequenceResults
   /** The sum of angular errors in the sequence, for failed relocalisations. Used to compute the average. */
   float sumRelocalisationFailedAngleError{0};
 
+  /** The median angle error for the sequence. */
+  float medianRelocalisationAngle{0};
+
+  /** The median translation error for the sequence. */
+  float medianRelocalisationTranslation{0};
+
+  /** The median of the finite angle error for the sequence. */
+  float medianFiniteRelocalisationAngle{0};
+
+  /** The median of the finite translation error for the sequence. */
+  float medianFiniteRelocalisationTranslation{0};
+
   /** The sequence of relocalisation results. Same element count as poseCount. */
   std::vector<bool> relocalizationResults;
 
@@ -323,6 +335,62 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
     ++res.poseCount;
     gtPathGenerator.increment_index();
     relocPathGenerator.increment_index();
+  }
+
+  // Compute medians.
+  std::vector<float> angleErrors = res.relocalisationAngularErrors;
+  std::vector<float> translationErrors = res.relocalisationTranslationalErrors;
+
+//  std::vector<float> angleErrors;
+//  std::vector<float> translationErrors;
+
+//  for(size_t i = 0; i < res.relocalisationAngularErrors.size(); ++i)
+//  {
+//      float angleError = res.relocalisationAngularErrors[i];
+//      float translationError = res.relocalisationTranslationalErrors[i];
+
+//      if(std::isfinite(angleError) && std::isfinite(translationError))
+//      {
+//          angleErrors.push_back(angleError);
+//          translationErrors.push_back(translationError);
+//      }
+//  }
+
+  auto comparer = [] (float a, float b)
+  {
+      if(std::isfinite(a) && std::isfinite(b)) return a < b;
+
+      if(std::isfinite(a)) return true;
+
+      if(std::isfinite(b)) return false;
+
+      return false;
+  };
+
+  std::sort(angleErrors.begin(), angleErrors.end(), comparer);
+  std::sort(translationErrors.begin(), translationErrors.end(), comparer);
+
+  if(angleErrors.size() > 0)
+  {
+      size_t medianElement = angleErrors.size() / 2;
+      res.medianRelocalisationAngle = angleErrors[medianElement];
+      res.medianRelocalisationTranslation = translationErrors[medianElement];
+
+      size_t maxValidIndex = -1;
+      for(maxValidIndex = 0; maxValidIndex < angleErrors.size(); ++maxValidIndex)
+      {
+          if(!std::isfinite(angleErrors[maxValidIndex]) || !std::isfinite(translationErrors[maxValidIndex]))
+          {
+              break;
+          }
+      }
+
+      if(maxValidIndex >= 0)
+      {
+          size_t medianElement = maxValidIndex / 2;
+          res.medianFiniteRelocalisationAngle = angleErrors[medianElement];
+          res.medianFiniteRelocalisationTranslation = translationErrors[medianElement];
+      }
   }
 
   return res;
@@ -413,6 +481,10 @@ int main(int argc, char *argv[])
   printWidth("Avg Succ A.", 14);
   printWidth("Avg Fail T.", 14);
   printWidth("Avg Fail A.", 14);
+  printWidth("Median T.", 14);
+  printWidth("Median A.", 14);
+  printWidth("Median Finite T.", 17);
+  printWidth("Median Finite A.", 17);
   std::cerr << '\n';
 
   // Compute percentages for each sequence and print everything.
@@ -434,6 +506,12 @@ int main(int argc, char *argv[])
     float avgFailTranslation = seqResult.sumRelocalisationFailedTranslationalError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc);
     float avgFailAngle = (seqResult.sumRelocalisationFailedAngleError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc)) * 180 / M_PI;
 
+    float medianAngleError = seqResult.medianRelocalisationAngle * 180 / M_PI;
+    float medianTranslationError = seqResult.medianRelocalisationTranslation;
+
+    float medianFiniteAngleError = seqResult.medianFiniteRelocalisationAngle * 180 / M_PI;
+    float medianFiniteTranslationError = seqResult.medianFiniteRelocalisationTranslation;
+
     printWidth(sequence, 15, true);
     printWidth(seqResult.poseCount, 8);
     printWidth(relocPct, 8);
@@ -445,6 +523,10 @@ int main(int argc, char *argv[])
     printWidth(avgSuccAngle, 14);
     printWidth(avgFailTranslation, 14);
     printWidth(avgFailAngle, 14);
+    printWidth(medianTranslationError, 14);
+    printWidth(medianAngleError, 14);
+    printWidth(medianFiniteTranslationError, 17);
+    printWidth(medianFiniteAngleError, 17);
     std::cerr << '\n';
   }
 

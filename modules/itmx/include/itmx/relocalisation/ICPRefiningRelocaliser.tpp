@@ -13,11 +13,12 @@
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 
+#include <orx/base/ORImagePtrTypes.h>
+
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 
-#include "../base/ITMImagePtrTypes.h"
 #include "../persistence/PosePersister.h"
 #include "../visualisation/DepthVisualisationUtil.tpp"
 #include "../visualisation/DepthVisualiserFactory.h"
@@ -100,7 +101,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::load_from_disk(const std::stri
 
 template <typename VoxelType, typename IndexType>
 std::vector<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics) const
 {
   std::vector<ORUtils::SE3Pose> initialPoses;
@@ -109,7 +110,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
 
 template <typename VoxelType, typename IndexType>
 std::vector<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
 #if DEBUGGING
@@ -144,8 +145,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     const ORUtils::SE3Pose initialPose = initialResults[resultIdx].pose;
 
     // Copy the depth and RGB images into the view.
-    m_view->depth->SetFrom(depthImage, m_settings->deviceType == DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
-    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
+    m_view->depth->SetFrom(depthImage, m_settings->deviceType == DEVICE_CUDA ? ORFloatImage::CUDA_TO_CUDA : ORFloatImage::CPU_TO_CPU);
+    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == DEVICE_CUDA ? ORUChar4Image::CUDA_TO_CUDA : ORUChar4Image::CPU_TO_CPU);
 
     // Create a fresh render state ready for raycasting.
     // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
@@ -259,7 +260,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::save_to_disk(const std::string
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+void ICPRefiningRelocaliser<VoxelType,IndexType>::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                         const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   start_timer(m_timerTraining);
@@ -296,7 +297,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::Mat cvRealDepth(m_view->depth->noDims.y, m_view->depth->noDims.x, CV_32FC1, m_view->depth->GetData(MEMORYDEVICE_CPU));
 
   // Render a synthetic depth image of the scene from the suggested pose.
-  ITMFloatImage_Ptr synthDepth(new ITMFloatImage(m_view->depth->noDims, true, true));
+  ORFloatImage_Ptr synthDepth(new ORFloatImage(m_view->depth->noDims, true, true));
   DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
     synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState,
     DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings

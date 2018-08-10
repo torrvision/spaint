@@ -6,8 +6,8 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR
 
-#include <itmx/base/ITMImagePtrTypes.h>
-#include <itmx/base/ITMMemoryBlockPtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
+#include <orx/base/ORMemoryBlockPtrTypes.h>
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
@@ -55,7 +55,7 @@ protected:
    * A memory block storing the offsets used to sample the depth values used in the descriptor.
    * There are two offsets involved per depth feature, so we encode them in a Vector4i.
    */
-  ITMInt4MemoryBlock_Ptr m_depthOffsets;
+  ORInt4MemoryBlock_Ptr m_depthOffsets;
 
   /** The step used to sample keypoints from the image. */
   uint32_t m_featureStep;
@@ -67,7 +67,7 @@ protected:
   bool m_normaliseRgb;
 
   /** A memory block storing the colour channels associated with the RGB part of the descriptor. */
-  ITMUCharMemoryBlock_Ptr m_rgbChannels;
+  ORUCharMemoryBlock_Ptr m_rgbChannels;
 
   /** The type of difference to use to compute RGB features. */
   RGBDPatchFeatureDifferenceType m_rgbDifferenceType;
@@ -88,7 +88,7 @@ protected:
    * A memory block storing the offsets used to sample the colour pixels used in the descriptor.
    * There are two offsets involved per colour feature, so we encode them in a Vector4i.
    */
-  ITMInt4MemoryBlock_Ptr m_rgbOffsets;
+  ORInt4MemoryBlock_Ptr m_rgbOffsets;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -145,7 +145,7 @@ public:
    *                         of the extracted keypoints. Will be resized as necessary.
    * \param descriptorsImage The output image that will contain the feature descriptors.
    */
-  virtual void compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+  virtual void compute_keypoints_and_features(const ORUChar4Image *rgbImage, const ORFloatImage *depthImage,
                                               const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                               KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const = 0;
 
@@ -167,7 +167,7 @@ public:
    *                         extracted features. Will be resized as necessary.
    * \param descriptorsImage The output image that will contain the feature descriptors.
    */
-  void compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
+  void compute_keypoints_and_features(const ORUChar4Image *rgbImage, const ORFloatImage *depthImage, const Vector4f& intrinsics,
                                       KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
 
   /**
@@ -197,7 +197,7 @@ protected:
    *
    * \throws std::invalid_argument If the features cannot be computed.
    */
-  Vector2i compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
+  Vector2i compute_output_dims(const ORUChar4Image *rgbImage, const ORFloatImage *depthImage) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

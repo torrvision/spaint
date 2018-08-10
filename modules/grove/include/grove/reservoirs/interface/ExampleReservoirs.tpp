@@ -8,9 +8,9 @@
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 
-#include <itmx/base/MemoryBlockFactory.h>
-
 #include <ORUtils/MemoryBlockPersister.h>
+
+#include <orx/base/MemoryBlockFactory.h>
 
 namespace grove {
 
@@ -20,7 +20,7 @@ template <typename ExampleType>
 ExampleReservoirs<ExampleType>::ExampleReservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : m_reservoirCapacity(reservoirCapacity), m_reservoirCount(reservoirCount), m_rngSeed(rngSeed)
 {
-  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
 
   // One row per reservoir, width equal to the capacity.
   m_reservoirs = mbf.make_image<ExampleType>(Vector2i(reservoirCapacity, reservoirCount));
@@ -76,7 +76,7 @@ uint32_t ExampleReservoirs<ExampleType>::get_reservoir_count() const
 }
 
 template <typename ExampleType>
-ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() const
+ORIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoir_sizes() const
 {
   return m_reservoirSizes;
 }

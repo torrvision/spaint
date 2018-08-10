@@ -30,10 +30,10 @@ Vector2i SingleRGBDImagePipe::getDepthImageSize() const
   return m_depthImageSize;
 }
 
-void SingleRGBDImagePipe::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void SingleRGBDImagePipe::getImages(ORUChar4Image *rgb, ORShortImage *rawDepth)
 {
-  rawDepth->SetFrom(m_depthImage.get(), ITMShortImage::CPU_TO_CPU);
-  rgb->SetFrom(m_rgbImage.get(), ITMUChar4Image::CPU_TO_CPU);
+  rawDepth->SetFrom(m_depthImage.get(), ORShortImage::CPU_TO_CPU);
+  rgb->SetFrom(m_rgbImage.get(), ORUChar4Image::CPU_TO_CPU);
 
   m_depthImage.reset();
   m_rgbImage.reset();
@@ -49,7 +49,7 @@ bool SingleRGBDImagePipe::hasMoreImages() const
   return m_depthImage || m_rgbImage;
 }
 
-void SingleRGBDImagePipe::set_images(const ITMUChar4Image_CPtr& rgbImage, const ITMShortImage_CPtr& depthImage)
+void SingleRGBDImagePipe::set_images(const ORUChar4Image_CPtr& rgbImage, const ORShortImage_CPtr& depthImage)
 {
   m_depthImage = depthImage;
   m_rgbImage = rgbImage;
