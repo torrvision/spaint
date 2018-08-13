@@ -14,15 +14,18 @@
 #include <opencv2/calib3d.hpp>
 
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
-#include <ITMLib/Utils/ITMProjectionUtils.h>
 using namespace ITMLib;
 
-#include <itmx/base/MemoryBlockFactory.h>
+#include <ORUtils/ProjectionUtils.h>
+
 #include <itmx/ocv/OpenCVUtil.h>
 #include <itmx/picking/PickerFactory.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 using namespace rigging;
+
+#include <orx/base/MemoryBlockFactory.h>
+using namespace orx;
 
 namespace spaint {
 
@@ -40,7 +43,7 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
   std::map<std::string,FiducialMeasurement> result;
 
   // Convert the current colour input image to OpenCV format.
-  const ITMUChar4Image *rgb = view->rgb;
+  const ORUChar4Image *rgb = view->rgb;
   rgb->UpdateHostFromDevice();
   cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
 

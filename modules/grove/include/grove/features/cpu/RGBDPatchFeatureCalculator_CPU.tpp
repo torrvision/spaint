@@ -25,7 +25,7 @@ RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::RGBDPatchFeatureCal
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoints_and_features(const ORUChar4Image *rgbImage, const ORFloatImage *depthImage,
                                                                                                  const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                                                                                  KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {

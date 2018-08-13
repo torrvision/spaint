@@ -6,7 +6,7 @@
 #ifndef H_ITMX_PICKER_SHARED
 #define H_ITMX_PICKER_SHARED
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 
 namespace itmx {
 

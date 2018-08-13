@@ -8,7 +8,7 @@
 
 #include <boost/optional.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 
 #include <rigging/Camera.h>
 

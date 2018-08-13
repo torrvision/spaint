@@ -24,7 +24,7 @@ class ObjectSegmentationContext
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The overlay image (if any) to render whilst performing segmentation in different scenes. */
-  std::map<std::string,ITMUChar4Image_CPtr> m_segmentationImages;
+  std::map<std::string,ORUChar4Image_CPtr> m_segmentationImages;
 
   /** The path generator for the current segmentation video (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_segmentationPathGenerator;
@@ -54,7 +54,7 @@ public:
    * \param sceneID The ID of the scene in which segmentation is being performed.
    * \return        The overlay image (if any) to render whilst performing segmentation.
    */
-  virtual ITMUChar4Image_CPtr get_segmentation_image(const std::string& sceneID) const;
+  virtual ORUChar4Image_CPtr get_segmentation_image(const std::string& sceneID) const;
 
   /**
    * \brief Gets the path generator for the current segmentation video (if any).
@@ -76,7 +76,7 @@ public:
    * \param sceneID           The ID of the scene in which segmentation is being performed.
    * \param segmentationImage The overlay image (if any) to render whilst performing segmentation in the specified scene.
    */
-  virtual void set_segmentation_image(const std::string& sceneID, const ITMUChar4Image_CPtr& segmentationImage);
+  virtual void set_segmentation_image(const std::string& sceneID, const ORUChar4Image_CPtr& segmentationImage);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

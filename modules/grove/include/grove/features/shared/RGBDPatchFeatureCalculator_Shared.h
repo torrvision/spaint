@@ -6,9 +6,8 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 
-#include <ITMLib/Utils/ITMProjectionUtils.h>
-
 #include <ORUtils/MathUtils.h>
+#include <ORUtils/ProjectionUtils.h>
 
 #include "../base/RGBDPatchFeatureDifferenceType.h"
 #include "../../keypoints/Keypoint2D.h"

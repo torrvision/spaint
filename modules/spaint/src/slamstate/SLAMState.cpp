@@ -23,31 +23,31 @@ const std::map<std::string,Fiducial_Ptr>& SLAMState::get_fiducials() const
   return m_fiducials;
 }
 
-ITMUCharImage_CPtr SLAMState::get_input_mask() const
+ORUCharImage_CPtr SLAMState::get_input_mask() const
 {
   return m_inputMask;
 }
 
-const ITMShortImage_Ptr& SLAMState::get_input_raw_depth_image()
+const ORShortImage_Ptr& SLAMState::get_input_raw_depth_image()
 {
   return m_inputRawDepthImage;
 }
 
-ITMShortImage_Ptr SLAMState::get_input_raw_depth_image_copy() const
+ORShortImage_Ptr SLAMState::get_input_raw_depth_image_copy() const
 {
-  ITMShortImage_Ptr copy(new ITMShortImage(m_inputRawDepthImage->noDims, true, false));
+  ORShortImage_Ptr copy(new ORShortImage(m_inputRawDepthImage->noDims, true, false));
   copy->SetFrom(m_inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
   return copy;
 }
 
-const ITMUChar4Image_Ptr& SLAMState::get_input_rgb_image()
+const ORUChar4Image_Ptr& SLAMState::get_input_rgb_image()
 {
   return m_inputRGBImage;
 }
 
-ITMUChar4Image_Ptr SLAMState::get_input_rgb_image_copy() const
+ORUChar4Image_Ptr SLAMState::get_input_rgb_image_copy() const
 {
-  ITMUChar4Image_Ptr copy(new ITMUChar4Image(m_inputRGBImage->noDims, true, false));
+  ORUChar4Image_Ptr copy(new ORUChar4Image(m_inputRGBImage->noDims, true, false));
   copy->SetFrom(m_inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
 }
@@ -117,17 +117,17 @@ SpaintVoxelScene_CPtr SLAMState::get_voxel_scene() const
   return m_voxelScene;
 }
 
-void SLAMState::set_input_mask(const ITMUCharImage_Ptr& inputMask)
+void SLAMState::set_input_mask(const ORUCharImage_Ptr& inputMask)
 {
   m_inputMask = inputMask;
 }
 
-void SLAMState::set_input_raw_depth_image(const ITMShortImage_Ptr& inputRawDepthImage)
+void SLAMState::set_input_raw_depth_image(const ORShortImage_Ptr& inputRawDepthImage)
 {
   m_inputRawDepthImage = inputRawDepthImage;
 }
 
-void SLAMState::set_input_rgb_image(const ITMUChar4Image_Ptr& inputRGBImage)
+void SLAMState::set_input_rgb_image(const ORUChar4Image_Ptr& inputRGBImage)
 {
   m_inputRGBImage = inputRGBImage;
 }

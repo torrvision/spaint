@@ -38,11 +38,12 @@
 #include <spaint/fiducials/ArUcoFiducialDetector.h>
 #endif
 
-#include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #ifdef WITH_ZED
 #include <itmx/imagesources/ZedImageSourceEngine.h>
 #endif
+
+#include <orx/base/MemoryBlockFactory.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 
@@ -54,6 +55,7 @@ using namespace InputSource;
 using namespace ITMLib;
 
 using namespace itmx;
+using namespace orx;
 using namespace spaint;
 using namespace tvgutil;
 

@@ -14,15 +14,17 @@ using boost::assign::list_of;
 
 #include <opencv2/opencv.hpp>
 
-#include <ITMLib/Utils/ITMProjectionUtils.h>
+#include <ORUtils/ProjectionUtils.h>
 
-#include <itmx/base/MemoryBlockFactory.h>
 #include <itmx/relocalisation/RefiningRelocaliser.h>
 #include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
 
 #include <grove/relocalisation/interface/ScoreRelocaliser.h>
 using namespace grove;
+
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 using namespace tvgutil;
@@ -197,7 +199,7 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
   SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
 
   // Render RGB
-  ITMUChar4Image_Ptr renderedRGB = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
+  ORUChar4Image_Ptr renderedRGB = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
 
   model->get_visualisation_generator()->get_rgb_input(renderedRGB, view);
 
@@ -208,7 +210,7 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &m
   std::vector<PoseCandidate> candidates;
   scoreRelocaliser->get_best_poses(candidates);
 
-  ITMUChar4Image_Ptr rendered = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
+  ORUChar4Image_Ptr rendered = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
 
   std::vector<cv::Mat> rgbWithPoints;
   std::vector<cv::Mat> raycastedPoses;

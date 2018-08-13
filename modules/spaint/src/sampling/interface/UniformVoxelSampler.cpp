@@ -5,8 +5,8 @@
 
 #include "sampling/interface/UniformVoxelSampler.h"
 
-#include <itmx/base/MemoryBlockFactory.h>
-using itmx::MemoryBlockFactory;
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
@@ -26,7 +26,7 @@ UniformVoxelSampler::~UniformVoxelSampler() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void UniformVoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, size_t numVoxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
+void UniformVoxelSampler::sample_voxels(const ORFloat4Image *raycastResult, size_t numVoxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
   // Choose which voxels to sample from the raycast result.
   int *sampledVoxelIndices = m_sampledVoxelIndicesMB->GetData(MEMORYDEVICE_CPU);

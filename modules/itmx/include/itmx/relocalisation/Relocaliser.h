@@ -10,8 +10,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Utils/ITMImageTypes.h>
-
+#include <ORUtils/ImageTypes.h>
 #include <ORUtils/SE3Pose.h>
 
 namespace itmx {
@@ -85,7 +84,7 @@ public:
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    * \return                The results of the relocalisation, from best to worst, or an empty vector otherwise.
    */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const = 0;
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Resets the relocaliser, allowing the integration of information for a new area.
@@ -109,7 +108,7 @@ public:
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    * \param cameraPose      The position of the camera in the world.
    */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                      const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

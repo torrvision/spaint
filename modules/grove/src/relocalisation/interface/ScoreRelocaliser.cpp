@@ -4,15 +4,13 @@
  */
 
 #include "relocalisation/interface/ScoreRelocaliser.h"
+using namespace itmx;
 
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 
-#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-using namespace ITMLib;
-
-#include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
+#include <orx/base/MemoryBlockFactory.h>
+using namespace orx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
@@ -61,7 +59,6 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
 
   // Instantiate the sub-algorithms.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
-  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(deviceType));
   m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
   m_reservoirCount = m_scoreForest->get_nb_leaves();
   m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
@@ -158,12 +155,12 @@ void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliserState->load_from_disk(inputFolder);
 }
 
-std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   std::vector<Result> results;
 
   // Iff we have enough valid depth values, try to estimate the camera pose:
-  if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
+  if(count_valid_depths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
     // Step 1: Extract keypoints from the RGB-D image and compute descriptors for them.
     m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, depthIntrinsics, m_keypointsImage.get(), m_descriptorsImage.get());
@@ -246,7 +243,7 @@ void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr& re
   m_relocaliserState = relocaliserState;
 }
 
-void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                              const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   if(!m_relocaliserState->exampleReservoirs)

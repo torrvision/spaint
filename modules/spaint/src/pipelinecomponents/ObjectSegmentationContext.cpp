@@ -16,9 +16,9 @@ ObjectSegmentationContext::~ObjectSegmentationContext() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-ITMUChar4Image_CPtr ObjectSegmentationContext::get_segmentation_image(const std::string& sceneID) const
+ORUChar4Image_CPtr ObjectSegmentationContext::get_segmentation_image(const std::string& sceneID) const
 {
-  return MapUtil::lookup(m_segmentationImages, sceneID, ITMUChar4Image_CPtr());
+  return MapUtil::lookup(m_segmentationImages, sceneID, ORUChar4Image_CPtr());
 }
 
 boost::optional<tvgutil::SequentialPathGenerator>& ObjectSegmentationContext::get_segmentation_path_generator()
@@ -31,7 +31,7 @@ const Segmenter_Ptr& ObjectSegmentationContext::get_segmenter() const
   return m_segmenter;
 }
 
-void ObjectSegmentationContext::set_segmentation_image(const std::string& sceneID, const ITMUChar4Image_CPtr& segmentationImage)
+void ObjectSegmentationContext::set_segmentation_image(const std::string& sceneID, const ORUChar4Image_CPtr& segmentationImage)
 {
   m_segmentationImages[sceneID] = segmentationImage;
 }

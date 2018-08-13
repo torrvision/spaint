@@ -30,10 +30,10 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual void calculate_normals(const ITMFloat4Image *raycastResult, const SpaintVoxelScene *scene) const;
+  virtual void calculate_normals(const ORFloat4Image *raycastResult, const SpaintVoxelScene *scene) const;
 
   /** Override */
-  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const;
+  virtual void perform_propagation(SpaintVoxel::Label label, const ORFloat4Image *raycastResult, SpaintVoxelScene *scene) const;
 };
 
 }

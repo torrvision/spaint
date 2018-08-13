@@ -43,7 +43,7 @@ public:
    *
    * \return  The results of the relocalisation, from best to worst, or an empty vector otherwise.
    */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

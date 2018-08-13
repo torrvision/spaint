@@ -13,7 +13,8 @@
 #include <opencv2/imgproc.hpp>
 #endif
 
-#include "base/MemoryBlockFactory.h"
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 namespace itmx {
 
@@ -34,7 +35,7 @@ struct RGBDFrameCompressor::Impl
   RGBCompressionType rgbCompressionType;
 
   /** An image storing the temporary uncompressed depth data. */
-  ITMShortImage_Ptr uncompressedDepthImage;
+  ORShortImage_Ptr uncompressedDepthImage;
 
 #ifdef WITH_OPENCV
   /** An OpenCV image storing the temporary uncompressed depth data. */
@@ -42,7 +43,7 @@ struct RGBDFrameCompressor::Impl
 #endif
 
   /** An image storing the temporary uncompressed RGB data. */
-  ITMUChar4Image_Ptr uncompressedRgbImage;
+  ORUChar4Image_Ptr uncompressedRgbImage;
 
 #ifdef WITH_OPENCV
   /** An OpenCV image storing the temporary uncompressed RGB data. */
@@ -64,7 +65,7 @@ RGBDFrameCompressor::RGBDFrameCompressor(const Vector2i& rgbImageSize, const Vec
 
   // If we're using the PNG compression from OpenCV to compress depth images, allocate a temporary OpenCV image accordingly.
   // The format of this image needs to be CV_16U to properly encode a depth image as PNG. We will use convertTo to fill
-  // this image from an ITMShortImage.
+  // this image from an ORShortImage.
   if(depthCompressionType == DEPTH_COMPRESSION_PNG)
   {
 #ifdef WITH_OPENCV
