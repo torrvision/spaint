@@ -83,11 +83,11 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
 
   // Read the results back in from the output file.
   float cost = std::numeric_limits<float>::max();
-  float relocWeightedAverage, icpWeightedAverage, trainingMicroseconds, relocalisationMicroseconds, updateMicroseconds;
+  float relocLoss, icpLoss, trainingMicroseconds, relocalisationMicroseconds, updateMicroseconds;
 
   {
     std::ifstream fs(outputPath.string().c_str());
-    fs >> relocWeightedAverage >> icpWeightedAverage >> trainingMicroseconds >> relocalisationMicroseconds >> updateMicroseconds;
+    fs >> relocLoss >> icpLoss >> trainingMicroseconds >> relocalisationMicroseconds >> updateMicroseconds;
 
     // If the reads were successful, compute the cost.
     if(fs)
@@ -100,11 +100,11 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
 //      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
       static const bool useRelocAverage = false; // We want to evaluate the relocalisation results AFTER ICP.
 
-      // We need to negate the values because the optimiser tries to *minimise* the cost.
-      cost = useRelocAverage ? -relocWeightedAverage : -icpWeightedAverage;
+      // Use the appropriate loss value.
+      cost = useRelocAverage ? relocLoss : icpLoss;
 
       // If we ran past the computation budget, penalize the cost.
-      // Normally the cost would range [-100,0], this change makes the cost for a "slow" variant of the algorithm range [0,100].
+      // Normally the cost would range [0,num_sequences], this change makes the cost for a "slow" variant of the algorithm range [100,100+num_sequences].
       if(trainingMicroseconds > maxTrainingTime || relocalisationMicroseconds > maxRelocalisationTime || updateMicroseconds > maxUpdateTime)
       {
         cost += 100.0f;
@@ -115,8 +115,8 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
   std::ofstream logStream(args.logPath.c_str(), std::ios::app);
   logStream << cost << ';'
             << elapsedSeconds << ';'
-            << relocWeightedAverage << ';'
-            << icpWeightedAverage << ';'
+            << relocLoss << ';'
+            << icpLoss << ';'
             << trainingMicroseconds << ';'
             << relocalisationMicroseconds << ';'
             << updateMicroseconds << ';'

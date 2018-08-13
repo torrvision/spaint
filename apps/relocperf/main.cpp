@@ -538,6 +538,10 @@ int main(int argc, char *argv[])
   float relocRawSum = 0.f;
   float icpRawSum = 0.f;
   float finalRawSum = 0.f;
+
+  float relocLoss = 0.0f;
+  float icpLoss = 0.0f;
+
   int poseCount = 0;
 
   for(const auto &sequence : sequenceNames)
@@ -556,6 +560,10 @@ int main(int argc, char *argv[])
     relocRawSum += static_cast<float>(seqResult.validPosesAfterReloc);
     icpRawSum += static_cast<float>(seqResult.validPosesAfterICP);
     finalRawSum += static_cast<float>(seqResult.validFinalPoses);
+
+    relocLoss += std::isfinite(relocPct) ? std::pow(1.0f - relocPct, 2) : 1.0f;
+    icpLoss += std::isfinite(icpPct) ? std::pow(1.0f - icpPct, 2) : 1.0f;
+
     poseCount += seqResult.poseCount;
   }
 
@@ -585,7 +593,7 @@ int main(int argc, char *argv[])
   // Print the weighted averages for the parameter search algorithm.
   if(useValidation)
   {
-    std::cout << relocWeightedAvg << ' ' << icpWeightedAvg << '\n';
+    std::cout << std::defaultfloat << relocLoss << ' ' << icpLoss << '\n';
   }
 
   // Save results of online training-relocalization
