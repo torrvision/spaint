@@ -6,8 +6,6 @@
 #ifndef H_GROVE_PREEMPTIVERANSAC
 #define H_GROVE_PREEMPTIVERANSAC
 
-#include <alglib/optimization.h>
-
 #include <boost/optional.hpp>
 
 #include <ORUtils/SE3Pose.h>
@@ -21,6 +19,14 @@
 #include "../shared/PoseCandidate.h"
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../scoreforests/ScorePrediction.h"
+
+/**
+ * \brief Forward declare some classes to avoid including Alglib's header here, since that causes NVCC to emit warnings when compiling the PreemptiveRansac_CUDA subclass.
+ */
+namespace alglib {
+  class real_1d_array;
+  class real_2d_array;
+}
 
 namespace grove {
 

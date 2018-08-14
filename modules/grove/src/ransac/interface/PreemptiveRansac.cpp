@@ -9,6 +9,8 @@ using namespace tvgutil;
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
+#include <alglib/optimization.h>
+
 #include <Eigen/Dense>
 
 #ifdef WITH_OPENMP
