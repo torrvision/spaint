@@ -9,6 +9,8 @@ using namespace tvgutil;
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
+#include <alglib/optimization.h>
+
 #include <Eigen/Dense>
 
 #ifdef WITH_OPENMP
@@ -29,11 +31,11 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
-: m_poseCandidatesAfterCull(0),
-  m_timerCandidateGeneration("Candidate Generation"),
+: m_timerCandidateGeneration("Candidate Generation"),
   m_timerFirstComputeEnergy("First Energy Computation"),
   m_timerFirstTrim("First Trim"),
   m_timerTotal("P-RANSAC Total"),
+  m_poseCandidatesAfterCull(0),
   m_settings(settings)
 {
   const std::string settingsNamespace = "PreemptiveRansac.";
