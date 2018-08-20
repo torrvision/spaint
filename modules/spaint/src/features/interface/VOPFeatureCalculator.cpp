@@ -7,8 +7,8 @@
 
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
-#endif
 using namespace itmx;
+#endif
 
 #include <orx/base/MemoryBlockFactory.h>
 using namespace orx;
