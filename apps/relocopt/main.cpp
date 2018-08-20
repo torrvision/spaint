@@ -94,11 +94,11 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
     {
       // The maximum times depend on the GPU (the following values assume a Titan X is used).
       static const float maxTrainingTime = 10000; // 10ms
-      static const float maxRelocalisationTime = 120000; // 120ms
+      static const float maxRelocalisationTime = 200000; // 200ms
       static const float maxUpdateTime = 10000; // 10ms (we don't really care too much about it).
 
-//      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
-      static const bool useRelocAverage = false; // We want to evaluate the relocalisation results AFTER ICP.
+      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
+//      static const bool useRelocAverage = false; // We want to evaluate the relocalisation results AFTER ICP.
 
       // Use the appropriate loss value.
       cost = useRelocAverage ? relocLoss : icpLoss;
@@ -211,11 +211,11 @@ try
   optimiser.add_param("PreemptiveRansac.usePredictionCovarianceForPoseOptimization", list_of<bool>(false)(true));
 
   // Relocaliser parameters.
-//  optimiser.add_param("ScoreRelocaliser.clustererSigma", list_of<float>(0.05f)(0.1f)(0.2f));
-//  optimiser.add_param("ScoreRelocaliser.clustererTau", list_of<float>(0.05f)(0.1f)(0.2f));
-//  optimiser.add_param("ScoreRelocaliser.maxClusterCount", list_of<int>(5)(10)(25)(50));
-//  optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
-//  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
+  optimiser.add_param("ScoreRelocaliser.clustererSigma", list_of<float>(0.05f)(0.1f)(0.2f));
+  optimiser.add_param("ScoreRelocaliser.clustererTau", list_of<float>(0.05f)(0.1f)(0.2f));
+  optimiser.add_param("ScoreRelocaliser.maxClusterCount", list_of<int>(5)(10)(25)(50));
+  optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
+  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
 
   // Print header in the log file.
   {
