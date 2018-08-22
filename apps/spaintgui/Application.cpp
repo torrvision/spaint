@@ -977,11 +977,11 @@ void Application::save_mesh() const
       mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
     }
 
-    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".obj");
+    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".ply");
 
     // Save the mesh to disk.
     std::cout << "Saving mesh to: " << meshPath << '\n';
-    mesh->WriteOBJ(meshPath.string().c_str());
+    mesh->WritePLY(meshPath.string().c_str());
   }
 }
 
