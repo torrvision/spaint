@@ -80,7 +80,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 #endif
 
   // Set up the remaining timers.
-  const int maxRansacIterations = static_cast<int>(log2(m_maxPoseCandidatesAfterCull));
+  const int maxRansacIterations = static_cast<int>(ceil(log2(m_maxPoseCandidatesAfterCull)));
   for(int i = 1; i <= maxRansacIterations; ++i)
   {
     m_timerInlierSampling.push_back(AverageTimer("Inlier Sampling " + boost::lexical_cast<std::string>(i)));
