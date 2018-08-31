@@ -451,11 +451,14 @@ void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMScen
 
   // Use the default values from InfiniTAM.
   GET_PARAM(int, maxW, 100);
-  GET_PARAM(float, mu, 0.02f);
+//  GET_PARAM(float, mu, 0.02f);
   GET_PARAM(bool, stopIntegratingAtMaxW, false);
   GET_PARAM(float, viewFrustum_max, 3.0f);
   GET_PARAM(float, viewFrustum_min, 0.2f);
   GET_PARAM(float, voxelSize, 0.005f);
+
+  // For the optimisation.
+  GET_PARAM(float, mu, sceneParams.voxelSize * 6.0f);
 
 #undef GET_PARAM
 }
