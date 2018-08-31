@@ -458,7 +458,8 @@ void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMScen
   GET_PARAM(float, voxelSize, 0.005f);
 
   // For the optimisation.
-  GET_PARAM(float, mu, sceneParams.voxelSize * 6.0f);
+  GET_PARAM(float, mu, 4.0f);
+  sceneParams.mu *= sceneParams.voxelSize;
 
 #undef GET_PARAM
 }

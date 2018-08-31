@@ -76,15 +76,16 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
 
   float elapsedSeconds = bc::duration_cast<bc::seconds>(bc::nanoseconds(timer.elapsed().system + timer.elapsed().user)).count();
 
-  if(exitCode)
-  {
-    throw std::runtime_error("System call failed. Terminating evaluation.");
-  }
-
-  // Read the results back in from the output file.
+  // Initialise the evaluation variables.
   float cost = std::numeric_limits<float>::max();
-  float relocLoss, icpLoss, trainingMicroseconds, relocalisationMicroseconds, updateMicroseconds;
+  float relocLoss = std::numeric_limits<float>::quiet_NaN();
+  float icpLoss = std::numeric_limits<float>::quiet_NaN();
+  float trainingMicroseconds = std::numeric_limits<float>::quiet_NaN();
+  float relocalisationMicroseconds = std::numeric_limits<float>::quiet_NaN();
+  float updateMicroseconds = std::numeric_limits<float>::quiet_NaN();
 
+  // If the call succeeded, read the results back in from the output file.
+  if(!exitCode)
   {
     std::ifstream fs(outputPath.string().c_str());
     fs >> relocLoss >> icpLoss >> trainingMicroseconds >> relocalisationMicroseconds >> updateMicroseconds;
@@ -110,6 +111,10 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
         cost += 100.0f;
       }
     }
+  }
+  else
+  {
+      std::cout << "System call failed. Skipping this set of parameters.\n";
   }
 
   std::ofstream logStream(args.logPath.c_str(), std::ios::app);
@@ -201,6 +206,7 @@ try
   CoordinateDescentParameterOptimiser optimiser(boost::bind(grove_cost_fn, args, _1), epochCount, seed);
 
   // Scene parameters.
+  optimiser.add_param("SceneParams.mu", list_of<float>(2.0f)(4.0f)(6.0f)(8.0f)(10.0f)); // It's a multiplicative coefficient applied to the voxelSize, requires a change in the main spaintgui app at the moment.
   optimiser.add_param("SceneParams.voxelSize", list_of<float>(0.005f)(0.010f)(0.015f)(0.020f)(0.025f)(0.030f)(0.040f)(0.050f));
   optimiser.add_param("SceneParams.viewFrustum_max", list_of<float>(2.0f)(3.0f)(4.0f)(5.0f)(7.5f)(10.0f)(15.0f));
 
