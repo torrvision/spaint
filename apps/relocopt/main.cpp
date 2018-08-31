@@ -76,16 +76,15 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
 
   float elapsedSeconds = bc::duration_cast<bc::seconds>(bc::nanoseconds(timer.elapsed().system + timer.elapsed().user)).count();
 
-  // Initialise the evaluation variables.
-  float cost = std::numeric_limits<float>::max();
-  float relocLoss = std::numeric_limits<float>::quiet_NaN();
-  float icpLoss = std::numeric_limits<float>::quiet_NaN();
-  float trainingMicroseconds = std::numeric_limits<float>::quiet_NaN();
-  float relocalisationMicroseconds = std::numeric_limits<float>::quiet_NaN();
-  float updateMicroseconds = std::numeric_limits<float>::quiet_NaN();
+  if(exitCode)
+  {
+    throw std::runtime_error("System call failed. Terminating evaluation.");
+  }
 
-  // If the call succeeded, read the results back in from the output file.
-  if(!exitCode)
+  // Read the results back in from the output file.
+  float cost = std::numeric_limits<float>::max();
+  float relocLoss, icpLoss, trainingMicroseconds, relocalisationMicroseconds, updateMicroseconds;
+
   {
     std::ifstream fs(outputPath.string().c_str());
     fs >> relocLoss >> icpLoss >> trainingMicroseconds >> relocalisationMicroseconds >> updateMicroseconds;
@@ -111,10 +110,6 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
         cost += 100.0f;
       }
     }
-  }
-  else
-  {
-      std::cout << "System call failed. Skipping this set of parameters.\n";
   }
 
   std::ofstream logStream(args.logPath.c_str(), std::ios::app);
