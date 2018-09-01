@@ -20,11 +20,7 @@
 
 namespace tvgutil {
 
-namespace Server_NS {
-
-//#################### USING DECLARATIONS ####################
-
-using boost::asio::ip::tcp;
+//#################### HELPER TYPES ####################
 
 /**
  * \brief An instance of this struct represents a basic client that has no data associated with it.
@@ -37,6 +33,12 @@ struct DefaultClient
   boost::shared_ptr<boost::thread> m_thread;
 };
 
+namespace Server_NS {
+
+//#################### USING DECLARATIONS ####################
+
+using boost::asio::ip::tcp;
+
 //#################### MAIN TYPE ####################
 
 /**
@@ -45,6 +47,11 @@ struct DefaultClient
 template <typename ClientType = DefaultClient>
 class Server
 {
+  //#################### TYPEDEFS ####################
+protected:
+  typedef ClientType Client;
+  typedef boost::shared_ptr<Client> Client_Ptr;
+
   //#################### ENUMERATIONS ####################
 public:
   /** The values of this enumeration can be used to specify the mode in which the server should run. */
@@ -56,10 +63,6 @@ public:
     /** The server will only accept a single client. */
     SM_SINGLE_CLIENT
   };
-
-  //#################### NESTED TYPES ####################
-private:
-  typedef boost::shared_ptr<ClientType> Client_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -250,7 +253,7 @@ private:
     // If a client successfully connects, start a thread for it and add an entry to the clients map.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    Client_Ptr client(new ClientType);
+    Client_Ptr client(new Client);
     boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, m_nextClientID, client, sock)));
     client->m_thread = clientThread;
     ++m_nextClientID;

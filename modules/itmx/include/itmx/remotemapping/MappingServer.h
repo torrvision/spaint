@@ -18,126 +18,66 @@
 
 #include <tvgutil/boost/WrappedAsio.h>
 #include <tvgutil/containers/PooledQueue.h>
+#include <tvgutil/net/Server.h>
 
 #include "RGBDFrameMessage.h"
 
 namespace itmx {
 
 /**
+ * \brief An instance of this struct contains all of the information associated with an individual client of a mapping server.
+ */
+struct MappingServerClient : tvgutil::DefaultClient
+{
+  //#################### TYPEDEFS ####################
+
+  typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
+  typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
+
+  //#################### PUBLIC VARIABLES ####################
+
+  /** The calibration parameters of the camera associated with the client. */
+  ITMLib::ITMRGBDCalib m_calib;
+
+  /** A queue containing the RGB-D frame messages received from the client. */
+  RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
+
+  /** A flag indicating whether or not the images associated with the first message in the queue have already been read. */
+  bool m_imagesDirty;
+
+  /** A flag indicating whether or not the pose associated with the first message in the queue has already been read. */
+  bool m_poseDirty;
+
+  //#################### CONSTRUCTORS ####################
+
+  MappingServerClient()
+  : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
+    m_imagesDirty(false),
+    m_poseDirty(false)
+  {}
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+  const Vector2i& get_depth_image_size() const
+  {
+    return m_calib.intrinsics_d.imgSize;
+  }
+
+  const Vector2i& get_rgb_image_size() const
+  {
+    return m_calib.intrinsics_rgb.imgSize;
+  }
+};
+
+/**
  * \brief An instance of this class represents a server that can be used to communicate with remote mapping clients.
  */
-class MappingServer
+class MappingServer : public tvgutil::Server<MappingServerClient>
 {
   //#################### TYPEDEFS ####################
 private:
   typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
   typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
-
-  //#################### ENUMERATIONS ####################
-public:
-  /** The values of this enumeration can be used to specify the mode in which the mapping server should run. */
-  enum Mode
-  {
-    /** The mapping server will accept multiple clients. */
-    MSM_MULTI_CLIENT,
-
-    /** The mapping server will only accept a single client. */
-    MSM_SINGLE_CLIENT
-  };
-
-  //#################### NESTED TYPES ####################
-private:
-  /**
-   * \brief An instance of this struct contains all of the information associated with an individual client.
-   */
-  struct Client
-  {
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
-
-    /** The calibration parameters of the camera associated with the client. */
-    ITMLib::ITMRGBDCalib m_calib;
-
-    /** A queue containing the RGB-D frame messages received from the client. */
-    RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
-
-    /** A flag indicating whether or not the images associated with the first message in the queue have already been read. */
-    bool m_imagesDirty;
-
-    /** A flag indicating whether or not the pose associated with the first message in the queue has already been read. */
-    bool m_poseDirty;
-
-    /** The thread that manages communication with the client. */
-    boost::shared_ptr<boost::thread> m_thread;
-
-    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-
-    Client()
-    : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
-      m_imagesDirty(false),
-      m_poseDirty(false)
-    {}
-
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
-
-    const Vector2i& get_depth_image_size() const
-    {
-      return m_calib.intrinsics_d.imgSize;
-    }
-
-    const Vector2i& get_rgb_image_size() const
-    {
-      return m_calib.intrinsics_rgb.imgSize;
-    }
-  };
-
-  typedef boost::shared_ptr<Client> Client_Ptr;
-
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** The server's TCP acceptor. */
-  boost::shared_ptr<boost::asio::ip::tcp::acceptor> m_acceptor;
-
-  /** A thread that keeps the map of clients clean by removing any clients that have terminated. */
-  boost::shared_ptr<boost::thread> m_cleanerThread;
-
-  /** A condition variable used to wait until a client thread is ready to start reading frame messages. */
-  mutable boost::condition_variable m_clientReady;
-
-  /** A condition variable used to wait for finished client threads that need to be cleaned up. */
-  boost::condition_variable m_clientsHaveFinished;
-
-  /** The currently active clients. */
-  std::map<int,Client_Ptr> m_clients;
-
-  /** The set of clients that have finished. */
-  std::set<int> m_finishedClients;
-
-  /** The server's I/O service. */
-  boost::asio::io_service m_ioService;
-
-  /** The mode in which the server should run. */
-  Mode m_mode;
-
-  /** The mutex used to control client creation/deletion. */
-  mutable boost::mutex m_mutex;
-
-  /** The ID to give the next client to connect. */
-  int m_nextClientID;
-
-  /** The port on which the server should listen for connections. */
-  int m_port;
-
-  /** The server thread. */
-  boost::shared_ptr<boost::thread> m_serverThread;
-
-  /** Whether or not the mapping server should terminate. */
-  boost::atomic<bool> m_shouldTerminate;
-
-  /** The set of clients that have finished but have not yet been removed from the clients map. */
-  std::set<int> m_uncleanClients;
-
-  /** A worker variable used to keep the I/O service running until we want it to stop. */
-  boost::shared_ptr<boost::asio::io_service::work> m_worker;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -147,24 +87,10 @@ public:
    * \param mode  The mode in which the server should run.
    * \param port  The port on which the server should listen for connections.
    */
-  explicit MappingServer(Mode mode = MSM_MULTI_CLIENT, int port = 7851);
-
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destroys the mapping server.
-   */
-  ~MappingServer();
+  explicit MappingServer(Mode mode = SM_MULTI_CLIENT, int port = 7851);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets the IDs of the clients that are currently active.
-   *
-   * \return  The IDs of the clients that are currently active.
-   */
-  std::vector<int> get_active_clients() const;
-
   /**
    * \brief Attempts to get the calibration parameters of the camera associated with the specified client.
    *
@@ -267,15 +193,6 @@ private:
   Client_Ptr get_client(int clientID) const;
 
   /**
-   * \brief Handles messages from a client.
-   *
-   * \param clientID  The ID of the client.
-   * \param client    The client itself.
-   * \param socket    The TCP socket associated with the client.
-   */
-  void handle_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
-
-  /**
    * \brief Attempts to read a message of type T from the specified socket.
    *
    * This will block until either the read succeeds, an error occurs or the server terminates.
@@ -306,10 +223,16 @@ private:
    */
   void run_cleaner();
 
+  /** Override */
+  virtual void run_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+
   /**
    * \brief Runs the mapping server.
    */
   void run_server();
+
+  /** Override */
+  virtual void setup_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 
   /**
    * \brief Attempts to write a message of type T on the specified socket.
