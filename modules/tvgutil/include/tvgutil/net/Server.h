@@ -362,7 +362,7 @@ private:
     std::cout << "Starting client: " << clientID << '\n';
 
     // Run the pre-loop code for the client.
-    handle_client_pre();
+    handle_client_pre(clientID, client, sock);
 
     // Add the client to the map of active clients.
     {
@@ -379,11 +379,11 @@ private:
     // Run the main loop for the client. Loop until either (a) the connection drops, or (b) the server itself is terminating.
     while(client->m_connectionOk && !m_shouldTerminate)
     {
-      handle_client_main();
+      handle_client_main(clientID, client, sock);
     }
 
     // Run the post-loop hook for the client.
-    handle_client_post();
+    handle_client_post(clientID, client, sock);
 
     // Once the client's finished, add it to the finished clients set so that it can be cleaned up.
     {
