@@ -77,10 +77,6 @@ include/tvgutil/misc/ThreadPool.h
 )
 
 ##
-SET(net_sources
-src/net/Server.cpp
-)
-
 SET(net_headers
 include/tvgutil/net/Server.h
 )
@@ -128,7 +124,6 @@ SET(sources
 ${commands_sources}
 ${filesystem_sources}
 ${misc_sources}
-${net_sources}
 ${numbers_sources}
 ${persistence_sources}
 )
@@ -155,7 +150,7 @@ SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(containers FILES ${containers_headers})
 SOURCE_GROUP(filesystem FILES ${filesystem_sources} ${filesystem_headers})
 SOURCE_GROUP(misc FILES ${misc_sources} ${misc_headers})
-SOURCE_GROUP(net FILES ${net_sources} ${net_headers})
+SOURCE_GROUP(net FILES ${net_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(statistics FILES ${statistics_headers})
