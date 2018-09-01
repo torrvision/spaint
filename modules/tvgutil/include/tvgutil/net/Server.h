@@ -139,12 +139,18 @@ private:
   /**
    * \brief TODO
    */
-  virtual void run_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock) = 0;
+  virtual void run_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+  {
+    // No-op by default
+  }
 
   /**
    * \brief TODO
    */
-  virtual void setup_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock) = 0;
+  virtual void setup_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+  {
+    // No-op by default
+  }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -283,38 +289,8 @@ private:
   {
     std::cout << "Starting client: " << clientID << '\n';
 
-#if 0
-    // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
-    RGBDCalibrationMessage calibMsg;
-    bool connectionOk = read_message(sock, calibMsg);
-#if DEBUGGING
-    std::cout << "Received calibration message from client: " << clientID << std::endl;
-#endif
-
-    // If the calibration message was successfully read:
-    RGBDFrameCompressor_Ptr frameCompressor;
-    RGBDFrameMessage_Ptr dummyFrameMsg;
-    if(connectionOk)
-    {
-      // Save the calibration parameters.
-      client->m_calib = calibMsg.extract_calib();
-
-      // Initialise the frame message queue.
-      const size_t capacity = 5;
-      const Vector2i& rgbImageSize = client->get_rgb_image_size();
-      const Vector2i& depthImageSize = client->get_depth_image_size();
-      client->m_frameMessageQueue->initialise(capacity, boost::bind(&RGBDFrameMessage::make, rgbImageSize, depthImageSize));
-
-      // Set up the frame compressor.
-      frameCompressor.reset(new RGBDFrameCompressor(rgbImageSize, depthImageSize, calibMsg.extract_rgb_compression_type(), calibMsg.extract_depth_compression_type()));
-
-      // Construct a dummy frame message to consume messages that cannot be pushed onto the queue.
-      dummyFrameMsg.reset(new RGBDFrameMessage(rgbImageSize, depthImageSize));
-
-      // Signal to the client that the server is ready.
-      connectionOk = write_message(sock, AckMessage());
-    }
-#endif
+    // Set up the client.
+    setup_client_hook();
 
     // Add the client to the map of active clients.
     {
@@ -328,53 +304,10 @@ private:
 #endif
     m_clientReady.notify_one();
 
-#if 0
-    // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
-    CompressedRGBDFrameHeaderMessage headerMsg;
-    CompressedRGBDFrameMessage frameMsg(headerMsg);
-    while(connectionOk && !m_shouldTerminate)
-    {
-#if DEBUGGING
-      std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
-#endif
+    // Run the main loop for the client.
+    run_client_hook();
 
-      RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
-      boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-      RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
-
-      // First, try to read a frame header message.
-      if((connectionOk = read_message(sock, headerMsg)))
-      {
-        // If that succeeds, set up the frame message accordingly.
-        frameMsg.set_compressed_image_sizes(headerMsg);
-
-        // Now, read the frame message itself.
-        if((connectionOk = read_message(sock, frameMsg)))
-        {
-          // If that succeeds, uncompress the images and send an acknowledgement to the client.
-          frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
-          connectionOk = write_message(sock, AckMessage());
-
-#if DEBUGGING
-          std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
-
-#ifdef WITH_OPENCV
-          static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->m_rgbImageSize, true, false));
-          msg.extract_rgb_image(rgbImage.get());
-          cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
-          cv::imshow("RGB", cvRGB);
-          cv::waitKey(1);
-#endif
-#endif
-        }
-      }
-    }
-
-    // Destroy the frame compressor prior to stopping the client (this cleanly deallocates CUDA memory and avoids a crash on exit).
-    frameCompressor.reset();
-#endif
-
-    // Once we've finished reading messages, add the client to the finished clients set so that it can be cleaned up.
+    // Once the client's finished, add it to the finished clients set so that it can be cleaned up.
     {
       boost::lock_guard<boost::mutex> lock(m_mutex);
       std::cout << "Stopping client: " << clientID << '\n';
