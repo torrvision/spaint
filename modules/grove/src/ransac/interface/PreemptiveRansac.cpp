@@ -6,6 +6,8 @@
 #include "ransac/interface/PreemptiveRansac.h"
 using namespace tvgutil;
 
+#include <alglib/optimization.h>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
@@ -29,11 +31,11 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
-: m_poseCandidatesAfterCull(0),
-  m_timerCandidateGeneration("Candidate Generation"),
+: m_timerCandidateGeneration("Candidate Generation"),
   m_timerFirstComputeEnergy("First Energy Computation"),
   m_timerFirstTrim("First Trim"),
   m_timerTotal("P-RANSAC Total"),
+  m_poseCandidatesAfterCull(0),
   m_settings(settings)
 {
   const std::string settingsNamespace = "PreemptiveRansac.";
@@ -78,7 +80,8 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 #endif
 
   // Set up the remaining timers.
-  for(int i = 1; i <= 6; ++i)
+  const int maxRansacIterations = static_cast<int>(ceil(log2(m_maxPoseCandidatesAfterCull)));
+  for(int i = 1; i <= maxRansacIterations; ++i)
   {
     m_timerInlierSampling.push_back(AverageTimer("Inlier Sampling " + boost::lexical_cast<std::string>(i)));
     m_timerPrepareOptimisation.push_back(AverageTimer("Prepare Optimisation " + boost::lexical_cast<std::string>(i)));
