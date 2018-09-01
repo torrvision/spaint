@@ -55,7 +55,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
   m_relocaliserTrainingCount(0),
-  m_relocaliserTrainingSkipFrames(0),
+  m_relocaliserTrainingSkip(0),
   m_sceneID(sceneID),
   m_trackerConfig(trackerConfig),
   m_trackingMode(trackingMode)
@@ -474,13 +474,15 @@ void SLAMComponent::process_relocalisation()
   // Save the current pose in case we need to restore it later.
   const SE3Pose oldPose(*trackingState->pose_d);
 
-  // Train if m_relocaliseEveryFrame is true OR (the tracking succeeded AND we don't have to skip the current frame).
-  const bool performTraining = m_relocaliseEveryFrame ||
-      (
-       trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD
-       &&
-       (m_relocaliserTrainingSkipFrames == 0 || (m_relocaliserTrainingCount++ % m_relocaliserTrainingSkipFrames == 0))
-      );
+  // Decide whether or not to perform training in this frame. We train iff either of the following is true:
+  // - Relocalising every frame is enabled
+  // - The tracking succeeded and the current frame is not one we should skip
+  const bool performTraining =
+    m_relocaliseEveryFrame ||
+    (
+      trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD &&
+      (m_relocaliserTrainingSkip == 0 || (m_relocaliserTrainingCount++ % m_relocaliserTrainingSkip == 0))
+    );
 
   // If we're not training in this frame, allow the relocaliser to perform any necessary internal bookkeeping.
   // Note that we prevent training and bookkeeping from both running in the same frame for performance reasons.
@@ -533,6 +535,7 @@ void SLAMComponent::setup_relocaliser()
   static const std::string settingsNamespace = "SLAMComponent.";
   m_finishTrainingEnabled = settings->get_first_value<bool>(settingsNamespace + "finishTrainingEnabled", false);
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
+  m_relocaliserTrainingSkip = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkip", 0);
 
 #ifndef WITH_GROVE
   // If the user is trying to use the Grove relocaliser and it has not been built, fall back to the ferns relocaliser and issue a warning.
@@ -597,9 +600,6 @@ void SLAMComponent::setup_relocaliser()
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
     innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
   ));
-
-  // Finally, set the number of frames to skip betwenn calls to the train method.
-  m_relocaliserTrainingSkipFrames = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkipFrames", 0);
 }
 
 void SLAMComponent::setup_tracker()

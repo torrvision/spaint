@@ -993,11 +993,11 @@ void Application::save_mesh() const
       mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
     }
 
-    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".obj");
+    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".ply");
 
     // Save the mesh to disk.
     std::cout << "Saving mesh to: " << meshPath << '\n';
-    mesh->WriteOBJ(meshPath.string().c_str());
+    mesh->WritePLY(meshPath.string().c_str());
   }
 }
 
@@ -1038,11 +1038,11 @@ void Application::save_sequence_frame()
   }
 
   // Save the current input images.
-  ImagePersister::save_image_on_thread(slamState->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
-  ImagePersister::save_image_on_thread(slamState->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
+  ImagePersister::save_image_on_thread(slamState->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("frame-%06i.depth.png"));
+  ImagePersister::save_image_on_thread(slamState->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("frame-%06i.color.png"));
 
   // Save the inverse pose (i.e. the camera -> world transformation).
-  PosePersister::save_pose_on_thread(slamState->get_pose().GetInvM(), m_sequencePathGenerator->make_path("posem%06i.txt"));
+  PosePersister::save_pose_on_thread(slamState->get_pose().GetInvM(), m_sequencePathGenerator->make_path("frame-%06i.pose.txt"));
 
   m_sequencePathGenerator->increment_index();
 }
