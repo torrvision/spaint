@@ -148,6 +148,14 @@ private:
   static ImageFileType deduce_image_file_type(const std::string& path);
 
   /**
+   * \brief Encodes a short image in PNG format and writes it into a buffer.
+   *
+   * \param image   The image to encode.
+   * \param buffer  The buffer into which to write the encoded image.
+   */
+  static void encode_png(const ORShortImage_CPtr& image, std::vector<unsigned char>& buffer);
+
+  /**
    * \brief Encodes an RGBA image in PNG format and writes it into a buffer.
    *
    * \param image   The image to encode.
