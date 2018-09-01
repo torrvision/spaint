@@ -53,6 +53,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
+  m_relocaliserTrainingCount(0),
+  m_relocaliserTrainingSkip(0),
   m_sceneID(sceneID),
   m_trackerConfig(trackerConfig),
   m_trackingMode(trackingMode)
@@ -330,6 +332,7 @@ void SLAMComponent::reset_scene()
 
   // Reset the relocaliser.
   m_context->get_relocaliser(m_sceneID)->reset();
+  m_relocaliserTrainingCount = 0;
 
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
@@ -444,16 +447,25 @@ void SLAMComponent::process_relocalisation()
   // Save the current pose in case we need to restore it later.
   const SE3Pose oldPose(*trackingState->pose_d);
 
+  // Decide whether or not to perform training in this frame. We train iff either of the following is true:
+  // - Relocalising every frame is enabled
+  // - The tracking succeeded and the current frame is not one we should skip
+  const bool performTraining =
+    m_relocaliseEveryFrame ||
+    (
+      trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD &&
+      (m_relocaliserTrainingSkip == 0 || (m_relocaliserTrainingCount++ % m_relocaliserTrainingSkip == 0))
+    );
+
   // If we're not training in this frame, allow the relocaliser to perform any necessary internal bookkeeping.
   // Note that we prevent training and bookkeeping from both running in the same frame for performance reasons.
-  const bool performTraining = trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD || m_relocaliseEveryFrame;
   if(!performTraining)
   {
     relocaliser->update();
   }
 
   // Relocalise if either (a) the tracking has failed, or (b) we're forcibly relocalising every frame for evaluation purposes.
-  const bool performRelocalisation = trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED || m_relocaliseEveryFrame;
+  const bool performRelocalisation = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED;
   if(performRelocalisation)
   {
     std::vector<Relocaliser::Result> relocalisationResults = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
@@ -495,6 +507,7 @@ void SLAMComponent::setup_relocaliser()
 
   static const std::string settingsNamespace = "SLAMComponent.";
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
+  m_relocaliserTrainingSkip = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkip", 0);
 
 #ifndef WITH_GROVE
   // If the user is trying to use the Grove relocaliser and it has not been built, fall back to the ferns relocaliser and issue a warning.
