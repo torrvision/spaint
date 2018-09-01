@@ -8,7 +8,9 @@
 #include <map>
 #include <vector>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
+using boost::assign::list_of;
 
 #include <opencv2/opencv.hpp>
 
@@ -108,8 +110,8 @@ int main(int argc, char *argv[]) try
   const std::string testingFolderName = "test";
 
   // Dataset-specific informations.
-  std::vector<std::string> sequenceNames = {"chess", "fire", "heads", "office", "pumpkin", "redkitchen", "stairs"};
-  std::vector<int> sequenceSplitLengths = {1000, 1000, 1000, 1000, 1000, 1000, 500};
+  std::vector<std::string> sequenceNames = list_of<std::string>()("chess")("fire")("heads")("office")("pumpkin")("redkitchen")("stairs");
+  std::vector<int> sequenceSplitLengths = list_of<int>(1000)(1000)(1000)(1000)(1000)(1000)(500);
 
   std::map<std::string, std::vector<std::string> > trainingSplits;
   std::map<std::string, std::vector<std::string> > testingSplits;
