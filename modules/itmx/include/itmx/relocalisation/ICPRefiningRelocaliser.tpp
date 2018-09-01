@@ -9,6 +9,8 @@
 #include <stdexcept>
 
 #include <ITMLib/Core/ITMTrackingController.h>
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 
 #include <orx/base/ORImagePtrTypes.h>
@@ -33,8 +35,7 @@ template <typename VoxelType, typename IndexType>
 ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                                                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                                     const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
-                                                                    const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
-                                                                    const VisualisationEngine_CPtr& visualisationEngine)
+                                                                    const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings)
 : RefiningRelocaliser(innerRelocaliser),
   m_denseVoxelMapper(denseVoxelMapper),
   m_depthVisualiser(DepthVisualiserFactory::make_depth_visualiser(settings->deviceType)),
@@ -44,7 +45,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   m_timerTraining("Training"),
   m_timerUpdate("Update"),
   m_tracker(tracker),
-  m_visualisationEngine(visualisationEngine)
+  m_visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType,IndexType>(settings->deviceType))
 {
   // Construct the tracking controller, tracking state and view.
   m_trackingController.reset(new ITMLib::ITMTrackingController(m_tracker.get(), m_settings.get()));
