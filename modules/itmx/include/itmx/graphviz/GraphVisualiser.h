@@ -10,7 +10,7 @@
 #include <boost/thread.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
 
 namespace itmx {
 

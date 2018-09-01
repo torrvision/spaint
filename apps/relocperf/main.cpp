@@ -210,53 +210,55 @@ bool pose_file_matches(const Eigen::Matrix4f &gtPose,
  */
 struct SequenceResults
 {
+  //#################### PUBLIC VARIABLES ####################
+
   /** The number of poses in the sequence. */
-  int poseCount{0};
+  int poseCount;
 
   /** The number of frames successfully relocalised. */
-  int validPosesAfterReloc{0};
+  int validPosesAfterReloc;
 
   /** The number of frames successfully relocalised after a round of ICP. */
-  int validPosesAfterICP{0};
+  int validPosesAfterICP;
 
   /** The number of frames successfully relocalised after a round of ICP+SVM. */
-  int validFinalPoses{0};
+  int validFinalPoses;
 
   /** The sum of translational errors in the sequence, used to compute the average. */
-  float sumRelocalisationTranslationalError{0};
+  float sumRelocalisationTranslationalError;
 
   /** The sum of angular errors in the sequence, used to compute the average. */
-  float sumRelocalisationAngleError{0};
+  float sumRelocalisationAngleError;
 
   /** The sum of translational errors in the sequence, for successful relocalisations. Used to compute the average. */
-  float sumRelocalisationSuccessfulTranslationalError{0};
+  float sumRelocalisationSuccessfulTranslationalError;
 
   /** The sum of angular errors in the sequence, for successful relocalisations. Used to compute the average. */
-  float sumRelocalisationSuccessfulAngleError{0};
+  float sumRelocalisationSuccessfulAngleError;
 
   /** The sum of translational errors in the sequence, for failed relocalisations. Used to compute the average. */
-  float sumRelocalisationFailedTranslationalError{0};
+  float sumRelocalisationFailedTranslationalError;
 
   /** The sum of angular errors in the sequence, for failed relocalisations. Used to compute the average. */
-  float sumRelocalisationFailedAngleError{0};
+  float sumRelocalisationFailedAngleError;
 
   /** The median angle error for the sequence. */
-  float medianRelocalisationAngle{0};
+  float medianRelocalisationAngle;
 
   /** The median translation error for the sequence. */
-  float medianRelocalisationTranslation{0};
+  float medianRelocalisationTranslation;
 
   /** The median of the finite angle error for the sequence. */
-  float medianFiniteRelocalisationAngle{0};
+  float medianFiniteRelocalisationAngle;
 
   /** The median of the finite translation error for the sequence. */
-  float medianFiniteRelocalisationTranslation{0};
+  float medianFiniteRelocalisationTranslation;
 
   /** The median angle error for the sequence, computed after ICP. */
-  float medianICPAngle{0};
+  float medianICPAngle;
 
   /** The median translation error for the sequence, computed after ICP. */
-  float medianICPTranslation{0};
+  float medianICPTranslation;
 
   /** The sequence of relocalisation results. Same element count as poseCount. */
   std::vector<bool> relocalizationResults;
@@ -278,6 +280,41 @@ struct SequenceResults
 
   /** The sequence of translational errors after ICP. */
   std::vector<float> icpTranslationalErrors;
+
+  //#################### CONSTRUCTORS ####################
+
+  SequenceResults()
+  : poseCount(0),
+    validPosesAfterReloc(0),
+    validPosesAfterICP(0),
+    validFinalPoses(0),
+    sumRelocalisationTranslationalError(0),
+    sumRelocalisationAngleError(0),
+    sumRelocalisationSuccessfulTranslationalError(0),
+    sumRelocalisationSuccessfulAngleError(0),
+    sumRelocalisationFailedTranslationalError(0),
+    sumRelocalisationFailedAngleError(0),
+    medianRelocalisationAngle(0),
+    medianRelocalisationTranslation(0),
+    medianFiniteRelocalisationAngle(0),
+    medianFiniteRelocalisationTranslation(0),
+    medianICPAngle(0),
+    medianICPTranslation(0)
+  {}
+};
+
+struct Comparer
+{
+  bool operator()(float a, float b) const
+  {
+    if(std::isfinite(a) && std::isfinite(b)) return a < b;
+
+    if(std::isfinite(a)) return true;
+
+    if(std::isfinite(b)) return false;
+
+    return false;
+  }
 };
 
 /**
@@ -375,22 +412,11 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
 //      }
 //  }
 
-  auto comparer = [] (float a, float b)
-  {
-      if(std::isfinite(a) && std::isfinite(b)) return a < b;
+  std::sort(angleErrors.begin(), angleErrors.end(), Comparer());
+  std::sort(translationErrors.begin(), translationErrors.end(), Comparer());
 
-      if(std::isfinite(a)) return true;
-
-      if(std::isfinite(b)) return false;
-
-      return false;
-  };
-
-  std::sort(angleErrors.begin(), angleErrors.end(), comparer);
-  std::sort(translationErrors.begin(), translationErrors.end(), comparer);
-
-  std::sort(icpAngleErrors.begin(), icpAngleErrors.end(), comparer);
-  std::sort(icpTranslationErrors.begin(), icpTranslationErrors.end(), comparer);
+  std::sort(icpAngleErrors.begin(), icpAngleErrors.end(), Comparer());
+  std::sort(icpTranslationErrors.begin(), icpTranslationErrors.end(), Comparer());
 
   if(angleErrors.size() > 0)
   {
@@ -628,7 +654,7 @@ int main(int argc, char *argv[])
       auto seqResult = results[sequence];
 
       std::string outFilename = onlineResultsFilenameStem + '_' + sequence + ".csv";
-      std::ofstream out(outFilename);
+      std::ofstream out(outFilename.c_str());
 
       // Print header
       out << "FrameIdx; FramePct; Reloc Success; Reloc Translation; Reloc Angle; Reloc Sum; Reloc Pct; ICP Success; "
