@@ -125,10 +125,7 @@ bool MappingServer::has_images_now(int clientID) const
 
 bool MappingServer::has_more_images(int clientID) const
 {
-  boost::lock_guard<boost::mutex> lock(m_mutex);
-
-  // Return whether or not the client is still active.
-  return m_finishedClients.find(clientID) == m_finishedClients.end();
+  return is_active(clientID);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

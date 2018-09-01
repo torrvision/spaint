@@ -155,110 +155,13 @@ public:
    */
   bool has_more_images(int clientID) const;
 
-  /**
-   * \brief Starts the mapping server.
-   */
-  void start();
-
-  /**
-   * \brief Gracefully terminates the mapping server.
-   */
-  void terminate();
-
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  /**
-   * \brief Accepts a client.
-   *
-   * This will block until either a client connects or the mapping server terminates.
-   */
-  void accept_client();
-
-  /**
-   * \brief The handler called when a client connects (technically, when an asynchronous accept finishes).
-   *
-   * \param sock  The socket via which to communicate with the client.
-   * \param err   The error code associated with the accept.
-   */
-  void accept_client_handler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const boost::system::error_code& err);
-
-  /**
-   * \brief Attempts to get the active client with the specified ID.
-   *
-   * If the client has not yet started, this will block.
-   *
-   * \param clientID  The ID of the client to get.
-   * \return          The client, if it exists and is active, or null if it has already finished.
-   */
-  Client_Ptr get_client(int clientID) const;
-
-  /**
-   * \brief Attempts to read a message of type T from the specified socket.
-   *
-   * This will block until either the read succeeds, an error occurs or the server terminates.
-   *
-   * \param sock  The socket from which to attempt to read the message.
-   * \param msg   The T into which to write the message, if reading succeeded.
-   * \return      true, if reading succeeded, or false otherwise.
-   */
-  template <typename T>
-  bool read_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, T& msg)
-  {
-    boost::optional<boost::system::error_code> err;
-    boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::read_message_handler, this, _1, boost::ref(err)));
-    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
-  }
-
-  /**
-   * \brief The handler called when an asynchronous read of a message finishes.
-   *
-   * \param err The error code associated with the read.
-   * \param ret A location into which to write the error code so that read_message can access it.
-   */
-  void read_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
-
-  /**
-   * \brief Keeps the map of clients clean by removing any clients that have terminated.
-   */
-  void run_cleaner();
-
   /** Override */
   virtual void run_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 
-  /**
-   * \brief Runs the mapping server.
-   */
-  void run_server();
-
   /** Override */
   virtual void setup_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
-
-  /**
-   * \brief Attempts to write a message of type T on the specified socket.
-   *
-   * This will block until either the write succeeds, an error occurs or the server terminates.
-   *
-   * \param sock  The socket to which to attempt to write the message.
-   * \param msg   The T to write.
-   * \return      true, if writing succeeded, or false otherwise.
-   */
-  template <typename T>
-  bool write_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const T& msg)
-  {
-    boost::optional<boost::system::error_code> err;
-    boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::write_message_handler, this, _1, boost::ref(err)));
-    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
-  }
-
-  /**
-   * \brief The handler called when an asynchronous write of a message finishes.
-   *
-   * \param err The error code associated with the write.
-   * \param ret A location into which to write the error code so that write_message can access it.
-   */
-  void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
 };
 
 //#################### TYPEDEFS ####################

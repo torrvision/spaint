@@ -183,6 +183,20 @@ public:
   }
 
   /**
+   * \brief Gets whether or not the specified client is currently active.
+   *
+   * \param clientID  The ID of the client to check.
+   * \return          true, if the client is currently active, or false otherwise.
+   */
+  bool is_active(int clientID) const
+  {
+    boost::lock_guard<boost::mutex> lock(m_mutex);
+
+    // Return whether or not the client is still active.
+    return m_finishedClients.find(clientID) == m_finishedClients.end();
+  }
+
+  /**
    * \brief Starts the server.
    */
   void start()
@@ -210,6 +224,66 @@ public:
 
     // Note: It's essential that we destroy the acceptor before the I/O service, or there will be a crash.
     m_acceptor.reset();
+  }
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Attempts to get the active client with the specified ID.
+   *
+   * If the client has not yet started, this will block.
+   *
+   * \param clientID  The ID of the client to get.
+   * \return          The client, if it exists and is active, or null if it has already finished.
+   */
+  Client_Ptr get_client(int clientID) const
+  {
+    boost::unique_lock<boost::mutex> lock(m_mutex);
+
+    // Wait until the client is either active or has terminated.
+    std::map<int, Client_Ptr>::const_iterator it;
+    while ((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
+    {
+      m_clientReady.wait(lock);
+    }
+
+    return it != m_clients.end() ? it->second : Client_Ptr();
+  }
+
+  /**
+   * \brief Attempts to read a message of type T from the specified socket.
+   *
+   * This will block until either the read succeeds, an error occurs or the server terminates.
+   *
+   * \param sock  The socket from which to attempt to read the message.
+   * \param msg   The T into which to write the message, if reading succeeded.
+   * \return      true, if reading succeeded, or false otherwise.
+   */
+  template <typename T>
+  bool read_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, T& msg)
+  {
+    boost::optional<boost::system::error_code> err;
+    boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::read_message_handler, this, _1, boost::ref(err)));
+    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    return m_shouldTerminate ? false : !*err;
+  }
+
+  /**
+   * \brief Attempts to write a message of type T on the specified socket.
+   *
+   * This will block until either the write succeeds, an error occurs or the server terminates.
+   *
+   * \param sock  The socket to which to attempt to write the message.
+   * \param msg   The T to write.
+   * \return      true, if writing succeeded, or false otherwise.
+   */
+  template <typename T>
+  bool write_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const T& msg)
+  {
+    boost::optional<boost::system::error_code> err;
+    boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::write_message_handler, this, _1, boost::ref(err)));
+    while (!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    return m_shouldTerminate ? false : !*err;
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -260,28 +334,6 @@ private:
   }
 
   /**
-   * \brief Attempts to get the active client with the specified ID.
-   *
-   * If the client has not yet started, this will block.
-   *
-   * \param clientID  The ID of the client to get.
-   * \return          The client, if it exists and is active, or null if it has already finished.
-   */
-  Client_Ptr get_client(int clientID) const
-  {
-    boost::unique_lock<boost::mutex> lock(m_mutex);
-
-    // Wait until the client is either active or has terminated.
-    std::map<int, Client_Ptr>::const_iterator it;
-    while ((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
-    {
-      m_clientReady.wait(lock);
-    }
-
-    return it != m_clients.end() ? it->second : Client_Ptr();
-  }
-
-  /**
    * \brief Handles messages from a client.
    *
    * \param clientID  The ID of the client.
@@ -318,24 +370,6 @@ private:
       m_uncleanClients.insert(clientID);
       m_clientsHaveFinished.notify_one();
     }
-  }
-
-  /**
-   * \brief Attempts to read a message of type T from the specified socket.
-   *
-   * This will block until either the read succeeds, an error occurs or the server terminates.
-   *
-   * \param sock  The socket from which to attempt to read the message.
-   * \param msg   The T into which to write the message, if reading succeeded.
-   * \return      true, if reading succeeded, or false otherwise.
-   */
-  template <typename T>
-  bool read_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, T& msg)
-  {
-    boost::optional<boost::system::error_code> err;
-    boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::read_message_handler, this, _1, boost::ref(err)));
-    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
   }
 
   /**
@@ -406,24 +440,6 @@ private:
 #if DEBUGGING
     std::cout << "Server thread terminating" << std::endl;
 #endif
-  }
-
-  /**
-   * \brief Attempts to write a message of type T on the specified socket.
-   *
-   * This will block until either the write succeeds, an error occurs or the server terminates.
-   *
-   * \param sock  The socket to which to attempt to write the message.
-   * \param msg   The T to write.
-   * \return      true, if writing succeeded, or false otherwise.
-   */
-  template <typename T>
-  bool write_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const T& msg)
-  {
-    boost::optional<boost::system::error_code> err;
-    boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::write_message_handler, this, _1, boost::ref(err)));
-    while (!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
   }
 
   /**
