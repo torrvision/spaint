@@ -27,10 +27,19 @@ namespace tvgutil {
  */
 struct DefaultClient
 {
-  //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+  //#################### PUBLIC VARIABLES ####################
+
+  /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
+  bool m_connectionOk;
 
   /** The thread that manages communication with the client. */
   boost::shared_ptr<boost::thread> m_thread;
+
+  //#################### CONSTRUCTORS ####################
+
+  DefaultClient()
+  : m_connectionOk(true)
+  {}
 };
 
 namespace Server_NS {
@@ -142,7 +151,7 @@ private:
   /**
    * \brief TODO
    */
-  virtual void run_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+  virtual void handle_client_main(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
   {
     // No-op by default
   }
@@ -150,7 +159,15 @@ private:
   /**
    * \brief TODO
    */
-  virtual void setup_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+  virtual void handle_client_post(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+  {
+    // No-op by default
+  }
+
+  /**
+   * \brief TODO
+   */
+  virtual void handle_client_pre(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
   {
     // No-op by default
   }
@@ -263,7 +280,7 @@ protected:
   bool read_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, T& msg)
   {
     boost::optional<boost::system::error_code> err;
-    boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::read_message_handler, this, _1, boost::ref(err)));
+    boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&Server::read_message_handler, this, _1, boost::ref(err)));
     while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     return m_shouldTerminate ? false : !*err;
   }
@@ -281,7 +298,7 @@ protected:
   bool write_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const T& msg)
   {
     boost::optional<boost::system::error_code> err;
-    boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::write_message_handler, this, _1, boost::ref(err)));
+    boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&Server::write_message_handler, this, _1, boost::ref(err)));
     while (!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     return m_shouldTerminate ? false : !*err;
   }
@@ -344,8 +361,8 @@ private:
   {
     std::cout << "Starting client: " << clientID << '\n';
 
-    // Set up the client.
-    setup_client_hook();
+    // Run the pre-loop code for the client.
+    handle_client_pre();
 
     // Add the client to the map of active clients.
     {
@@ -353,14 +370,20 @@ private:
       m_clients.insert(std::make_pair(clientID, client));
     }
 
-    // Signal to other threads that we're ready to start reading frame messages from the client.
+    // Signal to other threads that we're ready to start running the main loop for the client.
 #if DEBUGGING
     std::cout << "Client ready: " << clientID << '\n';
 #endif
     m_clientReady.notify_one();
 
-    // Run the main loop for the client.
-    run_client_hook();
+    // Run the main loop for the client. Loop until either (a) the connection drops, or (b) the server itself is terminating.
+    while(client->m_connectionOk && !m_shouldTerminate)
+    {
+      handle_client_main();
+    }
+
+    // Run the post-loop hook for the client.
+    handle_client_post();
 
     // Once the client's finished, add it to the finished clients set so that it can be cleaned up.
     {

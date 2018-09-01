@@ -39,9 +39,6 @@ struct MappingServerClient : tvgutil::DefaultClient
   /** The calibration parameters of the camera associated with the client. */
   ITMLib::ITMRGBDCalib m_calib;
 
-  /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
-  bool m_connectionOk;
-
   /** A dummy frame message to consume messages that cannot be pushed onto the queue. */
   RGBDFrameMessage_Ptr m_dummyFrameMsg;
 
@@ -50,6 +47,12 @@ struct MappingServerClient : tvgutil::DefaultClient
 
   /** A queue containing the RGB-D frame messages received from the client. */
   RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
+
+  /** A place in which to store compressed RGB-D frame messages. */
+  boost::shared_ptr<CompressedRGBDFrameMessage> m_frameMessage;
+
+  /** A place in which to store compressed RGB-D frame header messages. */
+  CompressedRGBDFrameHeaderMessage m_headerMessage;
 
   /** A flag indicating whether or not the images associated with the first message in the queue have already been read. */
   bool m_imagesDirty;
@@ -60,11 +63,12 @@ struct MappingServerClient : tvgutil::DefaultClient
   //#################### CONSTRUCTORS ####################
 
   MappingServerClient()
-  : m_connectionOk(true),
-    m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
+  : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
     m_imagesDirty(false),
     m_poseDirty(false)
-  {}
+  {
+    m_frameMessage.reset(new CompressedRGBDFrameMessage(m_headerMessage));
+  }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -168,10 +172,13 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual void run_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_client_main(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 
   /** Override */
-  virtual void setup_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_client_post(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+
+  /** Override */
+  virtual void handle_client_pre(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 };
 
 //#################### TYPEDEFS ####################

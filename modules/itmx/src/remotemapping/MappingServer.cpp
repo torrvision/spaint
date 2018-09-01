@@ -129,54 +129,52 @@ bool MappingServer::has_more_images(int clientID) const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void MappingServer::run_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
+void MappingServer::handle_client_main(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
-  // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
-  CompressedRGBDFrameHeaderMessage headerMsg;
-  CompressedRGBDFrameMessage frameMsg(headerMsg);
-  while(client->m_connectionOk && !m_shouldTerminate)
+  // Read and record a frame message from the client.
+#if DEBUGGING
+  std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+#endif
+
+  RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
+  boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
+  RGBDFrameMessage& msg = elt ? **elt : *client->m_dummyFrameMsg;
+
+  // First, try to read a frame header message.
+  if((client->m_connectionOk = read_message(sock, client->m_headerMessage)))
   {
-#if DEBUGGING
-    std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
-#endif
+    // If that succeeds, set up the frame message accordingly.
+    client->m_frameMessage->set_compressed_image_sizes(client->m_headerMessage);
 
-    RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
-    boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-    RGBDFrameMessage& msg = elt ? **elt : *client->m_dummyFrameMsg;
-
-    // First, try to read a frame header message.
-    if((client->m_connectionOk = read_message(sock, headerMsg)))
+    // Now, read the frame message itself.
+    if((client->m_connectionOk = read_message(sock, *client->m_frameMessage)))
     {
-      // If that succeeds, set up the frame message accordingly.
-      frameMsg.set_compressed_image_sizes(headerMsg);
-
-      // Now, read the frame message itself.
-      if((client->m_connectionOk = read_message(sock, frameMsg)))
-      {
-        // If that succeeds, uncompress the images and send an acknowledgement to the client.
-        client->m_frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
-        client->m_connectionOk = write_message(sock, AckMessage());
+      // If that succeeds, uncompress the images and send an acknowledgement to the client.
+      client->m_frameCompressor->uncompress_rgbd_frame(*client->m_frameMessage, msg);
+      client->m_connectionOk = write_message(sock, AckMessage());
 
 #if DEBUGGING
-        std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
+      std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
-      #ifdef WITH_OPENCV
-        static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->m_rgbImageSize, true, false));
-        msg.extract_rgb_image(rgbImage.get());
-        cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
-        cv::imshow("RGB", cvRGB);
-        cv::waitKey(1);
-      #endif
+    #ifdef WITH_OPENCV
+      static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->m_rgbImageSize, true, false));
+      msg.extract_rgb_image(rgbImage.get());
+      cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
+      cv::imshow("RGB", cvRGB);
+      cv::waitKey(1);
+    #endif
 #endif
-      }
     }
   }
+}
 
+void MappingServer::handle_client_post(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
+{
   // Destroy the frame compressor prior to stopping the client (this cleanly deallocates CUDA memory and avoids a crash on exit).
   client->m_frameCompressor.reset();
 }
 
-void MappingServer::setup_client_hook(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
+void MappingServer::handle_client_pre(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;
