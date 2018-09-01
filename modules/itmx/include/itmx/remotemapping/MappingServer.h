@@ -20,7 +20,7 @@
 #include <tvgutil/containers/PooledQueue.h>
 #include <tvgutil/net/Server.h>
 
-#include "RGBDFrameMessage.h"
+#include "RGBDFrameCompressor.h"
 
 namespace itmx {
 
@@ -39,6 +39,15 @@ struct MappingServerClient : tvgutil::DefaultClient
   /** The calibration parameters of the camera associated with the client. */
   ITMLib::ITMRGBDCalib m_calib;
 
+  /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
+  bool m_connectionOk;
+
+  /** A dummy frame message to consume messages that cannot be pushed onto the queue. */
+  RGBDFrameMessage_Ptr m_dummyFrameMsg;
+
+  /** The frame compressor for the client. */
+  RGBDFrameCompressor_Ptr m_frameCompressor;
+
   /** A queue containing the RGB-D frame messages received from the client. */
   RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
 
@@ -51,7 +60,8 @@ struct MappingServerClient : tvgutil::DefaultClient
   //#################### CONSTRUCTORS ####################
 
   MappingServerClient()
-  : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
+  : m_connectionOk(true),
+    m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
     m_imagesDirty(false),
     m_poseDirty(false)
   {}
