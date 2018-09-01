@@ -117,11 +117,11 @@ private:
   /** The path to the relocalisation forest. */
   std::string m_relocaliserForestPath;
 
-  /** The number of times the relocaliser has been trained with new data. */
+  /** A count that allows us to determine when to train the relocaliser (used in conjunction with m_relocaliserTrainingSkip). */
   size_t m_relocaliserTrainingCount;
 
   /** The number of frames to skip between each call to the relocaliser's train method. */
-  size_t m_relocaliserTrainingSkipFrames;
+  size_t m_relocaliserTrainingSkip;
 
   /** The type of relocaliser. */
   std::string m_relocaliserType;

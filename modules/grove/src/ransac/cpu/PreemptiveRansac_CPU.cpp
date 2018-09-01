@@ -96,7 +96,7 @@ void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
   const int *inlierRasterIndices = m_inlierRasterIndicesBlock->GetData(MEMORYDEVICE_CPU);
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
   const uint32_t nbInliers = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
   const PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
 
