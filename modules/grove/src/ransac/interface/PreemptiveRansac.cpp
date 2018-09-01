@@ -6,10 +6,10 @@
 #include "ransac/interface/PreemptiveRansac.h"
 using namespace tvgutil;
 
+#include <alglib/optimization.h>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
-
-#include <alglib/optimization.h>
 
 #include <Eigen/Dense>
 
