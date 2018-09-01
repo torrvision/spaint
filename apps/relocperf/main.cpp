@@ -210,47 +210,55 @@ bool pose_file_matches(const Eigen::Matrix4f &gtPose,
  */
 struct SequenceResults
 {
+  //#################### PUBLIC VARIABLES ####################
+
   /** The number of poses in the sequence. */
-  int poseCount{0};
+  int poseCount;
 
   /** The number of frames successfully relocalised. */
-  int validPosesAfterReloc{0};
+  int validPosesAfterReloc;
 
   /** The number of frames successfully relocalised after a round of ICP. */
-  int validPosesAfterICP{0};
+  int validPosesAfterICP;
 
   /** The number of frames successfully relocalised after a round of ICP+SVM. */
-  int validFinalPoses{0};
+  int validFinalPoses;
 
   /** The sum of translational errors in the sequence, used to compute the average. */
-  float sumRelocalisationTranslationalError{0};
+  float sumRelocalisationTranslationalError;
 
   /** The sum of angular errors in the sequence, used to compute the average. */
-  float sumRelocalisationAngleError{0};
+  float sumRelocalisationAngleError;
 
   /** The sum of translational errors in the sequence, for successful relocalisations. Used to compute the average. */
-  float sumRelocalisationSuccessfulTranslationalError{0};
+  float sumRelocalisationSuccessfulTranslationalError;
 
   /** The sum of angular errors in the sequence, for successful relocalisations. Used to compute the average. */
-  float sumRelocalisationSuccessfulAngleError{0};
+  float sumRelocalisationSuccessfulAngleError;
 
   /** The sum of translational errors in the sequence, for failed relocalisations. Used to compute the average. */
-  float sumRelocalisationFailedTranslationalError{0};
+  float sumRelocalisationFailedTranslationalError;
 
   /** The sum of angular errors in the sequence, for failed relocalisations. Used to compute the average. */
-  float sumRelocalisationFailedAngleError{0};
+  float sumRelocalisationFailedAngleError;
 
   /** The median angle error for the sequence. */
-  float medianRelocalisationAngle{0};
+  float medianRelocalisationAngle;
 
   /** The median translation error for the sequence. */
-  float medianRelocalisationTranslation{0};
+  float medianRelocalisationTranslation;
 
   /** The median of the finite angle error for the sequence. */
-  float medianFiniteRelocalisationAngle{0};
+  float medianFiniteRelocalisationAngle;
 
   /** The median of the finite translation error for the sequence. */
-  float medianFiniteRelocalisationTranslation{0};
+  float medianFiniteRelocalisationTranslation;
+
+  /** The median angle error for the sequence, computed after ICP. */
+  float medianICPAngle;
+
+  /** The median translation error for the sequence, computed after ICP. */
+  float medianICPTranslation;
 
   /** The sequence of relocalisation results. Same element count as poseCount. */
   std::vector<bool> relocalizationResults;
@@ -266,6 +274,47 @@ struct SequenceResults
 
   /** The sequence of translational errors after relocalisation. */
   std::vector<float> relocalisationTranslationalErrors;
+
+  /** The sequence of angular errors after ICP. */
+  std::vector<float> icpAngularErrors;
+
+  /** The sequence of translational errors after ICP. */
+  std::vector<float> icpTranslationalErrors;
+
+  //#################### CONSTRUCTORS ####################
+
+  SequenceResults()
+  : poseCount(0),
+    validPosesAfterReloc(0),
+    validPosesAfterICP(0),
+    validFinalPoses(0),
+    sumRelocalisationTranslationalError(0),
+    sumRelocalisationAngleError(0),
+    sumRelocalisationSuccessfulTranslationalError(0),
+    sumRelocalisationSuccessfulAngleError(0),
+    sumRelocalisationFailedTranslationalError(0),
+    sumRelocalisationFailedAngleError(0),
+    medianRelocalisationAngle(0),
+    medianRelocalisationTranslation(0),
+    medianFiniteRelocalisationAngle(0),
+    medianFiniteRelocalisationTranslation(0),
+    medianICPAngle(0),
+    medianICPTranslation(0)
+  {}
+};
+
+struct Comparer
+{
+  bool operator()(float a, float b) const
+  {
+    if(std::isfinite(a) && std::isfinite(b)) return a < b;
+
+    if(std::isfinite(a)) return true;
+
+    if(std::isfinite(b)) return false;
+
+    return false;
+  }
 };
 
 /**
@@ -299,10 +348,11 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
     const Eigen::Matrix4f gtPose = read_pose_from_file(gtPath);
 
     float relocalisationTranslationError, relocalisationAngleError;
+    float icpTranslationError, icpAngleError;
 
     // Check whether different kinds of relocalisations succeeded.
     bool validReloc = pose_file_matches(gtPose, relocPath, relocalisationTranslationError, relocalisationAngleError);
-    bool validICP = pose_file_matches(gtPose, icpPath);
+    bool validICP = pose_file_matches(gtPose, icpPath, icpTranslationError, icpAngleError);
     bool validFinal = pose_file_matches(gtPose, finalPath);
 
     // Accumulate stats.
@@ -331,6 +381,9 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
     res.relocalisationTranslationalErrors.push_back(relocalisationTranslationError);
     res.relocalisationAngularErrors.push_back(relocalisationAngleError);
 
+    res.icpTranslationalErrors.push_back(icpTranslationError);
+    res.icpAngularErrors.push_back(icpAngleError);
+
     // Increment counters.
     ++res.poseCount;
     gtPathGenerator.increment_index();
@@ -340,6 +393,9 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
   // Compute medians.
   std::vector<float> angleErrors = res.relocalisationAngularErrors;
   std::vector<float> translationErrors = res.relocalisationTranslationalErrors;
+
+  std::vector<float> icpAngleErrors = res.icpAngularErrors;
+  std::vector<float> icpTranslationErrors = res.icpTranslationalErrors;
 
 //  std::vector<float> angleErrors;
 //  std::vector<float> translationErrors;
@@ -356,25 +412,19 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
 //      }
 //  }
 
-  auto comparer = [] (float a, float b)
-  {
-      if(std::isfinite(a) && std::isfinite(b)) return a < b;
+  std::sort(angleErrors.begin(), angleErrors.end(), Comparer());
+  std::sort(translationErrors.begin(), translationErrors.end(), Comparer());
 
-      if(std::isfinite(a)) return true;
-
-      if(std::isfinite(b)) return false;
-
-      return false;
-  };
-
-  std::sort(angleErrors.begin(), angleErrors.end(), comparer);
-  std::sort(translationErrors.begin(), translationErrors.end(), comparer);
+  std::sort(icpAngleErrors.begin(), icpAngleErrors.end(), Comparer());
+  std::sort(icpTranslationErrors.begin(), icpTranslationErrors.end(), Comparer());
 
   if(angleErrors.size() > 0)
   {
       size_t medianElement = angleErrors.size() / 2;
       res.medianRelocalisationAngle = angleErrors[medianElement];
       res.medianRelocalisationTranslation = translationErrors[medianElement];
+      res.medianICPAngle = icpAngleErrors[medianElement];
+      res.medianICPTranslation = icpTranslationErrors[medianElement];
 
       size_t maxValidIndex = -1;
       for(maxValidIndex = 0; maxValidIndex < angleErrors.size(); ++maxValidIndex)
@@ -402,7 +452,7 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
 template <typename T>
 void printWidth(const T &item, int width, bool leftAlign = false)
 {
-  std::cerr << (leftAlign ? std::left : std::right) << std::setw(width) << std::fixed << std::setprecision(2) << item;
+  std::cerr << (leftAlign ? std::left : std::right) << std::setw(width) << std::fixed << std::setprecision(3) << item;
 }
 
 int main(int argc, char *argv[])
@@ -481,10 +531,10 @@ int main(int argc, char *argv[])
   printWidth("Avg Succ A.", 14);
   printWidth("Avg Fail T.", 14);
   printWidth("Avg Fail A.", 14);
-  printWidth("Median T.", 14);
-  printWidth("Median A.", 14);
-  printWidth("Median Finite T.", 17);
-  printWidth("Median Finite A.", 17);
+  printWidth("Median Reloc T.", 17);
+  printWidth("Median Reloc A.", 17);
+  printWidth("Median ICP T.", 17);
+  printWidth("Median ICP A.", 17);
   std::cerr << '\n';
 
   // Compute percentages for each sequence and print everything.
@@ -509,8 +559,11 @@ int main(int argc, char *argv[])
     float medianAngleError = seqResult.medianRelocalisationAngle * 180 / M_PI;
     float medianTranslationError = seqResult.medianRelocalisationTranslation;
 
-    float medianFiniteAngleError = seqResult.medianFiniteRelocalisationAngle * 180 / M_PI;
-    float medianFiniteTranslationError = seqResult.medianFiniteRelocalisationTranslation;
+    float medianICPAngleError = seqResult.medianICPAngle * 180 / M_PI;
+    float medianICPTranslationError = seqResult.medianICPTranslation;
+
+//    float medianFiniteAngleError = seqResult.medianFiniteRelocalisationAngle * 180 / M_PI;
+//    float medianFiniteTranslationError = seqResult.medianFiniteRelocalisationTranslation;
 
     printWidth(sequence, 15, true);
     printWidth(seqResult.poseCount, 8);
@@ -523,10 +576,12 @@ int main(int argc, char *argv[])
     printWidth(avgSuccAngle, 14);
     printWidth(avgFailTranslation, 14);
     printWidth(avgFailAngle, 14);
-    printWidth(medianTranslationError, 14);
-    printWidth(medianAngleError, 14);
-    printWidth(medianFiniteTranslationError, 17);
-    printWidth(medianFiniteAngleError, 17);
+    printWidth(medianTranslationError, 17);
+    printWidth(medianAngleError, 17);
+    printWidth(medianICPTranslationError, 17);
+    printWidth(medianICPAngleError, 17);
+//    printWidth(medianFiniteTranslationError, 17);
+//    printWidth(medianFiniteAngleError, 17);
     std::cerr << '\n';
   }
 
@@ -599,7 +654,7 @@ int main(int argc, char *argv[])
       auto seqResult = results[sequence];
 
       std::string outFilename = onlineResultsFilenameStem + '_' + sequence + ".csv";
-      std::ofstream out(outFilename);
+      std::ofstream out(outFilename.c_str());
 
       // Print header
       out << "FrameIdx; FramePct; Reloc Success; Reloc Translation; Reloc Angle; Reloc Sum; Reloc Pct; ICP Success; "

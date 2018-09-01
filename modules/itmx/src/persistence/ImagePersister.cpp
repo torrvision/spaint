@@ -52,6 +52,13 @@ void ImagePersister::save_image(const ORShortImage_CPtr& image, const std::strin
       SaveImageToFile(image.get(), path.c_str());
       break;
     }
+    case IFT_PNG:
+    {
+      std::vector<unsigned char> buffer;
+      encode_png(image, buffer);
+      lodepng::save_file(buffer, path);
+      break;
+    }
     default:
     {
       throw std::runtime_error("Could not save image to '" + path + "': unsupported file type");
@@ -132,6 +139,27 @@ ImagePersister::ImageFileType ImagePersister::deduce_image_file_type(const std::
     if(extension == ".ppm") return IFT_PPM;
   }
   return IFT_UNKNOWN;
+}
+
+void ImagePersister::encode_png(const ORShortImage_CPtr& image, std::vector<unsigned char>& buffer)
+{
+  const int pixelCount = static_cast<int>(image->dataSize);
+  std::vector<unsigned char> data(pixelCount * 2);
+  const short *src = image->GetData(MEMORYDEVICE_CPU);
+  unsigned char *dest = &data[0];
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    const unsigned char *pixel = reinterpret_cast<const unsigned char*>(&src[i]);
+    int offset = i * 2;
+    dest[offset] = *(pixel + 1);
+    dest[offset + 1] = *pixel;
+  }
+
+  lodepng::encode(buffer, &data[0], image->noDims.x, image->noDims.y, LCT_GREY, 16);
 }
 
 void ImagePersister::encode_png(const ORUChar4Image_CPtr& image, std::vector<unsigned char>& buffer)

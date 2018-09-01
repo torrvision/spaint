@@ -14,9 +14,16 @@ namespace itmx {
 
 /**
  * \brief An instance of this type represents a message containing the acknowledgement for a previously received message.
- *        The payload of this message is an integer that can be used to signal a status to the other party.
  */
-typedef SimpleMessage<int32_t> AckMessage;
+struct AckMessage : SimpleMessage<int32_t>
+{
+  /**
+   * \brief Constructs an acknowledgement message.
+   */
+  AckMessage()
+  : SimpleMessage<int32_t>(0)
+  {}
+};
 
 }
 
