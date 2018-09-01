@@ -7,4 +7,9 @@
 
 namespace tvgutil {
 
+void foo()
+{
+  Server<> s;
+}
+
 }

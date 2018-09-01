@@ -26,11 +26,23 @@ namespace Server_NS {
 
 using boost::asio::ip::tcp;
 
+/**
+ * \brief An instance of this struct represents a basic client that has no data associated with it.
+ */
+struct DefaultClient
+{
+  //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
+  /** The thread that manages communication with the client. */
+  boost::shared_ptr<boost::thread> m_thread;
+};
+
 //#################### MAIN TYPE ####################
 
 /**
  * \brief An instance of a class deriving from this one represents a server that can be used to communicate with one or more clients.
  */
+template <typename ClientType = DefaultClient>
 class Server
 {
   //#################### ENUMERATIONS ####################
@@ -47,18 +59,7 @@ public:
 
   //#################### NESTED TYPES ####################
 private:
-  /**
-   * \brief An instance of this struct contains all of the information associated with an individual client.
-   */
-  struct Client
-  {
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
-
-    /** The thread that manages communication with the client. */
-    boost::shared_ptr<boost::thread> m_thread;
-  };
-
-  typedef boost::shared_ptr<Client> Client_Ptr;
+  typedef boost::shared_ptr<ClientType> Client_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -69,7 +70,6 @@ private:
   boost::shared_ptr<boost::thread> m_cleanerThread;
 
   /** A condition variable used to wait until a client thread is ready to start reading frame messages. */
-  // STILL NEEDED?
   mutable boost::condition_variable m_clientReady;
 
   /** A condition variable used to wait for finished client threads that need to be cleaned up. */
@@ -133,6 +133,18 @@ public:
   {
     terminate();
   }
+
+  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  virtual void run_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock) = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual void setup_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -232,7 +244,7 @@ private:
     // If a client successfully connects, start a thread for it and add an entry to the clients map.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    Client_Ptr client(new Client);
+    Client_Ptr client(new ClientType);
     boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, m_nextClientID, client, sock)));
     client->m_thread = clientThread;
     ++m_nextClientID;
@@ -282,7 +294,7 @@ private:
     // If the calibration message was successfully read:
     RGBDFrameCompressor_Ptr frameCompressor;
     RGBDFrameMessage_Ptr dummyFrameMsg;
-    if (connectionOk)
+    if(connectionOk)
     {
       // Save the calibration parameters.
       client->m_calib = calibMsg.extract_calib();
@@ -320,7 +332,7 @@ private:
     // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
     CompressedRGBDFrameHeaderMessage headerMsg;
     CompressedRGBDFrameMessage frameMsg(headerMsg);
-    while (connectionOk && !m_shouldTerminate)
+    while(connectionOk && !m_shouldTerminate)
     {
 #if DEBUGGING
       std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
@@ -331,13 +343,13 @@ private:
       RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
 
       // First, try to read a frame header message.
-      if ((connectionOk = read_message(sock, headerMsg)))
+      if((connectionOk = read_message(sock, headerMsg)))
       {
         // If that succeeds, set up the frame message accordingly.
         frameMsg.set_compressed_image_sizes(headerMsg);
 
         // Now, read the frame message itself.
-        if ((connectionOk = read_message(sock, frameMsg)))
+        if((connectionOk = read_message(sock, frameMsg)))
         {
           // If that succeeds, uncompress the images and send an acknowledgement to the client.
           frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
@@ -386,7 +398,7 @@ private:
   {
     boost::optional<boost::system::error_code> err;
     boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&MappingServer::read_message_handler, this, _1, boost::ref(err)));
-    while (!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     return m_shouldTerminate ? false : !*err;
   }
 
@@ -410,15 +422,15 @@ private:
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
     bool canTerminate = m_shouldTerminate && m_clients.empty();
-    while (!canTerminate)
+    while(!canTerminate)
     {
       // Wait for clients to finish.
-      while (m_uncleanClients.empty()) m_clientsHaveFinished.wait(lock);
+      while(m_uncleanClients.empty()) m_clientsHaveFinished.wait(lock);
 
       // Clean up any clients that have finished.
-      for (std::set<int>::const_iterator it = m_uncleanClients.begin(), iend = m_uncleanClients.end(); it != iend; ++it)
+      for(std::set<int>::const_iterator it = m_uncleanClients.begin(), iend = m_uncleanClients.end(); it != iend; ++it)
       {
-        if (m_clients.find(*it) != m_clients.end())
+        if(m_clients.find(*it) != m_clients.end())
         {
           std::cout << "Cleaning up client: " << *it << std::endl;
           m_clients.erase(*it);
@@ -450,7 +462,7 @@ private:
 
     std::cout << "Listening for connections...\n";
 
-    while (!m_shouldTerminate)
+    while(!m_shouldTerminate)
     {
       accept_client();
     }
@@ -494,11 +506,6 @@ private:
 }
 
 using Server_NS::Server;
-
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<Server> Server_Ptr;
-typedef boost::shared_ptr<const Server> Server_CPtr;
 
 }
 
