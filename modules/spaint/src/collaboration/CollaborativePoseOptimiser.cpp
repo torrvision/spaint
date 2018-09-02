@@ -22,15 +22,14 @@ using namespace MiniSlamGraph;
 
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
+using namespace itmx;
 #endif
 
 #include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
-
-using namespace itmx;
-using namespace orx;
 using namespace tvgutil;
 
 namespace bf = boost::filesystem;
