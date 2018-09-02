@@ -23,6 +23,23 @@ namespace spaint {
  */
 class SLAMState
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration can be used to denote the status of the input stream to a SLAM component.
+   */
+  enum InputStatus
+  {
+    /** Input was available the last time the SLAM component attempted to process a frame. */
+    IS_ACTIVE,
+
+    /** Input was not available the last time the SLAM component attempted to process a frame, but might be again in the future. */
+    IS_IDLE,
+
+    /** The input sequence to the SLAM component has terminated. */
+    IS_TERMINATED
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The fiducials (if any) that have been detected in the 3D scene. */
@@ -36,6 +53,9 @@ private:
 
   /** The image into which RGB input is read each frame. */
   ORUChar4Image_Ptr m_inputRGBImage;
+
+  /** The status of the input stream to the SLAM component. */
+  InputStatus m_inputStatus;
 
   /** The surfel render state corresponding to the live camera pose. */
   SurfelRenderState_Ptr m_liveSurfelRenderState;
@@ -54,6 +74,13 @@ private:
 
   /** The current reconstructed voxel scene. */
   SpaintVoxelScene_Ptr m_voxelScene;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a SLAM state.
+   */
+  SLAMState();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -105,6 +132,13 @@ public:
    * \return        A copy of the image into which RGB input is read each frame.
    */
   ORUChar4Image_Ptr get_input_rgb_image_copy() const;
+
+  /**
+   * \brief Gets the status of the input stream to the SLAM component.
+   *
+   * \return  The status of the input stream to the SLAM component.
+   */
+  InputStatus get_input_status() const;
 
   /**
    * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the scene.
@@ -217,6 +251,13 @@ public:
    * \param inputRGBImage The image into which RGB input is read each frame.
    */
   void set_input_rgb_image(const ORUChar4Image_Ptr& inputRGBImage);
+
+  /**
+   * \brief Sets the status of the input stream to the SLAM component.
+   *
+   * \param inputStatus The status of the input stream to the SLAM component.
+   */
+  void set_input_status(InputStatus inputStatus);
 
   /**
    * \brief Sets the surfel render state corresponding to the live camera pose.

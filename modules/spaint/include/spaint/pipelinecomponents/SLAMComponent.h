@@ -74,6 +74,9 @@ private:
   /** The fiducial detector to use (if any). */
   FiducialDetector_CPtr m_fiducialDetector;
 
+  /** Whether or not to let the relocaliser know when no more calls will be made to its train or update functions. */
+  bool m_finishTrainingEnabled;
+
   /** The number of frames for which fusion has been run. */
   size_t m_fusedFramesCount;
 
