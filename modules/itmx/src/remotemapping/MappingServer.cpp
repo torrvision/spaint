@@ -186,7 +186,7 @@ void MappingServer::terminate()
 
 void MappingServer::accept_client()
 {
-  // FIXME: It would be better to have accept_client_handler call accept_client after accepted a connection.
+  // FIXME: It would be better to have accept_client_handler call accept_client after accepting a connection.
   //        This would allow us to get rid of the sleep loop.
   boost::shared_ptr<tcp::socket> sock(new tcp::socket(m_ioService));
   m_acceptor->async_accept(*sock, boost::bind(&MappingServer::accept_client_handler, this, sock, _1));
