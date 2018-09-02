@@ -165,10 +165,27 @@ void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
 
 bool SLAMComponent::process_frame()
 {
-  if(!m_imageSourceEngine->hasMoreImages()) return false;
-  if(!m_imageSourceEngine->hasImagesNow()) return true;
-
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+
+  if(m_imageSourceEngine->hasImagesNow())
+  {
+    slamState->set_input_status(SLAMState::IS_ACTIVE);
+  }
+  else
+  {
+    const SLAMState::InputStatus inputStatus = m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED;
+
+    // If finish training is enabled and no more images are expected, let the relocaliser know that no more calls will be made to its train or update functions.
+    if(m_finishTrainingEnabled && inputStatus == SLAMState::IS_TERMINATED && slamState->get_input_status() != SLAMState::IS_TERMINATED)
+    {
+      m_context->get_relocaliser(m_sceneID)->finish_training();
+    }
+
+    slamState->set_input_status(inputStatus);
+
+    return false;
+  }
+
   const ORShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
   const ORUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const SurfelRenderState_Ptr& liveSurfelRenderState = slamState->get_live_surfel_render_state();
@@ -506,6 +523,7 @@ void SLAMComponent::setup_relocaliser()
   m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
 
   static const std::string settingsNamespace = "SLAMComponent.";
+  m_finishTrainingEnabled = settings->get_first_value<bool>(settingsNamespace + "finishTrainingEnabled", false);
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
   m_relocaliserTrainingSkip = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkip", 0);
 

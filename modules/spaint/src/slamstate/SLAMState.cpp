@@ -11,6 +11,12 @@ using namespace ORUtils;
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+SLAMState::SLAMState()
+: m_inputStatus(IS_IDLE)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 const Vector2i& SLAMState::get_depth_image_size() const
@@ -50,6 +56,11 @@ ORUChar4Image_Ptr SLAMState::get_input_rgb_image_copy() const
   ORUChar4Image_Ptr copy(new ORUChar4Image(m_inputRGBImage->noDims, true, false));
   copy->SetFrom(m_inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
+}
+
+SLAMState::InputStatus SLAMState::get_input_status() const
+{
+  return m_inputStatus;
 }
 
 const ITMIntrinsics& SLAMState::get_intrinsics() const
@@ -130,6 +141,11 @@ void SLAMState::set_input_raw_depth_image(const ORShortImage_Ptr& inputRawDepthI
 void SLAMState::set_input_rgb_image(const ORUChar4Image_Ptr& inputRGBImage)
 {
   m_inputRGBImage = inputRGBImage;
+}
+
+void SLAMState::set_input_status(InputStatus inputStatus)
+{
+  m_inputStatus = inputStatus;
 }
 
 void SLAMState::set_live_surfel_render_state(const SurfelRenderState_Ptr& liveSurfelRenderState)
