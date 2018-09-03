@@ -97,8 +97,8 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
       static const float maxRelocalisationTime = 200000; // 200ms
       static const float maxUpdateTime = 10000; // 10ms (we don't really care too much about it).
 
-//      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
-      static const bool useRelocAverage = false; // We want to evaluate the relocalisation results AFTER ICP.
+      static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
+//      static const bool useRelocAverage = false; // We want to evaluate the relocalisation results AFTER ICP.
 
       // Use the appropriate loss value.
       cost = useRelocAverage ? relocLoss : icpLoss;
@@ -202,27 +202,27 @@ try
   const unsigned seed = 12345;
   CoordinateDescentParameterOptimiser optimiser(boost::bind(grove_cost_fn, args, _1), epochCount, seed);
 
-  // Scene parameters.
-  optimiser.add_param("SceneParams.mu", list_of<float>(2.0f)(4.0f)(6.0f)(8.0f)(10.0f)); // It's a multiplicative coefficient applied to the voxelSize, requires a change in the main spaintgui app at the moment.
-  optimiser.add_param("SceneParams.voxelSize", list_of<float>(0.005f)(0.010f)(0.015f)(0.020f)(0.025f)(0.030f)(0.040f)(0.050f));
-  optimiser.add_param("SceneParams.viewFrustum_max", list_of<float>(2.0f)(3.0f)(4.0f)(5.0f)(7.5f)(10.0f)(15.0f));
+//  // Scene parameters.
+//  optimiser.add_param("SceneParams.mu", list_of<float>(2.0f)(4.0f)(6.0f)(8.0f)(10.0f)); // It's a multiplicative coefficient applied to the voxelSize, requires a change in the main spaintgui app at the moment.
+//  optimiser.add_param("SceneParams.voxelSize", list_of<float>(0.005f)(0.010f)(0.015f)(0.020f)(0.025f)(0.030f)(0.040f)(0.050f));
+//  optimiser.add_param("SceneParams.viewFrustum_max", list_of<float>(2.0f)(3.0f)(4.0f)(5.0f)(7.5f)(10.0f)(15.0f));
 
-//  // Preemptive Ransac parameters.
-//  optimiser.add_param("PreemptiveRansac.maxCandidateGenerationIterations", list_of<int>(50)(250)(500)(1000)(6000));
-//  optimiser.add_param("PreemptiveRansac.maxPoseCandidates", list_of<int>(256)(512)(768)(1024)(2048));
-//  optimiser.add_param("PreemptiveRansac.maxPoseCandidatesAfterCull", list_of<int>(32)(64)(128)(256));
-//  optimiser.add_param("PreemptiveRansac.maxTranslationErrorForCorrectPose", list_of<float>(0.05f)(0.1f)(1000.0f)); // Last value basically disables the check.
-//  optimiser.add_param("PreemptiveRansac.minSquaredDistanceBetweenSampledModes", list_of<float>(0.0f)(0.15f * 0.15f)(0.3f * 0.3f)(0.6f * 0.6f)); // First value disables the check.
-//  optimiser.add_param("PreemptiveRansac.poseUpdate", list_of<bool>(false)(true));
-//  optimiser.add_param("PreemptiveRansac.ransacInliersPerIteration", list_of<int>(256)(512)(1024));
-//  optimiser.add_param("PreemptiveRansac.usePredictionCovarianceForPoseOptimization", list_of<bool>(false)(true));
+  // Preemptive Ransac parameters.
+  optimiser.add_param("PreemptiveRansac.maxCandidateGenerationIterations", list_of<int>(50)(250)(500)(1000)(6000));
+  optimiser.add_param("PreemptiveRansac.maxPoseCandidates", list_of<int>(256)(512)(768)(1024)(2048));
+  optimiser.add_param("PreemptiveRansac.maxPoseCandidatesAfterCull", list_of<int>(32)(64)(128)(256));
+  optimiser.add_param("PreemptiveRansac.maxTranslationErrorForCorrectPose", list_of<float>(0.05f)(0.1f)(1000.0f)); // Last value basically disables the check.
+  optimiser.add_param("PreemptiveRansac.minSquaredDistanceBetweenSampledModes", list_of<float>(0.0f)(0.15f * 0.15f)(0.3f * 0.3f)(0.6f * 0.6f)); // First value disables the check.
+  optimiser.add_param("PreemptiveRansac.poseUpdate", list_of<bool>(false)(true));
+  optimiser.add_param("PreemptiveRansac.ransacInliersPerIteration", list_of<int>(256)(512)(1024));
+  optimiser.add_param("PreemptiveRansac.usePredictionCovarianceForPoseOptimization", list_of<bool>(false)(true));
 
-//  // Relocaliser parameters.
-//  optimiser.add_param("ScoreRelocaliser.clustererSigma", list_of<float>(0.05f)(0.1f)(0.2f));
-//  optimiser.add_param("ScoreRelocaliser.clustererTau", list_of<float>(0.05f)(0.1f)(0.2f));
-//  optimiser.add_param("ScoreRelocaliser.maxClusterCount", list_of<int>(5)(10)(25)(50));
-//  optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
-//  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
+  // Relocaliser parameters.
+  optimiser.add_param("ScoreRelocaliser.clustererSigma", list_of<float>(0.05f)(0.1f)(0.2f));
+  optimiser.add_param("ScoreRelocaliser.clustererTau", list_of<float>(0.05f)(0.1f)(0.2f));
+  optimiser.add_param("ScoreRelocaliser.maxClusterCount", list_of<int>(5)(10)(25)(50));
+  optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
+  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
 
   // Print header in the log file.
   {
