@@ -34,6 +34,9 @@ using namespace grove;
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
 
+#include <orx/relocalisation/Relocaliser.h>
+using namespace orx;
+
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
