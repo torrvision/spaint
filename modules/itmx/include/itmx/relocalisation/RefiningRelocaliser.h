@@ -6,19 +6,19 @@
 #ifndef H_ITMX_REFININGRELOCALISER
 #define H_ITMX_REFININGRELOCALISER
 
-#include "Relocaliser.h"
+#include <orx/relocalisation/Relocaliser.h>
 
 namespace itmx {
 
 /**
  * \brief An instance of a relocaliser class deriving from this one can be used to refine the results of another relocaliser.
  */
-class RefiningRelocaliser : public Relocaliser
+class RefiningRelocaliser : public orx::Relocaliser
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** The relocaliser whose results are being refined. */
-  Relocaliser_Ptr m_innerRelocaliser;
+  orx::Relocaliser_Ptr m_innerRelocaliser;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -27,7 +27,7 @@ public:
    *
    * \param innerRelocaliser  The relocaliser whose results are being refined.
    */
-  explicit RefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser);
+  explicit RefiningRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser);
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -53,14 +53,14 @@ public:
    *
    * \return  The relocaliser whose results are being refined.
    */
-  const Relocaliser_Ptr& get_inner_relocaliser();
+  const orx::Relocaliser_Ptr& get_inner_relocaliser();
 
   /**
    * \brief Gets the relocaliser whose results are being refined.
    *
    * \return  The relocaliser whose results are being refined.
    */
-  Relocaliser_CPtr get_inner_relocaliser() const;
+  orx::Relocaliser_CPtr get_inner_relocaliser() const;
 };
 
 //#################### TYPEDEFS ####################

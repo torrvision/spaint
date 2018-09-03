@@ -6,7 +6,7 @@
 #ifndef H_ITMX_NULLRELOCALISER
 #define H_ITMX_NULLRELOCALISER
 
-#include "Relocaliser.h"
+#include <orx/relocalisation/Relocaliser.h>
 
 namespace itmx {
 
@@ -15,7 +15,7 @@ namespace itmx {
  *
  * This can be used to allow the user to reconstruct a scene without relocalisation support.
  */
-class NullRelocaliser : public Relocaliser
+class NullRelocaliser : public orx::Relocaliser
 {
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

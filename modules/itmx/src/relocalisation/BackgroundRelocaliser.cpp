@@ -11,7 +11,7 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-BackgroundRelocaliser::BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser, int relocalisationDevice)
+BackgroundRelocaliser::BackgroundRelocaliser(const orx::Relocaliser_Ptr& relocaliser, int relocalisationDevice)
 : m_relocalisationDevice(relocalisationDevice), m_relocaliser(relocaliser), m_relocaliserRunning(false)
 {}
 
@@ -41,7 +41,7 @@ void BackgroundRelocaliser::load_from_disk(const std::string& inputFolder)
   to_old_gpu();
 }
 
-std::vector<Relocaliser::Result> BackgroundRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<orx::Relocaliser::Result> BackgroundRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   // Prevent training and updating of the decorated relocaliser during a relocalisation.
   m_relocaliserRunning = true;

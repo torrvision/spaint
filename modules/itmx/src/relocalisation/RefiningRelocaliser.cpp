@@ -9,18 +9,18 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-RefiningRelocaliser::RefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser)
+RefiningRelocaliser::RefiningRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser)
 : m_innerRelocaliser(innerRelocaliser)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-const Relocaliser_Ptr& RefiningRelocaliser::get_inner_relocaliser()
+const orx::Relocaliser_Ptr& RefiningRelocaliser::get_inner_relocaliser()
 {
   return m_innerRelocaliser;
 }
 
-Relocaliser_CPtr RefiningRelocaliser::get_inner_relocaliser() const
+orx::Relocaliser_CPtr RefiningRelocaliser::get_inner_relocaliser() const
 {
   return m_innerRelocaliser;
 }

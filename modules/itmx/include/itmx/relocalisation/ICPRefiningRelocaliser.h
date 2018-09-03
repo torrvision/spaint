@@ -107,7 +107,7 @@ public:
    * \param denseVoxelMapper    The dense mapper used to find visible blocks in the voxel scene.
    * \param settings            The settings to use for InfiniTAM.
    */
-  ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
+  ICPRefiningRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                          const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
                          const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings);

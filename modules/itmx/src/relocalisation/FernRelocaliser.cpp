@@ -34,7 +34,7 @@ void FernRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliser->LoadFromDirectory(inputFolder + "/");
 }
 
-std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<orx::Relocaliser::Result> FernRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   std::vector<Relocaliser::Result> results;
 

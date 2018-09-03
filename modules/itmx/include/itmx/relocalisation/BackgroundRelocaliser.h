@@ -9,8 +9,7 @@
 #include <boost/atomic.hpp>
 
 #include <orx/base/ORImagePtrTypes.h>
-
-#include "Relocaliser.h"
+#include <orx/relocalisation/Relocaliser.h>
 
 namespace itmx {
 
@@ -18,7 +17,7 @@ namespace itmx {
  * \brief An instance of this class can be used to decorate calls to a relocaliser
  *        so that they are performed in the background on a different GPU.
  */
-class BackgroundRelocaliser : public Relocaliser
+class BackgroundRelocaliser : public orx::Relocaliser
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -41,7 +40,7 @@ private:
   int m_relocalisationDevice;
 
   /** The relocaliser to decorate. */
-  Relocaliser_Ptr m_relocaliser;
+  orx::Relocaliser_Ptr m_relocaliser;
 
   /**
    * An atomic flag recording whether or not a relocalisation is currently running. This is used to prevent attempts
@@ -58,7 +57,7 @@ public:
    * \param relocaliser           The relocaliser to decorate.
    * \param relocalisationDevice  The ID of the GPU on which calls to the decorated relocaliser should be performed.
    */
-  BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser, int relocalisationDevice);
+  BackgroundRelocaliser(const orx::Relocaliser_Ptr& relocaliser, int relocalisationDevice);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
