@@ -212,6 +212,21 @@ struct SequenceResults
 {
   //#################### PUBLIC VARIABLES ####################
 
+  /** The average time taken during the ICP Refinement phase. */
+  float averageICPRefinementTime;
+
+  /** The average time taken during the initial relocalisation phase. */
+  float averageInitialRelocalisationTime;
+
+  /** The average time taken during the relocalisation phase. */
+  float averageTotalRelocalisationTime;
+
+  /** The average time taken during the training phase. */
+  float averageTrainingTime;
+
+  /** The average time taken during the update phase. */
+  float averageUpdateTime;
+
   /** The number of poses in the sequence. */
   int poseCount;
 
@@ -284,7 +299,12 @@ struct SequenceResults
   //#################### CONSTRUCTORS ####################
 
   SequenceResults()
-  : poseCount(0),
+  : averageICPRefinementTime(0),
+    averageInitialRelocalisationTime(0),
+    averageTotalRelocalisationTime(0),
+    averageTrainingTime(0),
+    averageUpdateTime(0),
+    poseCount(0),
     validPosesAfterReloc(0),
     validPosesAfterICP(0),
     validFinalPoses(0),
@@ -322,10 +342,11 @@ struct Comparer
  *
  * \param gtFolder    The folder storing the ground truth poses.
  * \param relocFolder The folder storing the relocalisation results.
+ * \param statsFile   The file storing the average timings for the sequence (can be empty).
  *
  * \return The SequenceResults on this sequence.
  */
-SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relocFolder)
+SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relocFolder, const fs::path &statsFile)
 {
   SequenceResults res;
 
@@ -443,6 +464,20 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
       }
   }
 
+  // Read stats (if available).
+  if(fs::is_regular_file(statsFile))
+  {
+    std::ifstream in(statsFile.string().c_str());
+    in >> res.averageTrainingTime >> res.averageUpdateTime >> res.averageInitialRelocalisationTime >> res.averageICPRefinementTime >> res.averageTotalRelocalisationTime;
+
+    // Times above are in microseconds. Convert them to milliseconds.
+    res.averageICPRefinementTime /= 1000.0f;
+    res.averageInitialRelocalisationTime /= 1000.0f;
+    res.averageTotalRelocalisationTime /= 1000.0f;
+    res.averageTrainingTime /= 1000.0f;
+    res.averageUpdateTime /= 1000.0f;
+  }
+
   return res;
 }
 
@@ -459,18 +494,22 @@ int main(int argc, char *argv[])
 {
   fs::path datasetFolder;
   fs::path relocBaseFolder;
+  fs::path statsBaseFolder;
   std::string relocTag;
   bool useValidation = false;
   bool onlineEvaluation = false;
+  bool verbose = false;
 
   // Declare some options for the evaluation.
   po::options_description options("Relocperf Options");
   options.add_options()
       ("datasetFolder,d", po::value(&datasetFolder)->required(), "The path to the dataset.")
       ("relocBaseFolder,r", po::value(&relocBaseFolder)->required(), "The path to the folder where the relocalised poses are stored.")
+      ("statsBaseFolder,s", po::value(&statsBaseFolder), "The path to the folder where the relocalisation times are stored.")
       ("relocTag,t", po::value(&relocTag)->required(), "The tag assigned to the experimento to evaluate.")
       ("useValidation,v", po::bool_switch(&useValidation), "Whether to use the validation sequence to evaluate the relocaliser.")
       ("onlineEvaluation,o", po::bool_switch(&onlineEvaluation), "Whether to save the CSV for the evaluation of online relocalisation.")
+      ("verbose", po::bool_switch(&verbose), "whether or not to print more informations on the sequences.")
       ("help,h", "Print this help message.")
       ;
 
@@ -507,11 +546,12 @@ int main(int argc, char *argv[])
     // Compute the full paths.
     const fs::path gtPath = datasetFolder / sequence / (useValidation ? validationFolderName : testFolderName);
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
+    const fs::path statsFile = statsBaseFolder / (relocTag + '_' + sequence + ".txt");
 
     std::cerr << "Processing sequence " << sequence << " in: " << gtPath << "\t - " << relocFolder << std::endl;
     try
     {
-      results[sequence] = evaluate_sequence(gtPath, relocFolder);
+      results[sequence] = evaluate_sequence(gtPath, relocFolder, statsFile);
     }
     catch(std::runtime_error &)
     {
@@ -524,17 +564,29 @@ int main(int argc, char *argv[])
   printWidth("Poses", 8);
   printWidth("Reloc", 8);
   printWidth("ICP", 8);
-  printWidth("Final", 8);
-  printWidth("Avg T.", 20);
-  printWidth("Avg A.", 8);
-  printWidth("Avg Succ T.", 14);
-  printWidth("Avg Succ A.", 14);
-  printWidth("Avg Fail T.", 14);
-  printWidth("Avg Fail A.", 14);
+
+  if(verbose)
+  {
+    printWidth("Final", 8);
+    printWidth("Avg T.", 20);
+    printWidth("Avg A.", 8);
+    printWidth("Avg Succ T.", 14);
+    printWidth("Avg Succ A.", 14);
+    printWidth("Avg Fail T.", 14);
+    printWidth("Avg Fail A.", 14);
+  }
+
   printWidth("Median Reloc T.", 17);
   printWidth("Median Reloc A.", 17);
   printWidth("Median ICP T.", 17);
   printWidth("Median ICP A.", 17);
+
+  printWidth("Training ms", 20);
+  printWidth("Update ms", 20);
+  printWidth("Initial Reloc ms", 20);
+  printWidth("ICP ms", 20);
+  printWidth("Total Reloc ms", 20);
+
   std::cerr << '\n';
 
   // Compute percentages for each sequence and print everything.
@@ -569,19 +621,29 @@ int main(int argc, char *argv[])
     printWidth(seqResult.poseCount, 8);
     printWidth(relocPct, 8);
     printWidth(icpPct, 8);
-    printWidth(finalPct, 8);
-    printWidth(avgTranslation, 20);
-    printWidth(avgAngle, 8);
-    printWidth(avgSuccTranslation, 14);
-    printWidth(avgSuccAngle, 14);
-    printWidth(avgFailTranslation, 14);
-    printWidth(avgFailAngle, 14);
+
+    if(verbose)
+    {
+      printWidth(finalPct, 8);
+      printWidth(avgTranslation, 20);
+      printWidth(avgAngle, 8);
+      printWidth(avgSuccTranslation, 14);
+      printWidth(avgSuccAngle, 14);
+      printWidth(avgFailTranslation, 14);
+      printWidth(avgFailAngle, 14);
+    }
+
     printWidth(medianTranslationError, 17);
     printWidth(medianAngleError, 17);
     printWidth(medianICPTranslationError, 17);
     printWidth(medianICPAngleError, 17);
-//    printWidth(medianFiniteTranslationError, 17);
-//    printWidth(medianFiniteAngleError, 17);
+
+    printWidth(seqResult.averageTrainingTime, 20);
+    printWidth(seqResult.averageUpdateTime, 20);
+    printWidth(seqResult.averageInitialRelocalisationTime, 20);
+    printWidth(seqResult.averageICPRefinementTime, 20);
+    printWidth(seqResult.averageTotalRelocalisationTime, 20);
+
     std::cerr << '\n';
   }
 
@@ -598,6 +660,12 @@ int main(int argc, char *argv[])
   float medianTranslationSum = 0.f;
   float medianICPAngleSum = 0.f;
   float medianICPTranslationSum = 0.f;
+
+  float averageICPTimeSum = 0.0f;
+  float averageInitialRelocTimeSum = 0.0f;
+  float averageTrainingTimeSum = 0.0f;
+  float averageTotalRelocTimeSum = 0.0f;
+  float averageUpdateTimeSum = 0.0f;
 
   int poseCount = 0;
 
@@ -623,6 +691,12 @@ int main(int argc, char *argv[])
     icpRawSum += static_cast<float>(seqResult.validPosesAfterICP);
     finalRawSum += static_cast<float>(seqResult.validFinalPoses);
     poseCount += seqResult.poseCount;
+
+    averageICPTimeSum += seqResult.averageICPRefinementTime;
+    averageInitialRelocTimeSum += seqResult.averageInitialRelocalisationTime;
+    averageTotalRelocTimeSum += seqResult.averageTotalRelocalisationTime;
+    averageTrainingTimeSum += seqResult.averageTrainingTime;
+    averageUpdateTimeSum += seqResult.averageUpdateTime;
   }
 
   const float relocAvg = relocSum / sequenceNames.size() * 100.f;
@@ -638,24 +712,43 @@ int main(int argc, char *argv[])
   const float medianICPAngleAvg = medianICPAngleSum / sequenceNames.size() * 180.0f / M_PI;
   const float medianICPTranslationAvg = medianICPTranslationSum / sequenceNames.size();
 
+  const float averageICPTime = averageICPTimeSum / sequenceNames.size();
+  float averageInitialRelocTime = averageInitialRelocTimeSum / sequenceNames.size();
+  float averageTrainingTime = averageTrainingTimeSum / sequenceNames.size();
+  float averageTotalRelocTime = averageTotalRelocTimeSum / sequenceNames.size();
+  float averageUpdateTime = averageUpdateTimeSum / sequenceNames.size();
+
   // Print averages
   std::cerr << '\n';
   printWidth("Average", 15, true);
   printWidth(sequenceNames.size(), 8);
   printWidth(relocAvg, 8);
   printWidth(icpAvg, 8);
-  printWidth(finalAvg, 8);
-  printWidth(std::numeric_limits<float>::quiet_NaN(), 20);
-  printWidth(std::numeric_limits<float>::quiet_NaN(), 8);
-  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
-  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
-  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
-  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+
+  if(verbose)
+  {
+    printWidth(finalAvg, 8);
+    printWidth(std::numeric_limits<float>::quiet_NaN(), 20);
+    printWidth(std::numeric_limits<float>::quiet_NaN(), 8);
+    printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+    printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+    printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+    printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+  }
+
   printWidth(medianTranslationAvg, 17);
   printWidth(medianAngleAvg, 17);
   printWidth(medianICPTranslationAvg, 17);
   printWidth(medianICPAngleAvg, 17);
+
+  printWidth(averageTrainingTime, 20);
+  printWidth(averageUpdateTime, 20);
+  printWidth(averageInitialRelocTime, 20);
+  printWidth(averageICPTime, 20);
+  printWidth(averageTotalRelocTime, 20);
+
   std::cerr << '\n';
+
   printWidth("Average (W)", 15, true);
   printWidth(poseCount, 8);
   printWidth(relocWeightedAvg, 8);
