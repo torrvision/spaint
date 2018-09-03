@@ -720,10 +720,10 @@ int main(int argc, char *argv[])
   const float medianICPTranslationAvg = medianICPTranslationSum / sequenceNames.size();
 
   const float averageICPTime = averageICPTimeSum / sequenceNames.size();
-  float averageInitialRelocTime = averageInitialRelocTimeSum / sequenceNames.size();
-  float averageTrainingTime = averageTrainingTimeSum / sequenceNames.size();
-  float averageTotalRelocTime = averageTotalRelocTimeSum / sequenceNames.size();
-  float averageUpdateTime = averageUpdateTimeSum / sequenceNames.size();
+  const float averageInitialRelocTime = averageInitialRelocTimeSum / sequenceNames.size();
+  const float averageTrainingTime = averageTrainingTimeSum / sequenceNames.size();
+  const float averageTotalRelocTime = averageTotalRelocTimeSum / sequenceNames.size();
+  const float averageUpdateTime = averageUpdateTimeSum / sequenceNames.size();
 
   // Print averages
   std::cerr << '\n';
