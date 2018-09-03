@@ -593,6 +593,12 @@ int main(int argc, char *argv[])
   float relocRawSum = 0.f;
   float icpRawSum = 0.f;
   float finalRawSum = 0.f;
+
+  float medianAngleSum = 0.f;
+  float medianTranslationSum = 0.f;
+  float medianICPAngleSum = 0.f;
+  float medianICPTranslationSum = 0.f;
+
   int poseCount = 0;
 
   for(const auto &sequence : sequenceNames)
@@ -603,6 +609,11 @@ int main(int argc, char *argv[])
     const float relocPct = static_cast<float>(seqResult.validPosesAfterReloc) / static_cast<float>(seqResult.poseCount);
     const float icpPct = static_cast<float>(seqResult.validPosesAfterICP) / static_cast<float>(seqResult.poseCount);
     const float finalPct = static_cast<float>(seqResult.validFinalPoses) / static_cast<float>(seqResult.poseCount);
+
+    medianAngleSum += seqResult.medianRelocalisationAngle;
+    medianTranslationSum += seqResult.medianRelocalisationTranslation;
+    medianICPAngleSum += seqResult.medianICPAngle;
+    medianICPTranslationSum += seqResult.medianICPTranslation;
 
     relocSum += relocPct;
     icpSum += icpPct;
@@ -622,6 +633,11 @@ int main(int argc, char *argv[])
   const float icpWeightedAvg = icpRawSum / poseCount * 100.f;
   const float finalWeightedAvg = finalRawSum / poseCount * 100.f;
 
+  const float medianAngleAvg = medianAngleSum / sequenceNames.size() * 180.0f / M_PI;
+  const float medianTranslationAvg = medianTranslationSum / sequenceNames.size();
+  const float medianICPAngleAvg = medianICPAngleSum / sequenceNames.size() * 180.0f / M_PI;
+  const float medianICPTranslationAvg = medianICPTranslationSum / sequenceNames.size();
+
   // Print averages
   std::cerr << '\n';
   printWidth("Average", 15, true);
@@ -629,6 +645,16 @@ int main(int argc, char *argv[])
   printWidth(relocAvg, 8);
   printWidth(icpAvg, 8);
   printWidth(finalAvg, 8);
+  printWidth(std::numeric_limits<float>::quiet_NaN(), 20);
+  printWidth(std::numeric_limits<float>::quiet_NaN(), 8);
+  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+  printWidth(std::numeric_limits<float>::quiet_NaN(), 14);
+  printWidth(medianTranslationAvg, 17);
+  printWidth(medianAngleAvg, 17);
+  printWidth(medianICPTranslationAvg, 17);
+  printWidth(medianICPAngleAvg, 17);
   std::cerr << '\n';
   printWidth("Average (W)", 15, true);
   printWidth(poseCount, 8);
