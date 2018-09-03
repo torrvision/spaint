@@ -57,17 +57,29 @@ private:
   /** Whether or not to save the relocalised poses. */
   bool m_savePoses;
 
+  /** Whether or not to save the average relocalisation times. */
+  bool m_saveTimes;
+
   /** The scene being viewed from the camera. */
   Scene_Ptr m_scene;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
+  /** The timer used to profile the initial relocalisations. */
+  mutable AverageTimer m_timerInitialRelocalisation;
+
+  /** The timer used to profile the ICP refinement. */
+  mutable AverageTimer m_timerRefinement;
+
   /** The timer used to profile the relocalisation calls. */
   mutable AverageTimer m_timerRelocalisation;
 
   /** Whether or not timers are enabled and stats are printed on destruction. */
   bool m_timersEnabled;
+
+  /** The path to a file where to save the average relocalisation times. */
+  std::string m_timersOutputFile;
 
   /** The timer used to profile the training calls. */
   AverageTimer m_timerTraining;
@@ -106,13 +118,11 @@ public:
    * \param scene               The scene being viewed from the camera.
    * \param denseVoxelMapper    The dense mapper used to find visible blocks in the voxel scene.
    * \param settings            The settings to use for InfiniTAM.
-   * \param visualisationEngine The visualisation engine used to perform the raycasting.
    */
   ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                          const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
-                         const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
-                         const VisualisationEngine_CPtr& visualisationEngine);
+                         const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings);
 
   //#################### DESTRUCTOR ####################
 public:

@@ -71,11 +71,10 @@ private:
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 
-    explicit Client(const boost::shared_ptr<boost::thread>& thread)
+    Client()
     : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
       m_imagesDirty(false),
-      m_poseDirty(false),
-      m_thread(thread)
+      m_poseDirty(false)
     {}
 
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
@@ -145,7 +144,7 @@ public:
   /**
    * \brief Constructs a mapping server.
    *
-   * \param mode  The mode in which the server shuold run.
+   * \param mode  The mode in which the server should run.
    * \param port  The port on which the server should listen for connections.
    */
   explicit MappingServer(Mode mode = MSM_MULTI_CLIENT, int port = 7851);
@@ -271,9 +270,10 @@ private:
    * \brief Handles messages from a client.
    *
    * \param clientID  The ID of the client.
+   * \param client    The client itself.
    * \param socket    The TCP socket associated with the client.
    */
-  void handle_client(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  void handle_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 
   /**
    * \brief Attempts to read a message of type T from the specified socket.

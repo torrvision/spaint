@@ -20,9 +20,9 @@
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../scoreforests/ScorePrediction.h"
 
-/**
- * \brief Forward declare some classes to avoid including Alglib's header here, since that causes NVCC to emit warnings when compiling the PreemptiveRansac_CUDA subclass.
- */
+ //#################### FORWARD DECLARATIONS ####################
+
+// Note: We forward declare these to avoid including the ALGLIB header, which causes NVCC warnings when compiling PreemptiveRansac_CUDA.
 namespace alglib {
   class real_1d_array;
   class real_2d_array;

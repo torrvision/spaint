@@ -186,7 +186,7 @@ void MappingServer::terminate()
 
 void MappingServer::accept_client()
 {
-  // FIXME: It would be better to have accept_client_handler call accept_client after accepted a connection.
+  // FIXME: It would be better to have accept_client_handler call accept_client after accepting a connection.
   //        This would allow us to get rid of the sleep loop.
   boost::shared_ptr<tcp::socket> sock(new tcp::socket(m_ioService));
   m_acceptor->async_accept(*sock, boost::bind(&MappingServer::accept_client_handler, this, sock, _1));
@@ -212,8 +212,9 @@ void MappingServer::accept_client_handler(const boost::shared_ptr<boost::asio::i
   // If a client successfully connects, start a thread for it and add an entry to the clients map.
   std::cout << "Accepted client connection" << std::endl;
   boost::lock_guard<boost::mutex> lock(m_mutex);
-  boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&MappingServer::handle_client, this, m_nextClientID, sock)));
-  m_clients.insert(std::make_pair(m_nextClientID, Client_Ptr(new Client(clientThread))));
+  Client_Ptr client(new Client);
+  boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&MappingServer::handle_client, this, m_nextClientID, client, sock)));
+  client->m_thread = clientThread;
   ++m_nextClientID;
 }
 
@@ -221,7 +222,7 @@ MappingServer::Client_Ptr MappingServer::get_client(int clientID) const
 {
   boost::unique_lock<boost::mutex> lock(m_mutex);
 
-  // Wait until the client is either active and ready to accept frame messages, or has terminated.
+  // Wait until the client is either active or has terminated.
   std::map<int,Client_Ptr>::const_iterator it;
   while((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
   {
@@ -231,18 +232,9 @@ MappingServer::Client_Ptr MappingServer::get_client(int clientID) const
   return it != m_clients.end() ? it->second : Client_Ptr();
 }
 
-void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::socket>& sock)
+void MappingServer::handle_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
-  // Look up the client being handled by this thread.
-  Client_Ptr client;
-  {
-#if DEBUGGING
-    std::cout << "Waiting for thread creation to finish for client: " << clientID << std::endl;
-#endif
-    boost::lock_guard<boost::mutex> lock(m_mutex);
-    std::cout << "Starting client: " << clientID << '\n';
-    client = m_clients.find(clientID)->second;
-  }
+  std::cout << "Starting client: " << clientID << '\n';
 
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;
@@ -275,7 +267,16 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     connectionOk = write_message(sock, AckMessage());
   }
 
+  // Add the client to the map of active clients.
+  {
+    boost::lock_guard<boost::mutex> lock(m_mutex);
+    m_clients.insert(std::make_pair(clientID, client));
+  }
+
   // Signal to other threads that we're ready to start reading frame messages from the client.
+#if DEBUGGING
+  std::cout << "Client ready: " << clientID << '\n';
+#endif
   m_clientReady.notify_one();
 
   // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.

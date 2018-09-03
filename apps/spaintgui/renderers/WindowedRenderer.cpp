@@ -38,7 +38,7 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
   if(settings->get_first_value<bool>("batch", false)) SDL_MinimizeWindow(get_window());
 
   // If the waitForRetrace setting is false, avoid waiting for the vertical retrace (waiting prevents tearing, but can lower the frame rate).
-  const bool waitForRetrace = settings->get_first_value<bool>(settingsNamespace + "waitForRetrace", true);
+  const bool waitForRetrace = model->get_settings()->get_first_value<bool>(settingsNamespace + "waitForRetrace", false);
   if(!waitForRetrace) SDL_GL_SetSwapInterval(0);
 
   // Initialise the temporary image and texture used for visualising the scene.
