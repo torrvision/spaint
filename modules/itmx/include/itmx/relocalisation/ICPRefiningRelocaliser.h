@@ -190,16 +190,18 @@ private:
   /**
    * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
-   * \param timer The timer to start.
+   * \param timer            The timer to start.
+   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before starting the timer.
    */
-  void start_timer(AverageTimer& timer) const;
+  void start_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 
   /**
    * \brief Stops the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
    * \param timer The timer to stop.
+   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before stopping the timer.
    */
-  void stop_timer(AverageTimer& timer) const;
+  void stop_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 };
 
 }
