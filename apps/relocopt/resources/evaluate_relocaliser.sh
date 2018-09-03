@@ -35,30 +35,36 @@ training_sequence='train'
 evaluation_sequence='validation'
 
 training_time=0
-relocalisation_time=0
 update_time=0
+initial_relocalisation_time=0
+icp_refinement_time=0
+total_relocalisation_time=0
 
 # Run spaintgui on every sequence.
 for seq in $sequences; do
-  times=$(CUDA_VISIBLE_DEVICES=0 "$spaint_path" -c "$dataset_root/calib.txt" -s "$dataset_root/$seq/$training_sequence/" -t Disk -s "$dataset_root/$seq/$evaluation_sequence/" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" --headless | tee /dev/stderr | perl -ne '/^(Training|Relocalisation|Update).*/ && s/.*? ([0-9]+) microseconds/\1/g && print')
+  times=$(CUDA_VISIBLE_DEVICES=0 "$spaint_path" -c "$dataset_root/calib.txt" -s "$dataset_root/$seq/$training_sequence/" -t Disk -s "$dataset_root/$seq/$evaluation_sequence/" -t ForceFail --pipelineType slam --batch --experimentTag "$tag"_"$seq" -f "$ini_file" --headless | tee /dev/stderr | perl -ne '/^(Training|Update|Initial Relocalisation|ICP Refinement|Total Relocalisation).*/ && s/.*? ([0-9]+) microseconds/\1/g && print')
 
   times_arr=($times)
 
   training_time=$(($training_time + ${times_arr[0]}))
-  relocalisation_time=$(($relocalisation_time + ${times_arr[1]}))
-  update_time=$(($update_time + ${times_arr[2]}))
+  update_time=$(($update_time + ${times_arr[1]}))
+  initial_relocalisation_time=$(($initial_relocalisation_time + ${times_arr[2]}))
+  icp_refinement_time=$(($icp_refinement_time + ${times_arr[3]}))
+  total_relocalisation_time=$(($total_relocalisation_time + ${times_arr[4]}))
 done
 
 # Average the timings (integer division is fine since the numbers are in microseconds).
 training_time=$(($training_time / $sequence_count))
-relocalisation_time=$(($relocalisation_time / $sequence_count))
 update_time=$(($update_time / $sequence_count))
+initial_relocalisation_time=$(($initial_relocalisation_time / $sequence_count))
+icp_refinement_time=$(($icp_refinement_time / $sequence_count))
+total_relocalisation_time=$(($total_relocalisation_time / $sequence_count))
 
 # Now evaluate the run.
 $relocperf_path -d "$dataset_root" -r "$reloc_poses_path" -t "$tag" --useValidation > $output_file
 
 # Append the times to the output file.
-echo "$training_time $relocalisation_time $update_time" >> $output_file
+echo "$training_time $update_time $initial_relocalisation_time $icp_refinement_time $total_relocalisation_time" >> $output_file
 
 # Remove ini file.
 rm $ini_file

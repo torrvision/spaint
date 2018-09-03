@@ -83,11 +83,11 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
 
   // Read the results back in from the output file.
   float cost = std::numeric_limits<float>::max();
-  float relocLoss, icpLoss, trainingMicroseconds, relocalisationMicroseconds, updateMicroseconds;
+  float relocLoss, icpLoss, trainingMicroseconds, updateMicroseconds, initialRelocalisationMicroseconds, icpRefinementMicroseconds, totalRelocalisationMicroseconds;
 
   {
     std::ifstream fs(outputPath.string().c_str());
-    fs >> relocLoss >> icpLoss >> trainingMicroseconds >> relocalisationMicroseconds >> updateMicroseconds;
+    fs >> relocLoss >> icpLoss >> trainingMicroseconds >> updateMicroseconds >> initialRelocalisationMicroseconds >> icpRefinementMicroseconds >> totalRelocalisationMicroseconds;
 
     // If the reads were successful, compute the cost.
     if(fs)
@@ -105,7 +105,7 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
 
       // If we ran past the computation budget, penalize the cost.
       // Normally the cost would range [0,num_sequences], this change makes the cost for a "slow" variant of the algorithm range [100,100+num_sequences].
-      if(trainingMicroseconds > maxTrainingTime || relocalisationMicroseconds > maxRelocalisationTime || updateMicroseconds > maxUpdateTime)
+      if(trainingMicroseconds > maxTrainingTime || totalRelocalisationMicroseconds > maxRelocalisationTime || updateMicroseconds > maxUpdateTime)
       {
         cost += 100.0f;
       }
@@ -118,8 +118,10 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
             << relocLoss << ';'
             << icpLoss << ';'
             << trainingMicroseconds << ';'
-            << relocalisationMicroseconds << ';'
             << updateMicroseconds << ';'
+            << initialRelocalisationMicroseconds << ';'
+            << icpRefinementMicroseconds << ';'
+            << totalRelocalisationMicroseconds << ';'
             << ParamSetUtil::param_set_to_string(params) << '\n';
 
   // Delete the .ini file and the output file again.
@@ -225,7 +227,7 @@ try
   // Print header in the log file.
   {
     std::ofstream logStream(args.logPath.c_str());
-    logStream << "Cost;TotalTime;RelocAvg;ICPAvg;TrainingTime;RelocalisationTime;UpdateTime;Params\n";
+    logStream << "Cost;TotalTime;RelocAvg;ICPAvg;TrainingTime;UpdateTime;InitialRelocalisationTime;ICPRefinementTime;TotalRelocalisationTime;Params\n";
   }
 
   // Use the optimiser to choose a set of parameters.
