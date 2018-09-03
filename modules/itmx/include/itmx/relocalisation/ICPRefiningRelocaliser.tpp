@@ -41,6 +41,8 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   m_depthVisualiser(DepthVisualiserFactory::make_depth_visualiser(settings->deviceType)),
   m_scene(scene),
   m_settings(settings),
+  m_timerInitialRelocalisation("Initial Relocalisation"),
+  m_timerRefinement("ICP Refinement"),
   m_timerRelocalisation("Relocalisation"),
   m_timerTraining("Training"),
   m_timerUpdate("Update"),
@@ -56,19 +58,33 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
   m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", false);
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
+  m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
+
+  // Get the (global) experiment tag.
+  const std::string experimentTag = m_settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
 
   if(m_savePoses)
   {
-    // Get the (global) experiment tag.
-    const std::string experimentTag = m_settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
-
     // Determine the directory to which to save the poses and make sure that it exists.
     m_posePathGenerator.reset(tvgutil::SequentialPathGenerator(tvgutil::find_subdir_from_executable("reloc_poses") / experimentTag));
     boost::filesystem::create_directories(m_posePathGenerator->get_base_dir());
 
     // Output the directory we're using (for debugging purposes).
     std::cout << "Saving relocalisation poses in: " << m_posePathGenerator->get_base_dir() << '\n';
+  }
+
+  if(m_saveTimes)
+  {
+    // Forcefully enable timers.
+    m_timersEnabled = true;
+
+    // Make sure the directory where we want to save the relocalisation times exists.
+    boost::filesystem::path timersOutputFolder(tvgutil::find_subdir_from_executable("reloc_times"));
+    boost::filesystem::create_directories(timersOutputFolder);
+
+    // Prepare the output filename.
+    m_timersOutputFile = (timersOutputFolder / (experimentTag + ".txt")).string();
   }
 }
 
@@ -80,8 +96,23 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::~ICPRefiningRelocaliser()
   if(m_timersEnabled)
   {
     std::cout << "Training calls: " << m_timerTraining.count() << ", average duration: " << m_timerTraining.average_duration() << '\n';
-    std::cout << "Relocalisation calls: " << m_timerRelocalisation.count() << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
     std::cout << "Update calls: " << m_timerUpdate.count() << ", average duration: " << m_timerUpdate.average_duration() << '\n';
+    std::cout << "Initial Relocalisation calls: " << m_timerInitialRelocalisation.count() << ", average duration: " << m_timerInitialRelocalisation.average_duration() << '\n';
+    std::cout << "ICP Refinement calls: " << m_timerRefinement.count() << ", average duration: " << m_timerRefinement.average_duration() << '\n';
+    std::cout << "Total Relocalisation calls: " << m_timerRelocalisation.count() << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
+  }
+
+  if(m_saveTimes)
+  {
+    std::cout << "Saving relocalisation average times in: " << m_timersOutputFile << "\n";
+    std::ofstream out(m_timersOutputFile.c_str());
+
+    // Output the average durations.
+    out << m_timerTraining.average_duration().count() << " "
+        << m_timerUpdate.average_duration().count() << " "
+        << m_timerInitialRelocalisation.average_duration().count() << " "
+        << m_timerRefinement.average_duration().count() << " "
+        << m_timerRelocalisation.average_duration().count() << "\n";
   }
 }
 
@@ -125,7 +156,10 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
   initialPoses.clear();
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
+  start_timer(m_timerInitialRelocalisation);
   std::vector<Result> initialResults = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
+  stop_timer(m_timerInitialRelocalisation);
+
   if(initialResults.empty())
   {
     Matrix4f invalidPose;
@@ -138,6 +172,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
   std::vector<Relocaliser::Result> refinedResults;
   float bestScore = static_cast<float>(INT_MAX);
 
+  start_timer(m_timerRefinement);
   // For each initial result from the inner relocaliser:
   for(size_t resultIdx = 0; resultIdx < initialResults.size(); ++resultIdx)
   {
@@ -212,6 +247,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     }
   }
 
+  stop_timer(m_timerRefinement);
   stop_timer(m_timerRelocalisation);
 
   // Save the best initial and refined poses if needed.
