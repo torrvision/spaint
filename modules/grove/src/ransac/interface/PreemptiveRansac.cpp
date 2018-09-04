@@ -308,7 +308,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 {
   // We assume that the data on the CPU is up-to-date (the CUDA subclass must ensure this).
   // This function will probably go away as soon as we implement a shared SVD solver.
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
 #if 0
@@ -319,7 +319,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
+  for(int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
     PoseCandidate& candidate = poseCandidates[candidateIdx];
 
