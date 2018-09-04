@@ -11,7 +11,7 @@
 
 #include <ORUtils/DeviceType.h>
 
-#include <itmx/relocalisation/Relocaliser.h>
+#include <orx/relocalisation/Relocaliser.h>
 
 #include "../base/ScoreRelocaliserState.h"
 #include "../../clustering/interface/ExampleClusterer.h"
@@ -28,7 +28,7 @@ namespace grove {
  * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene, using the approach described
  *        in "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., 2017).
  */
-class ScoreRelocaliser : public itmx::Relocaliser
+class ScoreRelocaliser : public orx::Relocaliser
 {
   //#################### CONSTANTS ####################
 public:

@@ -1,14 +1,14 @@
 /**
- * itmx: RefiningRelocaliser.h
+ * orx: RefiningRelocaliser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_ITMX_REFININGRELOCALISER
-#define H_ITMX_REFININGRELOCALISER
+#ifndef H_ORX_REFININGRELOCALISER
+#define H_ORX_REFININGRELOCALISER
 
 #include "Relocaliser.h"
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of a relocaliser class deriving from this one can be used to refine the results of another relocaliser.

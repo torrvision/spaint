@@ -6,6 +6,7 @@
 #include "Model.h"
 using namespace ORUtils;
 using namespace itmx;
+using namespace orx;
 using namespace tvginput;
 
 #include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>

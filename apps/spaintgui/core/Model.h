@@ -251,7 +251,7 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
-  virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+  virtual orx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
   virtual const std::vector<std::string>& get_scene_ids() const;
   virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
   virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
