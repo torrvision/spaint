@@ -121,25 +121,16 @@ include/itmx/picking/shared/Picker_Shared.h
 ##
 SET(relocalisation_sources
 src/relocalisation/FernRelocaliser.cpp
-src/relocalisation/NullRelocaliser.cpp
-src/relocalisation/RefiningRelocaliser.cpp
 )
 
 SET(relocalisation_headers
 include/itmx/relocalisation/FernRelocaliser.h
 include/itmx/relocalisation/ICPRefiningRelocaliser.h
-include/itmx/relocalisation/NullRelocaliser.h
-include/itmx/relocalisation/RefiningRelocaliser.h
 )
 
 SET(relocalisation_templates
 include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
-
-IF(WITH_CUDA)
-  SET(relocalisation_sources ${relocalisation_sources} src/relocalisation/BackgroundRelocaliser.cpp)
-  SET(relocalisation_headers ${relocalisation_headers} include/itmx/relocalisation/BackgroundRelocaliser.h)
-ENDIF()
 
 ##
 SET(remotemapping_sources

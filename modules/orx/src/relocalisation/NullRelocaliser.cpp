@@ -1,12 +1,11 @@
 /**
- * itmx: NullRelocaliser.cpp
+ * orx: NullRelocaliser.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #include "relocalisation/NullRelocaliser.h"
-using namespace orx;
 
-namespace itmx {
+namespace orx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 

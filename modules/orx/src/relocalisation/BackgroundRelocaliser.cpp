@@ -1,14 +1,13 @@
 /**
- * itmx: BackgroundRelocaliser.cpp
+ * orx: BackgroundRelocaliser.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #include "relocalisation/BackgroundRelocaliser.h"
-using namespace orx;
 
 #include <iostream>
 
-namespace itmx {
+namespace orx {
 
 //#################### CONSTRUCTORS ####################
 

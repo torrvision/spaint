@@ -46,12 +46,21 @@ include/orx/geometry/Screw.h
 
 ##
 SET(relocalisation_sources
+src/relocalisation/NullRelocaliser.cpp
+src/relocalisation/RefiningRelocaliser.cpp
 src/relocalisation/Relocaliser.cpp
 )
 
 SET(relocalisation_headers
+include/orx/relocalisation/NullRelocaliser.h
+include/orx/relocalisation/RefiningRelocaliser.h
 include/orx/relocalisation/Relocaliser.h
 )
+
+IF(WITH_CUDA)
+  SET(relocalisation_sources ${relocalisation_sources} src/relocalisation/BackgroundRelocaliser.cpp)
+  SET(relocalisation_headers ${relocalisation_headers} include/orx/relocalisation/BackgroundRelocaliser.h)
+ENDIF()
 
 #################################################################
 # Collect the project files into sources, headers and templates #

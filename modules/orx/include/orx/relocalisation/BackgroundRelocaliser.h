@@ -1,23 +1,23 @@
 /**
- * itmx: BackgroundRelocaliser.h
+ * orx: BackgroundRelocaliser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_ITMX_BACKGROUNDRELOCALISER
-#define H_ITMX_BACKGROUNDRELOCALISER
+#ifndef H_ORX_BACKGROUNDRELOCALISER
+#define H_ORX_BACKGROUNDRELOCALISER
 
 #include <boost/atomic.hpp>
 
-#include <orx/base/ORImagePtrTypes.h>
-#include <orx/relocalisation/Relocaliser.h>
+#include "Relocaliser.h"
+#include "../base/ORImagePtrTypes.h"
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of this class can be used to decorate calls to a relocaliser
  *        so that they are performed in the background on a different GPU.
  */
-class BackgroundRelocaliser : public orx::Relocaliser
+class BackgroundRelocaliser : public Relocaliser
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -40,7 +40,7 @@ private:
   int m_relocalisationDevice;
 
   /** The relocaliser to decorate. */
-  orx::Relocaliser_Ptr m_relocaliser;
+  Relocaliser_Ptr m_relocaliser;
 
   /**
    * An atomic flag recording whether or not a relocalisation is currently running. This is used to prevent attempts
@@ -57,7 +57,7 @@ public:
    * \param relocaliser           The relocaliser to decorate.
    * \param relocalisationDevice  The ID of the GPU on which calls to the decorated relocaliser should be performed.
    */
-  BackgroundRelocaliser(const orx::Relocaliser_Ptr& relocaliser, int relocalisationDevice);
+  BackgroundRelocaliser(const Relocaliser_Ptr& relocaliser, int relocalisationDevice);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
