@@ -76,8 +76,10 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
     {
       size_t finalCandidateIdx;
 
-    #ifdef WITH_OPENMP
+    #ifdef WITH_OPENMP3
       #pragma omp atomic capture
+    #elif WITH_OPENMP
+      #pragma omp critical
     #endif
       finalCandidateIdx = m_poseCandidates->dataSize++;
 
@@ -144,8 +146,10 @@ void PreemptiveRansac_CPU::sample_inliers(bool useMask)
     {
       size_t arrayIdx = 0;
 
-    #ifdef WITH_OPENMP
+    #ifdef WITH_OPENMP3
       #pragma omp atomic capture
+    #elif WITH_OPENMP
+      #pragma omp critical
     #endif
       arrayIdx = m_inlierRasterIndicesBlock->dataSize++;
 
