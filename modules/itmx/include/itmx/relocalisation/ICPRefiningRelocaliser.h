@@ -57,17 +57,29 @@ private:
   /** Whether or not to save the relocalised poses. */
   bool m_savePoses;
 
+  /** Whether or not to save the average relocalisation times. */
+  bool m_saveTimes;
+
   /** The scene being viewed from the camera. */
   Scene_Ptr m_scene;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
+  /** The timer used to profile the initial relocalisations. */
+  mutable AverageTimer m_timerInitialRelocalisation;
+
+  /** The timer used to profile the ICP refinement. */
+  mutable AverageTimer m_timerRefinement;
+
   /** The timer used to profile the relocalisation calls. */
   mutable AverageTimer m_timerRelocalisation;
 
   /** Whether or not timers are enabled and stats are printed on destruction. */
   bool m_timersEnabled;
+
+  /** The path to a file where to save the average relocalisation times. */
+  std::string m_timersOutputFile;
 
   /** The timer used to profile the training calls. */
   AverageTimer m_timerTraining;
@@ -178,16 +190,18 @@ private:
   /**
    * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
-   * \param timer The timer to start.
+   * \param timer            The timer to start.
+   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before starting the timer.
    */
-  void start_timer(AverageTimer& timer) const;
+  void start_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 
   /**
    * \brief Stops the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
    * \param timer The timer to stop.
+   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before stopping the timer.
    */
-  void stop_timer(AverageTimer& timer) const;
+  void stop_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 };
 
 }
