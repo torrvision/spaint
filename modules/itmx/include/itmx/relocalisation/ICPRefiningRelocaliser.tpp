@@ -32,7 +32,7 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 template <typename VoxelType, typename IndexType>
-ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
+ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                                                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                                     const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
                                                                     const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings)
@@ -100,7 +100,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::load_from_disk(const std::stri
 }
 
 template <typename VoxelType, typename IndexType>
-std::vector<Relocaliser::Result>
+std::vector<orx::Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics) const
 {
@@ -109,7 +109,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
 }
 
 template <typename VoxelType, typename IndexType>
-std::vector<Relocaliser::Result>
+std::vector<orx::Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
