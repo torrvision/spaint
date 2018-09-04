@@ -753,7 +753,12 @@ int main(int argc, char *argv[])
   printWidth(poseCount, 8);
   printWidth(relocWeightedAvg, 8);
   printWidth(icpWeightedAvg, 8);
-  printWidth(finalWeightedAvg, 8);
+
+  if(verbose)
+  {
+    printWidth(finalWeightedAvg, 8);
+  }
+
   std::cerr << '\n';
 
   // Print the weighted average for the parameter search algorithm.
