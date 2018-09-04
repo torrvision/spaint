@@ -1,10 +1,10 @@
 /**
- * itmx: Relocaliser.h
+ * orx: Relocaliser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_ITMX_RELOCALISER
-#define H_ITMX_RELOCALISER
+#ifndef H_ORX_RELOCALISER
+#define H_ORX_RELOCALISER
 
 #include <vector>
 
@@ -13,7 +13,7 @@
 #include <ORUtils/ImageTypes.h>
 #include <ORUtils/SE3Pose.h>
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene

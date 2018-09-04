@@ -4,6 +4,7 @@
  */
 
 #include "pipelinecomponents/SLAMContext.h"
+using namespace orx;
 
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
@@ -12,12 +13,12 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-itmx::RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
+RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
 {
   return m_relocalisers[sceneID];
 }
 
-itmx::RefiningRelocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
+RefiningRelocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
 {
   return MapUtil::lookup(m_relocalisers, sceneID);
 }
