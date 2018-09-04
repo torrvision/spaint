@@ -4,23 +4,24 @@
  */
 
 #include "relocalisation/RefiningRelocaliser.h"
+using namespace orx;
 
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-RefiningRelocaliser::RefiningRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser)
+RefiningRelocaliser::RefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser)
 : m_innerRelocaliser(innerRelocaliser)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-const orx::Relocaliser_Ptr& RefiningRelocaliser::get_inner_relocaliser()
+const Relocaliser_Ptr& RefiningRelocaliser::get_inner_relocaliser()
 {
   return m_innerRelocaliser;
 }
 
-orx::Relocaliser_CPtr RefiningRelocaliser::get_inner_relocaliser() const
+Relocaliser_CPtr RefiningRelocaliser::get_inner_relocaliser() const
 {
   return m_innerRelocaliser;
 }

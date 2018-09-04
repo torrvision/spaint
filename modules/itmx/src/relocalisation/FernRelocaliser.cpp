@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/FernRelocaliser.h"
+using namespace orx;
 
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
@@ -34,7 +35,7 @@ void FernRelocaliser::load_from_disk(const std::string& inputFolder)
   m_relocaliser->LoadFromDirectory(inputFolder + "/");
 }
 
-std::vector<orx::Relocaliser::Result> FernRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> FernRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   std::vector<Relocaliser::Result> results;
 

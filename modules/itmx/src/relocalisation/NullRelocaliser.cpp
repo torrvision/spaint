@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/NullRelocaliser.h"
+using namespace orx;
 
 namespace itmx {
 
@@ -14,7 +15,7 @@ void NullRelocaliser::load_from_disk(const std::string& inputFolder)
   // No-op
 }
 
-std::vector<orx::Relocaliser::Result> NullRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
+std::vector<Relocaliser::Result> NullRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
   // A null relocaliser always fails to relocalise.
   return std::vector<Relocaliser::Result>();
