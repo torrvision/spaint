@@ -7,9 +7,8 @@ set -e
 
 tag='Relocopt_Batch'
 # We skip heads because there aren't enough subsequences to split the training set in train + validation
-# sequences='chess fire office pumpkin redkitchen stairs'
+sequences='chess fire office pumpkin redkitchen stairs'
 sequence_count=6
-sequences='chess fire heads office pumpkin redkitchen stairs'
 # sequences='redkitchen'
 # sequence_count=1
 
