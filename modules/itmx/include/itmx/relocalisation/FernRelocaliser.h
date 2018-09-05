@@ -8,14 +8,14 @@
 
 #include <FernRelocLib/Relocaliser.h>
 
-#include "Relocaliser.h"
+#include <orx/relocalisation/Relocaliser.h>
 
 namespace itmx {
 
 /**
  * \brief An instance of this class can be used to relocalise a camera in a 3D scene with the random fern-based relocaliser in InfiniTAM.
  */
-class FernRelocaliser : public Relocaliser
+class FernRelocaliser : public orx::Relocaliser
 {
   //#################### ENUMERATIONS ####################
 public:

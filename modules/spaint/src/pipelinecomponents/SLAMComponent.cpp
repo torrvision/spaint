@@ -29,10 +29,13 @@ using namespace grove;
 #endif
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
-#include <itmx/relocalisation/NullRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
+
+#include <orx/relocalisation/NullRelocaliser.h>
+#include <orx/relocalisation/Relocaliser.h>
+using namespace orx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
