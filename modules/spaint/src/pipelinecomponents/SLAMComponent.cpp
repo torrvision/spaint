@@ -27,13 +27,16 @@ using namespace grove;
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
-#include <itmx/relocalisation/BackgroundRelocaliser.h>
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
-#include <itmx/relocalisation/NullRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
+
+#include <orx/relocalisation/BackgroundRelocaliser.h>
+#include <orx/relocalisation/NullRelocaliser.h>
+#include <orx/relocalisation/Relocaliser.h>
+using namespace orx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
@@ -289,9 +292,10 @@ bool SLAMComponent::process_frame()
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
     }
 
-    // If a mapping client is active, use it to send the current frame to the remote mapping server.
+    // If a mapping client is active:
     if(m_mappingClient)
     {
+      // Send the current frame to the remote mapping server.
       MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_mappingClient->begin_push_frame_message();
       boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
       if(elt)

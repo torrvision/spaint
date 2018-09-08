@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_COLLABORATIVECONTEXT
 #define H_SPAINT_COLLABORATIVECONTEXT
 
-#include <itmx/relocalisation/RefiningRelocaliser.h>
+#include <orx/relocalisation/RefiningRelocaliser.h>
 
 #include "../collaboration/CollaborativePoseOptimiser.h"
 #include "../slamstate/SLAMState.h"
@@ -32,8 +32,8 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  virtual itmx::RefiningRelocaliser_Ptr& get_relocaliser(const std::string& sceneID) = 0;
-  virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const = 0;
+  virtual orx::RefiningRelocaliser_Ptr& get_relocaliser(const std::string& sceneID) = 0;
+  virtual orx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const = 0;
   virtual const std::vector<std::string>& get_scene_ids() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual SLAMState_CPtr get_slam_state(const std::string& sceneID) const = 0;

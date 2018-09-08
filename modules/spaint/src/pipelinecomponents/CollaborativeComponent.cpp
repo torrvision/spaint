@@ -14,11 +14,11 @@ using boost::bind;
 
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
-#endif
-#include <itmx/relocalisation/Relocaliser.h>
 using namespace itmx;
+#endif
 
 #include <orx/geometry/GeometryUtil.h>
+#include <orx/relocalisation/Relocaliser.h>
 using namespace orx;
 
 #define DEBUGGING 0
