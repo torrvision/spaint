@@ -16,17 +16,17 @@
 namespace itmx {
 
 /**
- * \brief An instance of this struct can be used to manage the connection to a mapping client.
+ * \brief An instance of this class can be used to manage the connection to a mapping client.
  */
-struct MappingClientHandler : tvgutil::ClientHandler
+class MappingClientHandler : public tvgutil::ClientHandler
 {
   //#################### TYPEDEFS ####################
-
+private:
   typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
   typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
-
+public:
   /** The calibration parameters of the camera associated with the client. */
   ITMLib::ITMRGBDCalib m_calib;
 
@@ -52,14 +52,14 @@ struct MappingClientHandler : tvgutil::ClientHandler
   bool m_poseDirty;
 
   //#################### CONSTRUCTORS ####################
-
+public:
   /**
    * \brief TODO
    */
   MappingClientHandler();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
-
+public:
   /**
    * \brief TODO
    */
@@ -69,6 +69,15 @@ struct MappingClientHandler : tvgutil::ClientHandler
    * \brief TODO
    */
   const Vector2i& get_rgb_image_size() const;
+
+  /** Override */
+  virtual void handle_main(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+
+  /** Override */
+  virtual void handle_post(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+
+  /** Override */
+  virtual void handle_pre(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 };
 
 }
