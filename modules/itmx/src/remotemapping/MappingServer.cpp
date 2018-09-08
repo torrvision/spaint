@@ -17,6 +17,7 @@ using namespace tvgutil;
 #include "remotemapping/AckMessage.h"
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 #include "remotemapping/CompressedRGBDFrameMessage.h"
+#include "remotemapping/InteractionTypeMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 
 #define DEBUGGING 0
@@ -131,39 +132,61 @@ bool MappingServer::has_more_images(int clientID) const
 
 void MappingServer::handle_client_main(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
-  // Read and record a frame message from the client.
-#if DEBUGGING
-  std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
-#endif
+  InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
 
-  RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
-  boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-  RGBDFrameMessage& msg = elt ? **elt : *client->m_dummyFrameMsg;
-
-  // First, try to read a frame header message.
-  if((client->m_connectionOk = read_message(sock, client->m_headerMessage)))
+  // TODO: First, try to read an interaction type message.
+  if(true)
   {
-    // If that succeeds, set up the frame message accordingly.
-    client->m_frameMessage->set_compressed_image_sizes(client->m_headerMessage);
-
-    // Now, read the frame message itself.
-    if((client->m_connectionOk = read_message(sock, *client->m_frameMessage)))
+    // If that succeeds, determine the type of interaction the client wants to have with the server and proceed accordingly.
+    switch(interactionTypeMsg.extract_value())
     {
-      // If that succeeds, uncompress the images and send an acknowledgement to the client.
-      client->m_frameCompressor->uncompress_rgbd_frame(*client->m_frameMessage, msg);
-      client->m_connectionOk = write_message(sock, AckMessage());
+      case IT_SENDFRAME:
+      {
+#if DEBUGGING
+        std::cout << "Receiving frame from client" << std::endl;
+#endif
+
+        // Try to read a frame header message.
+        if((client->m_connectionOk = read_message(sock, client->m_headerMessage)))
+        {
+          // If that succeeds, set up the frame message accordingly.
+          client->m_frameMessage->set_compressed_image_sizes(client->m_headerMessage);
+
+          // Now, read the frame message itself.
+          if((client->m_connectionOk = read_message(sock, *client->m_frameMessage)))
+          {
+            // If that succeeds, uncompress the images, store them on the frame message queue and send an acknowledgement to the client.
+#if DEBUGGING
+            std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+#endif
+
+            RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
+            boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
+            RGBDFrameMessage& msg = elt ? **elt : *client->m_dummyFrameMsg;
+            client->m_frameCompressor->uncompress_rgbd_frame(*client->m_frameMessage, msg);
+
+            client->m_connectionOk = write_message(sock, AckMessage());
 
 #if DEBUGGING
-      std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
+            std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
-    #ifdef WITH_OPENCV
-      static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->m_rgbImageSize, true, false));
-      msg.extract_rgb_image(rgbImage.get());
-      cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
-      cv::imshow("RGB", cvRGB);
-      cv::waitKey(1);
-    #endif
+          #ifdef WITH_OPENCV
+            static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->get_rgb_image_size(), true, false));
+            msg.extract_rgb_image(rgbImage.get());
+            cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
+            cv::imshow("RGB", cvRGB);
+            cv::waitKey(1);
+          #endif
 #endif
+          }
+        }
+
+        break;
+      }
+      default:
+      {
+        break;
+      }
     }
   }
 }
