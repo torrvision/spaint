@@ -1,24 +1,24 @@
 /**
- * itmx: MappingClientData.h
+ * itmx: MappingClientHandler.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#ifndef H_ITMX_MAPPINGCLIENTDATA
-#define H_ITMX_MAPPINGCLIENTDATA
+#ifndef H_ITMX_MAPPINGCLIENTHANDLER
+#define H_ITMX_MAPPINGCLIENTHANDLER
 
 #include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
 #include <tvgutil/containers/PooledQueue.h>
-#include <tvgutil/net/BasicClientData.h>
+#include <tvgutil/net/ClientHandler.h>
 
 #include "RGBDFrameCompressor.h"
 
 namespace itmx {
 
 /**
- * \brief An instance of this struct can be used to hold the data associated with an individual client of a mapping server.
+ * \brief An instance of this struct can be used to manage the connection to a mapping client.
  */
-struct MappingClientData : tvgutil::BasicClientData
+struct MappingClientHandler : tvgutil::ClientHandler
 {
   //#################### TYPEDEFS ####################
 
@@ -56,7 +56,7 @@ struct MappingClientData : tvgutil::BasicClientData
   /**
    * \brief TODO
    */
-  MappingClientData();
+  MappingClientHandler();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 

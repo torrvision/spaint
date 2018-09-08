@@ -13,7 +13,7 @@
 #include <boost/atomic.hpp>
 #include <boost/optional.hpp>
 
-#include "BasicClientData.h"
+#include "ClientHandler.h"
 #include "../boost/WrappedAsio.h"
 
 //#define DEBUGGING 1
@@ -27,7 +27,7 @@ using boost::asio::ip::tcp;
 /**
  * \brief An instance of a class deriving from this one represents a server that can be used to communicate with one or more clients.
  */
-template <typename Client = BasicClientData>
+template <typename Client = ClientHandler>
 class Server
 {
   //#################### TYPEDEFS ####################

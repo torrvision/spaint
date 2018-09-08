@@ -1,19 +1,19 @@
 /**
- * tvgutil: BasicClientData.h
+ * tvgutil: ClientHandler.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_BASICCLIENTDATA
-#define H_TVGUTIL_BASICCLIENTDATA
+#ifndef H_TVGUTIL_CLIENTHANDLER
+#define H_TVGUTIL_CLIENTHANDLER
 
 #include <boost/thread.hpp>
 
 namespace tvgutil {
 
 /**
- * \brief An instance of this struct can be used to hold the data for a basic client.
+ * \brief An instance of this struct can be used to manage the connection to a client.
  */
-struct BasicClientData
+struct ClientHandler
 {
   //#################### PUBLIC VARIABLES ####################
 
@@ -26,9 +26,9 @@ struct BasicClientData
   //#################### CONSTRUCTORS ####################
 
   /**
-   * \brief Constructs a basic client data instance.
+   * \brief Constructs a client handler.
    */
-  BasicClientData();
+  ClientHandler();
 };
 
 }

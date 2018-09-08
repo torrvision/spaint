@@ -8,14 +8,14 @@
 
 #include <tvgutil/net/Server.h>
 
-#include "MappingClientData.h"
+#include "MappingClientHandler.h"
 
 namespace itmx {
 
 /**
  * \brief An instance of this class represents a server that can be used to communicate with remote mapping clients.
  */
-class MappingServer : public tvgutil::Server<MappingClientData>
+class MappingServer : public tvgutil::Server<MappingClientHandler>
 {
   //#################### TYPEDEFS ####################
 private:

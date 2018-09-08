@@ -1,15 +1,15 @@
 /**
- * tvgutil: BasicClientData.cpp
+ * tvgutil: ClientHandler.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#include "net/BasicClientData.h"
+#include "net/ClientHandler.h"
 
 namespace tvgutil {
 
 //#################### CONSTRUCTORS ####################
 
-BasicClientData::BasicClientData()
+ClientHandler::ClientHandler()
 : m_connectionOk(true)
 {}
 

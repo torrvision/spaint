@@ -1,15 +1,15 @@
 /**
- * itmx: MappingClientData.cpp
+ * itmx: MappingClientHandler.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#include "remotemapping/MappingClientData.h"
+#include "remotemapping/MappingClientHandler.h"
 
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-MappingClientData::MappingClientData()
+MappingClientHandler::MappingClientHandler()
 : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
   m_imagesDirty(false),
   m_poseDirty(false)
@@ -19,12 +19,12 @@ MappingClientData::MappingClientData()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-const Vector2i& MappingClientData::get_depth_image_size() const
+const Vector2i& MappingClientHandler::get_depth_image_size() const
 {
   return m_calib.intrinsics_d.imgSize;
 }
 
-const Vector2i& MappingClientData::get_rgb_image_size() const
+const Vector2i& MappingClientHandler::get_rgb_image_size() const
 {
   return m_calib.intrinsics_rgb.imgSize;
 }

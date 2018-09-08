@@ -138,7 +138,7 @@ src/remotemapping/BaseRGBDFrameMessage.cpp
 src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
 src/remotemapping/CompressedRGBDFrameMessage.cpp
 src/remotemapping/MappingClient.cpp
-src/remotemapping/MappingClientData.cpp
+src/remotemapping/MappingClientHandler.cpp
 src/remotemapping/MappingServer.cpp
 src/remotemapping/RGBDCalibrationMessage.cpp
 src/remotemapping/RGBDFrameCompressor.cpp
@@ -152,7 +152,7 @@ include/itmx/remotemapping/CompressedRGBDFrameMessage.h
 include/itmx/remotemapping/DepthCompressionType.h
 include/itmx/remotemapping/InteractionTypeMessage.h
 include/itmx/remotemapping/MappingClient.h
-include/itmx/remotemapping/MappingClientData.h
+include/itmx/remotemapping/MappingClientHandler.h
 include/itmx/remotemapping/MappingServer.h
 include/itmx/remotemapping/RGBCompressionType.h
 include/itmx/remotemapping/RGBDCalibrationMessage.h
