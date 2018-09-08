@@ -31,14 +31,14 @@ PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr& setting
 
 void PreemptiveRansac_CPU::compute_energies_and_sort()
 {
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
   // Compute the energies for all pose candidates.
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(size_t i = 0; i < nbPoseCandidates; ++i)
+  for(int i = 0; i < nbPoseCandidates; ++i)
   {
     compute_pose_energy(poseCandidates[i]);
   }
@@ -62,7 +62,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 #ifdef WITH_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for(uint32_t candidateIdx = 0; candidateIdx < m_maxPoseCandidates; ++candidateIdx)
+  for(int candidateIdx = 0; candidateIdx < static_cast<int>(m_maxPoseCandidates); ++candidateIdx)
   {
     // Try to generate a valid pose candidate.
     PoseCandidate candidate;
@@ -76,8 +76,10 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
     {
       size_t finalCandidateIdx;
 
-    #ifdef WITH_OPENMP
+    #ifdef WITH_OPENMP3
       #pragma omp atomic capture
+    #elif WITH_OPENMP
+      #pragma omp critical
     #endif
       finalCandidateIdx = m_poseCandidates->dataSize++;
 
@@ -132,7 +134,7 @@ void PreemptiveRansac_CPU::sample_inliers(bool useMask)
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(uint32_t sampleIdx = 0; sampleIdx < m_ransacInliersPerIteration; ++sampleIdx)
+  for(int sampleIdx = 0; sampleIdx < static_cast<int>(m_ransacInliersPerIteration); ++sampleIdx)
   {
     // Try to sample the raster index of a valid keypoint whose prediction has at least one modal cluster, using the mask if necessary.
     int rasterIdx = -1;
@@ -144,8 +146,10 @@ void PreemptiveRansac_CPU::sample_inliers(bool useMask)
     {
       size_t arrayIdx = 0;
 
-    #ifdef WITH_OPENMP
+    #ifdef WITH_OPENMP3
       #pragma omp atomic capture
+    #elif WITH_OPENMP
+      #pragma omp critical
     #endif
       arrayIdx = m_inlierRasterIndicesBlock->dataSize++;
 

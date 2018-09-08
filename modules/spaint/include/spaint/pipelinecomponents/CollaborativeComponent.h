@@ -10,7 +10,7 @@
 #include <boost/thread.hpp>
 #include <boost/timer/timer.hpp>
 
-#include <itmx/relocalisation/Relocaliser.h>
+#include <orx/relocalisation/Relocaliser.h>
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 

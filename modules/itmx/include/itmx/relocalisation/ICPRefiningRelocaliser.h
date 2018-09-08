@@ -12,12 +12,13 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
 
+#include <orx/relocalisation/RefiningRelocaliser.h>
+
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 #include <tvgutil/timing/AverageTimer.h>
 
 #include "../base/ITMObjectPtrTypes.h"
 #include "../visualisation/interface/DepthVisualiser.h"
-#include "RefiningRelocaliser.h"
 
 namespace itmx {
 
@@ -28,7 +29,7 @@ namespace itmx {
  * \tparam IndexType  The type of indexing used to access the reconstructed scene.
  */
 template <typename VoxelType, typename IndexType>
-class ICPRefiningRelocaliser : public RefiningRelocaliser
+class ICPRefiningRelocaliser : public orx::RefiningRelocaliser
 {
   //#################### TYPEDEFS ####################
 private:
@@ -57,17 +58,29 @@ private:
   /** Whether or not to save the relocalised poses. */
   bool m_savePoses;
 
+  /** Whether or not to save the average relocalisation times. */
+  bool m_saveTimes;
+
   /** The scene being viewed from the camera. */
   Scene_Ptr m_scene;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
+  /** The timer used to profile the initial relocalisations. */
+  mutable AverageTimer m_timerInitialRelocalisation;
+
+  /** The timer used to profile the ICP refinement. */
+  mutable AverageTimer m_timerRefinement;
+
   /** The timer used to profile the relocalisation calls. */
   mutable AverageTimer m_timerRelocalisation;
 
   /** Whether or not timers are enabled and stats are printed on destruction. */
   bool m_timersEnabled;
+
+  /** The path to a file where to save the average relocalisation times. */
+  std::string m_timersOutputFile;
 
   /** The timer used to profile the training calls. */
   AverageTimer m_timerTraining;
@@ -107,7 +120,7 @@ public:
    * \param denseVoxelMapper    The dense mapper used to find visible blocks in the voxel scene.
    * \param settings            The settings to use for InfiniTAM.
    */
-  ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
+  ICPRefiningRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                          const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
                          const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings);
@@ -178,16 +191,18 @@ private:
   /**
    * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
-   * \param timer The timer to start.
+   * \param timer            The timer to start.
+   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before starting the timer.
    */
-  void start_timer(AverageTimer& timer) const;
+  void start_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 
   /**
    * \brief Stops the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
    * \param timer The timer to stop.
+   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before stopping the timer.
    */
-  void stop_timer(AverageTimer& timer) const;
+  void stop_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 };
 
 }

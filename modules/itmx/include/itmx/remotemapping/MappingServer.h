@@ -195,7 +195,7 @@ public:
   /**
    * \brief Constructs a mapping server.
    *
-   * \param mode  The mode in which the server shuold run.
+   * \param mode  The mode in which the server should run.
    * \param port  The port on which the server should listen for connections.
    */
   explicit MappingServer(Mode mode = MSM_MULTI_CLIENT, int port = 7851);

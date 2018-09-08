@@ -19,9 +19,9 @@
 #include <ORUtils/SE3Pose.h>
 
 #include <itmx/base/ITMObjectPtrTypes.h>
-#include <itmx/relocalisation/Relocaliser.h>
 
 #include <orx/base/ORImagePtrTypes.h>
+#include <orx/relocalisation/Relocaliser.h>
 
 #include <tvgutil/misc/SettingsContainer.h>
 
@@ -144,7 +144,7 @@ private:
   std::string m_poseFileMask;
 
   /** The relocaliser being tested. */
-  itmx::Relocaliser_Ptr m_relocaliser;
+  orx::Relocaliser_Ptr m_relocaliser;
 
   /** The (printf-like) mask used to generate the RGB image filenames. */
   std::string m_rgbImageMask;

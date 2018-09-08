@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/FernRelocaliser.h"
+using namespace orx;
 
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
