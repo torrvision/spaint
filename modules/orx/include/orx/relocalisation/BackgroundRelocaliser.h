@@ -1,18 +1,17 @@
 /**
- * itmx: BackgroundRelocaliser.h
+ * orx: BackgroundRelocaliser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_ITMX_BACKGROUNDRELOCALISER
-#define H_ITMX_BACKGROUNDRELOCALISER
+#ifndef H_ORX_BACKGROUNDRELOCALISER
+#define H_ORX_BACKGROUNDRELOCALISER
 
 #include <boost/atomic.hpp>
 
-#include <orx/base/ORImagePtrTypes.h>
-
 #include "Relocaliser.h"
+#include "../base/ORImagePtrTypes.h"
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of this class can be used to decorate calls to a relocaliser

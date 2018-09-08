@@ -13,9 +13,9 @@
 #endif
 
 #include <itmx/base/ITMObjectPtrTypes.h>
-#include <itmx/relocalisation/Relocaliser.h>
 
 #include <orx/base/ORImagePtrTypes.h>
+#include <orx/relocalisation/Relocaliser.h>
 
 namespace spaint {
 
@@ -39,7 +39,7 @@ struct CollaborativeRelocalisation
   int m_frameIndexJ;
 
   /** TODO */
-  itmx::Relocaliser::Quality m_initialRelocalisationQuality;
+  orx::Relocaliser::Quality m_initialRelocalisationQuality;
 
   /** The local pose of the frame being relocalised in scene j's coordinate system. */
   ORUtils::SE3Pose m_localPoseJ;
@@ -67,7 +67,7 @@ struct CollaborativeRelocalisation
   : m_candidateScore(0.0f),
     m_depthIntrinsicsI(depthIntrinsicsI),
     m_frameIndexJ(frameIndexJ),
-    m_initialRelocalisationQuality(itmx::Relocaliser::RELOCALISATION_POOR),
+    m_initialRelocalisationQuality(orx::Relocaliser::RELOCALISATION_POOR),
     m_localPoseJ(localPoseJ),
     m_sceneI(sceneI),
     m_sceneJ(sceneJ),

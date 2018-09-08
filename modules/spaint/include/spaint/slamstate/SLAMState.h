@@ -30,7 +30,7 @@ public:
    */
   enum InputStatus
   {
-    /** Input was available last time the SLAM component attempted to process a frame. */
+    /** Input was available the last time the SLAM component attempted to process a frame. */
     IS_ACTIVE,
 
     /** Input was not available the last time the SLAM component attempted to process a frame, but might be again in the future. */
