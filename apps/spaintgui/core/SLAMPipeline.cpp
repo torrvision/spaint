@@ -4,6 +4,7 @@
  */
 
 #include "SLAMPipeline.h"
+using namespace itmx;
 using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
@@ -11,7 +12,7 @@ using namespace spaint;
 SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
                            const std::string& trackerConfig, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
                            const boost::optional<boost::filesystem::path>& modelDir, const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials,
-                           const itmx::MappingServer_Ptr& mappingServer)
+                           const MappingServer_Ptr& mappingServer)
   // Note: A minimum of 2 labels is required (background and foreground).
 : MultiScenePipeline("slam", settings, resourcesDir, 2, mappingServer)
 {

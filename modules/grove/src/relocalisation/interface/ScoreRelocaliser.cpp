@@ -4,7 +4,6 @@
  */
 
 #include "relocalisation/interface/ScoreRelocaliser.h"
-using namespace itmx;
 
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
