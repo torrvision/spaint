@@ -6,87 +6,16 @@
 #ifndef H_ITMX_MAPPINGSERVER
 #define H_ITMX_MAPPINGSERVER
 
-#include <map>
-#include <set>
-#include <vector>
-
-#include <boost/atomic.hpp>
-#include <boost/optional.hpp>
-#include <boost/thread.hpp>
-
-#include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
-
-#include <tvgutil/boost/WrappedAsio.h>
-#include <tvgutil/containers/PooledQueue.h>
 #include <tvgutil/net/Server.h>
 
-#include "RGBDFrameCompressor.h"
+#include "MappingClientData.h"
 
 namespace itmx {
 
 /**
- * \brief An instance of this struct contains all of the information associated with an individual client of a mapping server.
- */
-struct MappingServerClient : tvgutil::DefaultClient
-{
-  //#################### TYPEDEFS ####################
-
-  typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
-  typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
-
-  //#################### PUBLIC VARIABLES ####################
-
-  /** The calibration parameters of the camera associated with the client. */
-  ITMLib::ITMRGBDCalib m_calib;
-
-  /** A dummy frame message to consume messages that cannot be pushed onto the queue. */
-  RGBDFrameMessage_Ptr m_dummyFrameMsg;
-
-  /** The frame compressor for the client. */
-  RGBDFrameCompressor_Ptr m_frameCompressor;
-
-  /** A queue containing the RGB-D frame messages received from the client. */
-  RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
-
-  /** A place in which to store compressed RGB-D frame messages. */
-  boost::shared_ptr<CompressedRGBDFrameMessage> m_frameMessage;
-
-  /** A place in which to store compressed RGB-D frame header messages. */
-  CompressedRGBDFrameHeaderMessage m_headerMessage;
-
-  /** A flag indicating whether or not the images associated with the first message in the queue have already been read. */
-  bool m_imagesDirty;
-
-  /** A flag indicating whether or not the pose associated with the first message in the queue has already been read. */
-  bool m_poseDirty;
-
-  //#################### CONSTRUCTORS ####################
-
-  MappingServerClient()
-  : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
-    m_imagesDirty(false),
-    m_poseDirty(false)
-  {
-    m_frameMessage.reset(new CompressedRGBDFrameMessage(m_headerMessage));
-  }
-
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-
-  const Vector2i& get_depth_image_size() const
-  {
-    return m_calib.intrinsics_d.imgSize;
-  }
-
-  const Vector2i& get_rgb_image_size() const
-  {
-    return m_calib.intrinsics_rgb.imgSize;
-  }
-};
-
-/**
  * \brief An instance of this class represents a server that can be used to communicate with remote mapping clients.
  */
-class MappingServer : public tvgutil::Server<MappingServerClient>
+class MappingServer : public tvgutil::Server<MappingClientData>
 {
   //#################### TYPEDEFS ####################
 private:

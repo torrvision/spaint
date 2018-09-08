@@ -12,53 +12,26 @@
 
 #include <boost/atomic.hpp>
 #include <boost/optional.hpp>
-#include <boost/thread.hpp>
 
+#include "BasicClientData.h"
 #include "../boost/WrappedAsio.h"
 
 //#define DEBUGGING 1
 
 namespace tvgutil {
 
-//#################### HELPER TYPES ####################
-
-/**
- * \brief An instance of this struct represents a basic client that has no data associated with it.
- */
-struct DefaultClient
-{
-  //#################### PUBLIC VARIABLES ####################
-
-  /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
-  bool m_connectionOk;
-
-  /** The thread that manages communication with the client. */
-  boost::shared_ptr<boost::thread> m_thread;
-
-  //#################### CONSTRUCTORS ####################
-
-  DefaultClient()
-  : m_connectionOk(true)
-  {}
-};
-
 namespace Server_NS {
 
-//#################### USING DECLARATIONS ####################
-
 using boost::asio::ip::tcp;
-
-//#################### MAIN TYPE ####################
 
 /**
  * \brief An instance of a class deriving from this one represents a server that can be used to communicate with one or more clients.
  */
-template <typename ClientType = DefaultClient>
+template <typename Client = BasicClientData>
 class Server
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef ClientType Client;
   typedef boost::shared_ptr<Client> Client_Ptr;
 
   //#################### ENUMERATIONS ####################

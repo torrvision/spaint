@@ -6,15 +6,16 @@
 #include "remotemapping/MappingServer.h"
 using boost::asio::ip::tcp;
 using namespace ITMLib;
-using namespace tvgutil;
 
 #include <iostream>
+
+#include <tvgutil/net/AckMessage.h>
+using namespace tvgutil;
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
 #endif
 
-#include "remotemapping/AckMessage.h"
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 #include "remotemapping/CompressedRGBDFrameMessage.h"
 #include "remotemapping/InteractionTypeMessage.h"
