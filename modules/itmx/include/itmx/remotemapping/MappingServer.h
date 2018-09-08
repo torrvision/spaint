@@ -25,9 +25,9 @@
 namespace itmx {
 
 /**
- * \brief An instance of this struct contains all of the information associated with an individual client of a mapping server.
+ * \brief An instance of this struct can be used to hold the data associated with an individual client of a mapping server.
  */
-struct MappingServerClient : tvgutil::DefaultClient
+struct MappingClientData : tvgutil::BasicClientData
 {
   //#################### TYPEDEFS ####################
 
@@ -62,7 +62,7 @@ struct MappingServerClient : tvgutil::DefaultClient
 
   //#################### CONSTRUCTORS ####################
 
-  MappingServerClient()
+  MappingClientData()
   : m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
     m_imagesDirty(false),
     m_poseDirty(false)
@@ -86,7 +86,7 @@ struct MappingServerClient : tvgutil::DefaultClient
 /**
  * \brief An instance of this class represents a server that can be used to communicate with remote mapping clients.
  */
-class MappingServer : public tvgutil::Server<MappingServerClient>
+class MappingServer : public tvgutil::Server<MappingClientData>
 {
   //#################### TYPEDEFS ####################
 private:
