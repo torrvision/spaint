@@ -292,9 +292,10 @@ bool SLAMComponent::process_frame()
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
     }
 
-    // If a mapping client is active, use it to send the current frame to the remote mapping server.
+    // If a mapping client is active:
     if(m_mappingClient)
     {
+      // Send the current frame to the remote mapping server.
       MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_mappingClient->begin_push_frame_message();
       boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
       if(elt)
