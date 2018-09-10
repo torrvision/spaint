@@ -151,6 +151,7 @@ include/itmx/remotemapping/BaseRGBDFrameMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameMessage.h
 include/itmx/remotemapping/DepthCompressionType.h
+include/itmx/remotemapping/InteractionTypeMessage.h
 include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingMessage.h
 include/itmx/remotemapping/MappingServer.h
