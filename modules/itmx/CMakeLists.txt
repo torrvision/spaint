@@ -120,10 +120,12 @@ include/itmx/picking/shared/Picker_Shared.h
 
 ##
 SET(relocalisation_sources
+src/relocalisation/CascadeRelocaliser.cpp
 src/relocalisation/FernRelocaliser.cpp
 )
 
 SET(relocalisation_headers
+include/itmx/relocalisation/CascadeRelocaliser.h
 include/itmx/relocalisation/FernRelocaliser.h
 include/itmx/relocalisation/ICPRefiningRelocaliser.h
 )

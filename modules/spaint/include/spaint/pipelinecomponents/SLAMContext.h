@@ -13,7 +13,7 @@
 
 #include <itmx/remotemapping/MappingServer.h>
 
-#include <orx/relocalisation/RefiningRelocaliser.h>
+#include <orx/relocalisation/Relocaliser.h>
 
 #include "../slamstate/SLAMState.h"
 
@@ -32,7 +32,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The relocalisers used to estimate the camera pose in the various scenes. */
-  std::map<std::string,orx::RefiningRelocaliser_Ptr> m_relocalisers;
+  std::map<std::string,orx::Relocaliser_Ptr> m_relocalisers;
 
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
@@ -55,36 +55,12 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the fast relocaliser for the specified scene.
+   * \brief Gets the relocaliser for the specified scene.
    *
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual orx::RefiningRelocaliser_Ptr& get_fast_relocaliser(const std::string& sceneID);
-
-  /**
-   * \brief Gets the fast relocaliser for the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The relocaliser for the specified scene.
-   */
-  virtual orx::RefiningRelocaliser_CPtr get_fast_relocaliser(const std::string& sceneID) const;
-
-  /**
-   * \brief Gets the intermediate relocaliser for the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The relocaliser for the specified scene.
-   */
-  virtual orx::RefiningRelocaliser_Ptr& get_intermediate_relocaliser(const std::string& sceneID);
-
-  /**
-   * \brief Gets the intermediate relocaliser for the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The relocaliser for the specified scene.
-   */
-  virtual orx::RefiningRelocaliser_CPtr get_intermediate_relocaliser(const std::string& sceneID) const;
+  virtual orx::Relocaliser_Ptr& get_relocaliser(const std::string& sceneID);
 
   /**
    * \brief Gets the relocaliser for the specified scene.
@@ -92,15 +68,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual orx::RefiningRelocaliser_Ptr& get_relocaliser(const std::string& sceneID);
-
-  /**
-   * \brief Gets the relocaliser for the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The relocaliser for the specified scene.
-   */
-  virtual orx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+  virtual orx::Relocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
 
   /**
    * \brief Gets the SLAM state for the specified scene.

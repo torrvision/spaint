@@ -29,6 +29,7 @@ using namespace grove;
 #endif
 #include <itmx/persistence/PosePersister.h>
 #include <itmx/relocalisation/FernRelocaliser.h>
+#include <itmx/relocalisation/CascadeRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 #include <itmx/trackers/TrackerFactory.h>
@@ -59,8 +60,6 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
-  m_relocaliserThresholdScore_Fast(0.15f),
-  m_relocaliserThresholdScore_Intermediate(0.15f),
   m_relocaliserTrainingCount(0),
   m_relocaliserTrainingSkip(0),
   m_sceneID(sceneID),
@@ -465,8 +464,6 @@ void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
 void SLAMComponent::process_relocalisation()
 {
   const Relocaliser_Ptr& relocaliser = m_context->get_relocaliser(m_sceneID);
-  const Relocaliser_Ptr& fastRelocaliser = m_context->get_fast_relocaliser(m_sceneID);
-  const Relocaliser_Ptr& intermediateRelocaliser = m_context->get_intermediate_relocaliser(m_sceneID);
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
   const View_Ptr& view = slamState->get_view();
@@ -496,57 +493,14 @@ void SLAMComponent::process_relocalisation()
   const bool performRelocalisation = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED;
   if(performRelocalisation)
   {
-    std::vector<Relocaliser::Result> relocalisationResults;
-
-    // First, try relocalising with the fast relocaliser (if available).
-    if(fastRelocaliser)
-    {
-      relocalisationResults = fastRelocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
-    }
-
-    // If the fast relocaliser is not instantiated, failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser.
-    if(intermediateRelocaliser && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Fast))
-    {
-      static int intermediateRelocalisationsCount = 0;
-
-      std::cout << "Using intermediate relocaliser to relocalise: " << intermediateRelocalisationsCount++ << ".\n";
-      relocalisationResults = intermediateRelocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
-    }
-
-    // Finally, run the normal relocaliser if all else failed.
-    if(relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate)
-    {
-      static int normalRelocalisationsCount = 0;
-
-      std::cout << "Using normal relocaliser to relocalise: " << normalRelocalisationsCount++ << ".\n";
-      relocalisationResults = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
-    }
-
-    // Get the (global) experiment tag.
-    const std::string experimentTag = m_context->get_settings()->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
-
-    // Determine the directory to which to save the poses and make sure that it exists.
-    static tvgutil::SequentialPathGenerator pathGenerator(tvgutil::find_subdir_from_executable("reloc_poses") / experimentTag);
-    boost::filesystem::create_directories(pathGenerator.get_base_dir());
-
-    Matrix4f relocalisedPose;
+    std::vector<Relocaliser::Result> relocalisationResults = relocaliser->relocalise(view->rgb, view->depth, depthIntrinsics);
 
     if(!relocalisationResults.empty())
     {
       const Relocaliser::Result& bestRelocalisationResult = relocalisationResults[0];
       trackingState->pose_d->SetFrom(&bestRelocalisationResult.pose);
       trackingState->trackerResult = bestRelocalisationResult.quality == Relocaliser::RELOCALISATION_GOOD ? ITMTrackingState::TRACKING_GOOD : ITMTrackingState::TRACKING_POOR;
-
-      relocalisedPose = bestRelocalisationResult.pose.GetInvM();
     }
-    else
-    {
-      // Save invalid pose.
-      relocalisedPose.setValues(std::numeric_limits<float>::quiet_NaN());
-    }
-
-    PosePersister::save_pose_on_thread(relocalisedPose, pathGenerator.make_path("pose-%06i.icp.txt"));
-    pathGenerator.increment_index();
   }
 
   // Train the relocaliser if necessary.
@@ -608,15 +562,12 @@ void SLAMComponent::setup_relocaliser()
 
     // Also create a fast relocaliser from the same file.
     innerRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType, "ScoreRelocaliser_Fast.");
-    m_relocaliserThresholdScore_Fast = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Fast", 0.15f);
 
     // Also create an intermediate relocaliser from the same file.
     innerRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType, "ScoreRelocaliser_Intermediate.");
-    m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.15f);
 
     // The fast and intermediate relocalisers share the state with the normal relocaliser (only the normal one will be trained and updated).
     ScoreRelocaliserState_Ptr relocaliserState = boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser)->get_relocaliser_state();
-
     boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser_Fast)->set_relocaliser_state(relocaliserState);
     boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser_Intermediate)->set_relocaliser_state(relocaliserState);
 #endif
@@ -649,25 +600,29 @@ void SLAMComponent::setup_relocaliser()
   FallibleTracker *dummy;
   Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
-  m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
+  // Wrap the inner relocaliser in an ICP refiner.
+  innerRelocaliser.reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
     innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
   ));
 
-  // Setup the fast relocaliser as well (if instantiated).
+  // Wrap the fast relocaliser as well (if instantiated).
   if(innerRelocaliser_Fast)
   {
-    m_context->get_fast_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
+    innerRelocaliser_Fast.reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
       innerRelocaliser_Fast, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
       voxelScene, m_denseVoxelMapper, settings));
   }
 
-  // Setup the intermediate relocaliser as well (if instantiated).
+  // Wrap the intermediate relocaliser as well (if instantiated).
   if(innerRelocaliser_Intermediate)
   {
-    m_context->get_intermediate_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
+    innerRelocaliser_Intermediate.reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
       innerRelocaliser_Intermediate, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
       voxelScene, m_denseVoxelMapper, settings));
   }
+
+  // Now create a CascadeRelocaliser that wraps the three relocalisers.
+  m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocaliser_Fast, innerRelocaliser_Intermediate, innerRelocaliser, settings));
 }
 
 void SLAMComponent::setup_tracker()

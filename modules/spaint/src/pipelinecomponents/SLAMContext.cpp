@@ -13,32 +13,12 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-RefiningRelocaliser_Ptr& SLAMContext::get_fast_relocaliser(const std::string& sceneID)
-{
-  return m_relocalisers[sceneID + "_Fast"];
-}
-
-RefiningRelocaliser_CPtr SLAMContext::get_fast_relocaliser(const std::string& sceneID) const
-{
-  return MapUtil::lookup(m_relocalisers, sceneID + "_Fast");
-}
-
-RefiningRelocaliser_Ptr& SLAMContext::get_intermediate_relocaliser(const std::string& sceneID)
-{
-  return m_relocalisers[sceneID + "_Intermediate"];
-}
-
-RefiningRelocaliser_CPtr SLAMContext::get_intermediate_relocaliser(const std::string& sceneID) const
-{
-  return MapUtil::lookup(m_relocalisers, sceneID + "_Intermediate");
-}
-
-RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
+Relocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
 {
   return m_relocalisers[sceneID];
 }
 
-RefiningRelocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
+Relocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
 {
   return MapUtil::lookup(m_relocalisers, sceneID);
 }
