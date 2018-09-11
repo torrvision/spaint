@@ -25,7 +25,7 @@ Vector2i ZedImageSourceEngine::getDepthImageSize() const
   return m_camera->get_depth_image_size();
 }
 
-void ZedImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void ZedImageSourceEngine::getImages(ORUChar4Image *rgb, ORShortImage *rawDepth)
 {
   m_camera->get_images(rgb, rawDepth);
 }

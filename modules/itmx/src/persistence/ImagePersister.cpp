@@ -17,7 +17,7 @@ namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path, ImageFileType fileType)
+ORUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path, ImageFileType fileType)
 {
   // If the image file type wasn't specified, try to deduce it.
   if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
@@ -39,7 +39,7 @@ ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path, Imag
   }
 }
 
-void ImagePersister::save_image(const ITMShortImage_CPtr& image, const std::string& path, ImageFileType fileType)
+void ImagePersister::save_image(const ORShortImage_CPtr& image, const std::string& path, ImageFileType fileType)
 {
   // If the image file type wasn't specified, try to deduce it.
   if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
@@ -52,6 +52,13 @@ void ImagePersister::save_image(const ITMShortImage_CPtr& image, const std::stri
       SaveImageToFile(image.get(), path.c_str());
       break;
     }
+    case IFT_PNG:
+    {
+      std::vector<unsigned char> buffer;
+      encode_png(image, buffer);
+      lodepng::save_file(buffer, path);
+      break;
+    }
     default:
     {
       throw std::runtime_error("Could not save image to '" + path + "': unsupported file type");
@@ -59,7 +66,7 @@ void ImagePersister::save_image(const ITMShortImage_CPtr& image, const std::stri
   }
 }
 
-void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType)
+void ImagePersister::save_image(const ORUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType)
 {
   // If the image file type wasn't specified, try to deduce it.
   if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
@@ -88,7 +95,7 @@ void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::str
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path)
+ORUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path)
 {
   // Decode the PNG.
   std::vector<unsigned char> data;
@@ -99,7 +106,7 @@ ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::vector<unsigned ch
   }
 
   // Construct the image.
-  ITMUChar4Image_Ptr image(new ITMUChar4Image(Vector2i(width, height), true, true));
+  ORUChar4Image_Ptr image(new ORUChar4Image(Vector2i(width, height), true, true));
   const int pixelCount = width * height;
   const unsigned char *src = &data[0];
   Vector4u *dest = image->GetData(MEMORYDEVICE_CPU);
@@ -134,7 +141,28 @@ ImagePersister::ImageFileType ImagePersister::deduce_image_file_type(const std::
   return IFT_UNKNOWN;
 }
 
-void ImagePersister::encode_png(const ITMUChar4Image_CPtr& image, std::vector<unsigned char>& buffer)
+void ImagePersister::encode_png(const ORShortImage_CPtr& image, std::vector<unsigned char>& buffer)
+{
+  const int pixelCount = static_cast<int>(image->dataSize);
+  std::vector<unsigned char> data(pixelCount * 2);
+  const short *src = image->GetData(MEMORYDEVICE_CPU);
+  unsigned char *dest = &data[0];
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    const unsigned char *pixel = reinterpret_cast<const unsigned char*>(&src[i]);
+    int offset = i * 2;
+    dest[offset] = *(pixel + 1);
+    dest[offset + 1] = *pixel;
+  }
+
+  lodepng::encode(buffer, &data[0], image->noDims.x, image->noDims.y, LCT_GREY, 16);
+}
+
+void ImagePersister::encode_png(const ORUChar4Image_CPtr& image, std::vector<unsigned char>& buffer)
 {
   const int pixelCount = static_cast<int>(image->dataSize);
   std::vector<unsigned char> data(pixelCount * 4);

@@ -6,7 +6,30 @@
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 using namespace tvgutil;
 
+#ifdef _MSC_VER
+  // Suppress some VC++ warnings that are produced when including the Thrust headers.
+  #pragma warning(disable:4244)
+#endif
+
+#include <thrust/count.h>
+#include <thrust/device_ptr.h>
+
+#ifdef _MSC_VER
+  // Reenable the suppressed warnings for the rest of the translation unit.
+  #pragma warning(default:4244)
+#endif
+
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
+
+//#################### LOCAL TYPES ####################
+
+struct ValidDepth
+{
+  __device__ bool operator()(float x) const
+  {
+    return x > 0.0f;
+  }
+};
 
 namespace grove {
 
@@ -32,6 +55,17 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string& forestFilename, 
 {}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
+
+uint32_t ScoreRelocaliser_CUDA::count_valid_depths(const ORFloatImage *depthImage) const
+{
+  const float *depths = depthImage->GetData(MEMORYDEVICE_CUDA);
+  const int pixelCount = depthImage->noDims.width * depthImage->noDims.height;
+
+  thrust::device_ptr<const float> depthsStart(depths);
+  thrust::device_ptr<const float> depthsEnd(depths + pixelCount);
+
+  return static_cast<uint32_t>(thrust::count_if(depthsStart, depthsEnd, ValidDepth()));
+}
 
 void ScoreRelocaliser_CUDA::merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const
 {

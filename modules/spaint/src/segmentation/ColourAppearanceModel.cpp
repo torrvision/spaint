@@ -44,7 +44,7 @@ float ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbCo
   return denom > 0.0f ? colourGivenObject / denom : 0.5f;
 }
 
-void ColourAppearanceModel::train(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask)
+void ColourAppearanceModel::train(const ORUChar4Image_CPtr& image, const ORUCharImage_CPtr& objectMask)
 {
   // Update the likelihood histograms based on the colour image and object mask.
   const Vector4u *imagePtr = image->GetData(MEMORYDEVICE_CPU);

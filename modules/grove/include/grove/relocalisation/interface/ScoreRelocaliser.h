@@ -8,8 +8,9 @@
 
 #include <boost/optional.hpp>
 
-#include <itmx/base/ITMObjectPtrTypes.h>
-#include <itmx/relocalisation/Relocaliser.h>
+#include <ORUtils/DeviceType.h>
+
+#include <orx/relocalisation/Relocaliser.h>
 
 #include "../base/ScoreRelocaliserState.h"
 #include "../../clustering/interface/ExampleClusterer.h"
@@ -26,7 +27,7 @@ namespace grove {
  * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene, using the approach described
  *        in "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., 2017).
  */
-class ScoreRelocaliser : public itmx::Relocaliser
+class ScoreRelocaliser : public orx::Relocaliser
 {
   //#################### CONSTANTS ####################
 public:
@@ -84,9 +85,6 @@ protected:
   /** The feature calculator used to extract keypoints and descriptors from the RGB-D image. */
   DA_RGBDPatchFeatureCalculator_Ptr m_featureCalculator;
 
-  /** The low-level engine used to perform basic image processing. */
-  LowLevelEngine_Ptr m_lowLevelEngine;
-
   /** The maximum number of clusters to store in each leaf in the forest (used during clustering). */
   uint32_t m_maxClusterCount;
 
@@ -143,6 +141,15 @@ public:
 
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
+  /**
+   * \brief Counts the number of pixels in the specified depth image that contain a valid depth value.
+   *
+   * \param depthImage  The depth image.
+   *
+   * \return  The number of pixels in the depth image that contain a valid depth value.
+   */
+  virtual uint32_t count_valid_depths(const ORFloatImage *depthImage) const = 0;
+
   /**
    * \brief Merges the SCoRe predictions (sets of clusters) associated with each keypoint to create a single
    *        SCoRe prediction (a single set of clusters) for each keypoint.
@@ -227,7 +234,7 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual std::vector<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual void reset();
@@ -245,7 +252,7 @@ public:
   void set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState);
 
   /** Override */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
+  virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
 
   /** Override */
   virtual void update();

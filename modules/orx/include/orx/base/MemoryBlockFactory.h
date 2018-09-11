@@ -1,10 +1,10 @@
 /**
- * itmx: MemoryBlockFactory.h
+ * orx: MemoryBlockFactory.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_ITMX_MEMORYBLOCKFACTORY
-#define H_ITMX_MEMORYBLOCKFACTORY
+#ifndef H_ORX_MEMORYBLOCKFACTORY
+#define H_ORX_MEMORYBLOCKFACTORY
 
 #include <boost/shared_ptr.hpp>
 
@@ -12,7 +12,7 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of this class can be used to make memory blocks.

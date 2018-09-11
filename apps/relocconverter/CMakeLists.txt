@@ -40,6 +40,7 @@ SOURCE_GROUP(sources FILES ${sources})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 
 ##########################################
@@ -47,7 +48,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 ##########################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
-TARGET_LINK_LIBRARIES(${targetname} spaint tvgutil tvginput)
+TARGET_LINK_LIBRARIES(${targetname} spaint orx tvgutil tvginput)
 
 #################################
 # Specify the libraries to link #

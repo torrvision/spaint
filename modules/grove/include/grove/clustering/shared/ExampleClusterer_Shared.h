@@ -201,8 +201,10 @@ inline void compute_parent(int exampleSetIdx, int exampleIdx, const ExampleType 
 #ifdef __CUDACC__
       clusterIdx = atomicAdd(&nbClustersPerExampleSet[exampleSetIdx], 1);
 #else
-    #ifdef WITH_OPENMP
+    #ifdef WITH_OPENMP3
       #pragma omp atomic capture
+    #elif WITH_OPENMP
+      #pragma omp critical
     #endif
       clusterIdx = nbClustersPerExampleSet[exampleSetIdx]++;
 #endif
@@ -263,8 +265,10 @@ inline void create_selected_cluster(int exampleSetIdx, int selectedClusterIdx, c
 #ifdef __CUDACC__
     outputClusterIdx = atomicAdd(&outputClusters.size, 1);
 #else
-  #ifdef WITH_OPENMP
+  #ifdef WITH_OPENMP3
     #pragma omp atomic capture
+  #elif WITH_OPENMP
+    #pragma omp critical
   #endif
     outputClusterIdx = outputClusters.size++;
 #endif

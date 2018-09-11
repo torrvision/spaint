@@ -59,7 +59,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+  virtual void compute_keypoints_and_features(const ORUChar4Image *rgbImage, const ORFloatImage *depthImage,
                                               const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                               KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
 

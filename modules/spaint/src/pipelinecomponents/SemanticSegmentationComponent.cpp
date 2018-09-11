@@ -5,11 +5,13 @@
 
 #include "pipelinecomponents/SemanticSegmentationComponent.h"
 
-#include <itmx/base/MemoryBlockFactory.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
 using namespace itmx;
+
+#include <orx/base/MemoryBlockFactory.h>
+using namespace orx;
 
 #include <rafl/examples/Example.h>
 using namespace rafl;

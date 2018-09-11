@@ -36,7 +36,7 @@ class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisi
 {
   //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
 private:
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
+  typedef boost::shared_ptr<const ORUChar4Image> ORUChar4Image_CPtr;
 
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
 private:
@@ -200,11 +200,11 @@ Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-ITMUChar4Image_CPtr Renderer::capture_screenshot() const
+ORUChar4Image_CPtr Renderer::capture_screenshot() const
 {
   // Read the pixel data from video memory into an image.
   const int width = m_windowViewportSize.width, height = m_windowViewportSize.height;
-  ITMUChar4Image_Ptr screenshotImage(new ITMUChar4Image(Vector2i(width, height), true, false));
+  ORUChar4Image_Ptr screenshotImage(new ORUChar4Image(Vector2i(width, height), true, false));
   Vector4u *pixelData = screenshotImage->GetData(MEMORYDEVICE_CPU);
   glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
 
@@ -386,7 +386,7 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
+void Renderer::generate_visualisation(const ORUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
                                       VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose,
                                       const View_CPtr& view, const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType,
                                       bool surfelFlag, const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
@@ -415,7 +415,7 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
   }
 }
 
-void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+void Renderer::render_overlay(const ORUChar4Image_CPtr& overlay) const
 {
   // Copy the overlay to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
@@ -444,7 +444,7 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
   boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracWindowPos);
   if(!fracSubwindowPos) return;
 
-  ITMUChar4Image_CPtr image = subwindow.get_image();
+  ORUChar4Image_CPtr image = subwindow.get_image();
   int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
   int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
   Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
@@ -476,7 +476,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   }
 
   // Generate the subwindow image.
-  const ITMUChar4Image_Ptr& image = subwindow.get_image();
+  const ORUChar4Image_Ptr& image = subwindow.get_image();
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   const View_CPtr view = slamState->get_view();
   const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
@@ -549,7 +549,7 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       // If the camera for the subwindow is in follow mode, render any overlay image generated during object segmentation.
       if(cameraMode == Subwindow::CM_FOLLOW)
       {
-        const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image(sceneID);
+        const ORUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image(sceneID);
         if(segmentationImage) render_overlay(segmentationImage);
       }
     }

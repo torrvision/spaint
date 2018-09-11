@@ -54,8 +54,10 @@ inline void add_example_to_reservoirs(const ExampleType& example, const int *res
 #ifdef __CUDACC__
     oldAddCallsCount = atomicAdd(&reservoirAddCalls[reservoirIdx], 1);
 #else
-  #ifdef WITH_OPENMP
+  #ifdef WITH_OPENMP3
     #pragma omp atomic capture
+  #elif WITH_OPENMP
+    #pragma omp critical
   #endif
     oldAddCallsCount = reservoirAddCalls[reservoirIdx]++;
 #endif

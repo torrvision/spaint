@@ -1,16 +1,16 @@
 /**
- * itmx: DualNumber.h
+ * orx: DualNumber.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_ITMX_DUALNUMBER
-#define H_ITMX_DUALNUMBER
+#ifndef H_ORX_DUALNUMBER
+#define H_ORX_DUALNUMBER
 
 #include <cassert>
 #include <cmath>
 #include <iostream>
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of an instantiation of this class template represents a dual number

@@ -1,5 +1,5 @@
 /**
- * itmx: GeometryUtil.cpp
+ * orx: GeometryUtil.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -10,7 +10,7 @@ using namespace tvgutil;
 
 #include "geometry/DualQuaternion.h"
 
-namespace itmx {
+namespace orx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

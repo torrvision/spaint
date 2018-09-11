@@ -6,8 +6,8 @@
 #include "MarkVoxelsCommand.h"
 using namespace spaint;
 
-#include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
+#include <orx/base/MemoryBlockFactory.h>
+using orx::MemoryBlockFactory;
 
 //#################### CONSTRUCTORS ####################
 

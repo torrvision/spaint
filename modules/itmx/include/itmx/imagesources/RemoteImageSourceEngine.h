@@ -6,7 +6,8 @@
 #ifndef H_ITMX_REMOTEIMAGESOURCEENGINE
 #define H_ITMX_REMOTEIMAGESOURCEENGINE
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
+
 #include "../base/ITMObjectPtrTypes.h"
 #include "../remotemapping/MappingServer.h"
 
@@ -44,7 +45,7 @@ public:
   virtual Vector2i getDepthImageSize() const;
 
   /** Override */
-  virtual void getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
+  virtual void getImages(ORUChar4Image *rgb, ORShortImage *rawDepth);
 
   /** Override */
   virtual Vector2i getRGBImageSize() const;

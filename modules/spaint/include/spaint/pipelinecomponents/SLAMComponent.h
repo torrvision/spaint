@@ -74,6 +74,9 @@ private:
   /** The fiducial detector to use (if any). */
   FiducialDetector_CPtr m_fiducialDetector;
 
+  /** Whether or not to let the relocaliser know when no more calls will be made to its train or update functions. */
+  bool m_finishTrainingEnabled;
+
   /** The number of frames for which fusion has been run. */
   size_t m_fusedFramesCount;
 
@@ -120,11 +123,11 @@ private:
   /** The score threshold used when deciding if the INTERMEDIATE relocaliser has succeeded. */
   float m_relocaliserThresholdScore_Intermediate;
 
-  /** The number of times the relocaliser has been trained with new data. */
+  /** A count that allows us to determine when to train the relocaliser (used in conjunction with m_relocaliserTrainingSkip). */
   size_t m_relocaliserTrainingCount;
 
   /** The number of frames to skip between each call to the relocaliser's train method. */
-  size_t m_relocaliserTrainingSkipFrames;
+  size_t m_relocaliserTrainingSkip;
 
   /** The type of relocaliser. */
   std::string m_relocaliserType;

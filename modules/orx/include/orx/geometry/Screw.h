@@ -1,14 +1,14 @@
 /**
- * itmx: Screw.h
+ * orx: Screw.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_ITMX_SCREW
-#define H_ITMX_SCREW
+#ifndef H_ORX_SCREW
+#define H_ORX_SCREW
 
 #include <ORUtils/Vector.h>
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of an instantiation of this class template represents a transformation in screw form.

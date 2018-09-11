@@ -29,28 +29,9 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 #############################
 
 ##
-SET(base_sources
-src/base/MemoryBlockFactory.cpp
-)
-
 SET(base_headers
-include/itmx/base/ITMImagePtrTypes.h
-include/itmx/base/ITMMemoryBlockPtrTypes.h
 include/itmx/base/ITMObjectPtrTypes.h
-include/itmx/base/MemoryBlockFactory.h
 include/itmx/base/Settings.h
-)
-
-##
-SET(geometry_sources
-src/geometry/GeometryUtil.cpp
-)
-
-SET(geometry_headers
-include/itmx/geometry/DualNumber.h
-include/itmx/geometry/DualQuaternion.h
-include/itmx/geometry/GeometryUtil.h
-include/itmx/geometry/Screw.h
 )
 
 ##
@@ -140,31 +121,19 @@ include/itmx/picking/shared/Picker_Shared.h
 ##
 SET(relocalisation_sources
 src/relocalisation/FernRelocaliser.cpp
-src/relocalisation/NullRelocaliser.cpp
-src/relocalisation/RefiningRelocaliser.cpp
-src/relocalisation/Relocaliser.cpp
 )
 
 SET(relocalisation_headers
 include/itmx/relocalisation/FernRelocaliser.h
 include/itmx/relocalisation/ICPRefiningRelocaliser.h
-include/itmx/relocalisation/NullRelocaliser.h
-include/itmx/relocalisation/RefiningRelocaliser.h
-include/itmx/relocalisation/Relocaliser.h
 )
 
 SET(relocalisation_templates
 include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
 
-IF(WITH_CUDA)
-  SET(relocalisation_sources ${relocalisation_sources} src/relocalisation/BackgroundRelocaliser.cpp)
-  SET(relocalisation_headers ${relocalisation_headers} include/itmx/relocalisation/BackgroundRelocaliser.h)
-ENDIF()
-
 ##
 SET(remotemapping_sources
-src/remotemapping/AckMessage.cpp
 src/remotemapping/BaseRGBDFrameMessage.cpp
 src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
 src/remotemapping/CompressedRGBDFrameMessage.cpp
@@ -182,6 +151,7 @@ include/itmx/remotemapping/BaseRGBDFrameMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameHeaderMessage.h
 include/itmx/remotemapping/CompressedRGBDFrameMessage.h
 include/itmx/remotemapping/DepthCompressionType.h
+include/itmx/remotemapping/InteractionTypeMessage.h
 include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingMessage.h
 include/itmx/remotemapping/MappingServer.h
@@ -189,16 +159,19 @@ include/itmx/remotemapping/RGBCompressionType.h
 include/itmx/remotemapping/RGBDCalibrationMessage.h
 include/itmx/remotemapping/RGBDFrameCompressor.h
 include/itmx/remotemapping/RGBDFrameMessage.h
+include/itmx/remotemapping/SimpleMessage.h
 )
 
 ##
 SET(trackers_sources
+src/trackers/GlobalTracker.cpp
 src/trackers/RemoteTracker.cpp
 src/trackers/TrackerFactory.cpp
 )
 
 SET(trackers_headers
 include/itmx/trackers/FallibleTracker.h
+include/itmx/trackers/GlobalTracker.h
 include/itmx/trackers/RemoteTracker.h
 include/itmx/trackers/TrackerFactory.h
 )
@@ -289,8 +262,6 @@ include/itmx/visualisation/shared/DepthVisualiser_Shared.h
 #################################################################
 
 SET(sources
-${base_sources}
-${geometry_sources}
 ${graphviz_sources}
 ${imagesources_sources}
 ${persistence_sources}
@@ -306,7 +277,6 @@ ${visualisation_cpu_sources}
 
 SET(headers
 ${base_headers}
-${geometry_headers}
 ${graphviz_headers}
 ${imagesources_headers}
 ${persistence_headers}
@@ -350,8 +320,7 @@ ENDIF()
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
-SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
+SOURCE_GROUP(base FILES ${base_headers})
 SOURCE_GROUP(graphviz FILES ${graphviz_sources} ${graphviz_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
@@ -376,6 +345,7 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/itmx)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 

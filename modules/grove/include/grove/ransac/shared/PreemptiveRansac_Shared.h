@@ -384,8 +384,10 @@ inline int sample_inlier(const Keypoint3DColour *keypoints, const ScorePredictio
 #ifdef __CUDACC__
       maskValue = atomicAdd(maskPtr, 1);
 #else
-    #ifdef WITH_OPENMP
+    #ifdef WITH_OPENMP3
       #pragma omp atomic capture
+    #elif WITH_OPENMP
+      #pragma omp critical
     #endif
       maskValue = (*maskPtr)++;
 #endif

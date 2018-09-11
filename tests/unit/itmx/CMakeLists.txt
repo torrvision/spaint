@@ -14,9 +14,6 @@ SET(suitename itmx)
 
 SET(testnames
 ColourConversion
-DualNumber
-DualQuaternion
-GeometryUtil
 )
 
 FOREACH(testname ${testnames})
@@ -52,6 +49,7 @@ SOURCE_GROUP(sources FILES ${sources})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
@@ -65,7 +63,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAUnitTestTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} itmx rigging tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} itmx orx rigging tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)

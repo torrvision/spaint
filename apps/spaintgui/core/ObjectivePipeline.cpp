@@ -46,7 +46,7 @@ void ObjectivePipeline::set_mode(Mode mode)
   // If we are switching out of segmentation training mode, clear the segmentation image.
   if(m_mode == MODE_SEGMENTATION_TRAINING && mode != MODE_SEGMENTATION_TRAINING)
   {
-    m_model->set_segmentation_image(Model::get_world_scene_id(), ITMUChar4Image_CPtr());
+    m_model->set_segmentation_image(Model::get_world_scene_id(), ORUChar4Image_CPtr());
   }
 
   // If we are switching into segmentation mode, start a new segmentation video.
@@ -64,8 +64,8 @@ void ObjectivePipeline::set_mode(Mode mode)
   if(m_mode == MODE_SEGMENTATION && mode != MODE_SEGMENTATION)
   {
     segmentationPathGenerator.reset();
-    m_model->get_slam_state(Model::get_world_scene_id())->set_input_mask(ITMUCharImage_Ptr());
-    m_model->set_segmentation_image(Model::get_world_scene_id(), ITMUChar4Image_CPtr());
+    m_model->get_slam_state(Model::get_world_scene_id())->set_input_mask(ORUCharImage_Ptr());
+    m_model->set_segmentation_image(Model::get_world_scene_id(), ORUChar4Image_CPtr());
   }
 
   switch(mode)

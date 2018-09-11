@@ -1,7 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 
 #include <tvgutil/misc/AttitudeUtil.h>
 using namespace tvgutil;

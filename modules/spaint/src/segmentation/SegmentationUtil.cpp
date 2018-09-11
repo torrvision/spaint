@@ -9,9 +9,9 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ITMUCharImage_Ptr SegmentationUtil::invert_mask(const ITMUCharImage_CPtr& mask)
+ORUCharImage_Ptr SegmentationUtil::invert_mask(const ORUCharImage_CPtr& mask)
 {
-  ITMUCharImage_Ptr invertedMask(new ITMUCharImage(mask->noDims, true, false));
+  ORUCharImage_Ptr invertedMask(new ORUCharImage(mask->noDims, true, false));
 
   const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
   uchar *invertedMaskPtr = invertedMask->GetData(MEMORYDEVICE_CPU);

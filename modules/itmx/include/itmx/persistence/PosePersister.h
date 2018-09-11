@@ -10,7 +10,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 
 namespace itmx {
 

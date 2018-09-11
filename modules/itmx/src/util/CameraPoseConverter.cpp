@@ -7,7 +7,7 @@
 using namespace ORUtils;
 using namespace rigging;
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Math.h>
 
 namespace itmx {
 

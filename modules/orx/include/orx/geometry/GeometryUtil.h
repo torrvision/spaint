@@ -1,10 +1,10 @@
 /**
- * itmx: GeometryUtil.h
+ * orx: GeometryUtil.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_ITMX_GEOMETRYUTIL
-#define H_ITMX_GEOMETRYUTIL
+#ifndef H_ORX_GEOMETRYUTIL
+#define H_ORX_GEOMETRYUTIL
 
 #include <cmath>
 #include <map>
@@ -12,13 +12,12 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Utils/ITMMath.h>
-
+#include <ORUtils/Math.h>
 #include <ORUtils/SE3Pose.h>
 
 #include "DualQuaternion.h"
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief This struct provides a number of useful geometric utility functions.

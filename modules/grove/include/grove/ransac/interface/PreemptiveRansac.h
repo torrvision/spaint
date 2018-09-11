@@ -6,14 +6,12 @@
 #ifndef H_GROVE_PREEMPTIVERANSAC
 #define H_GROVE_PREEMPTIVERANSAC
 
-#include <alglib/optimization.h>
-
 #include <boost/optional.hpp>
 
 #include <ORUtils/SE3Pose.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
-#include <itmx/base/ITMMemoryBlockPtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
+#include <orx/base/ORMemoryBlockPtrTypes.h>
 
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/AverageTimer.h>
@@ -21,6 +19,16 @@
 #include "../shared/PoseCandidate.h"
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../scoreforests/ScorePrediction.h"
+
+#ifdef WITH_ALGLIB
+ //#################### FORWARD DECLARATIONS ####################
+
+// Note: We forward declare these to avoid including the ALGLIB header, which causes NVCC warnings when compiling PreemptiveRansac_CUDA.
+namespace alglib {
+  class real_1d_array;
+  class real_2d_array;
+}
+#endif
 
 namespace grove {
 
@@ -97,10 +105,10 @@ protected:
   bool m_checkRigidTransformationConstraint;
 
   /** A memory block that stores the raster indices of the candidate inliers already sampled from the input image. */
-  ITMIntMemoryBlock_Ptr m_inlierRasterIndicesBlock;
+  ORIntMemoryBlock_Ptr m_inlierRasterIndicesBlock;
 
   /** A mask recording which inlier points have already been sampled. */
-  ITMIntImage_Ptr m_inliersMaskImage;
+  ORIntImage_Ptr m_inliersMaskImage;
 
   /** An image storing the keypoints extracted from the input image during relocalisation. Not owned by this class. */
   Keypoint3DColourImage_CPtr m_keypointsImage;
@@ -137,7 +145,7 @@ protected:
   uint32_t m_poseCandidatesAfterCull;
 
   /** The camera points used for the pose optimisation step. Each row represents the points for a pose candidate. */
-  ITMFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
+  ORFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
 
   /** The energy value that, if reached, will cause the pose optimisation (which is trying to decrease this value) to terminate. */
   double m_poseOptimisationEnergyThreshold;
@@ -253,7 +261,7 @@ public:
    *
    * \return The minimum number of points that have to be valid for the algorithm to attempt pose estimation.
    */
-  int get_min_nb_required_points() const;
+  uint32_t get_min_nb_required_points() const;
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
@@ -291,6 +299,8 @@ private:
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
+
+#ifdef WITH_ALGLIB
   /**
    * \brief A function that ALGLIB can call to compute the energy of the candidate camera pose.
    *
@@ -347,6 +357,7 @@ private:
    * \param pts The points that were used for the energy computation.
    */
   static void alglib_rep(const alglib::real_1d_array& xi, double phi, void *pts);
+#endif
 
   /**
    * \brief Computes an energy for the specified candidate camera pose based on L2 error terms for a set of points.
@@ -366,6 +377,7 @@ private:
    */
   static double compute_energy_mahalanobis(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac = NULL);
 
+#ifdef WITH_ALGLIB
   /**
    * \brief Makes an SE3 pose that corresponds to the specified 6D twist vector.
    *
@@ -381,6 +393,7 @@ private:
    * \return      The corresponding 6D twist vector.
    */
   static alglib::real_1d_array make_twist_from_pose(const ORUtils::SE3Pose& pose);
+#endif
 
   /**
    * \brief Pretty prints the value of a timer.

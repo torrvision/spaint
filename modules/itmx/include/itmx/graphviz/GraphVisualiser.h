@@ -10,7 +10,7 @@
 #include <boost/thread.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
-#include "../base/ITMImagePtrTypes.h"
+#include <orx/base/ORImagePtrTypes.h>
 
 namespace itmx {
 
@@ -46,7 +46,7 @@ public:
    * \param graphDesc   The graph description (i.e. the contents of the Graphviz source file).
    * \param graphvizExe The Graphviz executable to use.
    */
-  ITMUChar4Image_Ptr generate_visualisation(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO);
+  ORUChar4Image_Ptr generate_visualisation(const std::string& graphDesc, GraphvizExe graphvizExe = GV_NEATO);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

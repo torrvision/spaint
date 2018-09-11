@@ -32,8 +32,8 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
     for(size_t i = 0; i < m_poolCapacity; ++i)
     {
       RGBDImage rgbdImage;
-      rgbdImage.rawDepth.reset(new ITMShortImage(m_innerSource->getDepthImageSize(), true, false));
-      rgbdImage.rgb.reset(new ITMUChar4Image(m_innerSource->getRGBImageSize(), true, false));
+      rgbdImage.rawDepth.reset(new ORShortImage(m_innerSource->getDepthImageSize(), true, false));
+      rgbdImage.rgb.reset(new ORUChar4Image(m_innerSource->getRGBImageSize(), true, false));
       m_pool.push(rgbdImage);
     }
   }
@@ -74,7 +74,7 @@ Vector2i AsyncImageSourceEngine::getDepthImageSize() const
   return !m_queue.empty() ? m_queue.front().rawDepth->noDims : m_innerSource->getDepthImageSize();
 }
 
-void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void AsyncImageSourceEngine::getImages(ORUChar4Image *rgb, ORShortImage *rawDepth)
 {
   boost::unique_lock<boost::mutex> lock(m_mutex);
 
@@ -92,8 +92,8 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
   rgb->ChangeDims(rgbdImage.rgb->noDims);
 
   // Copy the depth and RGB images from the queued image into the output images.
-  rawDepth->SetFrom(rgbdImage.rawDepth.get(), ITMShortImage::CPU_TO_CPU);
-  rgb->SetFrom(rgbdImage.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
+  rawDepth->SetFrom(rgbdImage.rawDepth.get(), ORShortImage::CPU_TO_CPU);
+  rgb->SetFrom(rgbdImage.rgb.get(), ORUChar4Image::CPU_TO_CPU);
 
   // If there is space available in the RGB-D image pool, store the RGB-D image to avoid reallocating memory later.
   if(m_pool.size() < m_poolCapacity) m_pool.push(rgbdImage);
@@ -161,8 +161,8 @@ void AsyncImageSourceEngine::run_image_grabber()
     else
     {
       // If there was no existing image available from the pool, allocate new memory for the RGB-D image.
-      rgbdImage.rawDepth.reset(new ITMShortImage(m_innerSource->getDepthImageSize(), true, false));
-      rgbdImage.rgb.reset(new ITMUChar4Image(m_innerSource->getRGBImageSize(), true, false));
+      rgbdImage.rawDepth.reset(new ORShortImage(m_innerSource->getDepthImageSize(), true, false));
+      rgbdImage.rgb.reset(new ORUChar4Image(m_innerSource->getRGBImageSize(), true, false));
     }
 
     // Get the calibration for the RGB-D image from the inner source.

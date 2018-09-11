@@ -30,10 +30,13 @@ using namespace grove;
 #include <itmx/persistence/PosePersister.h>
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
-#include <itmx/relocalisation/NullRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 #include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
+
+#include <orx/relocalisation/NullRelocaliser.h>
+#include <orx/relocalisation/Relocaliser.h>
+using namespace orx;
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
@@ -59,7 +62,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_relocaliserThresholdScore_Fast(0.15f),
   m_relocaliserThresholdScore_Intermediate(0.15f),
   m_relocaliserTrainingCount(0),
-  m_relocaliserTrainingSkipFrames(0),
+  m_relocaliserTrainingSkip(0),
   m_sceneID(sceneID),
   m_trackerConfig(trackerConfig),
   m_trackingMode(trackingMode)
@@ -71,8 +74,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Set up the RGB and raw depth images into which input is to be read each frame.
   const SLAMState_Ptr& slamState = context->get_slam_state(sceneID);
-  slamState->set_input_rgb_image(ITMUChar4Image_Ptr(new ITMUChar4Image(rgbImageSize, true, true)));
-  slamState->set_input_raw_depth_image(ITMShortImage_Ptr(new ITMShortImage(depthImageSize, true, true)));
+  slamState->set_input_rgb_image(ORUChar4Image_Ptr(new ORUChar4Image(rgbImageSize, true, true)));
+  slamState->set_input_raw_depth_image(ORShortImage_Ptr(new ORShortImage(depthImageSize, true, true)));
 
   // Set up the low-level engine.
   const Settings_CPtr& settings = context->get_settings();
@@ -147,8 +150,8 @@ void SLAMComponent::load_models(const std::string& inputDir)
 
   // Set up the view to allow the scene to be rendered without any frames needing to be processed.
   // We are aiming to roughly mirror what would happen if we reconstructed the scene frame-by-frame.
-  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
-  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const ORShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  const ORUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const View_Ptr& view = slamState->get_view();
 
   ITMView *newView = view.get();
@@ -170,12 +173,29 @@ void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
 
 bool SLAMComponent::process_frame()
 {
-  if(!m_imageSourceEngine->hasMoreImages()) return false;
-  if(!m_imageSourceEngine->hasImagesNow()) return true;
-
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
-  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
-  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+
+  if(m_imageSourceEngine->hasImagesNow())
+  {
+    slamState->set_input_status(SLAMState::IS_ACTIVE);
+  }
+  else
+  {
+    const SLAMState::InputStatus inputStatus = m_imageSourceEngine->hasMoreImages() ? SLAMState::IS_IDLE : SLAMState::IS_TERMINATED;
+
+    // If finish training is enabled and no more images are expected, let the relocaliser know that no more calls will be made to its train or update functions.
+    if(m_finishTrainingEnabled && inputStatus == SLAMState::IS_TERMINATED && slamState->get_input_status() != SLAMState::IS_TERMINATED)
+    {
+      m_context->get_relocaliser(m_sceneID)->finish_training();
+    }
+
+    slamState->set_input_status(inputStatus);
+
+    return false;
+  }
+
+  const ORShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  const ORUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const SurfelRenderState_Ptr& liveSurfelRenderState = slamState->get_live_surfel_render_state();
   const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
   const SpaintSurfelScene_Ptr& surfelScene = slamState->get_surfel_scene();
@@ -191,12 +211,12 @@ bool SLAMComponent::process_frame()
   slamState->set_view(newView);
 
   // If there's an active input mask of the right size, apply it to the depth image.
-  ITMFloatImage_Ptr maskedDepthImage;
-  ITMUCharImage_CPtr inputMask = m_context->get_slam_state(m_sceneID)->get_input_mask();
+  ORFloatImage_Ptr maskedDepthImage;
+  ORUCharImage_CPtr inputMask = m_context->get_slam_state(m_sceneID)->get_input_mask();
   if(inputMask && inputMask->noDims == view->depth->noDims)
   {
     view->depth->UpdateHostFromDevice();
-    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter()), -1.0f);
+    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ORFloatImage_CPtr(view->depth, boost::serialization::null_deleter()), -1.0f);
     maskedDepthImage->UpdateDeviceFromHost();
     view->depth->Swap(*maskedDepthImage);
   }
@@ -271,9 +291,10 @@ bool SLAMComponent::process_frame()
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
     }
 
-    // If a mapping client is active, use it to send the current frame to the remote mapping server.
+    // If a mapping client is active:
     if(m_mappingClient)
     {
+      // Send the current frame to the remote mapping server.
       MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_mappingClient->begin_push_frame_message();
       boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
       if(elt)
@@ -454,13 +475,15 @@ void SLAMComponent::process_relocalisation()
   // Save the current pose in case we need to restore it later.
   const SE3Pose oldPose(*trackingState->pose_d);
 
-  // Train if m_relocaliseEveryFrame is true OR (the tracking succeeded AND we don't have to skip the current frame).
-  const bool performTraining = m_relocaliseEveryFrame ||
-      (
-       trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD
-       &&
-       (m_relocaliserTrainingSkipFrames == 0 || (m_relocaliserTrainingCount++ % m_relocaliserTrainingSkipFrames == 0))
-      );
+  // Decide whether or not to perform training in this frame. We train iff either of the following is true:
+  // - Relocalising every frame is enabled
+  // - The tracking succeeded and the current frame is not one we should skip
+  const bool performTraining =
+    m_relocaliseEveryFrame ||
+    (
+      trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD &&
+      (m_relocaliserTrainingSkip == 0 || (m_relocaliserTrainingCount++ % m_relocaliserTrainingSkip == 0))
+    );
 
   // If we're not training in this frame, allow the relocaliser to perform any necessary internal bookkeeping.
   // Note that we prevent training and bookkeeping from both running in the same frame for performance reasons.
@@ -554,7 +577,9 @@ void SLAMComponent::setup_relocaliser()
   m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
 
   static const std::string settingsNamespace = "SLAMComponent.";
+  m_finishTrainingEnabled = settings->get_first_value<bool>(settingsNamespace + "finishTrainingEnabled", false);
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
+  m_relocaliserTrainingSkip = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkip", 0);
 
 #ifndef WITH_GROVE
   // If the user is trying to use the Grove relocaliser and it has not been built, fall back to the ferns relocaliser and issue a warning.
@@ -625,8 +650,7 @@ void SLAMComponent::setup_relocaliser()
   Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-    innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-    voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
+    innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
   ));
 
   // Setup the fast relocaliser as well (if instantiated).

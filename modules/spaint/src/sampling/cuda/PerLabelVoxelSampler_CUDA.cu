@@ -106,7 +106,7 @@ void PerLabelVoxelSampler_CUDA::calculate_voxel_mask_prefix_sums(const ORUtils::
 #endif
 }
 
-void PerLabelVoxelSampler_CUDA::calculate_voxel_masks(const ITMFloat4Image *raycastResult,
+void PerLabelVoxelSampler_CUDA::calculate_voxel_masks(const ORFloat4Image *raycastResult,
                                                       const SpaintVoxel *voxelData,
                                                       const ITMVoxelIndex::IndexData *indexData) const
 {
@@ -143,7 +143,7 @@ void PerLabelVoxelSampler_CUDA::write_candidate_voxel_counts(const ORUtils::Memo
   voxelCountsForLabelsMB.UpdateHostFromDevice();
 }
 
-void PerLabelVoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult) const
+void PerLabelVoxelSampler_CUDA::write_candidate_voxel_locations(const ORFloat4Image *raycastResult) const
 {
   int threadsPerBlock = 256;
   int numBlocks = (m_raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;

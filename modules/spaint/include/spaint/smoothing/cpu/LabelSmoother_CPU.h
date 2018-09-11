@@ -33,7 +33,7 @@ public:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void smooth_labels(const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const;
+  virtual void smooth_labels(const ORFloat4Image *raycastResult, SpaintVoxelScene *scene) const;
 };
 
 }

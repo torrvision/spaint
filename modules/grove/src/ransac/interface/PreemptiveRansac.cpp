@@ -6,6 +6,10 @@
 #include "ransac/interface/PreemptiveRansac.h"
 using namespace tvgutil;
 
+#ifdef WITH_ALGLIB
+#include <alglib/optimization.h>
+#endif
+
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
@@ -15,9 +19,9 @@ using namespace tvgutil;
 #include <omp.h>
 #endif
 
-#include <itmx/base/MemoryBlockFactory.h>
-#include <itmx/geometry/GeometryUtil.h>
-using namespace itmx;
+#include <orx/base/MemoryBlockFactory.h>
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 //#################### MACROS ####################
 
@@ -34,6 +38,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings, const
   m_timerFirstComputeEnergy("First Energy Computation"),
   m_timerFirstTrim("First Trim"),
   m_timerTotal("P-RANSAC Total"),
+  m_poseCandidatesAfterCull(0),
   m_settings(settings)
 {
   // By default, we set all parameters as in SCoRe forests.
@@ -60,6 +65,14 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings, const
   // Each RANSAC iteration after the initial cull adds m_ransacInliersPerIteration inliers to the set, so we allocate enough space for all of them up-front.
   m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
 
+  // We can update the candidate poses only if ALGLIB is available. Check and throw an exception otherwise.
+#ifndef WITH_ALGLIB
+  if(m_poseUpdate)
+  {
+    throw std::runtime_error("Cannot run with poseUpdate enabled without ALGLIB. Rebuild with WITH_ALGLIB set to ON in CMake.");
+  }
+#endif
+
   // Allocate memory.
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   m_inlierRasterIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
@@ -76,7 +89,8 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings, const
 #endif
 
   // Set up the remaining timers.
-  for(int i = 1; i <= 6; ++i)
+  const int maxRansacIterations = static_cast<int>(ceil(log2(m_maxPoseCandidatesAfterCull)));
+  for(int i = 1; i <= maxRansacIterations; ++i)
   {
     m_timerInlierSampling.push_back(AverageTimer("Inlier Sampling " + boost::lexical_cast<std::string>(i)));
     m_timerPrepareOptimisation.push_back(AverageTimer("Prepare Optimisation " + boost::lexical_cast<std::string>(i)));
@@ -291,7 +305,7 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate>& poseCandidates
   }
 }
 
-int PreemptiveRansac::get_min_nb_required_points() const
+uint32_t PreemptiveRansac::get_min_nb_required_points() const
 {
   // We need at least the number of inliers required for a RANSAC iteration.
   return m_ransacInliersPerIteration;
@@ -303,7 +317,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 {
   // We assume that the data on the CPU is up-to-date (the CUDA subclass must ensure this).
   // This function will probably go away as soon as we implement a shared SVD solver.
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const int nbPoseCandidates = static_cast<int>(m_poseCandidates->dataSize);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
 #if 0
@@ -314,7 +328,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
+  for(int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
     PoseCandidate& candidate = poseCandidates[candidateIdx];
 
@@ -345,6 +359,7 @@ void PreemptiveRansac::reset_inliers(bool resetMask)
 
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
+#ifdef WITH_ALGLIB
   // Fill in the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
   ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);                          // The current number of inlier points.
@@ -392,6 +407,9 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   }
 
   return succeeded;
+#else
+  throw std::runtime_error("Cannot update candidate poses. Rebuild with WITH_ALGLIB set to ON in CMake.");
+#endif
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -403,6 +421,7 @@ void PreemptiveRansac::update_host_pose_candidates() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
+#ifdef WITH_ALGLIB
 void PreemptiveRansac::alglib_func_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
 {
   phi[0] = compute_energy_l2(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts));
@@ -427,6 +446,7 @@ void PreemptiveRansac::alglib_rep(const alglib::real_1d_array& xi, double phi, v
 {
   return;
 }
+#endif
 
 double PreemptiveRansac::compute_energy_l2(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac)
 {
@@ -554,6 +574,7 @@ double PreemptiveRansac::compute_energy_mahalanobis(const ORUtils::SE3Pose& cand
   return res;
 }
 
+#ifdef WITH_ALGLIB
 ORUtils::SE3Pose PreemptiveRansac::make_pose_from_twist(const alglib::real_1d_array& xi)
 {
   return ORUtils::SE3Pose(
@@ -576,6 +597,7 @@ alglib::real_1d_array PreemptiveRansac::make_twist_from_pose(const ORUtils::SE3P
   }
   return xi;
 }
+#endif
 
 void PreemptiveRansac::print_timer(const AverageTimer& timer)
 {

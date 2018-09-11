@@ -9,13 +9,16 @@
 #include <stdexcept>
 
 #include <ITMLib/Core/ITMTrackingController.h>
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
+
+#include <orx/base/ORImagePtrTypes.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 
-#include "../base/ITMImagePtrTypes.h"
 #include "../persistence/PosePersister.h"
 #include "../visualisation/DepthVisualisationUtil.tpp"
 #include "../visualisation/DepthVisualiserFactory.h"
@@ -29,45 +32,65 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 template <typename VoxelType, typename IndexType>
-ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
+ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                                                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                                     const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
-                                                                    const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
-                                                                    const VisualisationEngine_CPtr& visualisationEngine)
+                                                                    const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings)
 : RefiningRelocaliser(innerRelocaliser),
   m_denseVoxelMapper(denseVoxelMapper),
   m_depthVisualiser(DepthVisualiserFactory::make_depth_visualiser(settings->deviceType)),
   m_scene(scene),
   m_settings(settings),
+  m_timerInitialRelocalisation("Initial Relocalisation"),
+  m_timerRefinement("ICP Refinement"),
   m_timerRelocalisation("Relocalisation"),
   m_timerTraining("Training"),
   m_timerUpdate("Update"),
   m_tracker(tracker),
-  m_visualisationEngine(visualisationEngine)
+  m_visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType,IndexType>(settings->deviceType))
 {
-  // Construct the tracking controller, tracking state and view.
+  // Construct the tracking controller, tracking state, view and render state.
   m_trackingController.reset(new ITMLib::ITMTrackingController(m_tracker.get(), m_settings.get()));
   m_trackingState.reset(new ITMLib::ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
   m_view.reset(new ITMLib::ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == DEVICE_CUDA));
+  m_voxelRenderState.reset(ITMLib::ITMRenderStateFactory<IndexType>::CreateRenderState(
+    m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize),
+    m_scene->sceneParams,
+    m_settings->GetMemoryType()
+  ));
 
   // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
   m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", false);
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
+  m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
   m_scorePercentile = m_settings->get_first_value<float>(settingsNamespace + "scorePercentile", 0.95f);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
+  // Get the (global) experiment tag.
+  const std::string experimentTag = m_settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
+
   if(m_savePoses)
   {
-    // Get the (global) experiment tag.
-    const std::string experimentTag = m_settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
-
     // Determine the directory to which to save the poses and make sure that it exists.
     m_posePathGenerator.reset(tvgutil::SequentialPathGenerator(tvgutil::find_subdir_from_executable("reloc_poses") / experimentTag));
     boost::filesystem::create_directories(m_posePathGenerator->get_base_dir());
 
     // Output the directory we're using (for debugging purposes).
     std::cout << "Saving relocalisation poses in: " << m_posePathGenerator->get_base_dir() << '\n';
+  }
+
+  if(m_saveTimes)
+  {
+    // Forcefully enable timers.
+    m_timersEnabled = true;
+
+    // Make sure the directory where we want to save the relocalisation times exists.
+    boost::filesystem::path timersOutputFolder(tvgutil::find_subdir_from_executable("reloc_times"));
+    boost::filesystem::create_directories(timersOutputFolder);
+
+    // Prepare the output filename.
+    m_timersOutputFile = (timersOutputFolder / (experimentTag + ".txt")).string();
   }
 }
 
@@ -79,8 +102,23 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::~ICPRefiningRelocaliser()
   if(m_timersEnabled)
   {
     std::cout << "Training calls: " << m_timerTraining.count() << ", average duration: " << m_timerTraining.average_duration() << '\n';
-    std::cout << "Relocalisation calls: " << m_timerRelocalisation.count() << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
     std::cout << "Update calls: " << m_timerUpdate.count() << ", average duration: " << m_timerUpdate.average_duration() << '\n';
+    std::cout << "Initial Relocalisation calls: " << m_timerInitialRelocalisation.count() << ", average duration: " << m_timerInitialRelocalisation.average_duration() << '\n';
+    std::cout << "ICP Refinement calls: " << m_timerRefinement.count() << ", average duration: " << m_timerRefinement.average_duration() << '\n';
+    std::cout << "Total Relocalisation calls: " << m_timerRelocalisation.count() << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
+  }
+
+  if(m_saveTimes)
+  {
+    std::cout << "Saving relocalisation average times in: " << m_timersOutputFile << "\n";
+    std::ofstream out(m_timersOutputFile.c_str());
+
+    // Output the average durations.
+    out << m_timerTraining.average_duration().count() << " "
+        << m_timerUpdate.average_duration().count() << " "
+        << m_timerInitialRelocalisation.average_duration().count() << " "
+        << m_timerRefinement.average_duration().count() << " "
+        << m_timerRelocalisation.average_duration().count() << "\n";
   }
 }
 
@@ -99,8 +137,8 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::load_from_disk(const std::stri
 }
 
 template <typename VoxelType, typename IndexType>
-std::vector<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+std::vector<orx::Relocaliser::Result>
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics) const
 {
   std::vector<ORUtils::SE3Pose> initialPoses;
@@ -108,8 +146,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
 }
 
 template <typename VoxelType, typename IndexType>
-std::vector<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+std::vector<orx::Relocaliser::Result>
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, std::vector<ORUtils::SE3Pose>& initialPoses) const
 {
 #if DEBUGGING
@@ -118,24 +156,36 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
   std::cout << "---\nFrame Index: " << frameIdx << std::endl;
 #endif
 
-  start_timer(m_timerRelocalisation);
-
   // Reset the initial poses.
   initialPoses.clear();
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
+  start_timer(m_timerRelocalisation);
+  start_timer(m_timerInitialRelocalisation, false); // No need to synchronize the GPU again.
   std::vector<Result> initialResults = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
+  stop_timer(m_timerInitialRelocalisation);
+
   if(initialResults.empty())
   {
     Matrix4f invalidPose;
     invalidPose.setValues(std::numeric_limits<float>::quiet_NaN());
     save_poses(invalidPose, invalidPose);
-    stop_timer(m_timerRelocalisation);
+    stop_timer(m_timerRelocalisation, false); // No need to synchronize the GPU again.
     return std::vector<Relocaliser::Result>();
   }
 
   std::vector<Relocaliser::Result> refinedResults;
   float bestScore = static_cast<float>(INT_MAX);
+
+  start_timer(m_timerRefinement, false); // No need to synchronize the GPU again.
+
+  // Reset the render state before raycasting (we do it once for relocalisation attempt).
+  // FIXME: It would be nicer to simply reuse it, but unfortunately this leads
+  //        to the program randomly crashing after a while. The crash may be occurring because we don't use this render
+  //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
+  //        currently reset it each time as a workaround. A mildly less costly alternative might
+  //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
+  m_voxelRenderState->Reset();
 
   // For each initial result from the inner relocaliser:
   for(size_t resultIdx = 0; resultIdx < initialResults.size(); ++resultIdx)
@@ -144,20 +194,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     const ORUtils::SE3Pose initialPose = initialResults[resultIdx].pose;
 
     // Copy the depth and RGB images into the view.
-    m_view->depth->SetFrom(depthImage, m_settings->deviceType == DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA : ITMFloatImage::CPU_TO_CPU);
-    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA : ITMUChar4Image::CPU_TO_CPU);
-
-    // Create a fresh render state ready for raycasting.
-    // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
-    //        to the program randomly crashing after a while. The crash may be occurring because we don't use this render
-    //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
-    //        currently create a fresh render state each time as a workaround. A mildly less costly alternative might
-    //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
-    m_voxelRenderState.reset(ITMLib::ITMRenderStateFactory<IndexType>::CreateRenderState(
-      m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
-      m_scene->sceneParams,
-      m_settings->GetMemoryType()
-    ));
+    m_view->depth->SetFrom(depthImage, m_settings->deviceType == DEVICE_CUDA ? ORFloatImage::CUDA_TO_CUDA : ORFloatImage::CPU_TO_CPU);
+    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == DEVICE_CUDA ? ORUChar4Image::CUDA_TO_CUDA : ORUChar4Image::CPU_TO_CPU);
 
     // Set up the tracking state using the initial pose.
     m_trackingState->pose_d->SetFrom(&initialPose);
@@ -211,7 +249,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
     }
   }
 
-  stop_timer(m_timerRelocalisation);
+  stop_timer(m_timerRefinement);
+  stop_timer(m_timerRelocalisation, false); // No need to synchronize the GPU again.
 
   // Save the best initial and refined poses if needed.
   if(m_savePoses)
@@ -259,7 +298,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::save_to_disk(const std::string
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+void ICPRefiningRelocaliser<VoxelType,IndexType>::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                         const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   start_timer(m_timerTraining);
@@ -296,7 +335,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::Mat cvRealDepth(m_view->depth->noDims.y, m_view->depth->noDims.x, CV_32FC1, m_view->depth->GetData(MEMORYDEVICE_CPU));
 
   // Render a synthetic depth image of the scene from the suggested pose.
-  ITMFloatImage_Ptr synthDepth(new ITMFloatImage(m_view->depth->noDims, true, true));
+  ORFloatImage_Ptr synthDepth(new ORFloatImage(m_view->depth->noDims, true, true));
   DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
     synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState,
     DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
@@ -418,24 +457,30 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer(AverageTimer& timer) const
+void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer(AverageTimer& timer, bool cudaSynchronize) const
 {
   if(!m_timersEnabled) return;
 
 #ifdef WITH_CUDA
-  ORcudaSafeCall(cudaDeviceSynchronize());
+  if(cudaSynchronize)
+  {
+    ORcudaSafeCall(cudaDeviceSynchronize());
+  }
 #endif
 
   timer.start();
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer(AverageTimer& timer) const
+void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer(AverageTimer& timer, bool cudaSynchronize) const
 {
   if(!m_timersEnabled) return;
 
 #ifdef WITH_CUDA
-  ORcudaSafeCall(cudaDeviceSynchronize());
+  if(cudaSynchronize)
+  {
+    ORcudaSafeCall(cudaDeviceSynchronize());
+  }
 #endif
 
   timer.stop();

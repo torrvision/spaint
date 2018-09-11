@@ -29,7 +29,7 @@ namespace itmx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-ITMUChar4Image_Ptr GraphVisualiser::generate_visualisation(const std::string& graphDesc, GraphvizExe graphvizExe)
+ORUChar4Image_Ptr GraphVisualiser::generate_visualisation(const std::string& graphDesc, GraphvizExe graphvizExe)
 {
   std::string stem;
 
@@ -66,7 +66,7 @@ ITMUChar4Image_Ptr GraphVisualiser::generate_visualisation(const std::string& gr
 
   // Read the graph image back in.
   const bf::path graphImageFile = graphsDir / (stem + ".gv.png");
-  ITMUChar4Image_Ptr graphImage = ImagePersister::load_rgba_image(graphImageFile.string());
+  ORUChar4Image_Ptr graphImage = ImagePersister::load_rgba_image(graphImageFile.string());
 
   // Finally, delete the source and graph image files to keep things tidy.
   bf::remove(sourceFile);

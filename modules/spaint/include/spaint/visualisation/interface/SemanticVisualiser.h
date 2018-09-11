@@ -8,8 +8,8 @@
 
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-#include <ITMLib/Utils/ITMImageTypes.h>
 
+#include <ORUtils/ImageTypes.h>
 #include <ORUtils/SE3Pose.h>
 
 #include "../shared/SemanticVisualiser_Settings.h"
@@ -60,7 +60,7 @@ private:
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
   virtual void render_internal(const SpaintVoxelScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
-                               LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const = 0;
+                               LightingType lightingType, float labelAlpha, ORUChar4Image *outputImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -77,7 +77,7 @@ public:
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
   void render(const SpaintVoxelScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
-              const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const;
+              const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha, ORUChar4Image *outputImage) const;
 };
 
 //#################### TYPEDEFS ####################

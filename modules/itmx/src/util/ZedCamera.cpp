@@ -78,7 +78,7 @@ Vector2i ZedCamera::get_depth_image_size() const
   return get_image_size();
 }
 
-void ZedCamera::get_images(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void ZedCamera::get_images(ORUChar4Image *rgb, ORShortImage *rawDepth)
 {
   // If needed, try to grab the next frame.
   if(m_newImagesNeeded)

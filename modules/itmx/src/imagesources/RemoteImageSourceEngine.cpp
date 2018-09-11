@@ -26,7 +26,7 @@ Vector2i RemoteImageSourceEngine::getDepthImageSize() const
   return m_mappingServer->get_depth_image_size(m_clientID);
 }
 
-void RemoteImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void RemoteImageSourceEngine::getImages(ORUChar4Image *rgb, ORShortImage *rawDepth)
 {
   m_mappingServer->get_images(m_clientID, rgb, rawDepth);
 }

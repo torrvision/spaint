@@ -40,7 +40,7 @@ void PerLabelVoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::M
   }
 }
 
-void PerLabelVoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult,
+void PerLabelVoxelSampler_CPU::calculate_voxel_masks(const ORFloat4Image *raycastResult,
                                                      const SpaintVoxel *voxelData,
                                                      const ITMVoxelIndex::IndexData *indexData) const
 {
@@ -81,7 +81,7 @@ void PerLabelVoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::Memor
   }
 }
 
-void PerLabelVoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult) const
+void PerLabelVoxelSampler_CPU::write_candidate_voxel_locations(const ORFloat4Image *raycastResult) const
 {
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
   const unsigned char *voxelMasks = m_voxelMasksMB->GetData(MEMORYDEVICE_CPU);

@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include <itmx/base/MemoryBlockFactory.h>
+#include <orx/base/MemoryBlockFactory.h>
 
 namespace grove {
 
@@ -43,7 +43,7 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalcula
     throw std::invalid_argument("rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT");
 
   // Set up the memory blocks used to specify the features.
-  const itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  const orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
   m_depthOffsets = mbf.make_block<Vector4i>(m_depthFeatureCount);
   m_rgbChannels = mbf.make_block<uchar>(m_rgbFeatureCount);
   m_rgbOffsets = mbf.make_block<Vector4i>(m_rgbFeatureCount);
@@ -62,7 +62,7 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::~RGBDPatchFeatureCalcul
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
+void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_keypoints_and_features(const ORUChar4Image *rgbImage, const ORFloatImage *depthImage, const Vector4f& intrinsics,
                                                                                              KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
   // Forward the call on to the version of compute_keypoints_and_features that returns points in world coordinates,
@@ -89,7 +89,7 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::set_feature_step(u
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-Vector2i RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
+Vector2i RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_output_dims(const ORUChar4Image *rgbImage, const ORFloatImage *depthImage) const
 {
   const bool requireColour = m_rgbFeatureCount > 0;
   const bool requireDepth = m_normaliseDepth || m_normaliseRgb || m_depthFeatureCount > 0;

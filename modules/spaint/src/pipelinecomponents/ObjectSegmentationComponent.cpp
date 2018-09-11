@@ -43,7 +43,7 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
 
   // Segment the current input images to obtain a mask for the target.
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
-  ITMUCharImage_CPtr targetMask = segmenter->segment(slamState->get_pose(), renderState);
+  ORUCharImage_CPtr targetMask = segmenter->segment(slamState->get_pose(), renderState);
 
   // If there's a target mask, use its inverse to mask the camera input for tracking purposes. If not, early out.
   if(targetMask)
@@ -52,21 +52,21 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   }
   else
   {
-    slamState->set_input_mask(ITMUCharImage_Ptr());
-    m_context->set_segmentation_image(m_sceneID, ITMUChar4Image_Ptr());
+    slamState->set_input_mask(ORUCharImage_Ptr());
+    m_context->set_segmentation_image(m_sceneID, ORUChar4Image_Ptr());
     return;
   }
 
   // Make masked versions of the depth and RGB inputs.
   View_CPtr view = slamState->get_view();
-  ITMUChar4Image_Ptr colouredDepthInput(new ITMUChar4Image(view->depth->noDims, true, false));
+  ORUChar4Image_Ptr colouredDepthInput(new ORUChar4Image(view->depth->noDims, true, false));
   m_context->get_visualisation_generator()->get_depth_input(colouredDepthInput, view);
-  ITMShortImage_CPtr depthInput = slamState->get_input_raw_depth_image_copy();
-  ITMUChar4Image_CPtr rgbInput(slamState->get_view()->rgb, boost::serialization::null_deleter());
+  ORShortImage_CPtr depthInput = slamState->get_input_raw_depth_image_copy();
+  ORUChar4Image_CPtr rgbInput(slamState->get_view()->rgb, boost::serialization::null_deleter());
 
-  ITMUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput, Vector4u((uchar)0));
-  ITMShortImage_CPtr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput, 0);
-  ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput, Vector4u((uchar)0));
+  ORUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput, Vector4u((uchar)0));
+  ORShortImage_CPtr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput, 0);
+  ORUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput, Vector4u((uchar)0));
 
   // If output is enabled, write the masked images to the output pipe.
   if(m_outputEnabled && m_outputPipe) m_outputPipe->set_images(rgbMasked, depthMasked);
@@ -93,7 +93,7 @@ void ObjectSegmentationComponent::run_segmentation_training(const VoxelRenderSta
   const Segmenter_Ptr& segmenter = get_segmenter();
   if(!segmenter) return;
 
-  ITMUChar4Image_CPtr segmentationImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
+  ORUChar4Image_CPtr segmentationImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
   m_context->set_segmentation_image(m_sceneID, segmentationImage);
 }
 

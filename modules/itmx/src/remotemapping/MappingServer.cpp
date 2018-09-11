@@ -17,6 +17,7 @@ using namespace tvgutil;
 #include "remotemapping/AckMessage.h"
 #include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
 #include "remotemapping/CompressedRGBDFrameMessage.h"
+#include "remotemapping/InteractionTypeMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 #include "remotemapping/RGBDFrameCompressor.h"
 
@@ -73,7 +74,7 @@ Vector2i MappingServer::get_depth_image_size(int clientID) const
   return client ? client->get_depth_image_size() : Vector2i();
 }
 
-void MappingServer::get_images(int clientID, ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+void MappingServer::get_images(int clientID, ORUChar4Image *rgb, ORShortImage *rawDepth)
 {
   // Look up the client whose images we want to get. If it is no longer active, early out.
   Client_Ptr client = get_client(clientID);
@@ -186,7 +187,7 @@ void MappingServer::terminate()
 
 void MappingServer::accept_client()
 {
-  // FIXME: It would be better to have accept_client_handler call accept_client after accepted a connection.
+  // FIXME: It would be better to have accept_client_handler call accept_client after accepting a connection.
   //        This would allow us to get rid of the sleep loop.
   boost::shared_ptr<tcp::socket> sock(new tcp::socket(m_ioService));
   m_acceptor->async_accept(*sock, boost::bind(&MappingServer::accept_client_handler, this, sock, _1));
@@ -212,8 +213,9 @@ void MappingServer::accept_client_handler(const boost::shared_ptr<boost::asio::i
   // If a client successfully connects, start a thread for it and add an entry to the clients map.
   std::cout << "Accepted client connection" << std::endl;
   boost::lock_guard<boost::mutex> lock(m_mutex);
-  boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&MappingServer::handle_client, this, m_nextClientID, sock)));
-  m_clients.insert(std::make_pair(m_nextClientID, Client_Ptr(new Client(clientThread))));
+  Client_Ptr client(new Client);
+  boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&MappingServer::handle_client, this, m_nextClientID, client, sock)));
+  client->m_thread = clientThread;
   ++m_nextClientID;
 }
 
@@ -221,7 +223,7 @@ MappingServer::Client_Ptr MappingServer::get_client(int clientID) const
 {
   boost::unique_lock<boost::mutex> lock(m_mutex);
 
-  // Wait until the client is either active and ready to accept frame messages, or has terminated.
+  // Wait until the client is either active or has terminated.
   std::map<int,Client_Ptr>::const_iterator it;
   while((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
   {
@@ -231,18 +233,9 @@ MappingServer::Client_Ptr MappingServer::get_client(int clientID) const
   return it != m_clients.end() ? it->second : Client_Ptr();
 }
 
-void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::socket>& sock)
+void MappingServer::handle_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
-  // Look up the client being handled by this thread.
-  Client_Ptr client;
-  {
-#if DEBUGGING
-    std::cout << "Waiting for thread creation to finish for client: " << clientID << std::endl;
-#endif
-    boost::lock_guard<boost::mutex> lock(m_mutex);
-    std::cout << "Starting client: " << clientID << '\n';
-    client = m_clients.find(clientID)->second;
-  }
+  std::cout << "Starting client: " << clientID << '\n';
 
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;
@@ -275,46 +268,78 @@ void MappingServer::handle_client(int clientID, const boost::shared_ptr<tcp::soc
     connectionOk = write_message(sock, AckMessage());
   }
 
+  // Add the client to the map of active clients.
+  {
+    boost::lock_guard<boost::mutex> lock(m_mutex);
+    m_clients.insert(std::make_pair(clientID, client));
+  }
+
   // Signal to other threads that we're ready to start reading frame messages from the client.
+#if DEBUGGING
+  std::cout << "Client ready: " << clientID << '\n';
+#endif
   m_clientReady.notify_one();
 
-  // Read and record frame messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
+  // Read and process messages from the client until either (a) the connection drops, or (b) the server itself is terminating.
   CompressedRGBDFrameHeaderMessage headerMsg;
   CompressedRGBDFrameMessage frameMsg(headerMsg);
+  InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
+
   while(connectionOk && !m_shouldTerminate)
   {
-#if DEBUGGING
-    std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
-#endif
-
-    RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
-    boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-    RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
-
-    // First, try to read a frame header message.
-    if((connectionOk = read_message(sock, headerMsg)))
+    // TODO: First, try to read an interaction type message.
+    if(true)
     {
-      // If that succeeds, set up the frame message accordingly.
-      frameMsg.set_compressed_image_sizes(headerMsg);
-
-      // Now, read the frame message itself.
-      if((connectionOk = read_message(sock, frameMsg)))
+      // If that succeeds, determine the type of interaction the client wants to have with the server and proceed accordingly.
+      switch(interactionTypeMsg.extract_value())
       {
-        // If that succeeds, uncompress the images and send an acknowledgement to the client.
-        frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
-        connectionOk = write_message(sock, AckMessage());
+        case IT_SENDFRAME:
+        {
+#if DEBUGGING
+          std::cout << "Receiving frame from client" << std::endl;
+#endif
+
+          // Try to read a frame header message.
+          if((connectionOk = read_message(sock, headerMsg)))
+          {
+            // If that succeeds, set up the frame message accordingly.
+            frameMsg.set_compressed_image_sizes(headerMsg);
+
+            // Now, read the frame message itself.
+            if((connectionOk = read_message(sock, frameMsg)))
+            {
+              // If that succeeds, uncompress the images, store them on the frame message queue and send an acknowledgement to the client.
+#if DEBUGGING
+              std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+#endif
+
+              RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = client->m_frameMessageQueue->begin_push();
+              boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
+              RGBDFrameMessage& msg = elt ? **elt : *dummyFrameMsg;
+              frameCompressor->uncompress_rgbd_frame(frameMsg, msg);
+
+              connectionOk = write_message(sock, AckMessage());
 
 #if DEBUGGING
-        std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
+              std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
-      #ifdef WITH_OPENCV
-        static ITMUChar4Image_Ptr rgbImage(new ITMUChar4Image(client->m_rgbImageSize, true, false));
-        msg.extract_rgb_image(rgbImage.get());
-        cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
-        cv::imshow("RGB", cvRGB);
-        cv::waitKey(1);
-      #endif
+            #ifdef WITH_OPENCV
+              static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->get_rgb_image_size(), true, false));
+              msg.extract_rgb_image(rgbImage.get());
+              cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
+              cv::imshow("RGB", cvRGB);
+              cv::waitKey(1);
+            #endif
 #endif
+            }
+          }
+
+          break;
+        }
+        default:
+        {
+          break;
+        }
       }
     }
   }

@@ -17,7 +17,8 @@ IF(WITH_CUDA)
 
   # Set the compute capability flags.
   FOREACH(compute_capability ${CUDA_COMPUTE_CAPABILITY})
-    LIST(APPEND CUDA_NVCC_FLAGS --generate-code arch=compute_${compute_capability},code=sm_${compute_capability})
+    LIST(APPEND CUDA_NVCC_FLAGS --generate-code;arch=compute_${compute_capability},code=compute_${compute_capability})
+    LIST(APPEND CUDA_NVCC_FLAGS --generate-code;arch=compute_${compute_capability},code=sm_${compute_capability})
   ENDFOREACH()
 
   # If on Windows, make it possible to enable GPU debug information.
@@ -42,12 +43,11 @@ IF(WITH_CUDA)
     IF(${CMAKE_VERSION} VERSION_LESS 3.5)
       SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
     ENDIF()
-
-    SET(CUDA_NVCC_FLAGS -Xcompiler -std=c++11; -Xlinker -std=c++11; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
   # Disable some annoying nvcc warnings.
   IF(MSVC_IDE)
+    SET(CUDA_NVCC_FLAGS --Wno-deprecated-declarations ; ${CUDA_NVCC_FLAGS})
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=bad_friend_decl" ; -Xcudafe "--diag_suppress=overloaded_function_linkage" ; -Xcudafe "--diag_suppress=useless_type_qualifier_on_return_type" ; ${CUDA_NVCC_FLAGS})
   ELSE()
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})

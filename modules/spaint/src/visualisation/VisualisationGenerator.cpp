@@ -9,11 +9,11 @@
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 using namespace ITMLib;
 
-#include <itmx/geometry/GeometryUtil.h>
 #include <itmx/util/CameraPoseConverter.h>
 #include <itmx/visualisation/DepthVisualisationUtil.tpp>
 #include <itmx/visualisation/DepthVisualiserFactory.h>
 using namespace itmx;
+using namespace orx;
 using namespace rigging;
 
 #include "visualisation/SemanticVisualiserFactory.h"
@@ -42,7 +42,7 @@ VisualisationGenerator::VisualisationGenerator(const Settings_CPtr& settings, co
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+void VisualisationGenerator::generate_depth_from_voxels(const ORFloatImage_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                         const ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, DepthVisualiser::DepthType depthType) const
 {
   return DepthVisualisationUtil<SpaintVoxel,ITMVoxelIndex>::generate_depth_from_voxels(
@@ -50,7 +50,7 @@ void VisualisationGenerator::generate_depth_from_voxels(const ITMFloatImage_Ptr&
   );
 }
 
-void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+void VisualisationGenerator::generate_surfel_visualisation(const ORUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                            const ITMIntrinsics& intrinsics, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
 {
   if(!scene)
@@ -82,7 +82,7 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
     case VT_SCENE_DEPTH:
     {
       // FIXME: This is a workaround that is needed because DepthToUchar4 is currently CPU-only.
-      static ITMFloatImage temp(output->noDims, true, true);
+      static ORFloatImage temp(output->noDims, true, true);
       m_surfelVisualisationEngine->RenderDepthImage(scene.get(), &pose, renderState.get(), &temp);
       if(m_settings->deviceType == DEVICE_CUDA) temp.UpdateHostFromDevice();
       IITMVisualisationEngine::DepthToUchar4(output.get(), &temp);
@@ -115,7 +115,7 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
   if(m_settings->deviceType == DEVICE_CUDA) output->UpdateHostFromDevice();
 }
 
-void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+void VisualisationGenerator::generate_voxel_visualisation(const ORUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                           const ITMIntrinsics& intrinsics, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
                                                           const boost::optional<Postprocessor>& postprocessor) const
 {
@@ -174,19 +174,19 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void VisualisationGenerator::get_default_raycast(const ITMUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const
+void VisualisationGenerator::get_default_raycast(const ORUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const
 {
   make_postprocessed_cpu_copy(liveRenderState->raycastImage, postprocessor, output);
 }
 
-void VisualisationGenerator::get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
+void VisualisationGenerator::get_depth_input(const ORUChar4Image_Ptr& output, const View_CPtr& view) const
 {
   prepare_to_copy_visualisation(view->depth->noDims, output);
   if(m_settings->deviceType == DEVICE_CUDA) view->depth->UpdateHostFromDevice();
   m_voxelVisualisationEngine->DepthToUchar4(output.get(), view->depth);
 }
 
-void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
+void VisualisationGenerator::get_rgb_input(const ORUChar4Image_Ptr& output, const View_CPtr& view) const
 {
   prepare_to_copy_visualisation(view->rgb->noDims, output);
   if(m_settings->deviceType == DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
@@ -200,8 +200,8 @@ bool VisualisationGenerator::supports_semantics() const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VisualisationGenerator::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor,
-                                                         const ITMUChar4Image_Ptr& outputRaycast) const
+void VisualisationGenerator::make_postprocessed_cpu_copy(const ORUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor,
+                                                         const ORUChar4Image_Ptr& outputRaycast) const
 {
   // Make sure that the output raycast is of the right size.
   prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
@@ -230,7 +230,7 @@ void VisualisationGenerator::make_postprocessed_cpu_copy(const ITMUChar4Image *i
   }
 }
 
-void VisualisationGenerator::prepare_to_copy_visualisation(const Vector2i& inputSize, const ITMUChar4Image_Ptr& output) const
+void VisualisationGenerator::prepare_to_copy_visualisation(const Vector2i& inputSize, const ORUChar4Image_Ptr& output) const
 {
   output->Clear();
   output->ChangeDims(inputSize);

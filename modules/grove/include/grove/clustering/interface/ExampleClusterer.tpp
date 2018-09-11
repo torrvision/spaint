@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include <itmx/base/MemoryBlockFactory.h>
+#include <orx/base/MemoryBlockFactory.h>
 
 namespace grove {
 
@@ -25,7 +25,7 @@ ExampleClusterer<ExampleType, ClusterType, MaxClusters>::ExampleClusterer(float 
 
   // Initialise the temporary variables that are used as part of a cluster_examples call.
   // Initially, all are empty. We resize them later, once we know the right sizes.
-  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
 
   m_clusterIndices = mbf.make_image<int>();
   m_clusterSizeHistograms = mbf.make_image<int>();
@@ -45,7 +45,7 @@ ExampleClusterer<ExampleType,ClusterType,MaxClusters>::~ExampleClusterer()
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MaxClusters>
-void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::cluster_examples(const ExampleImage_CPtr& exampleSets, const ITMIntMemoryBlock_CPtr& exampleSetSizes,
+void ExampleClusterer<ExampleType,ClusterType,MaxClusters>::cluster_examples(const ExampleImage_CPtr& exampleSets, const ORIntMemoryBlock_CPtr& exampleSetSizes,
                                                                              uint32_t exampleSetStart, uint32_t exampleSetCount, ClusterContainers_Ptr& clusterContainers)
 {
   const uint32_t nbExampleSets = exampleSets->noDims.height;

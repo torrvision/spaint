@@ -8,9 +8,9 @@
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 
-#include <itmx/base/MemoryBlockFactory.h>
-
 #include <ORUtils/MemoryBlockPersister.h>
+
+#include <orx/base/MemoryBlockFactory.h>
 
 #include "../shared/ExampleReservoirs_Shared.h"
 
@@ -41,7 +41,7 @@ template <typename ExampleType>
 ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(uint32_t reservoirCount, uint32_t reservoirCapacity, uint32_t rngSeed)
 : ExampleReservoirs<ExampleType>(reservoirCount, reservoirCapacity, rngSeed)
 {
-  itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
+  orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
   m_rngs = mbf.make_block<CUDARNG>();
 
   reset();
