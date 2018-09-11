@@ -14,6 +14,8 @@
 
 #include "persistence/PosePersister.h"
 
+#define DEBUGGING 0
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -107,7 +109,7 @@ void CascadeRelocaliser::load_from_disk(const std::string& inputFolder)
 std::vector<orx::Relocaliser::Result>
 CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
-#if DEBUGGING
+#if DEBUGGING && 0
   static int frameIdx = -1;
   ++frameIdx;
   std::cout << "---\nFrame Index: " << frameIdx << std::endl;
