@@ -658,8 +658,7 @@ void SLAMComponent::setup_relocaliser()
   {
     m_context->get_fast_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
       innerRelocaliser_Fast, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-      voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
-    ));
+      voxelScene, m_denseVoxelMapper, settings));
   }
 
   // Setup the intermediate relocaliser as well (if instantiated).
@@ -667,12 +666,8 @@ void SLAMComponent::setup_relocaliser()
   {
     m_context->get_intermediate_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
       innerRelocaliser_Intermediate, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-      voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
-    ));
+      voxelScene, m_denseVoxelMapper, settings));
   }
-
-  // Finally, set the number of frames to skip betwenn calls to the train method.
-  m_relocaliserTrainingSkipFrames = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkipFrames", 0);
 }
 
 void SLAMComponent::setup_tracker()

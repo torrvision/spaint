@@ -60,7 +60,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual itmx::RefiningRelocaliser_Ptr& get_fast_relocaliser(const std::string& sceneID);
+  virtual orx::RefiningRelocaliser_Ptr& get_fast_relocaliser(const std::string& sceneID);
 
   /**
    * \brief Gets the fast relocaliser for the specified scene.
@@ -68,7 +68,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual itmx::RefiningRelocaliser_CPtr get_fast_relocaliser(const std::string& sceneID) const;
+  virtual orx::RefiningRelocaliser_CPtr get_fast_relocaliser(const std::string& sceneID) const;
 
   /**
    * \brief Gets the intermediate relocaliser for the specified scene.
@@ -76,7 +76,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual itmx::RefiningRelocaliser_Ptr& get_intermediate_relocaliser(const std::string& sceneID);
+  virtual orx::RefiningRelocaliser_Ptr& get_intermediate_relocaliser(const std::string& sceneID);
 
   /**
    * \brief Gets the intermediate relocaliser for the specified scene.
@@ -84,7 +84,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual itmx::RefiningRelocaliser_CPtr get_intermediate_relocaliser(const std::string& sceneID) const;
+  virtual orx::RefiningRelocaliser_CPtr get_intermediate_relocaliser(const std::string& sceneID) const;
 
   /**
    * \brief Gets the relocaliser for the specified scene.
