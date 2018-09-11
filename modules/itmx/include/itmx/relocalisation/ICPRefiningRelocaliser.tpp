@@ -64,7 +64,6 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
   m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", false);
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
-  m_scorePercentile = m_settings->get_first_value<float>(settingsNamespace + "scorePercentile", 0.95f);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
   // Get the (global) experiment tag.
@@ -347,7 +346,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
 #if DEBUGGING
   // If we're debugging, show the real and synthetic depth images to the user (note that we need to convert them to unsigned chars for visualisation).
   // We don't use the OpenCV normalize function because we want consistent visualisations for different frames (even though there might be clamping).
-  const float scaleFactor = 255.0f / 5.0f;
+  const float scaleFactor = 100.0f;
   cv::Mat cvRealDepthVis, cvSynthDepthVis;
   cvRealDepth.convertTo(cvRealDepthVis, CV_8U, scaleFactor);
   cvSynthDepth.convertTo(cvSynthDepthVis, CV_8U, scaleFactor);
@@ -360,80 +359,26 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   cv::Mat cvRealMask = cvRealDepth > 0;
   cv::Mat cvSynthMask = cvSynthDepth > 0;
   cv::Mat cvCombinedMask = cvRealMask & cvSynthMask;
-  cv::erode(cvCombinedMask, cvCombinedMask, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7,7)));
 
-#define USE_DIFFERENCE
-
-#ifdef USE_DIFFERENCE
   // Compute the difference between the real and synthetic depth images, and mask it using the combined mask.
   cv::Mat cvDepthDiff, cvMaskedDepthDiff;
-  cv::divide(cvRealDepth, cvSynthDepth, cvDepthDiff);
-  cv::absdiff(cvDepthDiff, cv::Scalar(1), cvDepthDiff);
-//  cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
+  cv::absdiff(cvRealDepth, cvSynthDepth, cvDepthDiff);
   cvDepthDiff.copyTo(cvMaskedDepthDiff, cvCombinedMask);
-
-  std::vector<cv::Mat> images = { cvMaskedDepthDiff };
-  std::vector<int> channels = { 0 };
-  std::vector<int> histSize = { 101 };
-  std::vector<float> ranges = { 0.0f, 1.0f };
-  cv::Mat histogram;
-
-  // Histogram the distribution of errors.
-  cv::calcHist(images, channels, cvCombinedMask, histogram, histSize, ranges);
-
-  // Count how many valid pixels are in the combined mask.
-  int validDepthsCount = cv::countNonZero(cvCombinedMask);
-
-  // We are interested in a certain percentile.
-  int percentileCount = m_scorePercentile * validDepthsCount;
-
-  // Find the right bin.
-  float accumulator = 0;
-  int bin = 0;
-  for(; bin < histogram.size().area(); ++bin)
-  {
-    accumulator += histogram.ptr<float>()[bin];
-    if(accumulator > percentileCount) break;
-  }
-
-  float percentileError = bin * 0.01f;
-
-//  std::cout << "95% percentile of " << validDepthsCount << " is: " << percentileCount
-//            << " - counted: " << accumulator << " at bin: " << bin << " equals error: " << percentileError << std::endl;
-
-#else
-  cv::Mat cvDepthTargetRatio;
-  cv::divide(cvRealDepth, cvSynthDepth, cvDepthTargetRatio);
-
-  cv::Mat cvDepthInRangeMask;
-  cv::inRange(cvDepthTargetRatio, cv::Scalar(0.975), cv::Scalar(1.025), cvDepthInRangeMask);
-
-  cv::Scalar depthInRangeCount = cv::countNonZero(cvDepthInRangeMask);
-  cv::Scalar validPixelsCount = cv::countNonZero(cvCombinedMask);
-
-  double depthInRangeFraction = std::min(1.0, depthInRangeCount(0) / validPixelsCount(0));
-
-#if 1 || DEBUGGING
-  std::cout << "\nDepth in range fraction: " << depthInRangeFraction << std::endl;
-#endif
-#endif
 
 #if DEBUGGING
   // We need to convert the image for visualisation.
-  cv::Mat cvMaskedDepthDiffVis = cvMaskedDepthDiff / 0.05 * 255.0;
-  cvMaskedDepthDiffVis.convertTo(cvMaskedDepthDiffVis, CV_8U);
+  cv::Mat cvMaskedDepthDiffVis;
+  cvMaskedDepthDiff.convertTo(cvMaskedDepthDiffVis, CV_8U, scaleFactor);
 
-  cv::imshow("Masked Depth Difference", cvMaskedDepthDiffVis);
+  cv::imshow("Masked Depth Difference", cvMaskedDepthDiff);
   cv::waitKey(1);
 #endif
 
-#ifdef USE_DIFFERENCE
   // Determine the mean depth difference for valid pixels in the real and synthetic depth images.
-  cv::Scalar meanDepthDiff, stdDevDepthDiff;
-  cv::meanStdDev(cvMaskedDepthDiff, meanDepthDiff, stdDevDepthDiff, cvCombinedMask);
+  cv::Scalar meanDepthDiff = cv::mean(cvMaskedDepthDiff, cvCombinedMask);
 
 #if DEBUGGING
-  std::cout << "\nMean Depth Difference: " << meanDepthDiff(0) << " - StdDev: " << stdDevDepthDiff(0) << std::endl;
+  std::cout << "\nMean Depth Difference: " << meanDepthDiff << std::endl;
 #endif
 
   // Compute the fraction of the synthetic depth image that is valid.
@@ -443,14 +388,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   std::cout << "Valid Synthetic Depth Pixels: " << cv::countNonZero(cvSynthMask) << std::endl;
 #endif
 
-//  return validFraction >= 0.1f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
-  return validFraction >= 0.1f ? percentileError : static_cast<float>(INT_MAX);
-#else
-  // Compute the fraction of the synthetic depth image that is valid.
-  float validFraction = static_cast<float>(cv::countNonZero(cvSynthMask)) / (cvSynthMask.size().area());
-
-  return validFraction >= 0.1f ? static_cast<float>(depthInRangeFraction) : 0.0f;
-#endif
+  return validFraction >= 0.1f ? static_cast<float>(meanDepthDiff(0)) : static_cast<float>(INT_MAX);
 #else
   return 0.0f;
 #endif

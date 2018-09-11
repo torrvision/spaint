@@ -34,8 +34,8 @@ CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocali
   const static std::string settingsNamespace = "CascadeRelocaliser.";
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
-  m_relocaliserThresholdScore_Fast = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Fast", 0.15f);
-  m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.15f);
+  m_relocaliserThresholdScore_Fast = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Fast", 0.05f);
+  m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
   // Get the (global) experiment tag.

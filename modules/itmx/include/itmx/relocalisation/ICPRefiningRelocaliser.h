@@ -64,9 +64,6 @@ private:
   /** The scene being viewed from the camera. */
   Scene_Ptr m_scene;
 
-  /** The percentile of pixels used to compute the depth difference score. */
-  float m_scorePercentile;
-
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
