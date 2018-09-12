@@ -6,7 +6,9 @@
 #include "ransac/interface/PreemptiveRansac.h"
 using namespace tvgutil;
 
+#ifdef WITH_ALGLIB
 #include <alglib/optimization.h>
+#endif
 
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
@@ -63,6 +65,14 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 
   // Each RANSAC iteration after the initial cull adds m_ransacInliersPerIteration inliers to the set, so we allocate enough space for all of them up-front.
   m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
+
+  // We can update the candidate poses only if ALGLIB is available. Check and throw an exception otherwise.
+#ifndef WITH_ALGLIB
+  if(m_poseUpdate)
+  {
+    throw std::runtime_error("Cannot run with poseUpdate enabled without ALGLIB. Rebuild with WITH_ALGLIB set to ON in CMake.");
+  }
+#endif
 
   // Allocate memory.
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
@@ -350,6 +360,7 @@ void PreemptiveRansac::reset_inliers(bool resetMask)
 
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
+#ifdef WITH_ALGLIB
   // Fill in the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
   ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);                          // The current number of inlier points.
@@ -397,6 +408,9 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   }
 
   return succeeded;
+#else
+  throw std::runtime_error("Cannot update candidate poses. Rebuild with WITH_ALGLIB set to ON in CMake.");
+#endif
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -408,6 +422,7 @@ void PreemptiveRansac::update_host_pose_candidates() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
+#ifdef WITH_ALGLIB
 void PreemptiveRansac::alglib_func_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
 {
   phi[0] = compute_energy_l2(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts));
@@ -432,6 +447,7 @@ void PreemptiveRansac::alglib_rep(const alglib::real_1d_array& xi, double phi, v
 {
   return;
 }
+#endif
 
 double PreemptiveRansac::compute_energy_l2(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac)
 {
@@ -559,6 +575,7 @@ double PreemptiveRansac::compute_energy_mahalanobis(const ORUtils::SE3Pose& cand
   return res;
 }
 
+#ifdef WITH_ALGLIB
 ORUtils::SE3Pose PreemptiveRansac::make_pose_from_twist(const alglib::real_1d_array& xi)
 {
   return ORUtils::SE3Pose(
@@ -581,6 +598,7 @@ alglib::real_1d_array PreemptiveRansac::make_twist_from_pose(const ORUtils::SE3P
   }
   return xi;
 }
+#endif
 
 void PreemptiveRansac::print_timer(const AverageTimer& timer)
 {
