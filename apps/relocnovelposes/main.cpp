@@ -273,6 +273,16 @@ int main(int argc, char *argv[])
   errorThresholds.push_back(ErrorThreshold { 0.40f, 40.f * M_PI / 180.f});
   errorThresholds.push_back(ErrorThreshold { 0.45f, 45.f * M_PI / 180.f});
   errorThresholds.push_back(ErrorThreshold { 0.50f, 50.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.55f, 55.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.60f, 60.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.65f, 65.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.70f, 70.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.75f, 75.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.80f, 80.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.85f, 85.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.90f, 90.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 0.95f, 95.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold { 1.00f, 100.f * M_PI / 180.f});
 
   if (argc < 4)
   {
