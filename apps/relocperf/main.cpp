@@ -788,8 +788,8 @@ int main(int argc, char *argv[])
       std::ofstream out(outFilename.c_str());
 
       // Print header
-      out << "FrameIdx; FramePct; Reloc Success; Reloc Translation; Reloc Angle; Reloc Sum; Reloc Pct; ICP Success; "
-             "ICP Sum; ICP Pct\n";
+      out << "FrameIdx, FramePct, Reloc Success, Reloc Translation, Reloc Angle, Reloc Sum, Reloc Pct, ICP Success, "
+             "ICP Sum, ICP Pct\n";
 
       int relocSum = 0;
       int icpSum = 0;
@@ -809,8 +809,8 @@ int main(int argc, char *argv[])
         float relocPct = static_cast<float>(relocSum) / poseIdx;
         float icpPct = static_cast<float>(icpSum) / poseIdx;
 
-        out << poseIdx << "; " << framePct << "; " << relocSuccess << "; " << relocTranslation << "; " << relocAngle
-            << "; " << relocSum << "; " << relocPct << "; " << icpSuccess << "; " << icpSum << "; " << icpPct << '\n';
+        out << poseIdx << ", " << framePct << ", " << relocSuccess << ", " << relocTranslation << ", " << relocAngle
+            << ", " << relocSum << ", " << relocPct << ", " << icpSuccess << ", " << icpSum << ", " << icpPct << '\n';
       }
     }
   }
