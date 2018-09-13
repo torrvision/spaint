@@ -79,13 +79,13 @@ include/tvgutil/misc/ThreadPool.h
 ##
 SET(net_sources
 src/net/AckMessage.cpp
-src/net/BasicClientData.cpp
+src/net/ClientHandler.cpp
 src/net/Message.cpp
 )
 
 SET(net_headers
 include/tvgutil/net/AckMessage.h
-include/tvgutil/net/BasicClientData.h
+include/tvgutil/net/ClientHandler.h
 include/tvgutil/net/Message.h
 include/tvgutil/net/Server.h
 include/tvgutil/net/SimpleMessage.h

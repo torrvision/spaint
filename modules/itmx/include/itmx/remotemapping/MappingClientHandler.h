@@ -1,32 +1,32 @@
 /**
- * itmx: MappingClientData.h
+ * itmx: MappingClientHandler.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#ifndef H_ITMX_MAPPINGCLIENTDATA
-#define H_ITMX_MAPPINGCLIENTDATA
+#ifndef H_ITMX_MAPPINGCLIENTHANDLER
+#define H_ITMX_MAPPINGCLIENTHANDLER
 
 #include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
 #include <tvgutil/containers/PooledQueue.h>
-#include <tvgutil/net/BasicClientData.h>
+#include <tvgutil/net/ClientHandler.h>
 
 #include "RGBDFrameCompressor.h"
 
 namespace itmx {
 
 /**
- * \brief An instance of this struct can be used to hold the data associated with an individual client of a mapping server.
+ * \brief An instance of this class can be used to manage the connection to a mapping client.
  */
-struct MappingClientData : tvgutil::BasicClientData
+class MappingClientHandler : public tvgutil::ClientHandler
 {
   //#################### TYPEDEFS ####################
-
+private:
   typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
   typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
-
+public:
   /** The calibration parameters of the camera associated with the client. */
   ITMLib::ITMRGBDCalib m_calib;
 
@@ -52,14 +52,19 @@ struct MappingClientData : tvgutil::BasicClientData
   bool m_poseDirty;
 
   //#################### CONSTRUCTORS ####################
-
+public:
   /**
    * \brief TODO
+   *
+   * \param clientID          The ID used by the server to refer to the client.
+   * \param sock              The socket used to communicate with the client.
+   * \param shouldTerminate   Whether or not the server should terminate.
    */
-  MappingClientData();
+  explicit MappingClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
+                                const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
-
+public:
   /**
    * \brief TODO
    */
@@ -69,6 +74,15 @@ struct MappingClientData : tvgutil::BasicClientData
    * \brief TODO
    */
   const Vector2i& get_rgb_image_size() const;
+
+  /** Override */
+  virtual void handle_main();
+
+  /** Override */
+  virtual void handle_post();
+
+  /** Override */
+  virtual void handle_pre();
 };
 
 }

@@ -13,7 +13,7 @@
 #include <boost/atomic.hpp>
 #include <boost/optional.hpp>
 
-#include "BasicClientData.h"
+#include "ClientHandler.h"
 #include "../boost/WrappedAsio.h"
 
 //#define DEBUGGING 1
@@ -27,12 +27,12 @@ using boost::asio::ip::tcp;
 /**
  * \brief An instance of a class deriving from this one represents a server that can be used to communicate with one or more clients.
  */
-template <typename Client = BasicClientData>
+template <typename ClientHandlerType = ClientHandler>
 class Server
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<Client> Client_Ptr;
+  typedef boost::shared_ptr<ClientHandlerType> ClientHandler_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -54,14 +54,14 @@ private:
   /** A thread that keeps the map of clients clean by removing any clients that have terminated. */
   boost::shared_ptr<boost::thread> m_cleanerThread;
 
+  /** The handlers for the currently active clients. */
+  std::map<int, ClientHandler_Ptr> m_clientHandlers;
+
   /** A condition variable used to wait until a client thread is ready to start reading frame messages. */
   mutable boost::condition_variable m_clientReady;
 
   /** A condition variable used to wait for finished client threads that need to be cleaned up. */
   boost::condition_variable m_clientsHaveFinished;
-
-  /** The currently active clients. */
-  std::map<int, Client_Ptr> m_clients;
 
   /** The set of clients that have finished. */
   std::set<int> m_finishedClients;
@@ -85,7 +85,7 @@ private:
   boost::shared_ptr<boost::thread> m_serverThread;
 
   /** Whether or not the server should terminate. */
-  boost::atomic<bool> m_shouldTerminate;
+  boost::shared_ptr<boost::atomic<bool> > m_shouldTerminate;
 
   /** The set of clients that have finished but have not yet been removed from the clients map. */
   std::set<int> m_uncleanClients;
@@ -105,7 +105,7 @@ public:
   : m_mode(mode),
     m_nextClientID(0),
     m_port(port),
-    m_shouldTerminate(false),
+    m_shouldTerminate(new boost::atomic<bool>(false)),
     m_worker(new boost::asio::io_service::work(m_ioService))
   {}
 
@@ -117,32 +117,6 @@ public:
   virtual ~Server()
   {
     terminate();
-  }
-
-  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief TODO
-   */
-  virtual void handle_client_main(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
-  {
-    // No-op by default
-  }
-
-  /**
-   * \brief TODO
-   */
-  virtual void handle_client_post(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
-  {
-    // No-op by default
-  }
-
-  /**
-   * \brief TODO
-   */
-  virtual void handle_client_pre(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
-  {
-    // No-op by default
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -160,10 +134,10 @@ public:
     //       are accepted or existing clients terminate. However, since the number of clients is generally fairly low,
     //       the benefits of doing so are quite limited in practice.
     std::vector<int> activeClients;
-    activeClients.reserve(m_clients.size());
-    for (std::map<int, Client_Ptr>::const_iterator it = m_clients.begin(), iend = m_clients.end(); it != iend; ++it)
+    activeClients.reserve(m_clientHandlers.size());
+    for(typename std::map<int, ClientHandler_Ptr>::const_iterator it = m_clientHandlers.begin(), iend = m_clientHandlers.end(); it != iend; ++it)
     {
-      if (m_finishedClients.find(it->first) == m_finishedClients.end())
+      if(m_finishedClients.find(it->first) == m_finishedClients.end())
       {
         activeClients.push_back(it->first);
       }
@@ -199,11 +173,11 @@ public:
    */
   void terminate()
   {
-    m_shouldTerminate = true;
+    *m_shouldTerminate = true;
 
-    if (m_serverThread) m_serverThread->join();
+    if(m_serverThread) m_serverThread->join();
 
-    if (m_cleanerThread)
+    if(m_cleanerThread)
     {
       // Make sure that the cleaner thread can terminate when there are no clients remaining to wake it up.
       m_uncleanClients.insert(-1);
@@ -219,61 +193,25 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Attempts to get the active client with the specified ID.
+   * \brief Attempts to get the handler of the active client with the specified ID.
    *
    * If the client has not yet started, this will block.
    *
-   * \param clientID  The ID of the client to get.
-   * \return          The client, if it exists and is active, or null if it has already finished.
+   * \param clientID  The ID of the client whose handler we want to get.
+   * \return          The client handler, if the client exists and is active, or null if it has already finished.
    */
-  Client_Ptr get_client(int clientID) const
+  ClientHandler_Ptr get_client_handler(int clientID) const
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
     // Wait until the client is either active or has terminated.
-    std::map<int, Client_Ptr>::const_iterator it;
-    while ((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
+    typename std::map<int, ClientHandler_Ptr>::const_iterator it;
+    while((it = m_clientHandlers.find(clientID)) == m_clientHandlers.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
     {
       m_clientReady.wait(lock);
     }
 
-    return it != m_clients.end() ? it->second : Client_Ptr();
-  }
-
-  /**
-   * \brief Attempts to read a message of type T from the specified socket.
-   *
-   * This will block until either the read succeeds, an error occurs or the server terminates.
-   *
-   * \param sock  The socket from which to attempt to read the message.
-   * \param msg   The T into which to write the message, if reading succeeded.
-   * \return      true, if reading succeeded, or false otherwise.
-   */
-  template <typename T>
-  bool read_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, T& msg)
-  {
-    boost::optional<boost::system::error_code> err;
-    boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&Server::read_message_handler, this, _1, boost::ref(err)));
-    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
-  }
-
-  /**
-   * \brief Attempts to write a message of type T on the specified socket.
-   *
-   * This will block until either the write succeeds, an error occurs or the server terminates.
-   *
-   * \param sock  The socket to which to attempt to write the message.
-   * \param msg   The T to write.
-   * \return      true, if writing succeeded, or false otherwise.
-   */
-  template <typename T>
-  bool write_message(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const T& msg)
-  {
-    boost::optional<boost::system::error_code> err;
-    boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&Server::write_message_handler, this, _1, boost::ref(err)));
-    while (!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
+    return it != m_clientHandlers.end() ? it->second : ClientHandler_Ptr();
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -289,7 +227,7 @@ private:
     //        This would allow us to get rid of the sleep loop.
     boost::shared_ptr<tcp::socket> sock(new tcp::socket(m_ioService));
     m_acceptor->async_accept(*sock, boost::bind(&Server::accept_client_handler, this, sock, _1));
-    while (!m_shouldTerminate && m_ioService.poll() == 0)
+    while(!*m_shouldTerminate && m_ioService.poll() == 0)
     {
       boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
     }
@@ -304,43 +242,43 @@ private:
   void accept_client_handler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const boost::system::error_code& err)
   {
     // If an error occurred, early out.
-    if (err) return;
+    if(err) return;
 
     // If the server is running in single client mode and a second client tries to connect, early out.
-    if (m_mode == SM_SINGLE_CLIENT && m_nextClientID != 0)
+    if(m_mode == SM_SINGLE_CLIENT && m_nextClientID != 0)
     {
       std::cout << "Warning: Rejecting client connection (server is in single client mode)" << std::endl;
       sock->close();
       return;
     }
 
-    // If a client successfully connects, start a thread for it and add an entry to the clients map.
+    // If a client successfully connects, start a thread for it.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    Client_Ptr client(new Client);
-    boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, m_nextClientID, client, sock)));
-    client->m_thread = clientThread;
+    ClientHandler_Ptr clientHandler(new ClientHandler(m_nextClientID, sock, m_shouldTerminate));
+    boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, clientHandler)));
+    clientHandler->m_thread = clientThread;
     ++m_nextClientID;
   }
 
   /**
    * \brief Handles messages from a client.
    *
-   * \param clientID  The ID of the client.
-   * \param client    The client itself.
-   * \param socket    The TCP socket associated with the client.
+   * \param client  The client.
    */
-  void handle_client(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+  void handle_client(const ClientHandler_Ptr& clientHandler)
   {
+    const int clientID = clientHandler->get_client_id();
+
     std::cout << "Starting client: " << clientID << '\n';
 
     // Run the pre-loop code for the client.
-    handle_client_pre(clientID, client, sock);
+    clientHandler->handle_pre();
 
-    // Add the client to the map of active clients.
+    // Add the client handler to the map of handlers for active clients.
     {
       boost::lock_guard<boost::mutex> lock(m_mutex);
-      m_clients.insert(std::make_pair(clientID, client));
+      m_clientHandlers.insert(std::make_pair(clientID, clientHandler));
     }
 
     // Signal to other threads that we're ready to start running the main loop for the client.
@@ -350,13 +288,13 @@ private:
     m_clientReady.notify_one();
 
     // Run the main loop for the client. Loop until either (a) the connection drops, or (b) the server itself is terminating.
-    while(client->m_connectionOk && !m_shouldTerminate)
+    while(clientHandler->m_connectionOk && !*m_shouldTerminate)
     {
-      handle_client_main(clientID, client, sock);
+      clientHandler->handle_main();
     }
 
     // Run the post-loop hook for the client.
-    handle_client_post(clientID, client, sock);
+    clientHandler->handle_post();
 
     // Once the client's finished, add it to the finished clients set so that it can be cleaned up.
     {
@@ -369,25 +307,13 @@ private:
   }
 
   /**
-   * \brief The handler called when an asynchronous read of a message finishes.
-   *
-   * \param err The error code associated with the read.
-   * \param ret A location into which to write the error code so that read_message can access it.
-   */
-  void read_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
-  {
-    // Store any error message so that it can be examined by read_message.
-    ret = err;
-  }
-
-  /**
    * \brief Keeps the map of clients clean by removing any clients that have terminated.
    */
   void run_cleaner()
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
-    bool canTerminate = m_shouldTerminate && m_clients.empty();
+    bool canTerminate = *m_shouldTerminate && m_clientHandlers.empty();
     while(!canTerminate)
     {
       // Wait for clients to finish.
@@ -396,17 +322,17 @@ private:
       // Clean up any clients that have finished.
       for(std::set<int>::const_iterator it = m_uncleanClients.begin(), iend = m_uncleanClients.end(); it != iend; ++it)
       {
-        if(m_clients.find(*it) != m_clients.end())
+        if(m_clientHandlers.find(*it) != m_clientHandlers.end())
         {
           std::cout << "Cleaning up client: " << *it << std::endl;
-          m_clients.erase(*it);
+          m_clientHandlers.erase(*it);
         }
       }
 
       m_uncleanClients.clear();
 
       // Update the flag.
-      canTerminate = m_shouldTerminate && m_clients.empty();
+      canTerminate = *m_shouldTerminate && m_clientHandlers.empty();
     }
 
 #if DEBUGGING
@@ -428,7 +354,7 @@ private:
 
     std::cout << "Listening for connections...\n";
 
-    while(!m_shouldTerminate)
+    while(!*m_shouldTerminate)
     {
       accept_client();
     }
@@ -436,18 +362,6 @@ private:
 #if DEBUGGING
     std::cout << "Server thread terminating" << std::endl;
 #endif
-  }
-
-  /**
-   * \brief The handler called when an asynchronous write of a message finishes.
-   *
-   * \param err The error code associated with the write.
-   * \param ret A location into which to write the error code so that write_message can access it.
-   */
-  void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
-  {
-    // Store any error message so that it can be examined by write_message.
-    ret = err;
   }
 };
 
