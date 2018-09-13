@@ -172,8 +172,8 @@ std::vector<BinnedPoses> classify_poses(
   res.resize(thresholds.size() + 1);
 
   // For each test pose:
-  for (size_t testIndex = 0, testCount = testPoses.size();
-      testIndex < testCount; ++testIndex)
+#pragma omp parallel for
+  for (size_t testIndex = 0; testIndex < testPoses.size(); ++testIndex)
   {
     const Eigen::Matrix4f& testPose = testPoses[testIndex];
     const Eigen::Matrix4f& relocPose = relocPoses[testIndex];
@@ -220,6 +220,7 @@ std::vector<BinnedPoses> classify_poses(
     currentPoses.testIdx = testIndex;
 
     // Store the test/icp pair in the right bucket
+#pragma omp critical
     res[chosenBin].push_back(currentPoses);
   }
 
@@ -228,8 +229,9 @@ std::vector<BinnedPoses> classify_poses(
 
 std::vector<BinStats> compute_bin_stats(const std::vector<BinnedPoses>& binnedPoses)
 {
-  std::vector<BinStats> binStats;
+  std::vector<BinStats> binStats(binnedPoses.size());
 
+#pragma omp parallel for
   for (size_t binIdx = 0; binIdx < binnedPoses.size(); ++binIdx)
   {
     auto& binContents = binnedPoses[binIdx];
@@ -246,7 +248,7 @@ std::vector<BinStats> compute_bin_stats(const std::vector<BinnedPoses>& binnedPo
     stats.relocPct = static_cast<float>(stats.successfulReloc) / static_cast<float>(stats.totalPoses);
     stats.icpPct = static_cast<float>(stats.successfulICP) / static_cast<float>(stats.totalPoses);
 
-    binStats.push_back(stats);
+    binStats[binIdx] = stats;
   }
 
   return binStats;
@@ -273,16 +275,16 @@ int main(int argc, char *argv[])
   errorThresholds.push_back(ErrorThreshold { 0.40f, 40.f * M_PI / 180.f});
   errorThresholds.push_back(ErrorThreshold { 0.45f, 45.f * M_PI / 180.f});
   errorThresholds.push_back(ErrorThreshold { 0.50f, 50.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.55f, 55.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.60f, 60.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.65f, 65.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.70f, 70.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.75f, 75.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.80f, 80.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.85f, 85.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.90f, 90.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.95f, 95.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 1.00f, 100.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.55f, 55.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.60f, 60.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.65f, 65.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.70f, 70.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.75f, 75.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.80f, 80.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.85f, 85.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.90f, 90.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 0.95f, 95.f * M_PI / 180.f});
+//  errorThresholds.push_back(ErrorThreshold { 1.00f, 100.f * M_PI / 180.f});
 
   if (argc < 4)
   {
@@ -341,6 +343,10 @@ int main(int argc, char *argv[])
   printWidth("Pose Ct", 8);
   printWidth("Reloc %", 8);
   printWidth("ICP %", 8);
+  printWidth("Success R", 10);
+  printWidth("Failure R", 10);
+  printWidth("Success I", 10);
+  printWidth("Failure I", 10);
   std::cerr << "\n";
 
   // For each sequence:
@@ -369,6 +375,10 @@ int main(int argc, char *argv[])
       printWidth(binStats.totalPoses, 8);
       printWidth(binStats.relocPct, 8);
       printWidth(binStats.icpPct, 8);
+      printWidth(binStats.successfulReloc, 10);
+      printWidth(binStats.totalPoses - binStats.successfulReloc, 10);
+      printWidth(binStats.successfulICP, 10);
+      printWidth(binStats.totalPoses - binStats.successfulICP, 10);
       std::cerr << "\n";
     }
   }
