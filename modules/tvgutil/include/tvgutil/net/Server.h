@@ -255,7 +255,7 @@ private:
     // If a client successfully connects, start a thread for it.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    ClientHandler_Ptr clientHandler(new ClientHandler(m_nextClientID, sock, m_shouldTerminate));
+    ClientHandler_Ptr clientHandler(new ClientHandlerType(m_nextClientID, sock, m_shouldTerminate));
     boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, clientHandler)));
     clientHandler->m_thread = clientThread;
     ++m_nextClientID;
