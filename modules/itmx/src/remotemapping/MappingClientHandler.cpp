@@ -8,6 +8,7 @@
 #include <tvgutil/net/AckMessage.h>
 using namespace tvgutil;
 
+#include "ocv/OpenCVUtil.h"
 #include "remotemapping/InteractionTypeMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 
@@ -66,7 +67,7 @@ void MappingClientHandler::handle_main()
           {
             // If that succeeds, uncompress the images, store them on the frame message queue and send an acknowledgement to the client.
 #if DEBUGGING
-            std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+            std::cout << "Message queue size (" << m_clientID << "): " << m_frameMessageQueue->size() << std::endl;
 #endif
 
             RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_frameMessageQueue->begin_push();
@@ -80,7 +81,7 @@ void MappingClientHandler::handle_main()
             std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
           #ifdef WITH_OPENCV
-            static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->get_rgb_image_size(), true, false));
+            static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(get_rgb_image_size(), true, false));
             msg.extract_rgb_image(rgbImage.get());
             cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
             cv::imshow("RGB", cvRGB);
@@ -112,7 +113,7 @@ void MappingClientHandler::handle_pre()
   RGBDCalibrationMessage calibMsg;
   m_connectionOk = read_message(calibMsg);
 #if DEBUGGING
-  std::cout << "Received calibration message from client: " << clientID << std::endl;
+  std::cout << "Received calibration message from client: " << m_clientID << std::endl;
 #endif
 
   // If the calibration message was successfully read:
