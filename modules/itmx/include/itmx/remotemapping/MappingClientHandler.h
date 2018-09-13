@@ -56,9 +56,11 @@ public:
   /**
    * \brief TODO
    *
-   * \param sock  The socket used to communicate with the client.
+   * \param sock              The socket used to communicate with the client.
+   * \param shouldTerminate   Whether or not the server should terminate.
    */
-  explicit MappingClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  explicit MappingClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
+                                const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

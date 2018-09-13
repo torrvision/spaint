@@ -9,8 +9,11 @@ namespace tvgutil {
 
 //#################### CONSTRUCTORS ####################
 
-ClientHandler::ClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
-: m_connectionOk(true), m_sock(sock)
+ClientHandler::ClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
+                             const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate)
+: m_connectionOk(true),
+  m_shouldTerminate(shouldTerminate),
+  m_sock(sock)
 {}
 
 //#################### DESTRUCTOR ####################

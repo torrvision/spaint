@@ -133,6 +133,7 @@ bool MappingServer::has_more_images(int clientID) const
 
 void MappingServer::handle_client_main(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
+#if 0
   InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
 
   // TODO: First, try to read an interaction type message.
@@ -190,16 +191,20 @@ void MappingServer::handle_client_main(int clientID, const Client_Ptr& client, c
       }
     }
   }
+#endif
 }
 
 void MappingServer::handle_client_post(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
+#if 0
   // Destroy the frame compressor prior to stopping the client (this cleanly deallocates CUDA memory and avoids a crash on exit).
   client->m_frameCompressor.reset();
+#endif
 }
 
 void MappingServer::handle_client_pre(int clientID, const Client_Ptr& client, const boost::shared_ptr<tcp::socket>& sock)
 {
+#if 0
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;
   client->m_connectionOk = read_message(sock, calibMsg);
@@ -228,6 +233,7 @@ void MappingServer::handle_client_pre(int clientID, const Client_Ptr& client, co
     // Signal to the client that the server is ready.
     client->m_connectionOk = write_message(sock, AckMessage());
   }
+#endif
 }
 
 }

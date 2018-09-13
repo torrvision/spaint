@@ -85,7 +85,7 @@ private:
   boost::shared_ptr<boost::thread> m_serverThread;
 
   /** Whether or not the server should terminate. */
-  boost::atomic<bool> m_shouldTerminate;
+  boost::shared_ptr<boost::atomic<bool> > m_shouldTerminate;
 
   /** The set of clients that have finished but have not yet been removed from the clients map. */
   std::set<int> m_uncleanClients;
@@ -105,7 +105,7 @@ public:
   : m_mode(mode),
     m_nextClientID(0),
     m_port(port),
-    m_shouldTerminate(false),
+    m_shouldTerminate(new boost::atomic<bool>(false)),
     m_worker(new boost::asio::io_service::work(m_ioService))
   {}
 
@@ -199,7 +199,7 @@ public:
    */
   void terminate()
   {
-    m_shouldTerminate = true;
+    *m_shouldTerminate = true;
 
     if(m_serverThread) m_serverThread->join();
 
@@ -240,6 +240,7 @@ protected:
     return it != m_clients.end() ? it->second : Client_Ptr();
   }
 
+#if 0
   /**
    * \brief Attempts to read a message of type T from the specified socket.
    *
@@ -254,8 +255,8 @@ protected:
   {
     boost::optional<boost::system::error_code> err;
     boost::asio::async_read(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&Server::read_message_handler, this, _1, boost::ref(err)));
-    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
+    while(!err && !*m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    return *m_shouldTerminate ? false : !*err;
   }
 
   /**
@@ -272,9 +273,10 @@ protected:
   {
     boost::optional<boost::system::error_code> err;
     boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&Server::write_message_handler, this, _1, boost::ref(err)));
-    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    return m_shouldTerminate ? false : !*err;
+    while(!err && !*m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    return *m_shouldTerminate ? false : !*err;
   }
+#endif
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -289,7 +291,7 @@ private:
     //        This would allow us to get rid of the sleep loop.
     boost::shared_ptr<tcp::socket> sock(new tcp::socket(m_ioService));
     m_acceptor->async_accept(*sock, boost::bind(&Server::accept_client_handler, this, sock, _1));
-    while(!m_shouldTerminate && m_ioService.poll() == 0)
+    while(!*m_shouldTerminate && m_ioService.poll() == 0)
     {
       boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
     }
@@ -317,7 +319,7 @@ private:
     // If a client successfully connects, start a thread for it and add an entry to the clients map.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    Client_Ptr client(new Client(sock));
+    Client_Ptr client(new Client(sock, m_shouldTerminate));
     boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, m_nextClientID, client, sock)));
     client->m_thread = clientThread;
     ++m_nextClientID;
@@ -350,7 +352,7 @@ private:
     m_clientReady.notify_one();
 
     // Run the main loop for the client. Loop until either (a) the connection drops, or (b) the server itself is terminating.
-    while(client->m_connectionOk && !m_shouldTerminate)
+    while(client->m_connectionOk && !*m_shouldTerminate)
     {
       handle_client_main(clientID, client, sock);
     }
@@ -368,6 +370,7 @@ private:
     }
   }
 
+#if 0
   /**
    * \brief The handler called when an asynchronous read of a message finishes.
    *
@@ -379,6 +382,7 @@ private:
     // Store any error message so that it can be examined by read_message.
     ret = err;
   }
+#endif
 
   /**
    * \brief Keeps the map of clients clean by removing any clients that have terminated.
@@ -387,7 +391,7 @@ private:
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
-    bool canTerminate = m_shouldTerminate && m_clients.empty();
+    bool canTerminate = *m_shouldTerminate && m_clients.empty();
     while(!canTerminate)
     {
       // Wait for clients to finish.
@@ -406,7 +410,7 @@ private:
       m_uncleanClients.clear();
 
       // Update the flag.
-      canTerminate = m_shouldTerminate && m_clients.empty();
+      canTerminate = *m_shouldTerminate && m_clients.empty();
     }
 
 #if DEBUGGING
@@ -428,7 +432,7 @@ private:
 
     std::cout << "Listening for connections...\n";
 
-    while(!m_shouldTerminate)
+    while(!*m_shouldTerminate)
     {
       accept_client();
     }
@@ -438,6 +442,7 @@ private:
 #endif
   }
 
+#if 0
   /**
    * \brief The handler called when an asynchronous write of a message finishes.
    *
@@ -449,6 +454,7 @@ private:
     // Store any error message so that it can be examined by write_message.
     ret = err;
   }
+#endif
 };
 
 }
