@@ -70,11 +70,10 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Attempts to read a message of type T from the specified socket.
+   * \brief Attempts to read a message of type T from the socket used to communicate with the client.
    *
    * This will block until either the read succeeds, an error occurs or the server terminates.
    *
-   * \param sock  The socket from which to attempt to read the message.
    * \param msg   The T into which to write the message, if reading succeeded.
    * \return      true, if reading succeeded, or false otherwise.
    */
@@ -88,11 +87,10 @@ protected:
   }
 
   /**
-   * \brief Attempts to write a message of type T on the specified socket.
+   * \brief Attempts to write a message of type T on the socket used to communicate with the client.
    *
    * This will block until either the write succeeds, an error occurs or the server terminates.
    *
-   * \param sock  The socket to which to attempt to write the message.
    * \param msg   The T to write.
    * \return      true, if writing succeeded, or false otherwise.
    */

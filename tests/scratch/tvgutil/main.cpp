@@ -8,6 +8,7 @@ int main()
 {
   Server<> server;
   server.start();
+  server.terminate();
   return 0;
 }
 

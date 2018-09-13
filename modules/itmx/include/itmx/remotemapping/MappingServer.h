@@ -97,17 +97,6 @@ public:
    * \return          true, if the client is currently active and may still have more RGB-D frames to yield, or false otherwise.
    */
   bool has_more_images(int clientID) const;
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /** Override */
-  virtual void handle_client_main(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
-
-  /** Override */
-  virtual void handle_client_post(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
-
-  /** Override */
-  virtual void handle_client_pre(int clientID, const Client_Ptr& client, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 };
 
 //#################### TYPEDEFS ####################
