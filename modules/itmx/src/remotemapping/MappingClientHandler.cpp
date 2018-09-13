@@ -71,7 +71,7 @@ void MappingClientHandler::handle_main()
 
             RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_frameMessageQueue->begin_push();
             boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-            RGBDFrameMessage& msg = elt ? **elt : *m_dummyFrameMsg;
+            RGBDFrameMessage& msg = elt ? **elt : *m_dummyFrameMessage;
             m_frameCompressor->uncompress_rgbd_frame(*m_frameMessage, msg);
 
             m_connectionOk = write_message(AckMessage());
@@ -131,7 +131,7 @@ void MappingClientHandler::handle_pre()
     m_frameCompressor.reset(new RGBDFrameCompressor(rgbImageSize, depthImageSize, calibMsg.extract_rgb_compression_type(), calibMsg.extract_depth_compression_type()));
 
     // Construct a dummy frame message to consume messages that cannot be pushed onto the queue.
-    m_dummyFrameMsg.reset(new RGBDFrameMessage(rgbImageSize, depthImageSize));
+    m_dummyFrameMessage.reset(new RGBDFrameMessage(rgbImageSize, depthImageSize));
 
     // Signal to the client that the server is ready.
     m_connectionOk = write_message(AckMessage());

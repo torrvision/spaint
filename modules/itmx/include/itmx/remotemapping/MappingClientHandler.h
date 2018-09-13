@@ -31,16 +31,16 @@ public:
   ITMLib::ITMRGBDCalib m_calib;
 
   /** A dummy frame message to consume messages that cannot be pushed onto the queue. */
-  RGBDFrameMessage_Ptr m_dummyFrameMsg;
+  RGBDFrameMessage_Ptr m_dummyFrameMessage;
 
   /** The frame compressor for the client. */
   RGBDFrameCompressor_Ptr m_frameCompressor;
 
-  /** A queue containing the RGB-D frame messages received from the client. */
-  RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
-
   /** A place in which to store compressed RGB-D frame messages. */
   boost::shared_ptr<CompressedRGBDFrameMessage> m_frameMessage;
+
+  /** A queue containing the RGB-D frame messages received from the client. */
+  RGBDFrameMessageQueue_Ptr m_frameMessageQueue;
 
   /** A place in which to store compressed RGB-D frame header messages. */
   CompressedRGBDFrameHeaderMessage m_headerMessage;
@@ -54,24 +54,27 @@ public:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a handler for a mapping client.
    *
    * \param clientID          The ID used by the server to refer to the client.
    * \param sock              The socket used to communicate with the client.
    * \param shouldTerminate   Whether or not the server should terminate.
    */
-  explicit MappingClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
-                                const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
+  MappingClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the size of the depth images produced by the client.
+   *
+   * \return  The size of the depth images produced by the client.
    */
   const Vector2i& get_depth_image_size() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the size of the colour images produced by the client.
+   *
+   * \return  The size of the colour images produced by the client.
    */
   const Vector2i& get_rgb_image_size() const;
 
