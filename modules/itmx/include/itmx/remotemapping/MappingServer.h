@@ -17,11 +17,6 @@ namespace itmx {
  */
 class MappingServer : public tvgutil::Server<MappingClientHandler>
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
-  typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
