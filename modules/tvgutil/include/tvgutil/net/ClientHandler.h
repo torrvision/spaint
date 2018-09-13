@@ -20,6 +20,9 @@ class ClientHandler
 {
   //#################### PUBLIC VARIABLES ####################
 public:
+  /** The ID used by the server to refer to the client. */
+  int m_clientID;
+
   /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
   bool m_connectionOk;
 
@@ -37,10 +40,11 @@ public:
   /**
    * \brief Constructs a client handler.
    *
+   * \param clientID          The ID used by the server to refer to the client.
    * \param sock              The socket used to communicate with the client.
    * \param shouldTerminate   Whether or not the server should terminate.
    */
-  explicit ClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
+  explicit ClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
                          const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
 
   //#################### DESTRUCTOR ####################
@@ -55,17 +59,22 @@ public:
   /**
    * \brief TODO
    */
-  virtual void handle_main(int clientID);
+  int get_client_id() const;
 
   /**
    * \brief TODO
    */
-  virtual void handle_post(int clientID);
+  virtual void handle_main();
 
   /**
    * \brief TODO
    */
-  virtual void handle_pre(int clientID);
+  virtual void handle_post();
+
+  /**
+   * \brief TODO
+   */
+  virtual void handle_pre();
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

@@ -17,9 +17,9 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-MappingClientHandler::MappingClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
+MappingClientHandler::MappingClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
                                            const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate)
-: ClientHandler(sock, shouldTerminate),
+: ClientHandler(clientID, sock, shouldTerminate),
   m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
   m_imagesDirty(false),
   m_poseDirty(false)
@@ -39,7 +39,7 @@ const Vector2i& MappingClientHandler::get_rgb_image_size() const
   return m_calib.intrinsics_rgb.imgSize;
 }
 
-void MappingClientHandler::handle_main(int clientID)
+void MappingClientHandler::handle_main()
 {
   InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
 
@@ -100,13 +100,13 @@ void MappingClientHandler::handle_main(int clientID)
   }
 }
 
-void MappingClientHandler::handle_post(int clientID)
+void MappingClientHandler::handle_post()
 {
   // Destroy the frame compressor prior to stopping the client handler (this cleanly deallocates CUDA memory and avoids a crash on exit).
   m_frameCompressor.reset();
 }
 
-void MappingClientHandler::handle_pre(int clientID)
+void MappingClientHandler::handle_pre()
 {
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;

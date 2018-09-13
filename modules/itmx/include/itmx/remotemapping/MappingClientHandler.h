@@ -56,10 +56,11 @@ public:
   /**
    * \brief TODO
    *
+   * \param clientID          The ID used by the server to refer to the client.
    * \param sock              The socket used to communicate with the client.
    * \param shouldTerminate   Whether or not the server should terminate.
    */
-  explicit MappingClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
+  explicit MappingClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
                                 const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -75,13 +76,13 @@ public:
   const Vector2i& get_rgb_image_size() const;
 
   /** Override */
-  virtual void handle_main(int clientID);
+  virtual void handle_main();
 
   /** Override */
-  virtual void handle_post(int clientID);
+  virtual void handle_post();
 
   /** Override */
-  virtual void handle_pre(int clientID);
+  virtual void handle_pre();
 };
 
 }

@@ -9,9 +9,10 @@ namespace tvgutil {
 
 //#################### CONSTRUCTORS ####################
 
-ClientHandler::ClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
+ClientHandler::ClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock,
                              const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate)
-: m_connectionOk(true),
+: m_clientID(clientID),
+  m_connectionOk(true),
   m_shouldTerminate(shouldTerminate),
   m_sock(sock)
 {}
@@ -22,17 +23,22 @@ ClientHandler::~ClientHandler() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ClientHandler::handle_main(int clientID)
+int ClientHandler::get_client_id() const
+{
+  return m_clientID;
+}
+
+void ClientHandler::handle_main()
 {
   // No-op
 }
 
-void ClientHandler::handle_post(int clientID)
+void ClientHandler::handle_post()
 {
   // No-op
 }
 
-void ClientHandler::handle_pre(int clientID)
+void ClientHandler::handle_pre()
 {
   // No-op
 }

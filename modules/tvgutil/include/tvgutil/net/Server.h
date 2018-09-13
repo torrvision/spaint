@@ -255,8 +255,8 @@ private:
     // If a client successfully connects, start a thread for it and add an entry to the clients map.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    Client_Ptr client(new Client(sock, m_shouldTerminate));
-    boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, m_nextClientID, client)));
+    Client_Ptr client(new Client(m_nextClientID, sock, m_shouldTerminate));
+    boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, client)));
     client->m_thread = clientThread;
     ++m_nextClientID;
   }
@@ -264,16 +264,16 @@ private:
   /**
    * \brief Handles messages from a client.
    *
-   * \param clientID  The ID of the client.
-   * \param client    The client itself.
-   * \param socket    The TCP socket associated with the client.
+   * \param client  The client.
    */
-  void handle_client(int clientID, const Client_Ptr& client)
+  void handle_client(const Client_Ptr& client)
   {
+    const int clientID = client->get_client_id();
+
     std::cout << "Starting client: " << clientID << '\n';
 
     // Run the pre-loop code for the client.
-    client->handle_pre(clientID);
+    client->handle_pre();
 
     // Add the client to the map of active clients.
     {
@@ -290,11 +290,11 @@ private:
     // Run the main loop for the client. Loop until either (a) the connection drops, or (b) the server itself is terminating.
     while(client->m_connectionOk && !*m_shouldTerminate)
     {
-      client->handle_main(clientID);
+      client->handle_main();
     }
 
     // Run the post-loop hook for the client.
-    client->handle_post(clientID);
+    client->handle_post();
 
     // Once the client's finished, add it to the finished clients set so that it can be cleaned up.
     {
