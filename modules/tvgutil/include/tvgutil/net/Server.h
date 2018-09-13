@@ -27,12 +27,12 @@ using boost::asio::ip::tcp;
 /**
  * \brief An instance of a class deriving from this one represents a server that can be used to communicate with one or more clients.
  */
-template <typename Client = ClientHandler>
+template <typename ClientHandlerType = ClientHandler>
 class Server
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<Client> ClientHandler_Ptr;
+  typedef boost::shared_ptr<ClientHandlerType> ClientHandler_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -255,7 +255,7 @@ private:
     // If a client successfully connects, start a thread for it.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    ClientHandler_Ptr clientHandler(new Client(m_nextClientID, sock, m_shouldTerminate));
+    ClientHandler_Ptr clientHandler(new ClientHandler(m_nextClientID, sock, m_shouldTerminate));
     boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, clientHandler)));
     clientHandler->m_thread = clientThread;
     ++m_nextClientID;

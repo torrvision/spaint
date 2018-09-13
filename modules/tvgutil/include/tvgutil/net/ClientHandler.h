@@ -57,7 +57,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the ID used by the server to refer to the client.
+   *
+   * \return  The ID used by the server to refer to the client.
    */
   int get_client_id() const;
 
