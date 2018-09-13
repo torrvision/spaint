@@ -22,6 +22,9 @@ public:
   /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
   bool m_connectionOk;
 
+  /** The socket used to communicate with the client. */
+  const boost::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
+
   /** The thread that manages communication with the client. */
   boost::shared_ptr<boost::thread> m_thread;
 
@@ -29,8 +32,10 @@ public:
 public:
   /**
    * \brief Constructs a client handler.
+   *
+   * \param sock  The socket used to communicate with the client.
    */
-  ClientHandler();
+  explicit ClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -44,17 +49,17 @@ public:
   /**
    * \brief TODO
    */
-  virtual void handle_main(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_main(int clientID);
 
   /**
    * \brief TODO
    */
-  virtual void handle_post(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_post(int clientID);
 
   /**
    * \brief TODO
    */
-  virtual void handle_pre(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_pre(int clientID);
 };
 
 }

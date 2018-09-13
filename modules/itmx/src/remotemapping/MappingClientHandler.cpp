@@ -9,8 +9,9 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-MappingClientHandler::MappingClientHandler()
-: m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
+MappingClientHandler::MappingClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+: ClientHandler(sock),
+  m_frameMessageQueue(new RGBDFrameMessageQueue(tvgutil::pooled_queue::PES_DISCARD)),
   m_imagesDirty(false),
   m_poseDirty(false)
 {
@@ -29,17 +30,17 @@ const Vector2i& MappingClientHandler::get_rgb_image_size() const
   return m_calib.intrinsics_rgb.imgSize;
 }
 
-void MappingClientHandler::handle_main(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+void MappingClientHandler::handle_main(int clientID)
 {
   // TODO
 }
 
-void MappingClientHandler::handle_post(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+void MappingClientHandler::handle_post(int clientID)
 {
   // TODO
 }
 
-void MappingClientHandler::handle_pre(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock)
+void MappingClientHandler::handle_pre(int clientID)
 {
   // TODO
 }

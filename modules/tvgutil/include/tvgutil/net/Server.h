@@ -161,9 +161,9 @@ public:
     //       the benefits of doing so are quite limited in practice.
     std::vector<int> activeClients;
     activeClients.reserve(m_clients.size());
-    for (std::map<int, Client_Ptr>::const_iterator it = m_clients.begin(), iend = m_clients.end(); it != iend; ++it)
+    for(typename std::map<int, Client_Ptr>::const_iterator it = m_clients.begin(), iend = m_clients.end(); it != iend; ++it)
     {
-      if (m_finishedClients.find(it->first) == m_finishedClients.end())
+      if(m_finishedClients.find(it->first) == m_finishedClients.end())
       {
         activeClients.push_back(it->first);
       }
@@ -201,9 +201,9 @@ public:
   {
     m_shouldTerminate = true;
 
-    if (m_serverThread) m_serverThread->join();
+    if(m_serverThread) m_serverThread->join();
 
-    if (m_cleanerThread)
+    if(m_cleanerThread)
     {
       // Make sure that the cleaner thread can terminate when there are no clients remaining to wake it up.
       m_uncleanClients.insert(-1);
@@ -231,8 +231,8 @@ protected:
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
     // Wait until the client is either active or has terminated.
-    std::map<int, Client_Ptr>::const_iterator it;
-    while ((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
+    typename std::map<int, Client_Ptr>::const_iterator it;
+    while((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
     {
       m_clientReady.wait(lock);
     }
@@ -272,7 +272,7 @@ protected:
   {
     boost::optional<boost::system::error_code> err;
     boost::asio::async_write(*sock, boost::asio::buffer(msg.get_data_ptr(), msg.get_size()), boost::bind(&Server::write_message_handler, this, _1, boost::ref(err)));
-    while (!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    while(!err && !m_shouldTerminate) boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     return m_shouldTerminate ? false : !*err;
   }
 
@@ -289,7 +289,7 @@ private:
     //        This would allow us to get rid of the sleep loop.
     boost::shared_ptr<tcp::socket> sock(new tcp::socket(m_ioService));
     m_acceptor->async_accept(*sock, boost::bind(&Server::accept_client_handler, this, sock, _1));
-    while (!m_shouldTerminate && m_ioService.poll() == 0)
+    while(!m_shouldTerminate && m_ioService.poll() == 0)
     {
       boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
     }
@@ -304,10 +304,10 @@ private:
   void accept_client_handler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const boost::system::error_code& err)
   {
     // If an error occurred, early out.
-    if (err) return;
+    if(err) return;
 
     // If the server is running in single client mode and a second client tries to connect, early out.
-    if (m_mode == SM_SINGLE_CLIENT && m_nextClientID != 0)
+    if(m_mode == SM_SINGLE_CLIENT && m_nextClientID != 0)
     {
       std::cout << "Warning: Rejecting client connection (server is in single client mode)" << std::endl;
       sock->close();
@@ -317,7 +317,7 @@ private:
     // If a client successfully connects, start a thread for it and add an entry to the clients map.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    Client_Ptr client(new Client);
+    Client_Ptr client(new Client(sock));
     boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, m_nextClientID, client, sock)));
     client->m_thread = clientThread;
     ++m_nextClientID;

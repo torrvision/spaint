@@ -1,6 +1,21 @@
 //###
 #if 1
 
+#include <tvgutil/net/Server.h>
+using namespace tvgutil;
+
+int main()
+{
+  Server<> server;
+  server.start();
+  return 0;
+}
+
+#endif
+
+//###
+#if 0
+
 #include <iostream>
 
 #include <boost/thread.hpp>

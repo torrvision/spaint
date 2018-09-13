@@ -55,8 +55,10 @@ public:
 public:
   /**
    * \brief TODO
+   *
+   * \param sock  The socket used to communicate with the client.
    */
-  MappingClientHandler();
+  explicit MappingClientHandler(const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -71,13 +73,13 @@ public:
   const Vector2i& get_rgb_image_size() const;
 
   /** Override */
-  virtual void handle_main(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_main(int clientID);
 
   /** Override */
-  virtual void handle_post(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_post(int clientID);
 
   /** Override */
-  virtual void handle_pre(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock);
+  virtual void handle_pre(int clientID);
 };
 
 }
