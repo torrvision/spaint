@@ -32,7 +32,7 @@ class Server
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<Client> Client_Ptr;
+  typedef boost::shared_ptr<Client> ClientHandler_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -54,14 +54,14 @@ private:
   /** A thread that keeps the map of clients clean by removing any clients that have terminated. */
   boost::shared_ptr<boost::thread> m_cleanerThread;
 
+  /** The handlers for the currently active clients. */
+  std::map<int, ClientHandler_Ptr> m_clientHandlers;
+
   /** A condition variable used to wait until a client thread is ready to start reading frame messages. */
   mutable boost::condition_variable m_clientReady;
 
   /** A condition variable used to wait for finished client threads that need to be cleaned up. */
   boost::condition_variable m_clientsHaveFinished;
-
-  /** The currently active clients. */
-  std::map<int, Client_Ptr> m_clients;
 
   /** The set of clients that have finished. */
   std::set<int> m_finishedClients;
@@ -134,8 +134,8 @@ public:
     //       are accepted or existing clients terminate. However, since the number of clients is generally fairly low,
     //       the benefits of doing so are quite limited in practice.
     std::vector<int> activeClients;
-    activeClients.reserve(m_clients.size());
-    for(typename std::map<int, Client_Ptr>::const_iterator it = m_clients.begin(), iend = m_clients.end(); it != iend; ++it)
+    activeClients.reserve(m_clientHandlers.size());
+    for(typename std::map<int, ClientHandler_Ptr>::const_iterator it = m_clientHandlers.begin(), iend = m_clientHandlers.end(); it != iend; ++it)
     {
       if(m_finishedClients.find(it->first) == m_finishedClients.end())
       {
@@ -193,25 +193,25 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Attempts to get the active client with the specified ID.
+   * \brief Attempts to get the handler of the active client with the specified ID.
    *
    * If the client has not yet started, this will block.
    *
-   * \param clientID  The ID of the client to get.
-   * \return          The client, if it exists and is active, or null if it has already finished.
+   * \param clientID  The ID of the client whose handler we want to get.
+   * \return          The client handler, if the client exists and is active, or null if it has already finished.
    */
-  Client_Ptr get_client(int clientID) const
+  ClientHandler_Ptr get_client_handler(int clientID) const
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
     // Wait until the client is either active or has terminated.
-    typename std::map<int, Client_Ptr>::const_iterator it;
-    while((it = m_clients.find(clientID)) == m_clients.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
+    typename std::map<int, ClientHandler_Ptr>::const_iterator it;
+    while((it = m_clientHandlers.find(clientID)) == m_clientHandlers.end() && m_finishedClients.find(clientID) == m_finishedClients.end())
     {
       m_clientReady.wait(lock);
     }
 
-    return it != m_clients.end() ? it->second : Client_Ptr();
+    return it != m_clientHandlers.end() ? it->second : ClientHandler_Ptr();
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -252,12 +252,12 @@ private:
       return;
     }
 
-    // If a client successfully connects, start a thread for it and add an entry to the clients map.
+    // If a client successfully connects, start a thread for it.
     std::cout << "Accepted client connection" << std::endl;
     boost::lock_guard<boost::mutex> lock(m_mutex);
-    Client_Ptr client(new Client(m_nextClientID, sock, m_shouldTerminate));
-    boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, client)));
-    client->m_thread = clientThread;
+    ClientHandler_Ptr clientHandler(new Client(m_nextClientID, sock, m_shouldTerminate));
+    boost::shared_ptr<boost::thread> clientThread(new boost::thread(boost::bind(&Server::handle_client, this, clientHandler)));
+    clientHandler->m_thread = clientThread;
     ++m_nextClientID;
   }
 
@@ -266,19 +266,19 @@ private:
    *
    * \param client  The client.
    */
-  void handle_client(const Client_Ptr& client)
+  void handle_client(const ClientHandler_Ptr& clientHandler)
   {
-    const int clientID = client->get_client_id();
+    const int clientID = clientHandler->get_client_id();
 
     std::cout << "Starting client: " << clientID << '\n';
 
     // Run the pre-loop code for the client.
-    client->handle_pre();
+    clientHandler->handle_pre();
 
-    // Add the client to the map of active clients.
+    // Add the client handler to the map of handlers for active clients.
     {
       boost::lock_guard<boost::mutex> lock(m_mutex);
-      m_clients.insert(std::make_pair(clientID, client));
+      m_clientHandlers.insert(std::make_pair(clientID, clientHandler));
     }
 
     // Signal to other threads that we're ready to start running the main loop for the client.
@@ -288,13 +288,13 @@ private:
     m_clientReady.notify_one();
 
     // Run the main loop for the client. Loop until either (a) the connection drops, or (b) the server itself is terminating.
-    while(client->m_connectionOk && !*m_shouldTerminate)
+    while(clientHandler->m_connectionOk && !*m_shouldTerminate)
     {
-      client->handle_main();
+      clientHandler->handle_main();
     }
 
     // Run the post-loop hook for the client.
-    client->handle_post();
+    clientHandler->handle_post();
 
     // Once the client's finished, add it to the finished clients set so that it can be cleaned up.
     {
@@ -313,7 +313,7 @@ private:
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
-    bool canTerminate = *m_shouldTerminate && m_clients.empty();
+    bool canTerminate = *m_shouldTerminate && m_clientHandlers.empty();
     while(!canTerminate)
     {
       // Wait for clients to finish.
@@ -322,17 +322,17 @@ private:
       // Clean up any clients that have finished.
       for(std::set<int>::const_iterator it = m_uncleanClients.begin(), iend = m_uncleanClients.end(); it != iend; ++it)
       {
-        if(m_clients.find(*it) != m_clients.end())
+        if(m_clientHandlers.find(*it) != m_clientHandlers.end())
         {
           std::cout << "Cleaning up client: " << *it << std::endl;
-          m_clients.erase(*it);
+          m_clientHandlers.erase(*it);
         }
       }
 
       m_uncleanClients.clear();
 
       // Update the flag.
-      canTerminate = *m_shouldTerminate && m_clients.empty();
+      canTerminate = *m_shouldTerminate && m_clientHandlers.empty();
     }
 
 #if DEBUGGING
