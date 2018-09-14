@@ -12,6 +12,8 @@
 
 #include <ORUtils/Image.h>
 
+#include <tvgutil/misc/SettingsContainer.h>
+
 //#################### FORWARD DECLARATIONS ####################
 
 #ifdef WITH_SCOREFORESTS
@@ -90,6 +92,9 @@ protected:
   /** The number of leaves in each tree. */
   std::vector<uint32_t> m_nbLeavesPerTree;
 
+  /** The depth of each tree. */
+  std::vector<uint32_t> m_nbLevelsPerTree;
+
   /** The number of nodes in each tree. */
   std::vector<uint32_t> m_nbNodesPerTree;
 
@@ -114,6 +119,13 @@ protected:
    * \throws std::runtime_error If the forest cannot be loaded.
    */
   explicit DecisionForest(const std::string& filename);
+
+  /**
+   * \brief Creates a balanced decision forest with random split functions, using parameters specified by the user.
+   *
+   * \param settings  The settings used to create the forest.
+   */
+  explicit DecisionForest(const tvgutil::SettingsContainer_CPtr& settings);
 
 #ifdef WITH_SCOREFORESTS
   /**
@@ -233,6 +245,9 @@ private:
   int convert_node(const Learner *learner, uint32_t nodeIdx, uint32_t treeIdx, uint32_t nbTrees, uint32_t outputIdx,
                    uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves);
 #endif
+
+  int create_node(uint32_t treeIdx, uint32_t nbTrees, uint32_t depthLeft, uint32_t outputIdx,
+                  uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves);
 };
 
 }
