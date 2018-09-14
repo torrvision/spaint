@@ -40,11 +40,17 @@ private:
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
 
-  /** The score threshold used when deciding if the FAST relocaliser has succeeded. */
-  float m_relocaliserThresholdScore_Fast;
+  /** Whether or not to enable relocalisation with the INTERMEDIATE relocaliser if the results of the fast one are not satisfactory. */
+  bool m_relocaliserEnabled_Intermediate;
 
-  /** The score threshold used when deciding if the INTERMEDIATE relocaliser has succeeded. */
+  /** Whether or not to enable relocalisation with the FULL relocaliser if the results of the previous one are not satisfactory. */
+  bool m_relocaliserEnabled_Full;
+
+  /** The score threshold used when deciding if the INTERMEDIATE relocaliser has to be used. */
   float m_relocaliserThresholdScore_Intermediate;
+
+  /** The score threshold used when deciding if the FULL relocaliser has to be used. */
+  float m_relocaliserThresholdScore_Full;
 
   /** Whether or not to save the relocalised poses. */
   bool m_savePoses;

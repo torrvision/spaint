@@ -36,8 +36,10 @@ CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocali
   const static std::string settingsNamespace = "CascadeRelocaliser.";
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
-  m_relocaliserThresholdScore_Fast = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Fast", 0.05f);
+  m_relocaliserEnabled_Intermediate = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Intermediate", true);
+  m_relocaliserEnabled_Full = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Full", true);
   m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f);
+  m_relocaliserThresholdScore_Full = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Full", 0.05f);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
   // Get the (global) experiment tag.
@@ -129,8 +131,8 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   // We time the following as "refinement".
   start_timer(m_timerRefinement, false); // No need to synchronize the GPU again.
 
-  // If the fast relocaliser failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser (if available).
-  if(m_innerRelocaliser_Intermediate && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Fast))
+  // If the fast relocaliser failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser (if enabled and available).
+  if(m_relocaliserEnabled_Intermediate && m_innerRelocaliser_Intermediate && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate))
   {
 #if DEBUGGING
     static int intermediateRelocalisationsCount = 0;
@@ -141,7 +143,7 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   }
 
   // Finally, run the normal relocaliser if all else failed.
-  if(m_innerRelocaliser_Full && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate))
+  if(m_relocaliserEnabled_Full && m_innerRelocaliser_Full && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Full))
   {
 #if DEBUGGING
     static int fullRelocalisationsCount = 0;
