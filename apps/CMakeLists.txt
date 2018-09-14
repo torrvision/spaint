@@ -35,6 +35,7 @@ IF(BUILD_AUXILIARY_APPS)
         ADD_SUBDIRECTORY(prepare_7scenes)
       ENDIF()
 
+      ADD_SUBDIRECTORY(relocicpeval)
       ADD_SUBDIRECTORY(relocnovelposes)
       ADD_SUBDIRECTORY(relocopt)
       ADD_SUBDIRECTORY(relocperf)

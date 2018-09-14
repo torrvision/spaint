@@ -1,5 +1,5 @@
 /**
- * relocvis: main.cpp
+ * relocnovelposes: main.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
