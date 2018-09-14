@@ -41,6 +41,8 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::Settings
   const std::string settingsNamespace = "DecisionForest.";
 
   const uint32_t treeDepth = settings->get_first_value<uint32_t>(settingsNamespace + "treeDepth", 15);
+  const float depthFeatureRatio = settings->get_first_value<float>(settingsNamespace + "depthFeatureRatio", 0.5f);
+  const bool useFixedThresholds = settings->get_first_value<bool>(settingsNamespace + "useFixedThresholds", true);
 
   // Derived params for completely balanced trees.
   const uint32_t nbNodesPerTree = std::pow(2, treeDepth + 1) - 1;
@@ -73,10 +75,10 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::Settings
   uint32_t currentLeafIdx = 0;
   NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
 
-  // Fill the trees.
+  // Fill the trees with nodes.
   for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
-    // We have to count the number of leaves in each tree
+    // Count the number of leaves in each tree to make sure everything works out.
     uint32_t nbLeavesBefore = currentLeafIdx;
 
     // Recursive call: we set the first free entry to 1, since we reserve 0 for the root of the tree.
@@ -89,6 +91,12 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::Settings
 
   tvgutil::RandomNumberGenerator rng(42);
 
+  // Parameters used to generate the feature thresholds in case useFixedThresholds is false (computed from the original forest trained on office).
+  const float depthMu = 20.09f;
+  const float depthSigma = 947.24f;
+  const float rgbMu = -2.85f;
+  const float rgbSigma = 72.98f;
+
   // Fill the trees with feature thresholds and indices.
   for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
@@ -99,9 +107,20 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::Settings
       if(node.leafIdx >= 0) // Is a leaf.
         continue;
 
+      // Whether or not to generate a depth feature (feature idx in 0..127).
+      bool depthFeature = rng.generate_real_from_uniform(0.f, 1.f) < depthFeatureRatio;
+
       // Generate a feature index and threshold.
-      node.featureIdx = rng.generate_int_from_uniform(0, 255);
-      node.featureThreshold = 0;
+      if(depthFeature)
+      {
+        node.featureIdx = rng.generate_int_from_uniform(0, 127);
+        node.featureThreshold = useFixedThresholds ? 0.0f : rng.generate_from_gaussian(depthMu, depthSigma);
+      }
+      else
+      {
+        node.featureIdx = rng.generate_int_from_uniform(128, 255);
+        node.featureThreshold = useFixedThresholds ? 0.0f : rng.generate_from_gaussian(rgbMu, rgbSigma);
+      }
     }
   }
 
