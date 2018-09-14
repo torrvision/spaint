@@ -49,6 +49,9 @@ public:
    */
   explicit DecisionForest_CUDA(const std::string& filename);
 
+  /** Override */
+  explicit DecisionForest_CUDA(const tvgutil::SettingsContainer_CPtr& settings);
+
 #ifdef WITH_SCOREFORESTS
   /**
    * \brief Constructs a decision forest by converting an EnsembleLearner that was pre-trained using ScoreForests.
