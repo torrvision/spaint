@@ -126,7 +126,7 @@ bool MappingServer::has_images_now(int clientID) const
 
 bool MappingServer::has_more_images(int clientID) const
 {
-  return is_active(clientID);
+  return !has_finished(clientID);
 }
 
 }

@@ -56,7 +56,7 @@ private:
   /** The handlers for the currently active clients. */
   std::map<int, ClientHandler_Ptr> m_clientHandlers;
 
-  /** A condition variable used to wait until a client thread is ready to start reading frame messages. */
+  /** A condition variable used to wait until a client thread is ready to start the client's main loop. */
   mutable boost::condition_variable m_clientReady;
 
   /** A condition variable used to wait for finished client threads that need to be cleaned up. */
@@ -86,7 +86,7 @@ private:
   /** Whether or not the server should terminate. */
   boost::shared_ptr<boost::atomic<bool> > m_shouldTerminate;
 
-  /** The set of clients that have finished but have not yet been removed from the clients map. */
+  /** The set of clients that have finished but whose handlers have not yet been removed from the client handlers map. */
   std::set<int> m_uncleanClients;
 
   /** A worker variable used to keep the I/O service running until we want it to stop. */
@@ -146,17 +146,15 @@ public:
   }
 
   /**
-   * \brief Gets whether or not the specified client is currently active.
+   * \brief Gets whether or not the specified client has finished.
    *
    * \param clientID  The ID of the client to check.
-   * \return          true, if the client is currently active, or false otherwise.
+   * \return          true, if the client has finished, or false otherwise.
    */
-  bool is_active(int clientID) const
+  bool has_finished(int clientID) const
   {
     boost::lock_guard<boost::mutex> lock(m_mutex);
-
-    // Return whether or not the client is still active.
-    return m_finishedClients.find(clientID) == m_finishedClients.end();
+    return m_finishedClients.find(clientID) != m_finishedClients.end();
   }
 
   /**
