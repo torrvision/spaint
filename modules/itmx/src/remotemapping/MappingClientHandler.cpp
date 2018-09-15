@@ -8,6 +8,7 @@
 #include <tvgutil/net/AckMessage.h>
 using namespace tvgutil;
 
+#include "ocv/OpenCVUtil.h"
 #include "remotemapping/InteractionTypeMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 
@@ -66,12 +67,12 @@ void MappingClientHandler::handle_main()
           {
             // If that succeeds, uncompress the images, store them on the frame message queue and send an acknowledgement to the client.
 #if DEBUGGING
-            std::cout << "Message queue size (" << clientID << "): " << client->m_frameMessageQueue->size() << std::endl;
+            std::cout << "Message queue size (" << m_clientID << "): " << m_frameMessageQueue->size() << std::endl;
 #endif
 
             RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_frameMessageQueue->begin_push();
             boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
-            RGBDFrameMessage& msg = elt ? **elt : *m_dummyFrameMsg;
+            RGBDFrameMessage& msg = elt ? **elt : *m_dummyFrameMessage;
             m_frameCompressor->uncompress_rgbd_frame(*m_frameMessage, msg);
 
             m_connectionOk = write_message(AckMessage());
@@ -80,7 +81,7 @@ void MappingClientHandler::handle_main()
             std::cout << "Got message: " << msg.extract_frame_index() << std::endl;
 
           #ifdef WITH_OPENCV
-            static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(client->get_rgb_image_size(), true, false));
+            static ORUChar4Image_Ptr rgbImage(new ORUChar4Image(get_rgb_image_size(), true, false));
             msg.extract_rgb_image(rgbImage.get());
             cv::Mat3b cvRGB = OpenCVUtil::make_rgb_image(rgbImage->GetData(MEMORYDEVICE_CPU), rgbImage->noDims.x, rgbImage->noDims.y);
             cv::imshow("RGB", cvRGB);
@@ -112,7 +113,7 @@ void MappingClientHandler::handle_pre()
   RGBDCalibrationMessage calibMsg;
   m_connectionOk = read_message(calibMsg);
 #if DEBUGGING
-  std::cout << "Received calibration message from client: " << clientID << std::endl;
+  std::cout << "Received calibration message from client: " << m_clientID << std::endl;
 #endif
 
   // If the calibration message was successfully read:
@@ -131,7 +132,7 @@ void MappingClientHandler::handle_pre()
     m_frameCompressor.reset(new RGBDFrameCompressor(rgbImageSize, depthImageSize, calibMsg.extract_rgb_compression_type(), calibMsg.extract_depth_compression_type()));
 
     // Construct a dummy frame message to consume messages that cannot be pushed onto the queue.
-    m_dummyFrameMsg.reset(new RGBDFrameMessage(rgbImageSize, depthImageSize));
+    m_dummyFrameMessage.reset(new RGBDFrameMessage(rgbImageSize, depthImageSize));
 
     // Signal to the client that the server is ready.
     m_connectionOk = write_message(AckMessage());
