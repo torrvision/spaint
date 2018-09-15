@@ -27,11 +27,11 @@ public:
   /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
   bool m_connectionOk;
 
-  /** Whether or not the server should terminate. */
+  /** Whether or not the server should terminate (read-only, set within the server itself). */
   boost::shared_ptr<const boost::atomic<bool> > m_shouldTerminate;
 
   /** The socket used to communicate with the client. */
-  const boost::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
+  boost::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
 
   /** The thread that manages communication with the client. */
   boost::shared_ptr<boost::thread> m_thread;
@@ -43,7 +43,7 @@ public:
    *
    * \param clientID          The ID used by the server to refer to the client.
    * \param sock              The socket used to communicate with the client.
-   * \param shouldTerminate   Whether or not the server should terminate.
+   * \param shouldTerminate   Whether or not the server should terminate (read-only, set within the server itself).
    */
   ClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
 
