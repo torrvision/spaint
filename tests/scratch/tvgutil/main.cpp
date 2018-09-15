@@ -1,12 +1,13 @@
 //###
 #if 1
 
+#include <tvgutil/net/ClientHandler.h>
 #include <tvgutil/net/Server.h>
 using namespace tvgutil;
 
 int main()
 {
-  Server<> server;
+  Server<ClientHandler> server;
   server.start();
   server.terminate();
   return 0;
