@@ -79,13 +79,13 @@ public:
   const Vector2i& get_rgb_image_size() const;
 
   /** Override */
-  virtual void handle_main();
+  virtual void run_iter();
 
   /** Override */
-  virtual void handle_post();
+  virtual void run_post();
 
   /** Override */
-  virtual void handle_pre();
+  virtual void run_pre();
 };
 
 }

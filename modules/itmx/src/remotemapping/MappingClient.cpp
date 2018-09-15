@@ -8,9 +8,8 @@
 #include <stdexcept>
 
 #include <tvgutil/boost/WrappedAsio.h>
-using boost::asio::ip::tcp;
-
 #include <tvgutil/net/AckMessage.h>
+using boost::asio::ip::tcp;
 using namespace tvgutil;
 
 namespace itmx {

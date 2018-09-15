@@ -8,7 +8,10 @@
 #include <tvgutil/net/AckMessage.h>
 using namespace tvgutil;
 
+#ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
+#endif
+
 #include "remotemapping/InteractionTypeMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 
@@ -40,7 +43,7 @@ const Vector2i& MappingClientHandler::get_rgb_image_size() const
   return m_calib.intrinsics_rgb.imgSize;
 }
 
-void MappingClientHandler::handle_main()
+void MappingClientHandler::run_iter()
 {
   InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
 
@@ -101,13 +104,13 @@ void MappingClientHandler::handle_main()
   }
 }
 
-void MappingClientHandler::handle_post()
+void MappingClientHandler::run_post()
 {
   // Destroy the frame compressor prior to stopping the client handler (this cleanly deallocates CUDA memory and avoids a crash on exit).
   m_frameCompressor.reset();
 }
 
-void MappingClientHandler::handle_pre()
+void MappingClientHandler::run_pre()
 {
   // Read a calibration message from the client to get its camera's image sizes and calibration parameters.
   RGBDCalibrationMessage calibMsg;

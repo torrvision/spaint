@@ -15,7 +15,7 @@
 namespace tvgutil {
 
 /**
- * \brief An instance of this class can be used to manage the connection to a client.
+ * \brief An instance of a class deriving from this one can be used to manage the connection to a client.
  */
 class ClientHandler
 {
@@ -27,11 +27,11 @@ public:
   /** Whether or not the connection is still ok (effectively tracks whether or not the most recent read/write succeeded). */
   bool m_connectionOk;
 
-  /** Whether or not the server should terminate. */
+  /** Whether or not the server should terminate (read-only, set within the server itself). */
   boost::shared_ptr<const boost::atomic<bool> > m_shouldTerminate;
 
   /** The socket used to communicate with the client. */
-  const boost::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
+  boost::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
 
   /** The thread that manages communication with the client. */
   boost::shared_ptr<boost::thread> m_thread;
@@ -43,7 +43,7 @@ public:
    *
    * \param clientID          The ID used by the server to refer to the client.
    * \param sock              The socket used to communicate with the client.
-   * \param shouldTerminate   Whether or not the server should terminate.
+   * \param shouldTerminate   Whether or not the server should terminate (read-only, set within the server itself).
    */
   ClientHandler(int clientID, const boost::shared_ptr<boost::asio::ip::tcp::socket>& sock, const boost::shared_ptr<const boost::atomic<bool> >& shouldTerminate);
 
@@ -54,6 +54,23 @@ public:
    */
   virtual ~ClientHandler();
 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Runs an iteration of the main loop for the client.
+   */
+  virtual void run_iter() = 0;
+
+  /**
+   * \brief Runs any code that should happen after the main loop for the client.
+   */
+  virtual void run_post() = 0;
+
+  /**
+   * \brief Runs any code that should happen before the main loop for the client.
+   */
+  virtual void run_pre() = 0;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -62,21 +79,6 @@ public:
    * \return  The ID used by the server to refer to the client.
    */
   int get_client_id() const;
-
-  /**
-   * \brief TODO
-   */
-  virtual void handle_main();
-
-  /**
-   * \brief TODO
-   */
-  virtual void handle_post();
-
-  /**
-   * \brief TODO
-   */
-  virtual void handle_pre();
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
@@ -122,11 +124,7 @@ private:
    * \param err The error code associated with the read.
    * \param ret A location into which to write the error code so that read_message can access it.
    */
-  void read_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
-  {
-    // Store any error message so that it can be examined by read_message.
-    ret = err;
-  }
+  void read_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
 
   /**
    * \brief The handler called when an asynchronous write of a message finishes.
@@ -134,11 +132,7 @@ private:
    * \param err The error code associated with the write.
    * \param ret A location into which to write the error code so that write_message can access it.
    */
-  void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
-  {
-    // Store any error message so that it can be examined by write_message.
-    ret = err;
-  }
+  void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
 };
 
 }

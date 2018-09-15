@@ -11,9 +11,8 @@
 #include <vector>
 
 #include <boost/atomic.hpp>
-#include <boost/optional.hpp>
+#include <boost/thread.hpp>
 
-#include "ClientHandler.h"
 #include "../boost/WrappedAsio.h"
 
 //#define DEBUGGING 1
@@ -27,7 +26,7 @@ using boost::asio::ip::tcp;
 /**
  * \brief An instance of a class deriving from this one represents a server that can be used to communicate with one or more clients.
  */
-template <typename ClientHandlerType = ClientHandler>
+template <typename ClientHandlerType>
 class Server
 {
   //#################### TYPEDEFS ####################
@@ -57,7 +56,7 @@ private:
   /** The handlers for the currently active clients. */
   std::map<int, ClientHandler_Ptr> m_clientHandlers;
 
-  /** A condition variable used to wait until a client thread is ready to start reading frame messages. */
+  /** A condition variable used to wait until a client thread is ready to start the client's main loop. */
   mutable boost::condition_variable m_clientReady;
 
   /** A condition variable used to wait for finished client threads that need to be cleaned up. */
@@ -87,7 +86,7 @@ private:
   /** Whether or not the server should terminate. */
   boost::shared_ptr<boost::atomic<bool> > m_shouldTerminate;
 
-  /** The set of clients that have finished but have not yet been removed from the clients map. */
+  /** The set of clients that have finished but whose handlers have not yet been removed from the client handlers map. */
   std::set<int> m_uncleanClients;
 
   /** A worker variable used to keep the I/O service running until we want it to stop. */
@@ -147,17 +146,15 @@ public:
   }
 
   /**
-   * \brief Gets whether or not the specified client is currently active.
+   * \brief Gets whether or not the specified client has finished.
    *
    * \param clientID  The ID of the client to check.
-   * \return          true, if the client is currently active, or false otherwise.
+   * \return          true, if the client has finished, or false otherwise.
    */
-  bool is_active(int clientID) const
+  bool has_finished(int clientID) const
   {
     boost::lock_guard<boost::mutex> lock(m_mutex);
-
-    // Return whether or not the client is still active.
-    return m_finishedClients.find(clientID) == m_finishedClients.end();
+    return m_finishedClients.find(clientID) != m_finishedClients.end();
   }
 
   /**
@@ -264,16 +261,15 @@ private:
   /**
    * \brief Handles messages from a client.
    *
-   * \param client  The client.
+   * \param clientHandler   The handler for the client.
    */
   void handle_client(const ClientHandler_Ptr& clientHandler)
   {
     const int clientID = clientHandler->get_client_id();
-
     std::cout << "Starting client: " << clientID << '\n';
 
     // Run the pre-loop code for the client.
-    clientHandler->handle_pre();
+    clientHandler->run_pre();
 
     // Add the client handler to the map of handlers for active clients.
     {
@@ -290,11 +286,11 @@ private:
     // Run the main loop for the client. Loop until either (a) the connection drops, or (b) the server itself is terminating.
     while(clientHandler->m_connectionOk && !*m_shouldTerminate)
     {
-      clientHandler->handle_main();
+      clientHandler->run_iter();
     }
 
-    // Run the post-loop hook for the client.
-    clientHandler->handle_post();
+    // Run the post-loop code for the client.
+    clientHandler->run_post();
 
     // Once the client's finished, add it to the finished clients set so that it can be cleaned up.
     {
