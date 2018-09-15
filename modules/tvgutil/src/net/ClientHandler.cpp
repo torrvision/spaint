@@ -28,19 +28,33 @@ int ClientHandler::get_client_id() const
   return m_clientID;
 }
 
-void ClientHandler::handle_main()
+void ClientHandler::run_iter()
 {
   // No-op
 }
 
-void ClientHandler::handle_post()
+void ClientHandler::run_post()
 {
   // No-op
 }
 
-void ClientHandler::handle_pre()
+void ClientHandler::run_pre()
 {
   // No-op
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void ClientHandler::read_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
+{
+  // Store any error message so that it can be examined by read_message.
+  ret = err;
+}
+
+void ClientHandler::write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
+{
+  // Store any error message so that it can be examined by write_message.
+  ret = err;
 }
 
 }

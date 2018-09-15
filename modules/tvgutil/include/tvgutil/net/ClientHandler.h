@@ -64,19 +64,19 @@ public:
   int get_client_id() const;
 
   /**
-   * \brief TODO
+   * \brief Runs an iteration of the main loop for the client.
    */
-  virtual void handle_main();
+  virtual void run_iter();
 
   /**
-   * \brief TODO
+   * \brief Runs any code that should happen after the main loop for the client.
    */
-  virtual void handle_post();
+  virtual void run_post();
 
   /**
-   * \brief TODO
+   * \brief Runs any code that should happen before the main loop for the client.
    */
-  virtual void handle_pre();
+  virtual void run_pre();
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
@@ -122,11 +122,7 @@ private:
    * \param err The error code associated with the read.
    * \param ret A location into which to write the error code so that read_message can access it.
    */
-  void read_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
-  {
-    // Store any error message so that it can be examined by read_message.
-    ret = err;
-  }
+  void read_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
 
   /**
    * \brief The handler called when an asynchronous write of a message finishes.
@@ -134,11 +130,7 @@ private:
    * \param err The error code associated with the write.
    * \param ret A location into which to write the error code so that write_message can access it.
    */
-  void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret)
-  {
-    // Store any error message so that it can be examined by write_message.
-    ret = err;
-  }
+  void write_message_handler(const boost::system::error_code& err, boost::optional<boost::system::error_code>& ret);
 };
 
 }
