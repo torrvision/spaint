@@ -6,6 +6,7 @@
 #ifndef H_TVGUTIL_CLIENTHANDLER
 #define H_TVGUTIL_CLIENTHANDLER
 
+#include <boost/atomic.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
 
