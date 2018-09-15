@@ -9,18 +9,6 @@ using namespace ITMLib;
 
 #include <iostream>
 
-#include <tvgutil/net/AckMessage.h>
-using namespace tvgutil;
-
-#ifdef WITH_OPENCV
-#include "ocv/OpenCVUtil.h"
-#endif
-
-#include "remotemapping/CompressedRGBDFrameHeaderMessage.h"
-#include "remotemapping/CompressedRGBDFrameMessage.h"
-#include "remotemapping/InteractionTypeMessage.h"
-#include "remotemapping/RGBDCalibrationMessage.h"
-
 #define DEBUGGING 0
 
 namespace itmx {
