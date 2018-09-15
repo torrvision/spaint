@@ -1,23 +1,6 @@
 //###
 #if 1
 
-#include <tvgutil/net/ClientHandler.h>
-#include <tvgutil/net/Server.h>
-using namespace tvgutil;
-
-int main()
-{
-  Server<ClientHandler> server;
-  server.start();
-  server.terminate();
-  return 0;
-}
-
-#endif
-
-//###
-#if 0
-
 #include <iostream>
 
 #include <boost/thread.hpp>
