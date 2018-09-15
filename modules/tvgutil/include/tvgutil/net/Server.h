@@ -261,12 +261,11 @@ private:
   /**
    * \brief Handles messages from a client.
    *
-   * \param client  The client.
+   * \param clientHandler   The handler for the client.
    */
   void handle_client(const ClientHandler_Ptr& clientHandler)
   {
     const int clientID = clientHandler->get_client_id();
-
     std::cout << "Starting client: " << clientID << '\n';
 
     // Run the pre-loop code for the client.
