@@ -112,7 +112,7 @@ Vector2i MappingServer::get_rgb_image_size(int clientID) const
 
 bool MappingServer::has_images_now(int clientID) const
 {
-  // Look up the client. If it is no longer active, early out.
+  // Look up the handler for the client. If the client is no longer active, early out.
   ClientHandler_Ptr clientHandler = get_client_handler(clientID);
   if(!clientHandler) return false;
 
