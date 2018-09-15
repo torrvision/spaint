@@ -1,20 +1,20 @@
 /**
- * itmx: MappingMessage.h
+ * tvgutil: Message.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_ITMX_MAPPINGMESSAGE
-#define H_ITMX_MAPPINGMESSAGE
+#ifndef H_TVGUTIL_MESSAGE
+#define H_TVGUTIL_MESSAGE
 
 #include <cstddef>
 #include <vector>
 
-namespace itmx {
+namespace tvgutil {
 
 /**
- * \brief An instance of a class deriving from this one represents a message that can be sent across a network for remote mapping.
+ * \brief An instance of a class deriving from this one represents a message that can be sent across a network.
  */
-class MappingMessage
+class Message
 {
   //#################### TYPEDEFS ####################
 protected:
@@ -29,9 +29,9 @@ protected:
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys the mapping message.
+   * \brief Destroys the message.
    */
-  virtual ~MappingMessage();
+  virtual ~Message();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
