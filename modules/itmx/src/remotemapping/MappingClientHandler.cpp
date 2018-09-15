@@ -8,7 +8,10 @@
 #include <tvgutil/net/AckMessage.h>
 using namespace tvgutil;
 
+#ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
+#endif
+
 #include "remotemapping/InteractionTypeMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 
