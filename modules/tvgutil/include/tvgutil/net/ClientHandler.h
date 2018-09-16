@@ -52,24 +52,7 @@ public:
   /**
    * \brief Destroys the client handler.
    */
-  virtual ~ClientHandler();
-
-  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Runs an iteration of the main loop for the client.
-   */
-  virtual void run_iter() = 0;
-
-  /**
-   * \brief Runs any code that should happen after the main loop for the client.
-   */
-  virtual void run_post() = 0;
-
-  /**
-   * \brief Runs any code that should happen before the main loop for the client.
-   */
-  virtual void run_pre() = 0;
+  virtual ~ClientHandler() = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -79,6 +62,21 @@ public:
    * \return  The ID used by the server to refer to the client.
    */
   int get_client_id() const;
+
+  /**
+   * \brief Runs an iteration of the main loop for the client.
+   */
+  virtual void run_iter();
+
+  /**
+   * \brief Runs any code that should happen after the main loop for the client.
+   */
+  virtual void run_post();
+
+  /**
+   * \brief Runs any code that should happen before the main loop for the client.
+   */
+  virtual void run_pre();
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
