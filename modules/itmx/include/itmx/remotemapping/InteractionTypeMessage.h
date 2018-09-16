@@ -6,7 +6,7 @@
 #ifndef H_ITMX_INTERACTIONTYPEMESSAGE
 #define H_ITMX_INTERACTIONTYPEMESSAGE
 
-#include "SimpleMessage.h"
+#include <tvgutil/net/SimpleMessage.h>
 
 namespace itmx {
 
@@ -32,7 +32,7 @@ enum InteractionType
 /**
  * \brief An instance of this type represents a message containing the way in which a mapping client next wants to interact with a mapping server.
  */
-typedef SimpleMessage<InteractionType> InteractionTypeMessage;
+typedef tvgutil::SimpleMessage<InteractionType> InteractionTypeMessage;
 
 }
 

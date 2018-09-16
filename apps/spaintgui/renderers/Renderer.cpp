@@ -258,7 +258,7 @@ void Renderer::render_client_images() const
   std::vector<int> clients = mappingServer->get_active_clients();
   for(size_t i = 0, size = clients.size(); i < size; ++i)
   {
-    MappingServer::RenderingImageHandler_Ptr imageHandler = mappingServer->get_rendering_image(clients[i]);
+    MappingClientHandler::RenderingImageHandler_Ptr imageHandler = mappingServer->get_rendering_image(clients[i]);
     if(!imageHandler) continue;
 
     const boost::optional<ORUtils::SE3Pose>& optionalPose = mappingServer->get_rendering_pose(clients[i]);

@@ -1,29 +1,29 @@
 /**
- * itmx: MappingMessage.cpp
+ * tvgutil: Message.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "remotemapping/MappingMessage.h"
+#include "net/Message.h"
 
-namespace itmx {
+namespace tvgutil {
 
 //#################### DESTRUCTOR ####################
 
-MappingMessage::~MappingMessage() {}
+Message::~Message() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-char *MappingMessage::get_data_ptr()
+char *Message::get_data_ptr()
 {
   return &m_data[0];
 }
 
-const char *MappingMessage::get_data_ptr() const
+const char *Message::get_data_ptr() const
 {
   return &m_data[0];
 }
 
-size_t MappingMessage::get_size() const
+size_t Message::get_size() const
 {
   return m_data.size();
 }
