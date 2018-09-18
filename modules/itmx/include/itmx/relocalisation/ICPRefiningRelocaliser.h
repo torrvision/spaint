@@ -52,8 +52,17 @@ private:
   /** The depth visualiser. */
   DepthVisualiser_CPtr m_depthVisualiser;
 
+  /** The path generator used to find the ground truth poses. */
+  mutable boost::optional<tvgutil::SequentialPathGenerator> m_gtPathGenerator;
+
+  /** The path generator used when saving the relocalised images. */
+  mutable boost::optional<tvgutil::SequentialPathGenerator> m_imagePathGenerator;
+
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
+
+  /** Whether or not to save the images rendered from the relocalised poses. */
+  bool m_saveImages;
 
   /** Whether or not to save the relocalised poses. */
   bool m_savePoses;
@@ -180,13 +189,13 @@ private:
   void save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const;
 
   /**
-   * \brief Scores a relocalisation result by computing the mean depth difference between the real depth image
-   *        and a synthetic depth image rendered from its pose.
+   * \brief Scores a camera pose by computing the mean depth difference between the real depth image
+   *        and a synthetic depth image rendered from it.
    *
-   * \param result  The relocalisation result to score.
-   * \return        The score computed for the relocalisation result.
+   * \param pose  The pose to score.
+   * \return      The score computed for the pose.
    */
-  float score_result(const Result& result) const;
+  float score_pose(const ORUtils::SE3Pose& pose) const;
 
   /**
    * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
