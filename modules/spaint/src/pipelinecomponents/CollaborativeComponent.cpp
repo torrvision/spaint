@@ -77,7 +77,7 @@ void CollaborativeComponent::run_collaborative_pose_estimation()
   bool fusionMayStillRun = update_trajectories();
   if(!fusionMayStillRun) m_mode = CM_BATCH;
 
-  if(m_frameIndex > 0 && (!fusionMayStillRun || (m_mode == CM_LIVE && m_frameIndex % 20 == 0)))
+  if(m_frameIndex > 0 && (!fusionMayStillRun || (m_mode == CM_LIVE && m_frameIndex % 50 == 0)))
   {
     // Start the collaboration timer if required.
     if(m_timeCollaboration && !m_collaborationTimer)
@@ -574,9 +574,9 @@ void CollaborativeComponent::try_schedule_relocalisation()
 #if 0
     // Print out all of the candidates for debugging purposes.
     std::cout << "BEGIN CANDIDATES " << m_frameIndex << '\n';
-    for(std::list<SubmapRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
+    for(std::list<CollaborativeRelocalisation>::const_iterator it = candidates.begin(), iend = candidates.end(); it != iend; ++it)
     {
-      const SubmapRelocalisation& candidate = *it;
+      const CollaborativeRelocalisation& candidate = *it;
       std::cout << candidate.m_sceneI << ' ' << candidate.m_sceneJ << ' ' << candidate.m_frameIndexJ << ' ' << candidate.m_candidateScore << '\n';
     }
     std::cout << "END CANDIDATES\n";
