@@ -430,7 +430,8 @@ int DecisionForest<DescriptorType,TreeCount>::convert_node(const Learner *tree, 
 #endif
 
 template<typename DescriptorType, int TreeCount>
-int DecisionForest<DescriptorType,TreeCount>::create_node(uint32_t treeIdx, uint32_t nbTrees, uint32_t depthLeft, uint32_t outputIdx, uint32_t outputFirstFreeIdx, DecisionForest::NodeEntry *outputNodes, uint32_t &outputNbLeaves)
+int DecisionForest<DescriptorType,TreeCount>::create_node(uint32_t treeIdx, uint32_t nbTrees, uint32_t depthLeft, uint32_t outputIdx, uint32_t outputFirstFreeIdx,
+                                                          typename DecisionForest<DescriptorType,TreeCount>::NodeEntry *outputNodes, uint32_t& outputNbLeaves)
 {
   NodeEntry& outputNode = outputNodes[outputIdx * nbTrees + treeIdx];
 
