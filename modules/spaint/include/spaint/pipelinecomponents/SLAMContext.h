@@ -11,6 +11,7 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
+#include <itmx/remotemapping/MappingClient.h>
 #include <itmx/remotemapping/MappingServer.h>
 
 #include <orx/relocalisation/RefiningRelocaliser.h>
@@ -31,6 +32,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The mapping clients (if any) to use to communicate with the remote mapping server regarding the various scenes. */
+  std::map<std::string,itmx::MappingClient_Ptr> m_mappingClients;
+
   /** The relocalisers used to estimate the camera pose in the various scenes. */
   std::map<std::string,orx::RefiningRelocaliser_Ptr> m_relocalisers;
 
@@ -63,6 +67,22 @@ public:
    * \param sceneID The scene ID to add.
    */
   void add_scene_id(const std::string& sceneID);
+
+  /**
+   * \brief Gets the mapping client (if any) for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The mapping client (if any) for the specified scene.
+   */
+  virtual itmx::MappingClient_Ptr& get_mapping_client(const std::string& sceneID);
+
+  /**
+   * \brief Gets the mapping client (if any) for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The mapping client (if any) for the specified scene.
+   */
+  virtual itmx::MappingClient_CPtr get_mapping_client(const std::string& sceneID) const;
 
   /**
    * \brief Gets the relocaliser for the specified scene.

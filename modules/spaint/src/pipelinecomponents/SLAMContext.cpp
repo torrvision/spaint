@@ -4,6 +4,7 @@
  */
 
 #include "pipelinecomponents/SLAMContext.h"
+using namespace itmx;
 using namespace orx;
 
 #include <tvgutil/containers/MapUtil.h>
@@ -16,6 +17,16 @@ namespace spaint {
 void SLAMContext::add_scene_id(const std::string& sceneID)
 {
   m_sceneIDs.push_back(sceneID);
+}
+
+MappingClient_Ptr& SLAMContext::get_mapping_client(const std::string& sceneID)
+{
+  return m_mappingClients[sceneID];
+}
+
+MappingClient_CPtr SLAMContext::get_mapping_client(const std::string& sceneID) const
+{
+  return MapUtil::lookup(m_mappingClients, sceneID, itmx::MappingClient_Ptr());
 }
 
 RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
