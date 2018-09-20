@@ -55,12 +55,14 @@ SET(util_sources
 src/util/CartesianProductParameterSetGenerator.cpp
 src/util/ConfusionMatrixUtil.cpp
 src/util/CoordinateDescentParameterOptimiser.cpp
+src/util/RandomParameterOptimiser.cpp
 )
 
 SET(util_headers
 include/evaluation/util/CartesianProductParameterSetGenerator.h
 include/evaluation/util/ConfusionMatrixUtil.h
 include/evaluation/util/CoordinateDescentParameterOptimiser.h
+include/evaluation/util/RandomParameterOptimiser.h
 )
 
 #################################################################

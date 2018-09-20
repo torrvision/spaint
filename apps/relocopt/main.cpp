@@ -16,12 +16,15 @@
 using boost::assign::list_of;
 
 #include <evaluation/util/CoordinateDescentParameterOptimiser.h>
+#include <evaluation/util/RandomParameterOptimiser.h>
 using namespace evaluation;
 
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
 //#define COST_IS_TIME
+
+#define USE_RANDOM
 
 //#################### NAMESPACE ALIASES ####################
 
@@ -198,9 +201,14 @@ try
   }
 
   // Set up the optimiser.
-  const size_t epochCount = 5;
   const unsigned seed = 12345;
+#ifdef USE_RANDOM
+  const size_t epochCount = 100;
+  RandomParameterOptimiser optimiser(boost::bind(grove_cost_fn, args, _1), epochCount, seed);
+#else
+  const size_t epochCount = 5;
   CoordinateDescentParameterOptimiser optimiser(boost::bind(grove_cost_fn, args, _1), epochCount, seed);
+#endif
 
 //  // Scene parameters.
 //  optimiser.add_param("SceneParams.mu", list_of<float>(2.0f)(4.0f)(6.0f)(8.0f)(10.0f)); // It's a multiplicative coefficient applied to the voxelSize, requires a change in the main spaintgui app at the moment.
