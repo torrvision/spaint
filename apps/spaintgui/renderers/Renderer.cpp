@@ -510,7 +510,7 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
     {
       boost::optional<std::pair<SE3Pose,size_t> > result = m_model->get_collaborative_pose_optimiser()->try_get_relative_transform(primarySceneID, sceneIDs[sceneIdx]);
       SE3Pose relativeTransform = result ? result->first : SE3Pose(static_cast<float>((sceneIdx + 1) * 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-      if(!result || result->second < CollaborativePoseOptimiser::confidence_threshold()) visualisationTypes[sceneIdx] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
+      if(!result || result->second < static_cast<size_t>(CollaborativePoseOptimiser::confidence_threshold())) visualisationTypes[sceneIdx] = VisualisationGenerator::VT_SCENE_SEMANTICPHONG;
 
       // ciTwi * wiTwj = ciTwj
       tempPose.SetM(tempPose.GetM() * relativeTransform.GetM());
