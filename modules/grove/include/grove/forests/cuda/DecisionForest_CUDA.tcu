@@ -30,6 +30,11 @@ DecisionForest_CUDA<DescriptorType,TreeCount>::DecisionForest_CUDA(const std::st
 : Base(filename)
 {}
 
+template <typename DescriptorType, int TreeCount>
+DecisionForest_CUDA<DescriptorType,TreeCount>::DecisionForest_CUDA(const tvgutil::SettingsContainer_CPtr& settings)
+: Base(settings)
+{}
+
 #ifdef WITH_SCOREFORESTS
 template <typename DescriptorType, int TreeCount>
 DecisionForest_CUDA<DescriptorType,TreeCount>::DecisionForest_CUDA(const EnsembleLearner& pretrainedForest)

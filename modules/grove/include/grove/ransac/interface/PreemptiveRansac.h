@@ -20,6 +20,7 @@
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../scoreforests/ScorePrediction.h"
 
+#ifdef WITH_ALGLIB
  //#################### FORWARD DECLARATIONS ####################
 
 // Note: We forward declare these to avoid including the ALGLIB header, which causes NVCC warnings when compiling PreemptiveRansac_CUDA.
@@ -27,6 +28,7 @@ namespace alglib {
   class real_1d_array;
   class real_2d_array;
 }
+#endif
 
 namespace grove {
 
@@ -296,6 +298,8 @@ private:
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
+
+#ifdef WITH_ALGLIB
   /**
    * \brief A function that ALGLIB can call to compute the energy of the candidate camera pose.
    *
@@ -352,6 +356,7 @@ private:
    * \param pts The points that were used for the energy computation.
    */
   static void alglib_rep(const alglib::real_1d_array& xi, double phi, void *pts);
+#endif
 
   /**
    * \brief Computes an energy for the specified candidate camera pose based on L2 error terms for a set of points.
@@ -371,6 +376,7 @@ private:
    */
   static double compute_energy_mahalanobis(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac = NULL);
 
+#ifdef WITH_ALGLIB
   /**
    * \brief Makes an SE3 pose that corresponds to the specified 6D twist vector.
    *
@@ -386,6 +392,7 @@ private:
    * \return      The corresponding 6D twist vector.
    */
   static alglib::real_1d_array make_twist_from_pose(const ORUtils::SE3Pose& pose);
+#endif
 
   /**
    * \brief Pretty prints the value of a timer.
