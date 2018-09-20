@@ -94,7 +94,7 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
     {
       // The maximum times depend on the GPU (the following values assume a Titan X is used).
       static const float maxTrainingTime = 10000; // 10ms
-      static const float maxRelocalisationTime = 200000; // 200ms
+      static const float maxRelocalisationTime = 150000; // 150ms
       static const float maxUpdateTime = 10000; // 10ms (we don't really care too much about it).
 
       static const bool useRelocAverage = true; // We want to evaluate the relocalisation results BEFORE ICP.
@@ -207,28 +207,28 @@ try
 //  optimiser.add_param("SceneParams.voxelSize", list_of<float>(0.005f)(0.010f)(0.015f)(0.020f)(0.025f)(0.030f)(0.040f)(0.050f));
 //  optimiser.add_param("SceneParams.viewFrustum_max", list_of<float>(2.0f)(3.0f)(4.0f)(5.0f)(7.5f)(10.0f)(15.0f));
 
-//  // Preemptive Ransac parameters.
-//  optimiser.add_param("PreemptiveRansac.maxCandidateGenerationIterations", list_of<int>(50)(250)(500)(1000)(6000));
-//  optimiser.add_param("PreemptiveRansac.maxPoseCandidates", list_of<int>(256)(512)(768)(1024)(2048));
-//  optimiser.add_param("PreemptiveRansac.maxPoseCandidatesAfterCull", list_of<int>(32)(64)(128)(256));
-//  optimiser.add_param("PreemptiveRansac.maxTranslationErrorForCorrectPose", list_of<float>(0.05f)(0.1f)(1000.0f)); // Last value basically disables the check.
-//  optimiser.add_param("PreemptiveRansac.minSquaredDistanceBetweenSampledModes", list_of<float>(0.0f)(0.15f * 0.15f)(0.3f * 0.3f)(0.6f * 0.6f)); // First value disables the check.
-//  optimiser.add_param("PreemptiveRansac.poseUpdate", list_of<bool>(false)(true));
-//  optimiser.add_param("PreemptiveRansac.ransacInliersPerIteration", list_of<int>(256)(512)(1024));
-//  optimiser.add_param("PreemptiveRansac.usePredictionCovarianceForPoseOptimization", list_of<bool>(false)(true));
+  // Preemptive Ransac parameters.
+  optimiser.add_param("PreemptiveRansac.maxCandidateGenerationIterations", list_of<int>(50)(250)(500)(1000)(6000));
+  optimiser.add_param("PreemptiveRansac.maxPoseCandidates", list_of<int>(256)(512)(768)(1024)(2048));
+  optimiser.add_param("PreemptiveRansac.maxPoseCandidatesAfterCull", list_of<int>(32)(64)(128)(256));
+  optimiser.add_param("PreemptiveRansac.maxTranslationErrorForCorrectPose", list_of<float>(0.05f)(0.1f)(1000.0f)); // Last value basically disables the check.
+  optimiser.add_param("PreemptiveRansac.minSquaredDistanceBetweenSampledModes", list_of<float>(0.0f)(0.15f * 0.15f)(0.3f * 0.3f)(0.6f * 0.6f)); // First value disables the check.
+  optimiser.add_param("PreemptiveRansac.poseUpdate", list_of<bool>(false)(true));
+  optimiser.add_param("PreemptiveRansac.ransacInliersPerIteration", list_of<int>(256)(512)(1024));
+  optimiser.add_param("PreemptiveRansac.usePredictionCovarianceForPoseOptimization", list_of<bool>(false)(true));
 
   // Relocaliser parameters.
 //  optimiser.add_param("ScoreRelocaliser.maxRelocalisationsToOutput", list_of<int>(1)(2)(4)(8)(16));
-//  optimiser.add_param("ScoreRelocaliser.clustererSigma", list_of<float>(0.05f)(0.1f)(0.2f));
-//  optimiser.add_param("ScoreRelocaliser.clustererTau", list_of<float>(0.05f)(0.1f)(0.2f));
-//  optimiser.add_param("ScoreRelocaliser.maxClusterCount", list_of<int>(5)(10)(25)(50));
-//  optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
-//  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
+  optimiser.add_param("ScoreRelocaliser.clustererSigma", list_of<float>(0.05f)(0.1f)(0.2f));
+  optimiser.add_param("ScoreRelocaliser.clustererTau", list_of<float>(0.05f)(0.1f)(0.2f));
+  optimiser.add_param("ScoreRelocaliser.maxClusterCount", list_of<int>(5)(10)(25)(50));
+  optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
+  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
 
-  // Random forest parameters.
-  optimiser.add_param("DecisionForest.treeDepth", list_of<int>(11)(12)(13)(14)(15));
-  optimiser.add_param("DecisionForest.depthFeatureRatio", list_of<float>(0.0f)(0.2f)(0.4f)(0.5f)(0.6f)(0.8f)(1.1f));
-  optimiser.add_param("DecisionForest.useFixedThresholds", list_of<bool>(false)(true));
+//  // Random forest parameters.
+//  optimiser.add_param("DecisionForest.treeDepth", list_of<int>(11)(12)(13)(14)(15));
+//  optimiser.add_param("DecisionForest.depthFeatureRatio", list_of<float>(0.0f)(0.2f)(0.4f)(0.5f)(0.6f)(0.8f)(1.1f));
+//  optimiser.add_param("DecisionForest.useFixedThresholds", list_of<bool>(false)(true));
 
   // Print header in the log file.
   {
