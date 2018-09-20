@@ -535,6 +535,7 @@ int main(int argc, char *argv[])
 
   // Find the valid sequences in the dataset folder.
   const std::vector<std::string> sequenceNames = find_sequence_names(datasetFolder);
+  size_t sequenceNameMaxLength = 0;
 
   std::map<std::string, SequenceResults> results;
 
@@ -542,6 +543,8 @@ int main(int argc, char *argv[])
   for(size_t sequenceIdx = 0; sequenceIdx < sequenceNames.size(); ++sequenceIdx)
   {
     const std::string &sequence = sequenceNames[sequenceIdx];
+
+    sequenceNameMaxLength = std::max(sequenceNameMaxLength, sequence.length() + 2);
 
     // Compute the full paths.
     const fs::path gtPath = datasetFolder / sequence / (useValidation ? validationFolderName : testFolderName);
@@ -560,7 +563,7 @@ int main(int argc, char *argv[])
   }
 
   // Print table
-  printWidth("Sequence", 15, true);
+  printWidth("Sequence", sequenceNameMaxLength, true);
   printWidth("Poses", 8);
   printWidth("Reloc", 8);
   printWidth("ICP", 8);
@@ -617,7 +620,7 @@ int main(int argc, char *argv[])
 //    float medianFiniteAngleError = seqResult.medianFiniteRelocalisationAngle * 180 / M_PI;
 //    float medianFiniteTranslationError = seqResult.medianFiniteRelocalisationTranslation;
 
-    printWidth(sequence, 15, true);
+    printWidth(sequence, sequenceNameMaxLength, true);
     printWidth(seqResult.poseCount, 8);
     printWidth(relocPct, 8);
     printWidth(icpPct, 8);
@@ -720,7 +723,7 @@ int main(int argc, char *argv[])
 
   // Print averages
   std::cerr << '\n';
-  printWidth("Average", 15, true);
+  printWidth("Average", sequenceNameMaxLength, true);
   printWidth(sequenceNames.size(), 8);
   printWidth(relocAvg, 8);
   printWidth(icpAvg, 8);
@@ -749,7 +752,7 @@ int main(int argc, char *argv[])
 
   std::cerr << '\n';
 
-  printWidth("Average (W)", 15, true);
+  printWidth("Average (W)", sequenceNameMaxLength, true);
   printWidth(poseCount, 8);
   printWidth(relocWeightedAvg, 8);
   printWidth(icpWeightedAvg, 8);
@@ -781,8 +784,8 @@ int main(int argc, char *argv[])
       std::ofstream out(outFilename.c_str());
 
       // Print header
-      out << "FrameIdx; FramePct; Reloc Success; Reloc Translation; Reloc Angle; Reloc Sum; Reloc Pct; ICP Success; "
-             "ICP Sum; ICP Pct\n";
+      out << "FrameIdx, FramePct, Reloc Success, Reloc Translation, Reloc Angle, Reloc Sum, Reloc Pct, ICP Success, "
+             "ICP Sum, ICP Pct\n";
 
       int relocSum = 0;
       int icpSum = 0;
@@ -802,8 +805,8 @@ int main(int argc, char *argv[])
         float relocPct = static_cast<float>(relocSum) / poseIdx;
         float icpPct = static_cast<float>(icpSum) / poseIdx;
 
-        out << poseIdx << "; " << framePct << "; " << relocSuccess << "; " << relocTranslation << "; " << relocAngle
-            << "; " << relocSum << "; " << relocPct << "; " << icpSuccess << "; " << icpSum << "; " << icpPct << '\n';
+        out << poseIdx << ", " << framePct << ", " << relocSuccess << ", " << relocTranslation << ", " << relocAngle
+            << ", " << relocSum << ", " << relocPct << ", " << icpSuccess << ", " << icpSum << ", " << icpPct << '\n';
       }
     }
   }

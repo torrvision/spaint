@@ -6,7 +6,9 @@
 #include "ransac/interface/PreemptiveRansac.h"
 using namespace tvgutil;
 
+#ifdef WITH_ALGLIB
 #include <alglib/optimization.h>
+#endif
 
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
@@ -63,6 +65,14 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
 
   // Each RANSAC iteration after the initial cull adds m_ransacInliersPerIteration inliers to the set, so we allocate enough space for all of them up-front.
   m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
+
+  // We can update the candidate poses only if ALGLIB is available. Check and throw an exception otherwise.
+#ifndef WITH_ALGLIB
+  if(m_poseUpdate)
+  {
+    throw std::runtime_error("Cannot run with poseUpdate enabled without ALGLIB. Rebuild with WITH_ALGLIB set to ON in CMake.");
+  }
+#endif
 
   // Allocate memory.
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
@@ -150,7 +160,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_timerCandidateGeneration.start();
+    m_timerCandidateGeneration.start(false); // No need to synchronize the GPU again.
     generate_pose_candidates();
     m_timerCandidateGeneration.stop();
   }
@@ -192,7 +202,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     //            the candidates by quality, this has the effect of keeping only the best ones.
     m_poseCandidates->dataSize = m_maxPoseCandidatesAfterCull;
 
-    m_timerFirstTrim.stop();
+    m_timerFirstTrim.stop(false); // No need to synchronize the GPU again.
   }
 
   m_poseCandidatesAfterCull = static_cast<uint32_t>(m_poseCandidates->dataSize);
@@ -228,20 +238,20 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     // Step 4(b): If pose update is enabled, optimise all remaining candidates, taking into account the newly selected inliers.
     if(m_poseUpdate)
     {
-      m_timerPrepareOptimisation[iteration].start();
+      m_timerPrepareOptimisation[iteration].start(false); // No need to synchronize the GPU again.
       prepare_inliers_for_optimisation();
       m_timerPrepareOptimisation[iteration].stop();
 
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "continuous optimization: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      m_timerOptimisation[iteration].start();
+      m_timerOptimisation[iteration].start(false); // No need to synchronize the GPU again.
       update_candidate_poses();
       m_timerOptimisation[iteration].stop();
     }
 
     // Step 4(c): Compute the energy for each candidate and sort them in non-increasing order of quality.
-    m_timerComputeEnergy[iteration].start();
+    m_timerComputeEnergy[iteration].start(false); // No need to synchronize the GPU again.
     compute_energies_and_sort();
     m_timerComputeEnergy[iteration].stop();
 
@@ -260,17 +270,17 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     m_timerInlierSampling[iteration].stop();
 
     // Having selected the inlier points, find the best associated modes to use during optimisation.
-    m_timerPrepareOptimisation[iteration].start();
+    m_timerPrepareOptimisation[iteration].start(false); // No need to synchronize the GPU again.
     prepare_inliers_for_optimisation();
     m_timerPrepareOptimisation[iteration].stop();
 
     // Run the optimisation.
-    m_timerOptimisation[iteration].start();
+    m_timerOptimisation[iteration].start(false); // No need to synchronize the GPU again.
     update_candidate_poses();
     m_timerOptimisation[iteration].stop();
   }
 
-  m_timerTotal.stop();
+  m_timerTotal.stop(false); // No need to synchronize the GPU again.
 
   // Make sure the pose candidates available on the host are up to date.
   update_host_pose_candidates();
@@ -350,6 +360,7 @@ void PreemptiveRansac::reset_inliers(bool resetMask)
 
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
+#ifdef WITH_ALGLIB
   // Fill in the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
   ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);                          // The current number of inlier points.
@@ -397,6 +408,9 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   }
 
   return succeeded;
+#else
+  throw std::runtime_error("Cannot update candidate poses. Rebuild with WITH_ALGLIB set to ON in CMake.");
+#endif
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -408,6 +422,7 @@ void PreemptiveRansac::update_host_pose_candidates() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
+#ifdef WITH_ALGLIB
 void PreemptiveRansac::alglib_func_l2(const alglib::real_1d_array& xi, alglib::real_1d_array& phi, void *pts)
 {
   phi[0] = compute_energy_l2(make_pose_from_twist(xi), *reinterpret_cast<PointsForLM*>(pts));
@@ -432,6 +447,7 @@ void PreemptiveRansac::alglib_rep(const alglib::real_1d_array& xi, double phi, v
 {
   return;
 }
+#endif
 
 double PreemptiveRansac::compute_energy_l2(const ORUtils::SE3Pose& candidateCameraPose, const PointsForLM& pts, double *jac)
 {
@@ -559,6 +575,7 @@ double PreemptiveRansac::compute_energy_mahalanobis(const ORUtils::SE3Pose& cand
   return res;
 }
 
+#ifdef WITH_ALGLIB
 ORUtils::SE3Pose PreemptiveRansac::make_pose_from_twist(const alglib::real_1d_array& xi)
 {
   return ORUtils::SE3Pose(
@@ -581,6 +598,7 @@ alglib::real_1d_array PreemptiveRansac::make_twist_from_pose(const ORUtils::SE3P
   }
   return xi;
 }
+#endif
 
 void PreemptiveRansac::print_timer(const AverageTimer& timer)
 {
