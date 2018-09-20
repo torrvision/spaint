@@ -62,6 +62,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
   // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
   m_chooseBestResult = m_settings->get_first_value<bool>(settingsNamespace + "chooseBestResult", false);
+  m_saveImages = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationImages", false);
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
@@ -77,6 +78,25 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
 
     // Output the directory we're using (for debugging purposes).
     std::cout << "Saving relocalisation poses in: " << m_posePathGenerator->get_base_dir() << '\n';
+  }
+
+  if(m_saveImages)
+  {
+    // Determine the directory to which to save the images and make sure that it exists.
+    m_imagePathGenerator.reset(tvgutil::SequentialPathGenerator(tvgutil::find_subdir_from_executable("reloc_images") / experimentTag));
+    boost::filesystem::create_directories(m_imagePathGenerator->get_base_dir());
+
+    std::vector<std::string> sequenceSpecifiers = m_settings->get_values("sequenceSpecifiers");
+    if(sequenceSpecifiers.size() < 2)
+    {
+      throw std::runtime_error("saveRelocalisationImages requires at least two sequenceSpecifiers (one for the training and one for the testing sequence)");
+    }
+
+    std::cout << "Reading GT poses from: " << sequenceSpecifiers[1] << "\n";
+    m_gtPathGenerator.reset(tvgutil::SequentialPathGenerator(sequenceSpecifiers[1]));
+
+    // Output the directory we're using (for debugging purposes).
+    std::cout << "Saving relocalisation images in: " << m_imagePathGenerator->get_base_dir() << '\n';
   }
 
   if(m_saveTimes)
@@ -168,8 +188,10 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
   {
     Matrix4f invalidPose;
     invalidPose.setValues(std::numeric_limits<float>::quiet_NaN());
-    save_poses(invalidPose, invalidPose);
     stop_timer(m_timerRelocalisation, false); // No need to synchronize the GPU again.
+    save_poses(invalidPose, invalidPose);
+    if(m_imagePathGenerator) m_imagePathGenerator->increment_index();
+    if(m_gtPathGenerator) m_gtPathGenerator->increment_index();
     return std::vector<Relocaliser::Result>();
   }
 
@@ -222,7 +244,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       if(initialResults.size() > 1 && m_chooseBestResult)
       {
         // Score the refined result.
-        refinedResult.score = score_result(refinedResult);
+        refinedResult.score = score_pose(refinedResult.pose);
 
 #if DEBUGGING
         std::cout << resultIdx << ": " << refinedResult.score << '\n';
@@ -281,6 +303,145 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     }
   }
 
+  // Render and save the best initial and refined poses if needed.
+  if(m_saveImages)
+  {
+#if WITH_OPENCV
+    cv::Size imageSize(m_view->depth->noDims.width, m_view->depth->noDims.height);
+    ORFloatImage_Ptr synthDepthF(new ORFloatImage(m_view->depth->noDims, true, true));
+    ORUChar4Image_Ptr synthDepthU(new ORUChar4Image(m_view->depth->noDims, true, true));
+
+    // First, read the ground truth pose and render the depth from that pose.
+    // Try to open the file
+    std::ifstream poseFile(m_gtPathGenerator->make_path("frame-%06i.pose.txt").string().c_str());
+
+    Matrix4f invPose;
+
+    // Matrix is column-major
+    poseFile >> invPose.m00 >> invPose.m10 >> invPose.m20 >> invPose.m30
+             >> invPose.m01 >> invPose.m11 >> invPose.m21 >> invPose.m31
+             >> invPose.m02 >> invPose.m12 >> invPose.m22 >> invPose.m32
+             >> invPose.m03 >> invPose.m13 >> invPose.m23 >> invPose.m33;
+
+    ORUtils::SE3Pose gtPose;
+    gtPose.SetInvM(invPose);
+
+    // Render a synthetic depth image of the scene from the initial pose (which is always valid if we got here.
+    DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
+      synthDepthF, m_scene, gtPose, m_view->calib.intrinsics_d, m_voxelRenderState,
+      DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
+    );
+
+    m_visualisationEngine->DepthToUchar4(synthDepthU.get(), synthDepthF.get());
+
+    cv::Mat gtDepthF = cv::Mat(imageSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
+    cv::Mat gtDepthU = cv::Mat(imageSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
+    cv::cvtColor(gtDepthU, gtDepthU, cv::COLOR_RGBA2BGR);
+
+    // Save the GT depth image.
+    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.gt.png").string().c_str(), gtDepthU);
+
+    // Save the input depth image.
+    m_view->depth->UpdateHostFromDevice();
+    m_visualisationEngine->DepthToUchar4(synthDepthU.get(), m_view->depth);
+
+    cv::Mat inputDepthF = cv::Mat(imageSize, CV_32FC1, m_view->depth->GetData(MEMORYDEVICE_CPU)).clone();
+    cv::Mat inputDepthU = cv::Mat(imageSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
+    cv::cvtColor(inputDepthU, inputDepthU, cv::COLOR_RGBA2BGR);
+
+    // Save the GT depth image.
+    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.depth.png").string().c_str(), inputDepthU);
+
+    // Render a synthetic depth image of the scene from the initial pose (which is always valid if we got here.
+    DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
+      synthDepthF, m_scene, initialResults[0].pose, m_view->calib.intrinsics_d, m_voxelRenderState,
+      DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
+    );
+
+    m_visualisationEngine->DepthToUchar4(synthDepthU.get(), synthDepthF.get());
+
+    cv::Mat initialDepthF = cv::Mat(imageSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
+    cv::Mat initialDepthU = cv::Mat(imageSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
+    cv::cvtColor(initialDepthU, initialDepthU, cv::COLOR_RGBA2BGR);
+
+    // Save the initial depth image.
+    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.reloc.png").string().c_str(), initialDepthU);
+
+    // Compute the difference between the input depth image and the rendering from the GT pose.
+    cv::Mat gtDiff;
+    cv::absdiff(inputDepthF, gtDepthF, gtDiff);
+
+    gtDiff.convertTo(gtDiff, CV_8U, 255 / 0.3); // Saturate at 30cm.
+    // Colormap it
+    cv::applyColorMap(gtDiff, gtDiff, cv::COLORMAP_JET);
+
+    // Save it
+    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.gtDiff.png").string().c_str(), gtDiff);
+
+    // Compute the "score" for the ground truth pose.
+    {
+      std::ofstream out(m_imagePathGenerator->make_path("image-%06i.gtScore.txt").string().c_str());
+      out << score_pose(gtPose) << "\n";
+    }
+
+    // Compute the difference between the input depth image and the rendering from the initial pose.
+    cv::Mat relocDiff;
+    cv::absdiff(inputDepthF, initialDepthF, relocDiff);
+
+    relocDiff.convertTo(relocDiff, CV_8U, 255 / 0.3); // Saturate at 30cm.
+    // Colormap it
+    cv::applyColorMap(relocDiff, relocDiff, cv::COLORMAP_JET);
+
+    // Save it
+    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.relocDiff.png").string().c_str(), relocDiff);
+
+    // Save the initial score.
+    {
+      std::ofstream out(m_imagePathGenerator->make_path("image-%06i.relocScore.txt").string().c_str());
+      out << score_pose(initialResults[0].pose) << "\n";
+    }
+
+    // If there is a refined pose
+    if(!refinedResults.empty())
+    {
+      // Render a synthetic depth image of the scene from the initial pose (which is always valid if we got here.
+      DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
+        synthDepthF, m_scene, refinedResults[0].pose, m_view->calib.intrinsics_d, m_voxelRenderState,
+        DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
+      );
+
+      m_visualisationEngine->DepthToUchar4(synthDepthU.get(), synthDepthF.get());
+
+      cv::Mat refinedDepthF = cv::Mat(imageSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
+      cv::Mat refinedDepthU = cv::Mat(imageSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
+      cv::cvtColor(refinedDepthU, refinedDepthU, cv::COLOR_RGBA2BGR);
+
+      // Save the refined depth image.
+      cv::imwrite(m_imagePathGenerator->make_path("image-%06i.icp.png").string().c_str(), refinedDepthU);
+
+      // Compute the difference between the input depth image and the rendering from the refined pose.
+      cv::Mat refinedDiff;
+      cv::absdiff(inputDepthF, refinedDepthF, refinedDiff);
+
+      refinedDiff.convertTo(refinedDiff, CV_8U, 255 / 0.3); // Saturate at 30cm.
+      // Colormap it
+      cv::applyColorMap(refinedDiff, refinedDiff, cv::COLORMAP_JET);
+
+      // Save it
+      cv::imwrite(m_imagePathGenerator->make_path("image-%06i.icpDiff.png").string().c_str(), refinedDiff);
+
+      // Save the refined score.
+      {
+        std::ofstream out(m_imagePathGenerator->make_path("image-%06i.icpScore.txt").string().c_str());
+        out << score_pose(refinedResults[0].pose) << "\n";
+      }
+    }
+#endif
+
+    m_imagePathGenerator->increment_index();
+    m_gtPathGenerator->increment_index();
+  }
+
   return refinedResults;
 }
 
@@ -326,7 +487,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& rel
 }
 
 template <typename VoxelType, typename IndexType>
-float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& result) const
+float ICPRefiningRelocaliser<VoxelType,IndexType>::score_pose(const ORUtils::SE3Pose& pose) const
 {
 #ifdef WITH_OPENCV
   // Make an OpenCV wrapper of the current depth image.
@@ -336,7 +497,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   // Render a synthetic depth image of the scene from the suggested pose.
   ORFloatImage_Ptr synthDepth(new ORFloatImage(m_view->depth->noDims, true, true));
   DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
-    synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState,
+    synthDepth, m_scene, pose, m_view->calib.intrinsics_d, m_voxelRenderState,
     DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
   );
 
