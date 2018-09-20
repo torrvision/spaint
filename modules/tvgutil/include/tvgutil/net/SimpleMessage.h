@@ -8,6 +8,8 @@
 
 #include "Message.h"
 
+#include <cstring>
+
 namespace tvgutil {
 
 /**
