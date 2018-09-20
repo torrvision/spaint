@@ -775,7 +775,7 @@ try
   MappingServer_Ptr mappingServer;
   if(args.runServer)
   {
-    const MappingServer::Mode mode = args.pipelineType == "collaborative" ? MappingServer::MSM_MULTI_CLIENT : MappingServer::MSM_SINGLE_CLIENT;
+    const MappingServer::Mode mode = args.pipelineType == "collaborative" ? MappingServer::SM_MULTI_CLIENT : MappingServer::SM_SINGLE_CLIENT;
     mappingServer.reset(new MappingServer(mode));
     mappingServer->start();
   }
