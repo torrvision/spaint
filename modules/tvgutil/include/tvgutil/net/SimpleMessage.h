@@ -1,20 +1,22 @@
 /**
- * itmx: SimpleMessage.h
+ * tvgutil: SimpleMessage.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#ifndef H_ITMX_SIMPLEMESSAGE
-#define H_ITMX_SIMPLEMESSAGE
+#ifndef H_TVGUTIL_SIMPLEMESSAGE
+#define H_TVGUTIL_SIMPLEMESSAGE
 
-#include "MappingMessage.h"
+#include "Message.h"
 
-namespace itmx {
+#include <cstring>
+
+namespace tvgutil {
 
 /**
  * \brief An instance of this class represents a message containing a single value of a specified type.
  */
 template <typename T>
-class SimpleMessage : public MappingMessage
+class SimpleMessage : public Message
 {
   //#################### PRIVATE VARIABLES ####################
 private:

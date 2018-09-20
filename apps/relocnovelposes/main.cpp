@@ -138,8 +138,8 @@ struct TestICPPair
   bool relocSucceeded;
   bool icpSucceeded;
 
-  size_t trainIdx;
-  size_t testIdx;
+  int trainIdx;
+  int testIdx;
 };
 
 typedef std::vector<TestICPPair> BinnedPoses;
@@ -158,6 +158,10 @@ struct ErrorThreshold
 {
   float translationMaxError;
   float angleMaxError;
+
+  ErrorThreshold(float translationMaxError_, float angleMaxError_)
+  : translationMaxError(translationMaxError_), angleMaxError(angleMaxError_)
+  {}
 };
 
 std::vector<BinnedPoses> classify_poses(
@@ -172,8 +176,10 @@ std::vector<BinnedPoses> classify_poses(
   res.resize(thresholds.size() + 1);
 
   // For each test pose:
-#pragma omp parallel for
-  for (size_t testIndex = 0; testIndex < testPoses.size(); ++testIndex)
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int testIndex = 0; testIndex < static_cast<int>(testPoses.size()); ++testIndex)
   {
     const Eigen::Matrix4f& testPose = testPoses[testIndex];
     const Eigen::Matrix4f& relocPose = relocPoses[testIndex];
@@ -220,7 +226,9 @@ std::vector<BinnedPoses> classify_poses(
     currentPoses.testIdx = testIndex;
 
     // Store the test/icp pair in the right bucket
-#pragma omp critical
+#ifdef WITH_OPENMP
+    #pragma omp critical
+#endif
     res[chosenBin].push_back(currentPoses);
   }
 
@@ -231,18 +239,20 @@ std::vector<BinStats> compute_bin_stats(const std::vector<BinnedPoses>& binnedPo
 {
   std::vector<BinStats> binStats(binnedPoses.size());
 
-#pragma omp parallel for
-  for (size_t binIdx = 0; binIdx < binnedPoses.size(); ++binIdx)
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int binIdx = 0; binIdx < static_cast<int>(binnedPoses.size()); ++binIdx)
   {
-    auto& binContents = binnedPoses[binIdx];
+    const BinnedPoses& binContents = binnedPoses[binIdx];
 
     BinStats stats;
     stats.totalPoses = binContents.size();
 
-    for(auto &x : binContents)
+    for(BinnedPoses::const_iterator it = binContents.begin(), iend = binContents.end(); it != iend; ++it)
     {
-      stats.successfulReloc += x.relocSucceeded;
-      stats.successfulICP += x.icpSucceeded;
+      stats.successfulReloc += it->relocSucceeded;
+      stats.successfulICP += it->icpSucceeded;
     }
 
     stats.relocPct = static_cast<float>(stats.successfulReloc) / static_cast<float>(stats.totalPoses);
@@ -265,16 +275,16 @@ int main(int argc, char *argv[])
 {
   std::vector<ErrorThreshold> errorThresholds;
 
-  errorThresholds.push_back(ErrorThreshold { 0.05f, 5.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.10f, 10.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.15f, 15.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.20f, 20.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.25f, 25.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.30f, 30.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.35f, 35.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.40f, 40.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.45f, 45.f * M_PI / 180.f});
-  errorThresholds.push_back(ErrorThreshold { 0.50f, 50.f * M_PI / 180.f});
+  errorThresholds.push_back(ErrorThreshold(0.05f, 5.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.10f, 10.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.15f, 15.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.20f, 20.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.25f, 25.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.30f, 30.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.35f, 35.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.40f, 40.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.45f, 45.f * M_PI / 180.f));
+  errorThresholds.push_back(ErrorThreshold(0.50f, 50.f * M_PI / 180.f));
 //  errorThresholds.push_back(ErrorThreshold { 0.55f, 55.f * M_PI / 180.f});
 //  errorThresholds.push_back(ErrorThreshold { 0.60f, 60.f * M_PI / 180.f});
 //  errorThresholds.push_back(ErrorThreshold { 0.65f, 65.f * M_PI / 180.f});
@@ -328,7 +338,7 @@ int main(int argc, char *argv[])
     std::cout << "ICP: " << icpTrajectory.size() << "\n";
 
     // Classify poses
-    auto binnedPoses = classify_poses(trainTrajectory, testTrajectory, relocTrajectory, icpTrajectory, errorThresholds);
+    std::vector<BinnedPoses> binnedPoses = classify_poses(trainTrajectory, testTrajectory, relocTrajectory, icpTrajectory, errorThresholds);
 
     // Compute stats for each bin.
     std::vector<BinStats> binStats = compute_bin_stats(binnedPoses);
@@ -350,9 +360,9 @@ int main(int argc, char *argv[])
   std::cerr << "\n";
 
   // For each sequence:
-  for(const auto& sequence : results)
+  for(std::map<std::string,std::vector<BinStats> >::const_iterator it = results.begin(), iend = results.end(); it != iend; ++it)
   {
-    const std::vector<BinStats>& bins = sequence.second;
+    const std::vector<BinStats>& bins = it->second;
 
     // For each bin:
     for(size_t binIdx = 0; binIdx < bins.size(); ++binIdx)
@@ -363,7 +373,7 @@ int main(int argc, char *argv[])
 
       if(binIdx == 0)
       {
-        printWidth(sequence.first, 15, true);
+        printWidth(it->first, 15, true);
       }
       else
       {
