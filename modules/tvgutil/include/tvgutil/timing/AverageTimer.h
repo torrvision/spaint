@@ -107,17 +107,27 @@ public:
 
   /**
    * \brief Starts the timer (this should be called prior before each run of the event).
+   *
+   * \param cudaSynchronize  Whether or not to synchronize the GPU before starting the timer.
    */
-  void start()
+  void start(bool cudaSynchronize = true)
   {
+#ifdef WITH_CUDA
+    if(cudaSynchronize) cudaDeviceSynchronize();
+#endif
     m_t0 = boost::chrono::high_resolution_clock::now();
   }
 
   /**
    * \brief Stops the timer (this should be called after each run of the event).
+   *
+   * \param cudaSynchronize  Whether or not to synchronize the GPU before stopping the timer.
    */
-  void stop()
+  void stop(bool cudaSynchronize = true)
   {
+#ifdef WITH_CUDA
+    if(cudaSynchronize) cudaDeviceSynchronize();
+#endif
     boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
     m_lastDuration = boost::chrono::duration_cast<Scale>(t1 - m_t0);
     m_totalDuration += m_lastDuration;

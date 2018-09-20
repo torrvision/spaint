@@ -1,23 +1,19 @@
-##########################################
-# CMakeLists.txt for apps/relocconverter #
-##########################################
+###########################################
+# CMakeLists.txt for apps/relocnovelposes #
+###########################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname relocconverter)
+SET(targetname relocnovelposes)
 
 ################################
 # Specify the libraries to use #
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGrove.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
@@ -39,25 +35,21 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
-TARGET_LINK_LIBRARIES(${targetname} spaint orx tvgutil tvginput)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
+TARGET_LINK_LIBRARIES(${targetname} tvgutil)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 
 #############################
 # Specify things to install #
