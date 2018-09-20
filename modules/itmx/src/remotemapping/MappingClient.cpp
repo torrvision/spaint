@@ -4,14 +4,13 @@
  */
 
 #include "remotemapping/MappingClient.h"
-using namespace tvgutil;
 
 #include <stdexcept>
 
 #include <tvgutil/boost/WrappedAsio.h>
+#include <tvgutil/net/AckMessage.h>
 using boost::asio::ip::tcp;
-
-#include "remotemapping/AckMessage.h"
+using namespace tvgutil;
 
 namespace itmx {
 
