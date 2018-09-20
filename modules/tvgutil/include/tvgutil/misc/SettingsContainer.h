@@ -85,6 +85,18 @@ public:
     return values.empty() || values[0] == NOT_SET ? defaultValue : from_string<T>(values[0]);
   }
 
+  /**
+   * \brief Gets all values associated with the specified setting.
+   *
+   * \param key           The name of the setting whose values are to be looked up.
+   * \return              All values associated with the specified setting or an empty vector otherwise.
+   */
+  std::vector<std::string> get_values(const std::string& key) const
+  {
+    static std::vector<std::string> defaultEmptyVector;
+    return MapUtil::lookup(m_settings, key, defaultEmptyVector);
+  }
+
   //#################### STREAM OPERATORS ####################
 public:
   /**
