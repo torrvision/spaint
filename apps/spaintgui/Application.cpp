@@ -962,7 +962,7 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
   const int mainViewportWidth = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.mainViewportWidth", 640);
   const int mainViewportHeight = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.mainViewportHeight", 480);
-  Vector2i windowViewportSize((int)ROUND(mainViewportWidth / mainSubwindow.width()), (int)ROUND(mainViewportHeight / mainSubwindow.height()));
+  const Vector2i windowViewportSize((int)ROUND(mainViewportWidth / mainSubwindow.width()), (int)ROUND(mainViewportHeight / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
 }
