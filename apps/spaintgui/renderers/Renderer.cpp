@@ -386,7 +386,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     {
       // TODO: Comment here.
       ORUChar4Image_CPtr remoteImage = mappingClient->get_remote_image();
-      render_image(remoteImage);
+      if(remoteImage) render_image(remoteImage);
     }
     else
     {
