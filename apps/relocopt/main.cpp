@@ -24,7 +24,7 @@ using namespace tvgutil;
 
 //#define COST_IS_TIME
 
-#define USE_RANDOM
+//#define USE_RANDOM
 
 //#################### NAMESPACE ALIASES ####################
 
