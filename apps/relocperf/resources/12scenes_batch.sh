@@ -8,9 +8,9 @@ cd "${0%/*}"
 tag=${1:-Default_NoRank} # The tag can be specified as first parameter of the script.
 tag=${tag%.ini} # Remove trailing .ini from the tag if present
 
-sequences='chess fire heads office pumpkin redkitchen stairs'
+sequences='apt1-kitchen apt1-living apt2-bed apt2-kitchen apt2-living apt2-luke office1-gates362 office1-gates381 office1-lounge office1-manolis office2-5a office2-5b'
 
-dataset_root=${2:-/media/data_ssd/datasets/7scenes} # The dataset root can be specified as second parameter of the script.
+dataset_root=${2:-/media/data_ssd/datasets/12scenes} # The dataset root can be specified as second parameter of the script.
 config_file="$tag.ini"
 spaintgui_folder="../../spaintgui"
 relocperf_folder=".."
