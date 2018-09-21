@@ -256,9 +256,18 @@ private:
   const boost::optional<spaint::VisualisationGenerator::Postprocessor>& get_postprocessor() const;
 
   /**
-   * \brief Renders all the reconstructed scenes, with appropriate depth testing.
+   * \brief Renders all the reconstructed scenes into an image, with appropriate depth testing.
    *
-   * TODO: Some of these names may need fixing.
+   * FIXME: The concept of an original image size seems a bit weird out of the subwindow context.
+   *
+   * \param primaryPose               The camera pose in the primary scene.
+   * \param primarySceneID            The ID of the primary scene.
+   * \param primaryVisualisationType  The type of visualisation to use for the primary scene.
+   * \param voxelRenderState          The voxel render state to use for intermediate storage (if relevant).
+   * \param surfelRenderState         The surfel render state to use for intermediate storage (if relevant).
+   * \param originalImgSize           The original size of the image in which to store the visualisation.
+   * \param surfelFlag                Whether or not to render a surfel visualisation rather than a voxel one.
+   * \param output                    The location into which to put the output image.
    */
   void render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, const std::string& primarySceneID,
                                        spaint::VisualisationGenerator::VisualisationType primaryVisualisationType,
