@@ -449,7 +449,7 @@ const boost::optional<VisualisationGenerator::Postprocessor>& Renderer::get_post
 void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
   // Generate the subwindow image.
-  const ORUChar4Image_Ptr& image = subwindow.get_image();
+  const ORUChar4Image_Ptr& output = subwindow.get_image();
 
   static std::vector<ORUChar4Image_Ptr> colourImages;
   static std::vector<ORFloatImage_Ptr> depthImages;
@@ -468,8 +468,8 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
   // Step 2: Reallocate the colour and depth images for the scenes if needed.
   while(colourImages.size() < sceneIDs.size())
   {
-    colourImages.push_back(ORUChar4Image_Ptr(new ORUChar4Image(image->noDims, true, true)));
-    depthImages.push_back(ORFloatImage_Ptr(new ORFloatImage(image->noDims, true, true)));
+    colourImages.push_back(ORUChar4Image_Ptr(new ORUChar4Image(output->noDims, true, true)));
+    depthImages.push_back(ORFloatImage_Ptr(new ORFloatImage(output->noDims, true, true)));
   }
 
   // Step 3: Render colour and depth images for each scene, making sure to render the primary scene for the
@@ -519,7 +519,7 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
     // Actually render the colour and depth images for the scene.
     SLAMState_CPtr primarySlamState = m_model->get_slam_state(primarySceneID);
     const SLAMState_CPtr& bestSlamState = primarySlamState && primarySlamState->get_view() ? primarySlamState : slamState;
-    const ITMIntrinsics intrinsics = bestSlamState->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
+    const ITMIntrinsics intrinsics = bestSlamState->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), output->noDims);
 
     generate_visualisation(
       colourImages[sceneIdx], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
@@ -536,9 +536,9 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
     depthImages[sceneIdx]->UpdateHostFromDevice();
   }
 
-  // Step 4: Combine the colour images for the different scenes using per-pixel depth testing to produce the final image for the subwindow.
-  image->Clear();
-  for(int k = 0; k < image->noDims.width * image->noDims.height; ++k)
+  // Step 4: Combine the colour images for the different scenes using per-pixel depth testing to produce the final output image.
+  output->Clear();
+  for(int k = 0; k < output->noDims.width * output->noDims.height; ++k)
   {
     float smallestDepth = static_cast<float>(INT_MAX);
     for(size_t i = 0, size = colourImages.size(); i < size; ++i)
@@ -549,13 +549,13 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
       if(depth != -1.0f && depth < smallestDepth)
       {
         smallestDepth = depth;
-        image->GetData(MEMORYDEVICE_CPU)[k] = colourImages[i]->GetData(MEMORYDEVICE_CPU)[k];
+        output->GetData(MEMORYDEVICE_CPU)[k] = colourImages[i]->GetData(MEMORYDEVICE_CPU)[k];
       }
     }
   }
 
-  // Step 5: Render a quad textured with the final subwindow image.
-  render_image(image);
+  // Step 5: Render a quad textured with the final output image.
+  render_image(output);
 }
 
 void Renderer::render_image(const ORUChar4Image_CPtr& image, bool useAlphaBlending) const
