@@ -150,7 +150,7 @@ public:
   bool get_supersampling_enabled() const;
 
   /**
-   * \brief TODO
+   * \brief Renders any images that were requested by clients of the mapping server (if one is active).
    */
   void render_client_images() const;
 
