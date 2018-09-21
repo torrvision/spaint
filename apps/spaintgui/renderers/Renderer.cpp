@@ -273,13 +273,15 @@ void Renderer::render_client_images() const
 
     ORUtils::SE3Pose pose = *optionalPose;
 
-    // FIXME: The primary scene ID shouldn't be hard-coded like this.
+    // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded like this.
     const std::string primarySceneID = Model::get_world_scene_id();
+    ITMIntrinsics intrinsics;
+    intrinsics = intrinsics.MakeRescaled(intrinsics.imgSize, image->noDims);
 
     static VoxelRenderState_Ptr voxelRenderState;
     static SurfelRenderState_Ptr surfelRenderState;
     const bool surfelFlag = false;
-    render_all_reconstructed_scenes(pose, primarySceneID, VisualisationGenerator::VT_SCENE_COLOUR, voxelRenderState, surfelRenderState, image->noDims, surfelFlag, image);
+    render_all_reconstructed_scenes(pose, primarySceneID, VisualisationGenerator::VT_SCENE_COLOUR, voxelRenderState, surfelRenderState, intrinsics, surfelFlag, image);
   }
 }
 
@@ -491,7 +493,7 @@ const boost::optional<VisualisationGenerator::Postprocessor>& Renderer::get_post
 void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, const std::string& primarySceneID,
                                                VisualisationGenerator::VisualisationType primaryVisualisationType,
                                                VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
-                                               const Vector2i& originalImgSize, bool surfelFlag, const ORUChar4Image_Ptr& output) const
+                                               const ITMIntrinsics& intrinsics, bool surfelFlag, const ORUChar4Image_Ptr& output) const
 {
   static std::vector<ORUChar4Image_Ptr> colourImages;
   static std::vector<ORFloatImage_Ptr> depthImages;
@@ -558,10 +560,6 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPo
     }
 
     // Actually render the colour and depth images for the scene.
-    SLAMState_CPtr primarySlamState = m_model->get_slam_state(primarySceneID);
-    const SLAMState_CPtr& bestSlamState = primarySlamState && primarySlamState->get_view() ? primarySlamState : slamState;
-    const ITMIntrinsics intrinsics = bestSlamState->get_view()->calib.intrinsics_d.MakeRescaled(originalImgSize, output->noDims);
-
     generate_visualisation(
       colourImages[sceneIdx], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
       voxelRenderState, surfelRenderState, tempPose, slamState->get_view(), intrinsics,
@@ -603,7 +601,7 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPo
 {
   render_all_reconstructed_scenes(
     primaryPose, subwindow.get_scene_id(), subwindow.get_type(), subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    subwindow.get_original_image_size(), subwindow.get_surfel_flag(), subwindow.get_image()
+    subwindow.get_camera_intrinsics(), subwindow.get_surfel_flag(), subwindow.get_image()
   );
 }
 
