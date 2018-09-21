@@ -381,6 +381,13 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
     glViewport(left, top, width, height);
 
+    // If the sub-window is in follow mode, update its camera.
+    if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
+    {
+      ORUtils::SE3Pose livePose = slamState->get_pose();
+      subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
+    }
+
     MappingClient_CPtr mappingClient = m_model->get_mapping_client(sceneID);
     if(mappingClient && subwindow.get_remote_flag())
     {
@@ -390,13 +397,6 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     }
     else
     {
-      // If the sub-window is in follow mode, update its camera.
-      if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
-      {
-        ORUtils::SE3Pose livePose = slamState->get_pose();
-        subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
-      }
-
       // Determine the pose from which to render.
       Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
       ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
