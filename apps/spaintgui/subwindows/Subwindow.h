@@ -98,6 +98,13 @@ public:
   const rigging::CompositeCamera_Ptr& get_camera() const;
 
   /**
+   * \brief Gets the camera intrinsics to use when rendering scene visualisations for the sub-window.
+   *
+   * \return  The camera intrinsics to use when rendering scene visualisations for the sub-window.
+   */
+  ITMLib::ITMIntrinsics get_camera_intrinsics() const;
+
+  /**
    * \brief Gets the current camera mode.
    *
    * \return  The current camera mode.

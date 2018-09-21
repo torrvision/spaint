@@ -4,6 +4,7 @@
  */
 
 #include "Subwindow.h"
+using namespace ITMLib;
 using namespace rigging;
 
 #include <spaint/util/CameraFactory.h>
@@ -37,6 +38,11 @@ const Vector2f& Subwindow::bottom_right() const
 const CompositeCamera_Ptr& Subwindow::get_camera() const
 {
   return m_camera;
+}
+
+ITMIntrinsics Subwindow::get_camera_intrinsics() const
+{
+  return ITMIntrinsics(m_image->noDims);
 }
 
 Subwindow::CameraMode Subwindow::get_camera_mode() const
