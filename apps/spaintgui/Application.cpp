@@ -240,9 +240,10 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
-    const Vector2i imgSize = Vector2i(640, 480);
+    const int subwindowImageWidth = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.subwindowImageWidth", 640);
+    const int subwindowImageHeight = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.subwindowImageHeight", 480);
     m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(
-      i, imgSize, m_pipeline->get_type()
+      i, Vector2i(subwindowImageWidth, subwindowImageHeight), m_pipeline->get_type()
     );
   }
 
@@ -1102,8 +1103,9 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  const Vector2i mainViewportSize = Vector2i(640,480);
-  Vector2i windowViewportSize((int)ROUND(mainViewportSize.width / mainSubwindow.width()), (int)ROUND(mainViewportSize.height / mainSubwindow.height()));
+  const int mainViewportWidth = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.mainViewportWidth", 640);
+  const int mainViewportHeight = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.mainViewportHeight", 480);
+  const Vector2i windowViewportSize((int)ROUND(mainViewportWidth / mainSubwindow.width()), (int)ROUND(mainViewportHeight / mainSubwindow.height()));
 
   const std::string title = m_pipeline->get_model()->get_mapping_server() ? "SemanticPaint - Server" : "SemanticPaint";
   m_renderer.reset(new WindowedRenderer(title, m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
