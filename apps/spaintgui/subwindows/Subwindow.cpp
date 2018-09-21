@@ -4,6 +4,7 @@
  */
 
 #include "Subwindow.h"
+using namespace ITMLib;
 using namespace rigging;
 
 #include <spaint/util/CameraFactory.h>
@@ -43,6 +44,13 @@ bool Subwindow::get_all_scenes_flag() const
 const CompositeCamera_Ptr& Subwindow::get_camera() const
 {
   return m_camera;
+}
+
+ITMIntrinsics Subwindow::get_camera_intrinsics() const
+{
+  ITMIntrinsics intrinsics;
+  intrinsics = intrinsics.MakeRescaled(intrinsics.imgSize, m_image->noDims);
+  return intrinsics;
 }
 
 Subwindow::CameraMode Subwindow::get_camera_mode() const

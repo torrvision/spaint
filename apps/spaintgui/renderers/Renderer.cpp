@@ -620,12 +620,11 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   const View_CPtr view = slamState->get_view();
-  const ITMIntrinsics intrinsics = view->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), image->noDims);
 
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
     subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, view, intrinsics, subwindow.get_type(), subwindow.get_surfel_flag()
+    pose, view, subwindow.get_camera_intrinsics(), subwindow.get_type(), subwindow.get_surfel_flag()
   );
 
   // Render a quad textured with the subwindow image.
