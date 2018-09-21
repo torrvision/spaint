@@ -275,8 +275,7 @@ void Renderer::render_client_images() const
 
     // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded like this.
     const std::string primarySceneID = Model::get_world_scene_id();
-    ITMIntrinsics intrinsics;
-    intrinsics = intrinsics.MakeRescaled(intrinsics.imgSize, image->noDims);
+    ITMIntrinsics intrinsics(image->noDims);
 
     static VoxelRenderState_Ptr voxelRenderState;
     static SurfelRenderState_Ptr surfelRenderState;
