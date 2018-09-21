@@ -517,9 +517,7 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Sub
     }
 
     // Actually render the colour and depth images for the scene.
-    SLAMState_CPtr primarySlamState = m_model->get_slam_state(primarySceneID);
-    const SLAMState_CPtr& bestSlamState = primarySlamState && primarySlamState->get_view() ? primarySlamState : slamState;
-    const ITMIntrinsics intrinsics = bestSlamState->get_view()->calib.intrinsics_d.MakeRescaled(subwindow.get_original_image_size(), output->noDims);
+    const ITMIntrinsics intrinsics = subwindow.get_camera_intrinsics();
 
     generate_visualisation(
       colourImages[sceneIdx], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
