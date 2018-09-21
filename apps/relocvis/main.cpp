@@ -231,7 +231,7 @@ std::vector<std::vector<TestICPPair> > prune_near_poses(
     for (const TestICPPair &pose : poses[binIdx])
     {
       Eigen::Vector3f candidateTestT = pose.testPose.block<3, 1>(0, 3);
-      Eigen::Vector3f candidateTrainT = pose.trainPose.block<3, 1>(0, 3);
+//      Eigen::Vector3f candidateTrainT = pose.trainPose.block<3, 1>(0, 3);
 
       // If there are no similar poses in the results vector insert the current candidate
       bool insert = true;
@@ -242,9 +242,9 @@ std::vector<std::vector<TestICPPair> > prune_near_poses(
         {
           auto &resultPose = result[checkBinIdx][i];
           Eigen::Vector3f resultTestT = resultPose.testPose.block<3, 1>(0, 3);
-          Eigen::Vector3f resultTrainT = resultPose.trainPose.block<3, 1>(0, 3);
+//          Eigen::Vector3f resultTrainT = resultPose.trainPose.block<3, 1>(0, 3);
           Eigen::Vector3f diffTest = candidateTestT - resultTestT;
-          Eigen::Vector3f diffTrain = candidateTrainT - resultTrainT;
+//          Eigen::Vector3f diffTrain = candidateTrainT - resultTrainT;
 
           if (diffTest.norm() < 0.5f) // || diffTrain.norm() < 0.5)
           {
@@ -324,7 +324,7 @@ void key_cb(const KeyboardEvent& event, void* cookie_v)
 
 int main(int argc, char *argv[])
 {
-  static const int TRAJ_SUB_FACTOR = 100;
+//  static const int TRAJ_SUB_FACTOR = 100;
   static const int SUBTRAJ_LENGTH = 1000;
   static const cv::Matx33d intrinsics(585, 0, 320, 0, 585, 240, 0, 0, 1);
 
@@ -748,7 +748,7 @@ int main(int argc, char *argv[])
 
     if (cookie.refresh)
     {
-      auto camera = visualizer.getViewerPose();
+//      auto camera = visualizer.getViewerPose();
 //      visualizerTrajectory.setViewerPose(camera);
 //      visualizerTrajectory.spinOnce();
       cookie.refresh = false;
