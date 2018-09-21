@@ -42,9 +42,7 @@ const CompositeCamera_Ptr& Subwindow::get_camera() const
 
 ITMIntrinsics Subwindow::get_camera_intrinsics() const
 {
-  ITMIntrinsics intrinsics;
-  intrinsics = intrinsics.MakeRescaled(intrinsics.imgSize, m_image->noDims);
-  return intrinsics;
+  return ITMIntrinsics(m_image->noDims);
 }
 
 Subwindow::CameraMode Subwindow::get_camera_mode() const
