@@ -29,7 +29,7 @@ private:
   /** The cost function to use to evaluate the different parameter sets. */
   CostFunction m_costFunction;
 
-  /** The number of epochs for which coordinate descent should be run. */
+  /** The number of epochs for which the random parameter generation should be run. */
   size_t m_epochCount;
 
   /** A list of the possible values for each parameter (e.g. [("A", [1,2]), ("B", [3,4])]). */
@@ -41,10 +41,10 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a coordinate descent parameter optimiser.
+   * \brief Constructs a random parameter optimiser.
    *
    * \param costFunction  The cost function to use to evaluate the different parameter sets.
-   * \param epochCount    The number of epochs for which coordinate descent should be run.
+   * \param epochCount    The number of epochs for which the random parameter generation should be run.
    * \param seed          The seed for the random number generator.
    */
   RandomParameterOptimiser(const CostFunction& costFunction, size_t epochCount, unsigned int seed);
@@ -75,10 +75,10 @@ public:
   }
 
   /**
-   * \brief Performs coordinate descent optimisation with random restarts to try to find a parameter set with as low a cost as possible.
+   * \brief Performs an optimisation with random parameter generation to try to find a parameter set with as low a cost as possible.
    *
    * \param bestCost    A place in which to return the cost associated with the best parameter set found (may be NULL).
-   * \return            The best parameter set found during coordinate descent.
+   * \return            The best parameter set found.
    */
   ParamSet optimise_for_parameters(float *bestCost = NULL) const;
 

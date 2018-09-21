@@ -36,10 +36,10 @@ ParamSet RandomParameterOptimiser::optimise_for_parameters(float *bestCost) cons
   // For each epoch:
   for(size_t i = 0; i < m_epochCount; ++i)
   {
-    // Randomly generate an initial set of parameter value indices.
+    // Randomly generate a set of parameter value indices.
     std::vector<size_t> valueIndices = generate_random_value_indices();
 
-    // Optimise the initial set of parameter value indices using coordinate descent.
+    // Compute the cost associated to the generated parameters.
     float configurationCost = compute_cost(valueIndices);
 
     // If the optimised cost is the best we've seen so far, update the best cost and best parameter value indices.
