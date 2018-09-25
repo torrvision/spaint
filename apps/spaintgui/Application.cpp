@@ -196,8 +196,14 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
-    const int subwindowImageWidth = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.subwindowImageWidth", 640);
-    const int subwindowImageHeight = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.subwindowImageHeight", 480);
+    const Model_CPtr& model = m_pipeline->get_model();
+    const Settings_CPtr& settings = model->get_settings();
+    const SLAMState_CPtr slamState = model->get_slam_state(Model::get_world_scene_id());
+    const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
+
+    const int subwindowImageWidth = settings->get_first_value<int>("Application.subwindowImageWidth", rgbImageSize.width);
+    const int subwindowImageHeight = settings->get_first_value<int>("Application.subwindowImageHeight", rgbImageSize.height);
+
     m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(
       i, Vector2i(subwindowImageWidth, subwindowImageHeight), m_pipeline->get_type()
     );
