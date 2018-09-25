@@ -581,7 +581,7 @@ void Application::process_camera_input()
     if(mappingClient && subwindow.get_remote_flag())
     {
       ORUtils::SE3Pose renderingPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
-      mappingClient->update_rendering_pose(renderingPose);
+      mappingClient->update_rendering_request(renderingPose);
     }
   }
 }

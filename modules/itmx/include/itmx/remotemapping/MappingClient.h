@@ -76,7 +76,7 @@ public:
    *
    * \param renderingPose The pose (in the client's coordinate system) from which the server should render the scene.
    */
-  void update_rendering_pose(const ORUtils::SE3Pose& renderingPose);
+  void update_rendering_request(const ORUtils::SE3Pose& renderingPose);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

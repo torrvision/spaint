@@ -13,6 +13,7 @@ using boost::asio::ip::tcp;
 using namespace tvgutil;
 
 #include "remotemapping/InteractionTypeMessage.h"
+#include "remotemapping/RenderingRequestMessage.h"
 
 namespace itmx {
 
@@ -91,19 +92,20 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
 
-void MappingClient::update_rendering_pose(const ORUtils::SE3Pose& renderingPose)
+void MappingClient::update_rendering_request(const ORUtils::SE3Pose& renderingPose)
 {
   AckMessage ackMsg;
-  InteractionTypeMessage interactionTypeMsg(IT_UPDATERENDERINGPOSE);
-  SimpleMessage<ORUtils::SE3Pose> renderingPoseMsg(renderingPose);
+  InteractionTypeMessage interactionTypeMsg(IT_UPDATERENDERINGREQUEST);
+  RenderingRequestMessage renderingRequestMsg;
+  renderingRequestMsg.set_pose(renderingPose);
 
   boost::lock_guard<boost::mutex> lock(m_interactionMutex);
 
-  // First send the interaction type message, then send the rendering pose message,
-  // then wait for an acknowledgement from the server. We chain all of these with
-  // && so as to early out in case of failure.
+  // First send the interaction type message, then send the rendering request message,
+  // then wait for an acknowledgement from the server. We chain all of these with &&
+  // so as to early out in case of failure.
   m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()) &&
-  m_stream.write(renderingPoseMsg.get_data_ptr(), renderingPoseMsg.get_size()) &&
+  m_stream.write(renderingRequestMsg.get_data_ptr(), renderingRequestMsg.get_size()) && 
   m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
 }
 

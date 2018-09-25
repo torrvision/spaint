@@ -13,6 +13,7 @@ using namespace tvgutil;
 #endif
 
 #include "remotemapping/InteractionTypeMessage.h"
+#include "remotemapping/RenderingRequestMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 
 //#define DEBUGGING 1
@@ -51,7 +52,7 @@ const Vector2i& MappingClientHandler::get_rgb_image_size() const
 void MappingClientHandler::run_iter()
 {
   InteractionTypeMessage interactionTypeMsg;
-  SimpleMessage<ORUtils::SE3Pose> renderingPoseMsg;
+  RenderingRequestMessage renderingRequestMsg;
 
   // First, try to read an interaction type message.
   if((m_connectionOk = read_message(interactionTypeMsg)))
@@ -121,18 +122,18 @@ void MappingClientHandler::run_iter()
 
         break;
       }
-      case IT_UPDATERENDERINGPOSE:
+      case IT_UPDATERENDERINGREQUEST:
       {
 #if DEBUGGING
         std::cout << "Receiving updated rendering pose from client" << std::endl;
 #endif
 
-        // Try to read a rendering pose message.
-        if((m_connectionOk = read_message(renderingPoseMsg)))
+        // Try to read a rendering request message.
+        if((m_connectionOk = read_message(renderingRequestMsg)))
         {
           // If that succeeds, store the pose so that it can be picked up by the renderer and send an acknowledgement to the client.
-          boost::lock_guard<boost::mutex> lock(m_renderingPoseMutex);
-          m_renderingPose = renderingPoseMsg.extract_value();
+          boost::lock_guard<boost::mutex> lock(m_renderingRequestMutex);
+          m_renderingPose = renderingRequestMsg.extract_pose();
           m_connectionOk = write_message(AckMessage());
 
           // Force the parameters to be recomputed.

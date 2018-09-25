@@ -23,8 +23,8 @@ enum InteractionType
   /** An interaction in which the client sends a single RGB-D frame to the server. */
   IT_SENDFRAME,
 
-  /** An interaction in which the client sends a new rendering pose to the server. */
-  IT_UPDATERENDERINGPOSE,
+  /** An interaction in which the client sends a new rendering request to the server. */
+  IT_UPDATERENDERINGREQUEST,
 };
 
 //#################### TYPES ####################

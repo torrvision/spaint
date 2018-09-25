@@ -14,6 +14,7 @@ namespace itmx {
 RenderingRequestMessage::RenderingRequestMessage()
 {
   m_poseSegment = std::make_pair(0, MessageSegmentUtil::bytes_for_pose());
+  m_data.resize(m_poseSegment.first + m_poseSegment.second);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

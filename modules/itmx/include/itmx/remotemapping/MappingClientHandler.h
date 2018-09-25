@@ -100,8 +100,8 @@ public:
   /** An optional pose (in the client's coordinate system) from which the client wants the server to render the scene. */
   boost::optional<ORUtils::SE3Pose> m_renderingPose;
 
-  /** The synchronisation mutex for the rendering pose. */
-  boost::mutex m_renderingPoseMutex;
+  /** The synchronisation mutex for the rendering request. */
+  boost::mutex m_renderingRequestMutex;
 
   //#################### CONSTRUCTORS ####################
 public:

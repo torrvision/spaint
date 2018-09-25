@@ -103,7 +103,7 @@ boost::optional<ORUtils::SE3Pose> MappingServer::get_rendering_pose(int clientID
   ClientHandler_Ptr clientHandler = get_client_handler(clientID);
   if(clientHandler)
   {
-    boost::lock_guard<boost::mutex> lock(clientHandler->m_renderingPoseMutex);
+    boost::lock_guard<boost::mutex> lock(clientHandler->m_renderingRequestMutex);
     return clientHandler->m_renderingPose;
   }
   else return boost::none;
