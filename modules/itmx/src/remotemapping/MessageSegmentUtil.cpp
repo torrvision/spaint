@@ -17,11 +17,6 @@ size_t MessageSegmentUtil::bytes_for_pose()
   return sizeof(Matrix4f) + 6 * sizeof(float);
 }
 
-int MessageSegmentUtil::extract_int(const std::vector<char>& data, const Segment& segment)
-{
-  return *reinterpret_cast<const int*>(&data[segment.first]);
-}
-
 ORUtils::SE3Pose MessageSegmentUtil::extract_pose(const std::vector<char>& data, const Segment& segment)
 {
   ORUtils::SE3Pose pose;
@@ -53,11 +48,6 @@ ORUtils::SE3Pose MessageSegmentUtil::extract_pose(const std::vector<char>& data,
   else pose.SetM(M);
 
   return pose;
-}
-
-void MessageSegmentUtil::set_int(int i, std::vector<char>& data, const Segment& segment)
-{
-  memcpy(&data[segment.first], reinterpret_cast<const char*>(&i), segment.second);
 }
 
 void MessageSegmentUtil::set_pose(const ORUtils::SE3Pose& pose, std::vector<char>& data, const Segment& segment)

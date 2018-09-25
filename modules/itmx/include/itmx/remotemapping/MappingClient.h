@@ -74,10 +74,11 @@ public:
   /**
    * \brief Sends a request to the server to update the pose from which it should render the scene for the client.
    *
-   * \param renderingPose The pose (in the client's coordinate system) from which the server should render the scene.
+   * \param imgSize       The size of image to render.
+   * \param pose          The pose (in the client's coordinate system) from which the server should render the scene.
    * \param visualisation The type of visualisation to render.
    */
-  void update_rendering_request(const ORUtils::SE3Pose& renderingPose, int visualisationType);
+  void update_rendering_request(const Vector2i& imgSize, const ORUtils::SE3Pose& pose, int visualisationType);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

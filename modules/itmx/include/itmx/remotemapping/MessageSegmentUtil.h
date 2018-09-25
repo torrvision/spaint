@@ -31,7 +31,11 @@ struct MessageSegmentUtil
   /**
    * \brief TODO
    */
-  static int extract_int(const std::vector<char>& data, const Segment& segment);
+  template <typename T>
+  static T extract_simple(const std::vector<char>& data, const Segment& segment)
+  {
+    return *reinterpret_cast<const T*>(&data[segment.first]);
+  }
 
   /**
    * \brief TODO
@@ -41,7 +45,11 @@ struct MessageSegmentUtil
   /**
    * \brief TODO
    */
-  static void set_int(int i, std::vector<char>& data, const Segment& segment);
+  template <typename T>
+  static void set_simple(const T& t, std::vector<char>& data, const Segment& segment)
+  {
+    memcpy(&data[segment.first], reinterpret_cast<const char*>(&t), segment.second);
+  }
 
   /**
    * \brief TODO

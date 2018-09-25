@@ -92,13 +92,15 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
 
-void MappingClient::update_rendering_request(const ORUtils::SE3Pose& renderingPose, int visualisationType)
+void MappingClient::update_rendering_request(const Vector2i& imgSize, const ORUtils::SE3Pose& pose, int visualisationType)
 {
   AckMessage ackMsg;
   InteractionTypeMessage interactionTypeMsg(IT_UPDATERENDERINGREQUEST);
-  RenderingRequestMessage renderingRequestMsg;
-  renderingRequestMsg.set_pose(renderingPose);
-  renderingRequestMsg.set_visualisation_type(visualisationType);
+
+  RenderingRequestMessage requestMsg;
+  requestMsg.set_image_size(imgSize);
+  requestMsg.set_pose(pose);
+  requestMsg.set_visualisation_type(visualisationType);
 
   boost::lock_guard<boost::mutex> lock(m_interactionMutex);
 
@@ -106,7 +108,7 @@ void MappingClient::update_rendering_request(const ORUtils::SE3Pose& renderingPo
   // then wait for an acknowledgement from the server. We chain all of these with &&
   // so as to early out in case of failure.
   m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()) &&
-  m_stream.write(renderingRequestMsg.get_data_ptr(), renderingRequestMsg.get_size()) && 
+  m_stream.write(requestMsg.get_data_ptr(), requestMsg.get_size()) && 
   m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
 }
 

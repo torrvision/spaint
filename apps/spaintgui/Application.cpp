@@ -580,8 +580,8 @@ void Application::process_camera_input()
     const MappingClient_Ptr& mappingClient = m_pipeline->get_model()->get_mapping_client(subwindow.get_scene_id());
     if(mappingClient && subwindow.get_remote_flag())
     {
-      ORUtils::SE3Pose renderingPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
-      mappingClient->update_rendering_request(renderingPose, subwindow.get_type());
+      const ORUtils::SE3Pose renderingPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
+      mappingClient->update_rendering_request(subwindow.get_image()->noDims, renderingPose, subwindow.get_type());
     }
   }
 }

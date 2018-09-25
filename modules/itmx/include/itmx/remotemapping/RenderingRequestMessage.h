@@ -6,6 +6,7 @@
 #ifndef H_ITMX_RENDERINGREQUESTMESSAGE
 #define H_ITMX_RENDERINGREQUESTMESSAGE
 
+#include <ORUtils/Math.h>
 #include <ORUtils/SE3Pose.h>
 
 #include <tvgutil/net/Message.h>
@@ -19,6 +20,9 @@ class RenderingRequestMessage : public tvgutil::Message
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The byte segment within the message data that corresponds to the size of image to render. */
+  Segment m_imageSizeSegment;
+
   /** The byte segment within the message data that corresponds to the pose from which to render. */
   Segment m_poseSegment;
 
@@ -35,6 +39,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Extracts the size of image to render from the message.
+   *
+   * \return  The size of image to render.
+   */
+  Vector2i extract_image_size() const;
+
+  /**
    * \brief Extracts the pose from which to render from the message.
    *
    * \return  The pose from which to render.
@@ -47,6 +58,13 @@ public:
    * \return  The type of visualisation to render.
    */
   int extract_visualisation_type() const;
+
+  /**
+   * \brief Sets the size of image to render.
+   *
+   * \param imgSize The size of image to render.
+   */
+  void set_image_size(const Vector2i& imgSize);
 
   /**
    * \brief Copies the pose from which to render into the appropriate byte segment in the message.

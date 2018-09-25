@@ -265,11 +265,8 @@ void Renderer::render_client_images() const
     if(!request) continue;
 
     ORUChar4Image_Ptr& image = imageHandler->get();
-    if(!image)
-    {
-      // FIXME: The size shouldn't be hard-coded like this.
-      image.reset(new ORUChar4Image(mappingServer->get_rgb_image_size(clients[i]), true, true));
-    }
+    if(!image) image.reset(new ORUChar4Image(request->extract_image_size(), true, true));
+    image->ChangeDims(request->extract_image_size());
 
     // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded like this.
     const std::string primarySceneID = Model::get_world_scene_id();
