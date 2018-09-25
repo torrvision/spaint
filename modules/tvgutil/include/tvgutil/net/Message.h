@@ -17,7 +17,7 @@ namespace tvgutil {
 class Message
 {
   //#################### TYPEDEFS ####################
-protected:
+public:
   /** An (offset, size) pair used to specify a byte segment within the message data. */
   typedef std::pair<size_t,size_t> Segment;
 
