@@ -272,8 +272,9 @@ void Renderer::render_client_images() const
     const std::string primarySceneID = Model::get_world_scene_id();
     ITMIntrinsics intrinsics(image->noDims);
 
-    static VoxelRenderState_Ptr voxelRenderState;
-    static SurfelRenderState_Ptr surfelRenderState;
+    // FIXME: The render states should be cached unless the size changes.
+    VoxelRenderState_Ptr voxelRenderState;
+    SurfelRenderState_Ptr surfelRenderState;
     const bool surfelFlag = false;
     render_all_reconstructed_scenes(
       request->extract_pose(),
@@ -500,14 +501,12 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPo
 {
   static std::vector<ORUChar4Image_Ptr> colourImages;
   static std::vector<ORFloatImage_Ptr> depthImages;
-  static bool supersamplingEnabled = m_supersamplingEnabled;
   const std::vector<std::string> sceneIDs = m_model->get_scene_ids();
   std::vector<VisualisationGenerator::VisualisationType> visualisationTypes(sceneIDs.size());
 
-  // Step 1: If supersampling has been toggled since the last time we rendered the scenes, arrange for the colour and depth images for the scenes to be reallocated.
-  if(supersamplingEnabled != m_supersamplingEnabled)
+  // Step 1: If the output image size has changed since the last time we rendered the scenes, arrange for the colour and depth images for the scenes to be reallocated.
+  if(!colourImages.empty() && colourImages[0]->noDims != output->noDims)
   {
-    supersamplingEnabled = m_supersamplingEnabled;
     colourImages.clear();
     depthImages.clear();
   }

@@ -49,13 +49,18 @@ ORUChar4Image_CPtr MappingClient::get_remote_image() const
       {
         m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size());
 
-        // FIXME: Avoid recreating this every time, and avoid hard-coding the sizes.
-        const Vector2i rgbImageSize(640,480);
-        const Vector2i depthImageSize(640,480);
+        // FIXME: Avoid recreating this every time.
+        const Vector2i rgbImageSize = headerMsg.extract_rgb_image_size();
+        const Vector2i depthImageSize = headerMsg.extract_depth_image_size();
         RGBDFrameMessage uncompressedFrameMsg(rgbImageSize, depthImageSize);
+
         m_frameCompressor->uncompress_rgbd_frame(frameMsg, uncompressedFrameMsg);
+
         if(!m_remoteImage) m_remoteImage.reset(new ORUChar4Image(rgbImageSize, true, false));
+        m_remoteImage->ChangeDims(rgbImageSize);
+
         uncompressedFrameMsg.extract_rgb_image(m_remoteImage.get());
+
         return m_remoteImage;
       }
     }

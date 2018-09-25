@@ -104,8 +104,10 @@ void RGBDFrameCompressor::compress_rgbd_frame(const RGBDFrameMessage& uncompress
   compress_rgb_image();
 
   // Now, prepare the compressed header.
-  compressedHeader.set_depth_image_size(static_cast<uint32_t>(m_impl->compressedDepthBytes.size()));
-  compressedHeader.set_rgb_image_size(static_cast<uint32_t>(m_impl->compressedRgbBytes.size()));
+  compressedHeader.set_depth_image_byte_size(static_cast<uint32_t>(m_impl->compressedDepthBytes.size()));
+  compressedHeader.set_depth_image_size(m_impl->uncompressedDepthImage->noDims);
+  compressedHeader.set_rgb_image_byte_size(static_cast<uint32_t>(m_impl->compressedRgbBytes.size()));
+  compressedHeader.set_rgb_image_size(m_impl->uncompressedRgbImage->noDims);
 
   // Finally, prepare the compressed frame.
   compressedFrame.set_compressed_image_sizes(compressedHeader);
