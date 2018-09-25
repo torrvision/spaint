@@ -69,9 +69,15 @@ void MappingClientHandler::run_iter()
         RenderingImageHandler_Ptr imageHandler = get_rendering_image();
         if(!imageHandler->get()) break;
 
-        m_dummyFrameMessage->set_frame_index(-1);
-        m_dummyFrameMessage->set_rgb_image(imageHandler->get());
-        m_frameCompressor->compress_rgbd_frame(*m_dummyFrameMessage, m_headerMessage, *m_frameMessage);
+        static RGBDFrameMessage_Ptr uncompressedFrameMessage;
+        if(!uncompressedFrameMessage || uncompressedFrameMessage->get_rgb_image_size() != imageHandler->get()->noDims)
+        {
+          uncompressedFrameMessage.reset(new RGBDFrameMessage(imageHandler->get()->noDims, Vector2i(640,480)));
+        }
+
+        uncompressedFrameMessage->set_frame_index(-1);
+        uncompressedFrameMessage->set_rgb_image(imageHandler->get());
+        m_frameCompressor->compress_rgbd_frame(*uncompressedFrameMessage, m_headerMessage, *m_frameMessage);
 
         // TODO: Comment here.
         AckMessage ackMsg;
@@ -177,8 +183,7 @@ void MappingClientHandler::run_pre()
     // Set up the frame compressor.
     m_frameCompressor.reset(new RGBDFrameCompressor(rgbImageSize, depthImageSize, calibMsg.extract_rgb_compression_type(), calibMsg.extract_depth_compression_type()));
 
-    // Construct a dummy frame message to consume messages that cannot be pushed onto the queue
-    // and to use as a temporary storage space when sending renderings back to the client.
+    // Construct a dummy frame message to consume messages that cannot be pushed onto the queue.
     m_dummyFrameMessage.reset(new RGBDFrameMessage(rgbImageSize, depthImageSize));
 
     // Signal to the client that the server is ready.

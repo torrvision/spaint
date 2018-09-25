@@ -53,6 +53,16 @@ void RGBDFrameMessage::extract_rgb_image(ORUChar4Image *rgbImage) const
   memcpy(reinterpret_cast<char*>(rgbImage->GetData(MEMORYDEVICE_CPU)), &m_data[m_rgbImageSegment.first], m_rgbImageSegment.second);
 }
 
+const Vector2i& RGBDFrameMessage::get_depth_image_size() const
+{
+  return m_depthImageSize;
+}
+
+const Vector2i& RGBDFrameMessage::get_rgb_image_size() const
+{
+  return m_rgbImageSize;
+}
+
 void RGBDFrameMessage::set_depth_image(const ORShortImage_CPtr& depthImage)
 {
   memcpy(&m_data[m_depthImageSegment.first], reinterpret_cast<const char*>(depthImage->GetData(MEMORYDEVICE_CPU)), m_depthImageSegment.second);

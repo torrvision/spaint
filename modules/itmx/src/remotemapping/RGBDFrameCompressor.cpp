@@ -96,6 +96,8 @@ void RGBDFrameCompressor::compress_rgbd_frame(const RGBDFrameMessage& uncompress
   compressedFrame.set_pose(uncompressedFrame.extract_pose());
 
   // Then, extract the images from the uncompressed message.
+  m_impl->uncompressedDepthImage->ChangeDims(uncompressedFrame.get_depth_image_size());
+  m_impl->uncompressedRgbImage->ChangeDims(uncompressedFrame.get_rgb_image_size());
   uncompressedFrame.extract_depth_image(m_impl->uncompressedDepthImage.get());
   uncompressedFrame.extract_rgb_image(m_impl->uncompressedRgbImage.get());
 
@@ -201,9 +203,10 @@ void RGBDFrameCompressor::uncompress_depth_image()
     // If we're using PNG compression, first decode the image into a preallocated internal buffer.
     m_impl->uncompressedDepthMat = cv::imdecode(m_impl->compressedDepthBytes, cv::IMREAD_ANYDEPTH, &m_impl->uncompressedDepthMat);
 
-    // Then, copy the image back into an InfiniTAM image. Note that as part of this process,
-    // we convert the format back from CV_16U (as returned to cv::imdecode) to CV_16S (the
-    // format InfiniTAM is expecting).
+    // Then, copy the image back into an InfiniTAM image, resizing as necessary. Note that as part of
+    // this process, we convert the format back from CV_16U (as returned to cv::imdecode) to CV_16S
+    // (the format InfiniTAM is expecting).
+    m_impl->uncompressedDepthImage->ChangeDims(Vector2i(m_impl->uncompressedDepthMat.cols, m_impl->uncompressedDepthMat.rows));
     cv::Mat depthWrapper(
       m_impl->uncompressedDepthImage->noDims.y,
       m_impl->uncompressedDepthImage->noDims.x, CV_16SC1,
@@ -245,8 +248,10 @@ void RGBDFrameCompressor::uncompress_rgb_image()
     // Otherwise, first decode the image into a preallocated internal buffer.
     m_impl->uncompressedRgbMat = cv::imdecode(m_impl->compressedRgbBytes, cv::IMREAD_COLOR, &m_impl->uncompressedRgbMat);
 
-    // Then, copy the image back into an InfiniTAM image. Note that as part of this process,
-    // we reorder the bytes and re-add the alpha channel.
+    // Then, copy the image back into an InfiniTAM image, resizing as necessary. Note that
+    // as part of this process, we reorder the bytes and re-add the alpha channel.
+    m_impl->uncompressedRgbImage->ChangeDims(Vector2i(m_impl->uncompressedRgbMat.cols, m_impl->uncompressedRgbMat.rows));
+
     cv::Mat rgbWrapper(
       m_impl->uncompressedRgbImage->noDims.y,
       m_impl->uncompressedRgbImage->noDims.x, CV_8UC4,
