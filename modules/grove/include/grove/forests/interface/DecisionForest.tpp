@@ -36,7 +36,7 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const std::string& file
 }
 
 template<typename DescriptorType, int TreeCount>
-DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::SettingsContainer_CPtr &settings)
+DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::SettingsContainer_CPtr& settings)
 {
   const std::string settingsNamespace = "DecisionForest.";
 
@@ -45,8 +45,8 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::Settings
   const bool useFixedThresholds = settings->get_first_value<bool>(settingsNamespace + "useFixedThresholds", true);
 
   // Derived params for completely balanced trees.
-  const uint32_t nbNodesPerTree = std::pow(2, treeDepth + 1) - 1;
-  const uint32_t nbLeavesPerTree = std::pow(2, treeDepth);
+  const uint32_t nbNodesPerTree = (1 << (treeDepth + 1)) - 1;
+  const uint32_t nbLeavesPerTree = 1 << treeDepth;
 
   std::cout << "Creating " << TREE_COUNT << " trees of depth " << treeDepth << " with " << nbNodesPerTree << " nodes and " << nbLeavesPerTree << " leaves each.\n";
 
