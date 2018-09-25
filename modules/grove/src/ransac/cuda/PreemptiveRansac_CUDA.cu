@@ -57,7 +57,12 @@ __global__ void ck_compute_energies(const Keypoint3DColour *keypoints, const Sco
   // https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler
 
   // Step 1: Sum the energies in each warp using downward shuffling, storing the result in the energySum variable of the first thread in the warp.
-  for(int offset = warpSize / 2; offset > 0; offset /= 2) energySum += __shfl_down_sync(0xFFFFFFFF, energySum, offset);
+  for(int offset = warpSize / 2; offset > 0; offset /= 2)
+#if defined(__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ >= 9)
+    energySum += __shfl_down_sync(0xFFFFFFFF, energySum, offset);
+#else
+    energySum += __shfl_down(energySum, offset);
+#endif
 
   // Step 2: If this is the first thread in the warp, add the energy sum for the warp to the candidate's energy.
   if((threadIdx.x & (warpSize - 1)) == 0) atomicAdd(&currentCandidate.energy, energySum);

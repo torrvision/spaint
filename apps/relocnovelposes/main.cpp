@@ -146,12 +146,20 @@ typedef std::vector<TestICPPair> BinnedPoses;
 
 struct BinStats
 {
-  size_t totalPoses{0};
-  size_t successfulReloc{0};
-  size_t successfulICP{0};
+  size_t totalPoses;
+  size_t successfulReloc;
+  size_t successfulICP;
 
-  float relocPct {0.0f};
-  float icpPct {0.0f};
+  float relocPct;
+  float icpPct;
+
+  BinStats()
+  : totalPoses(0),
+    successfulReloc(0),
+    successfulICP(0),
+    relocPct(0.0f),
+    icpPct(0.0f)
+  {}
 };
 
 struct ErrorThreshold
@@ -311,7 +319,7 @@ int main(int argc, char *argv[])
   // Find the valid sequences in the dataset folder.
   const std::vector<std::string> sequenceNames = find_sequence_names(datasetFolder);
 
-  std::map<std::string, std::vector<BinStats>> results;
+  std::map<std::string, std::vector<BinStats> > results;
 
   // Evaluate each sequence.
   for(size_t sequenceIdx = 0; sequenceIdx < sequenceNames.size(); ++sequenceIdx)
