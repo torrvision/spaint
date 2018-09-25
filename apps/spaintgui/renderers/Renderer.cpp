@@ -261,8 +261,8 @@ void Renderer::render_client_images() const
     MappingClientHandler::RenderingImageHandler_Ptr imageHandler = mappingServer->get_rendering_image(clients[i]);
     if(!imageHandler) continue;
 
-    const boost::optional<ORUtils::SE3Pose>& optionalPose = mappingServer->get_rendering_pose(clients[i]);
-    if(!optionalPose) continue;
+    const boost::optional<RenderingRequestMessage>& optionalRenderingRequest = mappingServer->get_rendering_request(clients[i]);
+    if(!optionalRenderingRequest) continue;
 
     ORUChar4Image_Ptr& image = imageHandler->get();
     if(!image)
@@ -271,7 +271,7 @@ void Renderer::render_client_images() const
       image.reset(new ORUChar4Image(mappingServer->get_rgb_image_size(clients[i]), true, true));
     }
 
-    ORUtils::SE3Pose pose = *optionalPose;
+    ORUtils::SE3Pose pose = optionalRenderingRequest->extract_pose();
 
     // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded like this.
     const std::string primarySceneID = Model::get_world_scene_id();

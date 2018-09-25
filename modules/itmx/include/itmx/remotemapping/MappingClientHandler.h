@@ -11,6 +11,7 @@
 #include <tvgutil/containers/PooledQueue.h>
 #include <tvgutil/net/ClientHandler.h>
 
+#include "RenderingRequestMessage.h"
 #include "RGBDFrameCompressor.h"
 
 namespace itmx {
@@ -97,8 +98,8 @@ public:
   /** The synchronisation mutex for the rendering image. */
   boost::mutex m_renderingImageMutex;
 
-  /** An optional pose (in the client's coordinate system) from which the client wants the server to render the scene. */
-  boost::optional<ORUtils::SE3Pose> m_renderingPose;
+  /** An optional rendering request, containing a pose (in the client's coordinate system) from which the client wants the server to render the scene. */
+  boost::optional<RenderingRequestMessage> m_renderingRequestMsg;
 
   /** The synchronisation mutex for the rendering request. */
   boost::mutex m_renderingRequestMutex;

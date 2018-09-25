@@ -98,13 +98,13 @@ MappingClientHandler::RenderingImageHandler_Ptr MappingServer::get_rendering_ima
   else return MappingClientHandler::RenderingImageHandler_Ptr();
 }
 
-boost::optional<ORUtils::SE3Pose> MappingServer::get_rendering_pose(int clientID) const
+boost::optional<RenderingRequestMessage> MappingServer::get_rendering_request(int clientID) const
 {
   ClientHandler_Ptr clientHandler = get_client_handler(clientID);
   if(clientHandler)
   {
     boost::lock_guard<boost::mutex> lock(clientHandler->m_renderingRequestMutex);
-    return clientHandler->m_renderingPose;
+    return clientHandler->m_renderingRequestMsg;
   }
   else return boost::none;
 }

@@ -74,12 +74,12 @@ public:
   MappingClientHandler::RenderingImageHandler_Ptr get_rendering_image(int clientID) const;
 
   /**
-   * \brief Gets the optional rendering pose (in the client's coordinate system) from which the specified client wants the server to render the scene.
+   * \brief Gets the optional rendering request for the specified client.
    *
-   * \param clientID  The ID of the client whose rendering pose we want to get.
-   * \return          The rendering pose of the specified client.
+   * \param clientID  The ID of the client whose rendering request we want to get.
+   * \return          The rendering request for the specified client.
    */
-  boost::optional<ORUtils::SE3Pose> get_rendering_pose(int clientID) const;
+  boost::optional<RenderingRequestMessage> get_rendering_request(int clientID) const;
 
   /**
    * \brief Attempts to get the size of RGB image produced by the camera associated with the specified client.

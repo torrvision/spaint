@@ -133,11 +133,8 @@ void MappingClientHandler::run_iter()
         {
           // If that succeeds, store the pose so that it can be picked up by the renderer and send an acknowledgement to the client.
           boost::lock_guard<boost::mutex> lock(m_renderingRequestMutex);
-          m_renderingPose = renderingRequestMsg.extract_pose();
+          m_renderingRequestMsg = renderingRequestMsg;
           m_connectionOk = write_message(AckMessage());
-
-          // Force the parameters to be recomputed.
-          m_renderingPose->SetM(m_renderingPose->GetM());
         }
 
         break;
