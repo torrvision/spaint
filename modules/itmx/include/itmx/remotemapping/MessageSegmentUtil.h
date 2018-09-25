@@ -17,6 +17,10 @@ namespace itmx {
  */
 struct MessageSegmentUtil
 {
+  //#################### TYPEDEFS ####################
+
+  typedef tvgutil::Message::Segment Segment;
+
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
@@ -27,12 +31,22 @@ struct MessageSegmentUtil
   /**
    * \brief TODO
    */
-  static ORUtils::SE3Pose extract_pose(const std::vector<char>& data, const tvgutil::Message::Segment& poseSegment);
+  static int extract_int(const std::vector<char>& data, const Segment& segment);
 
   /**
    * \brief TODO
    */
-  static void set_pose(const ORUtils::SE3Pose& pose, std::vector<char>& data, const tvgutil::Message::Segment& poseSegment);
+  static ORUtils::SE3Pose extract_pose(const std::vector<char>& data, const Segment& segment);
+
+  /**
+   * \brief TODO
+   */
+  static void set_int(int i, std::vector<char>& data, const Segment& segment);
+
+  /**
+   * \brief TODO
+   */
+  static void set_pose(const ORUtils::SE3Pose& pose, std::vector<char>& data, const Segment& segment);
 };
 
 }

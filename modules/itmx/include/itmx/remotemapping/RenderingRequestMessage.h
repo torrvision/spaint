@@ -22,6 +22,9 @@ private:
   /** The byte segment within the message data that corresponds to the pose from which to render. */
   Segment m_poseSegment;
 
+  /** The byte segment within the message that corresponds to the type of visualisation to render. */
+  Segment m_visualisationTypeSegment;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -39,11 +42,25 @@ public:
   ORUtils::SE3Pose extract_pose() const;
 
   /**
+   * \brief Extracts the type of visualisation to render from the message.
+   *
+   * \return  The type of visualisation to render.
+   */
+  int extract_visualisation_type() const;
+
+  /**
    * \brief Copies the pose from which to render into the appropriate byte segment in the message.
    *
    * \param pose  The pose from which to render.
    */
   void set_pose(const ORUtils::SE3Pose& pose);
+
+  /**
+   * \brief Sets the type of visualisation to render.
+   *
+   * \param visualisationType The type of visualisation to render.
+   */
+  void set_visualisation_type(int visualisationType);
 };
 
 }

@@ -261,8 +261,8 @@ void Renderer::render_client_images() const
     MappingClientHandler::RenderingImageHandler_Ptr imageHandler = mappingServer->get_rendering_image(clients[i]);
     if(!imageHandler) continue;
 
-    const boost::optional<RenderingRequestMessage>& optionalRenderingRequest = mappingServer->get_rendering_request(clients[i]);
-    if(!optionalRenderingRequest) continue;
+    const boost::optional<RenderingRequestMessage>& request = mappingServer->get_rendering_request(clients[i]);
+    if(!request) continue;
 
     ORUChar4Image_Ptr& image = imageHandler->get();
     if(!image)
@@ -271,8 +271,6 @@ void Renderer::render_client_images() const
       image.reset(new ORUChar4Image(mappingServer->get_rgb_image_size(clients[i]), true, true));
     }
 
-    ORUtils::SE3Pose pose = optionalRenderingRequest->extract_pose();
-
     // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded like this.
     const std::string primarySceneID = Model::get_world_scene_id();
     ITMIntrinsics intrinsics(image->noDims);
@@ -280,7 +278,16 @@ void Renderer::render_client_images() const
     static VoxelRenderState_Ptr voxelRenderState;
     static SurfelRenderState_Ptr surfelRenderState;
     const bool surfelFlag = false;
-    render_all_reconstructed_scenes(pose, primarySceneID, VisualisationGenerator::VT_SCENE_COLOUR, voxelRenderState, surfelRenderState, intrinsics, surfelFlag, image);
+    render_all_reconstructed_scenes(
+      request->extract_pose(),
+      primarySceneID,
+      static_cast<VisualisationGenerator::VisualisationType>(request->extract_visualisation_type()),
+      voxelRenderState,
+      surfelRenderState,
+      intrinsics,
+      surfelFlag,
+      image
+    );
   }
 }
 

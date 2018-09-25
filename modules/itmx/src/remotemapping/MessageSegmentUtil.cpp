@@ -17,15 +17,20 @@ size_t MessageSegmentUtil::bytes_for_pose()
   return sizeof(Matrix4f) + 6 * sizeof(float);
 }
 
-ORUtils::SE3Pose MessageSegmentUtil::extract_pose(const std::vector<char>& data, const Message::Segment& poseSegment)
+int MessageSegmentUtil::extract_int(const std::vector<char>& data, const Segment& segment)
+{
+  return *reinterpret_cast<const int*>(&data[segment.first]);
+}
+
+ORUtils::SE3Pose MessageSegmentUtil::extract_pose(const std::vector<char>& data, const Segment& segment)
 {
   ORUtils::SE3Pose pose;
 
   // Extract both the 4x4 matrix and the rotation/translation vector representations of the pose from the message.
-  Matrix4f M = *reinterpret_cast<const Matrix4f*>(&data[poseSegment.first]);
+  Matrix4f M = *reinterpret_cast<const Matrix4f*>(&data[segment.first]);
 
   float params[6];
-  memcpy(params, &data[poseSegment.first + sizeof(Matrix4f)], 6 * sizeof(float));
+  memcpy(params, &data[segment.first + sizeof(Matrix4f)], 6 * sizeof(float));
 
   // Check whether or not the rotation/translation vector representation of the pose is valid. Currently, PC clients
   // send both the matrix and the rotation/translation vector representations across to the server to allow it to
@@ -50,10 +55,15 @@ ORUtils::SE3Pose MessageSegmentUtil::extract_pose(const std::vector<char>& data,
   return pose;
 }
 
-void MessageSegmentUtil::set_pose(const ORUtils::SE3Pose& pose, std::vector<char>& data, const Message::Segment& poseSegment)
+void MessageSegmentUtil::set_int(int i, std::vector<char>& data, const Segment& segment)
 {
-  memcpy(&data[poseSegment.first], reinterpret_cast<const char*>(&pose.GetM()), sizeof(Matrix4f));
-  memcpy(&data[poseSegment.first + sizeof(Matrix4f)], reinterpret_cast<const char*>(pose.GetParams()), 6 * sizeof(float));
+  memcpy(&data[segment.first], reinterpret_cast<const char*>(&i), segment.second);
+}
+
+void MessageSegmentUtil::set_pose(const ORUtils::SE3Pose& pose, std::vector<char>& data, const Segment& segment)
+{
+  memcpy(&data[segment.first], reinterpret_cast<const char*>(&pose.GetM()), sizeof(Matrix4f));
+  memcpy(&data[segment.first + sizeof(Matrix4f)], reinterpret_cast<const char*>(pose.GetParams()), 6 * sizeof(float));
 }
 
 }

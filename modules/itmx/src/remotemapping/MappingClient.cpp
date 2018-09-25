@@ -92,12 +92,13 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
 
-void MappingClient::update_rendering_request(const ORUtils::SE3Pose& renderingPose)
+void MappingClient::update_rendering_request(const ORUtils::SE3Pose& renderingPose, int visualisationType)
 {
   AckMessage ackMsg;
   InteractionTypeMessage interactionTypeMsg(IT_UPDATERENDERINGREQUEST);
   RenderingRequestMessage renderingRequestMsg;
   renderingRequestMsg.set_pose(renderingPose);
+  renderingRequestMsg.set_visualisation_type(visualisationType);
 
   boost::lock_guard<boost::mutex> lock(m_interactionMutex);
 
