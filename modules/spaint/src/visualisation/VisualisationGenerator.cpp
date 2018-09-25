@@ -174,23 +174,45 @@ void VisualisationGenerator::generate_voxel_visualisation(const ORUChar4Image_Pt
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void VisualisationGenerator::get_default_raycast(const ORUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const
-{
-  make_postprocessed_cpu_copy(liveRenderState->raycastImage, postprocessor, output);
-}
-
 void VisualisationGenerator::get_depth_input(const ORUChar4Image_Ptr& output, const View_CPtr& view) const
 {
-  prepare_to_copy_visualisation(view->depth->noDims, output);
-  if(m_settings->deviceType == DEVICE_CUDA) view->depth->UpdateHostFromDevice();
-  m_voxelVisualisationEngine->DepthToUchar4(output.get(), view->depth);
+  output->Clear();
+
+  if(m_settings->deviceType == DEVICE_CUDA)
+  {
+    view->depth->UpdateHostFromDevice();
+  }
+
+  if(view->depth->noDims == output->noDims)
+  {
+    m_voxelVisualisationEngine->DepthToUchar4(output.get(), view->depth);
+  }
+  else
+  {
+    static ORUChar4Image_Ptr temp(new ORUChar4Image(view->depth->noDims, true, true));
+    temp->ChangeDims(view->depth->noDims);
+    m_voxelVisualisationEngine->DepthToUchar4(temp.get(), view->depth);
+    resize_into(output, temp.get());
+  }
 }
 
 void VisualisationGenerator::get_rgb_input(const ORUChar4Image_Ptr& output, const View_CPtr& view) const
 {
-  prepare_to_copy_visualisation(view->rgb->noDims, output);
-  if(m_settings->deviceType == DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
-  output->SetFrom(view->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  output->Clear();
+
+  if(m_settings->deviceType == DEVICE_CUDA)
+  {
+    view->rgb->UpdateHostFromDevice();
+  }
+
+  if(view->rgb->noDims == output->noDims)
+  {
+    output->SetFrom(view->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  }
+  else
+  {
+    resize_into(output, view->rgb);
+  }
 }
 
 bool VisualisationGenerator::supports_semantics() const
@@ -203,8 +225,15 @@ bool VisualisationGenerator::supports_semantics() const
 void VisualisationGenerator::make_postprocessed_cpu_copy(const ORUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor,
                                                          const ORUChar4Image_Ptr& outputRaycast) const
 {
-  // Make sure that the output raycast is of the right size.
-  prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
+  // Clear the output raycast.
+  outputRaycast->Clear();
+
+  // Ensure the output raycast is of the right size. If it isn't, resize it and print a warning.
+  if(outputRaycast->noDims != inputRaycast->noDims)
+  {
+    outputRaycast->ChangeDims(inputRaycast->noDims);
+    std::cerr << "Warning: Had to resize output raycast\n";
+  }
 
   if(postprocessor)
   {
@@ -230,10 +259,13 @@ void VisualisationGenerator::make_postprocessed_cpu_copy(const ORUChar4Image *in
   }
 }
 
-void VisualisationGenerator::prepare_to_copy_visualisation(const Vector2i& inputSize, const ORUChar4Image_Ptr& output) const
+void VisualisationGenerator::resize_into(const ORUChar4Image_Ptr& output, const ORUChar4Image *input) const
 {
-  output->Clear();
-  output->ChangeDims(inputSize);
+#ifdef WITH_OPENCV
+  cv::Mat cvInput(input->noDims.y, input->noDims.x, CV_8UC4, const_cast<Vector4u*>(input->GetData(MEMORYDEVICE_CPU)));
+  cv::Mat cvOutput(output->noDims.y, output->noDims.x, CV_8UC4, output->GetData(MEMORYDEVICE_CPU));
+  cv::resize(cvInput, cvOutput, cv::Size(output->noDims.x, output->noDims.y));
+#endif
 }
 
 }
