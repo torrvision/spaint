@@ -573,15 +573,14 @@ void Application::process_camera_input()
     }
   }
 
-  // If one of the sub-windows has its remote flag set and a mapping client is active, send the sub-window's camera pose to the mapping server.
+  // If one of the sub-windows has its remote flag set and a mapping client is active for its scene, send a rendering request to the mapping server.
   for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
   {
-    Subwindow& subwindow = subwindowConfiguration->subwindow(i);
+    const Subwindow& subwindow = subwindowConfiguration->subwindow(i);
     const MappingClient_Ptr& mappingClient = m_pipeline->get_model()->get_mapping_client(subwindow.get_scene_id());
     if(mappingClient && subwindow.get_remote_flag())
     {
-      const ORUtils::SE3Pose renderingPose = CameraPoseConverter::camera_to_pose(*subwindow.get_camera());
-      mappingClient->update_rendering_request(subwindow.get_image()->noDims, renderingPose, subwindow.get_type());
+      mappingClient->update_rendering_request(subwindow.get_image()->noDims, CameraPoseConverter::camera_to_pose(*subwindow.get_camera()), subwindow.get_type());
     }
   }
 }
