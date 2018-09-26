@@ -204,9 +204,10 @@ void RGBDFrameCompressor::uncompress_depth_image()
     m_impl->uncompressedDepthMat = cv::imdecode(m_impl->compressedDepthBytes, cv::IMREAD_ANYDEPTH, &m_impl->uncompressedDepthMat);
 
     // Then, copy the image back into an InfiniTAM image, resizing as necessary. Note that as part of
-    // this process, we convert the format back from CV_16U (as returned to cv::imdecode) to CV_16S
+    // this process, we convert the format back from CV_16U (as returned by cv::imdecode) to CV_16S
     // (the format InfiniTAM is expecting).
     m_impl->uncompressedDepthImage->ChangeDims(Vector2i(m_impl->uncompressedDepthMat.cols, m_impl->uncompressedDepthMat.rows));
+
     cv::Mat depthWrapper(
       m_impl->uncompressedDepthImage->noDims.y,
       m_impl->uncompressedDepthImage->noDims.x, CV_16SC1,
