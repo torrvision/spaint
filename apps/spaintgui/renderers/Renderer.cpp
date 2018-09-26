@@ -258,7 +258,7 @@ void Renderer::render_client_images() const
   std::vector<int> clients = mappingServer->get_active_clients();
   for(size_t i = 0, size = clients.size(); i < size; ++i)
   {
-    MappingClientHandler::RenderingImageHandler_Ptr imageHandler = mappingServer->get_rendering_image(clients[i]);
+    MappingClientHandler::RenderedImageHandler_Ptr imageHandler = mappingServer->get_rendered_image(clients[i]);
     if(!imageHandler) continue;
 
     const boost::optional<RenderingRequestMessage>& request = mappingServer->get_rendering_request(clients[i]);

@@ -31,7 +31,7 @@ public:
   /**
    * \brief TODO
    */
-  class RenderingImageHandler
+  class RenderedImageHandler
   {
     //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
   private:
@@ -46,25 +46,25 @@ public:
     /**
      * \brief TODO
      */
-    RenderingImageHandler(MappingClientHandler *clientHandler)
-    : m_clientHandler(clientHandler), m_lock(clientHandler->m_renderingImageMutex)
+    RenderedImageHandler(MappingClientHandler *clientHandler)
+    : m_clientHandler(clientHandler), m_lock(clientHandler->m_renderedImageMutex)
     {}
 
     //~~~~~~~~~~~~~~~~~~~~ COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ~~~~~~~~~~~~~~~~~~~~
   private:
     // Deliberately private and unimplemented.
-    RenderingImageHandler(const RenderingImageHandler&);
-    RenderingImageHandler& operator=(const RenderingImageHandler&);
+    RenderedImageHandler(const RenderedImageHandler&);
+    RenderedImageHandler& operator=(const RenderedImageHandler&);
 
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
   public:
     ORUChar4Image_Ptr& get()
     {
-      return m_clientHandler->m_renderingImage;
+      return m_clientHandler->m_renderedImage;
     }
   };
 
-  typedef boost::shared_ptr<RenderingImageHandler> RenderingImageHandler_Ptr;
+  typedef boost::shared_ptr<RenderedImageHandler> RenderedImageHandler_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
@@ -93,10 +93,10 @@ public:
   bool m_poseDirty;
 
   /** An optional image into which to render the scene for the client. */
-  ORUChar4Image_Ptr m_renderingImage;
+  ORUChar4Image_Ptr m_renderedImage;
 
-  /** The synchronisation mutex for the rendering image. */
-  boost::mutex m_renderingImageMutex;
+  /** The synchronisation mutex for the rendered image. */
+  boost::mutex m_renderedImageMutex;
 
   /** An optional rendering request, containing a pose (in the client's coordinate system) from which the client wants the server to render the scene. */
   boost::optional<RenderingRequestMessage> m_renderingRequestMessage;
@@ -130,7 +130,7 @@ public:
   /**
    * \brief TODO
    */
-  RenderingImageHandler_Ptr get_rendering_image();
+  RenderedImageHandler_Ptr get_rendered_image();
 
   /**
    * \brief Gets the size of the colour images produced by the client.

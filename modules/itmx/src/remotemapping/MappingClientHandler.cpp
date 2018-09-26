@@ -39,9 +39,9 @@ const Vector2i& MappingClientHandler::get_depth_image_size() const
   return m_calib.intrinsics_d.imgSize;
 }
 
-MappingClientHandler::RenderingImageHandler_Ptr MappingClientHandler::get_rendering_image()
+MappingClientHandler::RenderedImageHandler_Ptr MappingClientHandler::get_rendered_image()
 {
-  return RenderingImageHandler_Ptr(new RenderingImageHandler(this));
+  return RenderedImageHandler_Ptr(new RenderedImageHandler(this));
 }
 
 const Vector2i& MappingClientHandler::get_rgb_image_size() const
@@ -66,7 +66,7 @@ void MappingClientHandler::run_iter()
         std::cout << "Receiving get rendered image request from client" << std::endl;
 #endif
 
-        RenderingImageHandler_Ptr imageHandler = get_rendering_image();
+        RenderedImageHandler_Ptr imageHandler = get_rendered_image();
         if(!imageHandler->get()) break;
 
         if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandler->get()->noDims)
@@ -130,13 +130,13 @@ void MappingClientHandler::run_iter()
       case IT_UPDATERENDERINGREQUEST:
       {
 #if DEBUGGING
-        std::cout << "Receiving updated rendering pose from client" << std::endl;
+        std::cout << "Receiving updated rendering request from client" << std::endl;
 #endif
 
         // Try to read a rendering request message.
         if((m_connectionOk = read_message(renderingRequestMsg)))
         {
-          // If that succeeds, store the pose so that it can be picked up by the renderer and send an acknowledgement to the client.
+          // If that succeeds, store the request so that it can be picked up by the renderer, and send an acknowledgement to the client.
           boost::lock_guard<boost::mutex> lock(m_renderingRequestMutex);
           m_renderingRequestMessage = renderingRequestMsg;
           m_connectionOk = write_message(AckMessage());

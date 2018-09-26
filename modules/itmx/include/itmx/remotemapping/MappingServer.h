@@ -71,7 +71,7 @@ public:
   /**
    * \brief TODO
    */
-  MappingClientHandler::RenderingImageHandler_Ptr get_rendering_image(int clientID) const;
+  MappingClientHandler::RenderedImageHandler_Ptr get_rendered_image(int clientID) const;
 
   /**
    * \brief Gets the optional rendering request for the specified client.
