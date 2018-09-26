@@ -153,7 +153,9 @@ public:
   const Vector2i& get_original_image_size() const;
 
   /**
-   * \brief TODO
+   * \brief Gets a flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   *
+   * \return  A flag indicating whether or not to ask the mapping server to render the image for this sub-window.
    */
   bool get_remote_flag() const;
 
@@ -249,7 +251,9 @@ public:
   void set_camera_up_vector(const Eigen::Vector3f& cameraUpVector);
 
   /**
-   * \brief TODO
+   * \brief Sets a flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   *
+   * \param remoteFlag  A flag indicating whether or not to ask the mapping server to render the image for this sub-window.
    */
   void set_remote_flag(bool remoteFlag);
 

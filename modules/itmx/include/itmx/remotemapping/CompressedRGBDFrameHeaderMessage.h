@@ -15,7 +15,7 @@
 namespace itmx {
 
 /**
- * \brief An instance of this class represents a message containing the sizes (in bytes) of the compressed depth and RGB images for a single frame of compressed RGB-D data.
+ * \brief An instance of this class represents a message containing the sizes (in bytes) and dimensions of the compressed images for a single RGB-D frame.
  */
 class CompressedRGBDFrameHeaderMessage : public MappingMessage
 {
@@ -50,7 +50,9 @@ public:
   uint32_t extract_depth_image_byte_size() const;
 
   /**
-   * \brief TODO
+   * \brief Extracts the dimensions of the compressed depth image from the message.
+   *
+   * \return  The dimensions of the compressed depth image.
    */
   Vector2i extract_depth_image_size() const;
 
@@ -62,7 +64,9 @@ public:
   uint32_t extract_rgb_image_byte_size() const;
 
   /**
-   * \brief TODO
+   * \brief Extracts the dimensions of the compressed RGB image from the message.
+   *
+   * \return  The dimensions of the compressed RGB image.
    */
   Vector2i extract_rgb_image_size() const;
 
@@ -74,7 +78,9 @@ public:
   void set_depth_image_byte_size(uint32_t depthImageByteSize);
 
   /**
-   * \brief TODO
+   * \brief Sets the dimensions of the compressed depth image.
+   *
+   * \param depthImageSize  The dimensions of the compressed depth image.
    */
   void set_depth_image_size(const Vector2i& depthImageSize);
 
@@ -86,7 +92,9 @@ public:
   void set_rgb_image_byte_size(uint32_t rgbImageByteSize);
 
   /**
-   * \brief TODO
+   * \brief Sets the dimensions of the compressed RGB image.
+   *
+   * \param rgbImageSize  The dimensions of the compressed RGB image.
    */
   void set_rgb_image_size(const Vector2i& rgbImageSize);
 };
