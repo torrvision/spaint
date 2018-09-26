@@ -13,12 +13,12 @@ namespace grove {
 
 template <typename DescriptorType, int TreeCount>
 DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const std::string& filename)
-  : Base(filename)
+: Base(filename)
 {}
 
 template<typename DescriptorType, int TreeCount>
-DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const tvgutil::SettingsContainer_CPtr &settings)
-  : Base(settings)
+DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const tvgutil::SettingsContainer_CPtr& settings)
+: Base(settings)
 {}
 
 #ifdef WITH_SCOREFORESTS
