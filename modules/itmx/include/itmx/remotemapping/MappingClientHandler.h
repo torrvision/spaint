@@ -29,22 +29,24 @@ private:
   //#################### NESTED TYPES ####################
 public:
   /**
-   * \brief TODO
+   * \brief An instance of this class can be used to provide exclusive access to the image (if any) that the server has rendered for the client.
    */
   class RenderedImageHandler
   {
     //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
   private:
-    /** TODO */
+    /** The handler managing the connection to the client. */
     MappingClientHandler *m_clientHandler;
 
-    /** TODO */
+    /** The lock used to provide exclusive access to the image. */
     boost::lock_guard<boost::mutex> m_lock;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
   public:
     /**
-     * \brief TODO
+     * \brief Constructs a rendered image handler.
+     *
+     * \param clientHandler The handler managing the connection to the client.
      */
     RenderedImageHandler(MappingClientHandler *clientHandler)
     : m_clientHandler(clientHandler), m_lock(clientHandler->m_renderedImageMutex)
@@ -58,6 +60,11 @@ public:
 
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
   public:
+    /**
+     * \brief Gets the image (if any) that the server has rendered for the client.
+     *
+     * \return  The image (if any) that the server has rendered for the client.
+     */
     ORUChar4Image_Ptr& get()
     {
       return m_clientHandler->m_renderedImage;
@@ -128,7 +135,11 @@ public:
   const Vector2i& get_depth_image_size() const;
 
   /**
-   * \brief TODO
+   * \brief Grabs the image (if any) that the server has rendered for the client.
+   *
+   * \note  The returned handler locks the associated mutex until the caller has finished using the image, preventing a race condition.
+   *
+   * \return  A handler providing access to the image (if any) that the server has rendered for the client.
    */
   RenderedImageHandler_Ptr get_rendered_image();
 
