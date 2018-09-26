@@ -35,7 +35,7 @@ private:
   /** A mutex used to synchronise interactions with the server to avoid overlaps. */
   mutable boost::mutex m_interactionMutex;
 
-  /** TODO */
+  /** The image in which remote scene renderings retrieved from the server are stored. */
   mutable ORUChar4Image_Ptr m_remoteImage;
 
   /** The TCP stream used as a wrapper around the connection to the server. */
@@ -60,7 +60,9 @@ public:
   RGBDFrameMessageQueue::PushHandler_Ptr begin_push_frame_message();
 
   /**
-   * \brief TODO
+   * \brief Gets the image in which remote scene renderings retrieved from the server are stored.
+   *
+   * \return  The image in which remote scene renderings retrieved from the server are stored.
    */
   ORUChar4Image_CPtr get_remote_image() const;
 
@@ -72,7 +74,7 @@ public:
   void send_calibration_message(const RGBDCalibrationMessage& msg);
 
   /**
-   * \brief Sends a request to the server to update the pose from which it should render the scene for the client.
+   * \brief Sends a request to the server to render a visualisation of the scene for the client.
    *
    * \param imgSize       The size of image to render.
    * \param pose          The pose (in the client's coordinate system) from which the server should render the scene.

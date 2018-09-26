@@ -73,7 +73,7 @@ public:
    *
    * \note  The returned handler locks the associated mutex until the caller has finished using the image, preventing a race condition.
    *
-   * \param clientID  The ID of the client whose rendered image (if any) we want to get.
+   * \param clientID  The ID of the client whose rendered image we want to get.
    * \return          A handler providing access to the image (if any) that the server has rendered for the specified client.
    */
   MappingClientHandler::RenderedImageHandler_Ptr get_rendered_image(int clientID) const;
