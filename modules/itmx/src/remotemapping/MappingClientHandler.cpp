@@ -66,8 +66,10 @@ void MappingClientHandler::run_iter()
         std::cout << "Receiving get rendered image request from client" << std::endl;
 #endif
 
-        // Grab the rendered image to send across to the client, locking the associated mutex for the duration of the process.
+        // Try to grab the rendered image to send across to the client, locking the associated mutex for the duration of the process.
+        // If no image has been rendered for the client, early out.
         RenderedImageHandler_Ptr imageHandler = get_rendered_image();
+        if(!imageHandler->get()) break;
 
         // Prepare the rendering response message (we reuse an uncompressed RGB-D frame for this to avoid creating a new message type).
         if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandler->get()->noDims)

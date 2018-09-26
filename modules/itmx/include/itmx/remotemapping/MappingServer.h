@@ -69,15 +69,20 @@ public:
   void get_pose(int clientID, ORUtils::SE3Pose& pose);
 
   /**
-   * \brief TODO
+   * \brief Grabs the image (if any) that the server has rendered for the specified client.
+   *
+   * \note  The returned handler locks the associated mutex until the caller has finished using the image, preventing a race condition.
+   *
+   * \param clientID  The ID of the client whose rendered image (if any) we want to get.
+   * \return          A handler providing access to the image (if any) that the server has rendered for the specified client.
    */
   MappingClientHandler::RenderedImageHandler_Ptr get_rendered_image(int clientID) const;
 
   /**
-   * \brief Gets the optional rendering request for the specified client.
+   * \brief Gets the rendering request (if any) for the specified client.
    *
    * \param clientID  The ID of the client whose rendering request we want to get.
-   * \return          The rendering request for the specified client.
+   * \return          The rendering request (if any) for the specified client.
    */
   boost::optional<RenderingRequestMessage> get_rendering_request(int clientID) const;
 
