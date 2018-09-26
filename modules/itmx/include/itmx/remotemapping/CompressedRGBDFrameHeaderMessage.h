@@ -10,14 +10,14 @@
 
 #include <ORUtils/Math.h>
 
-#include <tvgutil/net/Message.h>
+#include "MappingMessage.h"
 
 namespace itmx {
 
 /**
  * \brief An instance of this class represents a message containing the sizes (in bytes) of the compressed depth and RGB images for a single frame of compressed RGB-D data.
  */
-class CompressedRGBDFrameHeaderMessage : public tvgutil::Message
+class CompressedRGBDFrameHeaderMessage : public MappingMessage
 {
   //#################### PRIVATE VARIABLES ####################
 private:

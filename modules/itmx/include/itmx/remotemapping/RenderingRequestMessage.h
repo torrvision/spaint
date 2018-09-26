@@ -7,16 +7,15 @@
 #define H_ITMX_RENDERINGREQUESTMESSAGE
 
 #include <ORUtils/Math.h>
-#include <ORUtils/SE3Pose.h>
 
-#include <tvgutil/net/Message.h>
+#include "MappingMessage.h"
 
 namespace itmx {
 
 /**
  * \brief An instance of this class represents a message containing a request from a mapping client for the server to render a visualisation of the scene.
  */
-class RenderingRequestMessage : public tvgutil::Message
+class RenderingRequestMessage : public MappingMessage
 {
   //#################### PRIVATE VARIABLES ####################
 private:

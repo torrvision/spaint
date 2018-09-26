@@ -5,10 +5,6 @@
 
 #include "remotemapping/BaseRGBDFrameMessage.h"
 
-#include <ORUtils/Math.h>
-
-#include "remotemapping/MessageSegmentUtil.h"
-
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -19,22 +15,22 @@ BaseRGBDFrameMessage::BaseRGBDFrameMessage() {}
 
 int BaseRGBDFrameMessage::extract_frame_index() const
 {
-  return *reinterpret_cast<const int*>(&m_data[m_frameIndexSegment.first]);
+  return read_simple<int>(m_frameIndexSegment);
 }
 
 ORUtils::SE3Pose BaseRGBDFrameMessage::extract_pose() const
 {
-  return MessageSegmentUtil::extract_pose(m_data, m_poseSegment);
+  return read_pose(m_poseSegment);
 }
 
 void BaseRGBDFrameMessage::set_frame_index(int frameIndex)
 {
-  memcpy(&m_data[m_frameIndexSegment.first], reinterpret_cast<const char*>(&frameIndex), m_frameIndexSegment.second);
+  write_simple(frameIndex, m_frameIndexSegment);
 }
 
 void BaseRGBDFrameMessage::set_pose(const ORUtils::SE3Pose& pose)
 {
-  MessageSegmentUtil::set_pose(pose, m_data, m_poseSegment);
+  write_pose(pose, m_poseSegment);
 }
 
 }

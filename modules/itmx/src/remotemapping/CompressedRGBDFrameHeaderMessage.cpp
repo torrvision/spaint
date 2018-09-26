@@ -7,8 +7,6 @@
 
 #include <cstring>
 
-#include "remotemapping/MessageSegmentUtil.h"
-
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -26,42 +24,42 @@ CompressedRGBDFrameHeaderMessage::CompressedRGBDFrameHeaderMessage()
 
 uint32_t CompressedRGBDFrameHeaderMessage::extract_depth_image_byte_size() const
 {
-  return MessageSegmentUtil::extract_simple<uint32_t>(m_data, m_depthImageByteSizeSegment);
+  return read_simple<uint32_t>(m_depthImageByteSizeSegment);
 }
 
 Vector2i CompressedRGBDFrameHeaderMessage::extract_depth_image_size() const
 {
-  return MessageSegmentUtil::extract_simple<Vector2i>(m_data, m_depthImageSizeSegment);
+  return read_simple<Vector2i>(m_depthImageSizeSegment);
 }
 
 uint32_t CompressedRGBDFrameHeaderMessage::extract_rgb_image_byte_size() const
 {
-  return MessageSegmentUtil::extract_simple<uint32_t>(m_data, m_rgbImageByteSizeSegment);
+  return read_simple<uint32_t>(m_rgbImageByteSizeSegment);
 }
 
 Vector2i CompressedRGBDFrameHeaderMessage::extract_rgb_image_size() const
 {
-  return MessageSegmentUtil::extract_simple<Vector2i>(m_data, m_rgbImageSizeSegment);
+  return read_simple<Vector2i>(m_rgbImageSizeSegment);
 }
 
 void CompressedRGBDFrameHeaderMessage::set_depth_image_byte_size(uint32_t depthImageByteSize)
 {
-  MessageSegmentUtil::set_simple(depthImageByteSize, m_data, m_depthImageByteSizeSegment);
+  write_simple(depthImageByteSize, m_depthImageByteSizeSegment);
 }
 
 void CompressedRGBDFrameHeaderMessage::set_depth_image_size(const Vector2i& depthImageSize)
 {
-  MessageSegmentUtil::set_simple(depthImageSize, m_data, m_depthImageSizeSegment);
+  write_simple(depthImageSize, m_depthImageSizeSegment);
 }
 
 void CompressedRGBDFrameHeaderMessage::set_rgb_image_byte_size(uint32_t rgbImageByteSize)
 {
-  MessageSegmentUtil::set_simple(rgbImageByteSize, m_data, m_rgbImageByteSizeSegment);
+  write_simple(rgbImageByteSize, m_rgbImageByteSizeSegment);
 }
 
 void CompressedRGBDFrameHeaderMessage::set_rgb_image_size(const Vector2i& rgbImageSize)
 {
-  MessageSegmentUtil::set_simple(rgbImageSize, m_data, m_rgbImageSizeSegment);
+  write_simple(rgbImageSize, m_rgbImageSizeSegment);
 }
 
 }

@@ -58,12 +58,12 @@ ITMRGBDCalib RGBDCalibrationMessage::extract_calib() const
 
 DepthCompressionType RGBDCalibrationMessage::extract_depth_compression_type() const
 {
-  return *reinterpret_cast<const DepthCompressionType*>(&m_data[m_depthCompressionTypeSegment.first]);
+  return read_simple<DepthCompressionType>(m_depthCompressionTypeSegment);
 }
 
 RGBCompressionType RGBDCalibrationMessage::extract_rgb_compression_type() const
 {
-  return *reinterpret_cast<const RGBCompressionType*>(&m_data[m_rgbCompressionTypeSegment.first]);
+  return read_simple<RGBCompressionType>(m_rgbCompressionTypeSegment);
 }
 
 void RGBDCalibrationMessage::set_calib(const ITMRGBDCalib& calib)
@@ -93,12 +93,12 @@ void RGBDCalibrationMessage::set_calib(const ITMRGBDCalib& calib)
 
 void RGBDCalibrationMessage::set_depth_compression_type(DepthCompressionType depthCompressionType)
 {
-  memcpy(&m_data[m_depthCompressionTypeSegment.first], reinterpret_cast<const char*>(&depthCompressionType), m_depthCompressionTypeSegment.second);
+  write_simple(depthCompressionType, m_depthCompressionTypeSegment);
 }
 
 void RGBDCalibrationMessage::set_rgb_compression_type(RGBCompressionType rgbCompressionType)
 {
-  memcpy(&m_data[m_rgbCompressionTypeSegment.first], reinterpret_cast<const char*>(&rgbCompressionType), m_rgbCompressionTypeSegment.second);
+  write_simple(rgbCompressionType, m_rgbCompressionTypeSegment);
 }
 
 }

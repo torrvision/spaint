@@ -1,31 +1,26 @@
 /**
- * itmx: MessageSegmentUtil.cpp
+ * itmx: MappingMessage.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#include "remotemapping/MessageSegmentUtil.h"
+#include "remotemapping/MappingMessage.h"
 using namespace tvgutil;
 
 #include <ORUtils/Math.h>
 
 namespace itmx {
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+//#################### PROTECTED MEMBER FUNCTIONS ####################
 
-size_t MessageSegmentUtil::bytes_for_pose()
-{
-  return sizeof(Matrix4f) + 6 * sizeof(float);
-}
-
-ORUtils::SE3Pose MessageSegmentUtil::extract_pose(const std::vector<char>& data, const Segment& segment)
+ORUtils::SE3Pose MappingMessage::read_pose(const Segment& segment) const
 {
   ORUtils::SE3Pose pose;
 
   // Extract both the 4x4 matrix and the rotation/translation vector representations of the pose from the message.
-  Matrix4f M = *reinterpret_cast<const Matrix4f*>(&data[segment.first]);
+  Matrix4f M = *reinterpret_cast<const Matrix4f*>(&m_data[segment.first]);
 
   float params[6];
-  memcpy(params, &data[segment.first + sizeof(Matrix4f)], 6 * sizeof(float));
+  memcpy(params, &m_data[segment.first + sizeof(Matrix4f)], 6 * sizeof(float));
 
   // Check whether or not the rotation/translation vector representation of the pose is valid. Currently, PC clients
   // send both the matrix and the rotation/translation vector representations across to the server to allow it to
@@ -50,10 +45,17 @@ ORUtils::SE3Pose MessageSegmentUtil::extract_pose(const std::vector<char>& data,
   return pose;
 }
 
-void MessageSegmentUtil::set_pose(const ORUtils::SE3Pose& pose, std::vector<char>& data, const Segment& segment)
+void MappingMessage::write_pose(const ORUtils::SE3Pose& pose, const Segment& segment)
 {
-  memcpy(&data[segment.first], reinterpret_cast<const char*>(&pose.GetM()), sizeof(Matrix4f));
-  memcpy(&data[segment.first + sizeof(Matrix4f)], reinterpret_cast<const char*>(pose.GetParams()), 6 * sizeof(float));
+  memcpy(&m_data[segment.first], reinterpret_cast<const char*>(&pose.GetM()), sizeof(Matrix4f));
+  memcpy(&m_data[segment.first + sizeof(Matrix4f)], reinterpret_cast<const char*>(pose.GetParams()), 6 * sizeof(float));
+}
+
+//#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
+
+size_t MappingMessage::bytes_for_pose()
+{
+  return sizeof(Matrix4f) + 6 * sizeof(float);
 }
 
 }

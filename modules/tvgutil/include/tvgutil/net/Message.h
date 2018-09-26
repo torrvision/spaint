@@ -17,7 +17,7 @@ namespace tvgutil {
 class Message
 {
   //#################### TYPEDEFS ####################
-public:
+protected:
   /** An (offset, size) pair used to specify a byte segment within the message data. */
   typedef std::pair<size_t,size_t> Segment;
 
@@ -55,6 +55,32 @@ public:
    * \return  The size of the message.
    */
   size_t get_size() const;
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Reads a simple value from the specified byte segment in the message.
+   *
+   * \param segment The byte segment from which to read the value.
+   * \return        The value.
+   */
+  template <typename T>
+  T read_simple(const Segment& segment) const
+  {
+    return *reinterpret_cast<const T*>(&m_data[segment.first]);
+  }
+
+  /**
+   * \brief Writes a simple value into the specified byte segment in the message.
+   *
+   * \param value   The value.
+   * \param segment The byte segment into which to write it.
+   */
+  template <typename T>
+  void write_simple(const T& value, const Segment& segment)
+  {
+    memcpy(&m_data[segment.first], reinterpret_cast<const char*>(&value), segment.second);
+  }
 };
 
 }
