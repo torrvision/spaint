@@ -66,7 +66,7 @@ public:
   void set_image_size(const Vector2i& imgSize);
 
   /**
-   * \brief Copies the pose from which to render into the appropriate byte segment in the message.
+   * \brief Sets the pose from which to render.
    *
    * \param pose  The pose from which to render.
    */
