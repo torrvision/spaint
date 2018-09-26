@@ -66,19 +66,23 @@ void MappingClientHandler::run_iter()
         std::cout << "Receiving get rendered image request from client" << std::endl;
 #endif
 
+        // Grab the rendered image to send across to the client, locking the associated mutex for the duration of the process.
         RenderedImageHandler_Ptr imageHandler = get_rendered_image();
-        if(!imageHandler->get()) break;
 
+        // Prepare the rendering response message (we reuse an uncompressed RGB-D frame for this to avoid creating a new message type).
         if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandler->get()->noDims)
         {
-          m_renderingResponseMessage.reset(new RGBDFrameMessage(imageHandler->get()->noDims, Vector2i(640,480)));
+          m_renderingResponseMessage.reset(new RGBDFrameMessage(imageHandler->get()->noDims, Vector2i(1,1)));
         }
 
         m_renderingResponseMessage->set_frame_index(-1);
         m_renderingResponseMessage->set_rgb_image(imageHandler->get());
+
+        // Compress the rendering response message for transmission over the network.
+        // FIXME: Consider using a separate frame compressor for rendering responses (to avoid continually resizing this one's internal images).
         m_frameCompressor->compress_rgbd_frame(*m_renderingResponseMessage, m_headerMessage, *m_frameMessage);
 
-        // TODO: Comment here.
+        // Send the rendering response to the client, and wait for an acknowledgement before proceeding.
         AckMessage ackMsg;
         m_connectionOk = m_connectionOk && write_message(m_headerMessage) && write_message(*m_frameMessage) && read_message(ackMsg);
 
