@@ -94,8 +94,7 @@ void MappingServer::get_pose(int clientID, ORUtils::SE3Pose& pose)
 MappingClientHandler::RenderingImageHandler_Ptr MappingServer::get_rendering_image(int clientID) const
 {
   ClientHandler_Ptr clientHandler = get_client_handler(clientID);
-  if(clientHandler) return clientHandler->get_rendering_image();
-  else return MappingClientHandler::RenderingImageHandler_Ptr();
+  return clientHandler ? clientHandler->get_rendering_image() : MappingClientHandler::RenderingImageHandler_Ptr();
 }
 
 boost::optional<RenderingRequestMessage> MappingServer::get_rendering_request(int clientID) const

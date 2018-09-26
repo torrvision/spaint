@@ -15,7 +15,7 @@ CompressedRGBDFrameMessage::CompressedRGBDFrameMessage(const CompressedRGBDFrame
 {
   // The frame index and pose have a fixed size and position in the message.
   m_frameIndexSegment = std::make_pair(0, sizeof(int));
-  m_poseSegment = std::make_pair(m_frameIndexSegment.second, bytes_for_pose());
+  m_poseSegment = std::make_pair(end_of(m_frameIndexSegment), bytes_for_pose());
 
   // The depth and RGB segments' size and position can be obtained from the header message.
   set_compressed_image_sizes(headerMsg);
