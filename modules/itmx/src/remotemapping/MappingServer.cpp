@@ -104,7 +104,7 @@ boost::optional<RenderingRequestMessage> MappingServer::get_rendering_request(in
   if(clientHandler)
   {
     boost::lock_guard<boost::mutex> lock(clientHandler->m_renderingRequestMutex);
-    return clientHandler->m_renderingRequestMsg;
+    return clientHandler->m_renderingRequestMessage;
   }
   else return boost::none;
 }

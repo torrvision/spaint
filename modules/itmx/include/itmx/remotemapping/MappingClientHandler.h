@@ -99,10 +99,13 @@ public:
   boost::mutex m_renderingImageMutex;
 
   /** An optional rendering request, containing a pose (in the client's coordinate system) from which the client wants the server to render the scene. */
-  boost::optional<RenderingRequestMessage> m_renderingRequestMsg;
+  boost::optional<RenderingRequestMessage> m_renderingRequestMessage;
 
   /** The synchronisation mutex for the rendering request. */
   boost::mutex m_renderingRequestMutex;
+
+  /** A place in which to store uncompressed RGB-D frame messages that can be used to send server-rendered images back to the client. */
+  RGBDFrameMessage_Ptr m_renderingResponseMessage;
 
   //#################### CONSTRUCTORS ####################
 public:

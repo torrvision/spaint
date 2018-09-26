@@ -69,15 +69,14 @@ void MappingClientHandler::run_iter()
         RenderingImageHandler_Ptr imageHandler = get_rendering_image();
         if(!imageHandler->get()) break;
 
-        static RGBDFrameMessage_Ptr uncompressedFrameMessage;
-        if(!uncompressedFrameMessage || uncompressedFrameMessage->get_rgb_image_size() != imageHandler->get()->noDims)
+        if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandler->get()->noDims)
         {
-          uncompressedFrameMessage.reset(new RGBDFrameMessage(imageHandler->get()->noDims, Vector2i(640,480)));
+          m_renderingResponseMessage.reset(new RGBDFrameMessage(imageHandler->get()->noDims, Vector2i(640,480)));
         }
 
-        uncompressedFrameMessage->set_frame_index(-1);
-        uncompressedFrameMessage->set_rgb_image(imageHandler->get());
-        m_frameCompressor->compress_rgbd_frame(*uncompressedFrameMessage, m_headerMessage, *m_frameMessage);
+        m_renderingResponseMessage->set_frame_index(-1);
+        m_renderingResponseMessage->set_rgb_image(imageHandler->get());
+        m_frameCompressor->compress_rgbd_frame(*m_renderingResponseMessage, m_headerMessage, *m_frameMessage);
 
         // TODO: Comment here.
         AckMessage ackMsg;
@@ -139,7 +138,7 @@ void MappingClientHandler::run_iter()
         {
           // If that succeeds, store the pose so that it can be picked up by the renderer and send an acknowledgement to the client.
           boost::lock_guard<boost::mutex> lock(m_renderingRequestMutex);
-          m_renderingRequestMsg = renderingRequestMsg;
+          m_renderingRequestMessage = renderingRequestMsg;
           m_connectionOk = write_message(AckMessage());
         }
 
