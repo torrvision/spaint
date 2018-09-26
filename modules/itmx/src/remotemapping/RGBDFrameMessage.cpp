@@ -15,10 +15,10 @@ RGBDFrameMessage::RGBDFrameMessage(const Vector2i& rgbImageSize, const Vector2i&
 : m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize)
 {
   m_frameIndexSegment = std::make_pair(0, sizeof(int));
-  m_poseSegment = std::make_pair(m_frameIndexSegment.second, bytes_for_pose());
-  m_rgbImageSegment = std::make_pair(m_poseSegment.first + m_poseSegment.second, rgbImageSize.width * rgbImageSize.height * sizeof(Vector4u));
-  m_depthImageSegment = std::make_pair(m_rgbImageSegment.first + m_rgbImageSegment.second, depthImageSize.width * depthImageSize.height * sizeof(short));
-  m_data.resize(m_depthImageSegment.first + m_depthImageSegment.second);
+  m_poseSegment = std::make_pair(end_of(m_frameIndexSegment), bytes_for_pose());
+  m_rgbImageSegment = std::make_pair(end_of(m_poseSegment), rgbImageSize.width * rgbImageSize.height * sizeof(Vector4u));
+  m_depthImageSegment = std::make_pair(end_of(m_rgbImageSegment), depthImageSize.width * depthImageSize.height * sizeof(short));
+  m_data.resize(end_of(m_depthImageSegment));
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

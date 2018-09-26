@@ -28,4 +28,11 @@ size_t Message::get_size() const
   return m_data.size();
 }
 
+//#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
+
+size_t Message::end_of(const Segment& segment)
+{
+  return segment.first + segment.second;
+}
+
 }

@@ -13,15 +13,15 @@ namespace itmx {
 RGBDCalibrationMessage::RGBDCalibrationMessage()
 {
   m_depthCompressionTypeSegment = std::make_pair(0, sizeof(DepthCompressionType));
-  m_rgbCompressionTypeSegment = std::make_pair(m_depthCompressionTypeSegment.first + m_depthCompressionTypeSegment.second, sizeof(RGBCompressionType));
+  m_rgbCompressionTypeSegment = std::make_pair(end_of(m_depthCompressionTypeSegment), sizeof(RGBCompressionType));
   m_calibSegment = std::make_pair(
-    m_rgbCompressionTypeSegment.first + m_rgbCompressionTypeSegment.second,
+    end_of(m_rgbCompressionTypeSegment),
     sizeof(Vector2f) + sizeof(ITMDisparityCalib::TrafoType) + // disparityCalib
     sizeof(Vector2i) + sizeof(Vector4f) +                     // intrinsics_d
     sizeof(Vector2i) + sizeof(Vector4f) +                     // intrinsics_rgb
     sizeof(Matrix4f)                                          // trafo_rgb_to_depth
   );
-  m_data.resize(m_calibSegment.first + m_calibSegment.second);
+  m_data.resize(end_of(m_calibSegment));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

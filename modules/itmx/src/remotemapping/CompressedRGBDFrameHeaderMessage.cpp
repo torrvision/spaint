@@ -14,10 +14,10 @@ namespace itmx {
 CompressedRGBDFrameHeaderMessage::CompressedRGBDFrameHeaderMessage()
 {
   m_depthImageByteSizeSegment = std::make_pair(0, sizeof(uint32_t));
-  m_depthImageSizeSegment = std::make_pair(m_depthImageByteSizeSegment.second, sizeof(Vector2i));
-  m_rgbImageByteSizeSegment = std::make_pair(m_depthImageSizeSegment.first + m_depthImageSizeSegment.second, sizeof(uint32_t));
-  m_rgbImageSizeSegment = std::make_pair(m_rgbImageByteSizeSegment.first + m_rgbImageByteSizeSegment.second, sizeof(Vector2i));
-  m_data.resize(m_rgbImageSizeSegment.first + m_rgbImageSizeSegment.second);
+  m_depthImageSizeSegment = std::make_pair(end_of(m_depthImageByteSizeSegment), sizeof(Vector2i));
+  m_rgbImageByteSizeSegment = std::make_pair(end_of(m_depthImageSizeSegment), sizeof(uint32_t));
+  m_rgbImageSizeSegment = std::make_pair(end_of(m_rgbImageByteSizeSegment), sizeof(Vector2i));
+  m_data.resize(end_of(m_rgbImageSizeSegment));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

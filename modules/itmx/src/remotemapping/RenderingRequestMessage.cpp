@@ -12,9 +12,9 @@ namespace itmx {
 RenderingRequestMessage::RenderingRequestMessage()
 {
   m_imageSizeSegment = std::make_pair(0, sizeof(Vector2i));
-  m_poseSegment = std::make_pair(m_imageSizeSegment.first + m_imageSizeSegment.second, bytes_for_pose());
-  m_visualisationTypeSegment = std::make_pair(m_poseSegment.first + m_poseSegment.second, sizeof(int));
-  m_data.resize(m_visualisationTypeSegment.first + m_visualisationTypeSegment.second);
+  m_poseSegment = std::make_pair(end_of(m_imageSizeSegment), bytes_for_pose());
+  m_visualisationTypeSegment = std::make_pair(end_of(m_poseSegment), sizeof(int));
+  m_data.resize(end_of(m_visualisationTypeSegment));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

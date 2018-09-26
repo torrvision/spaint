@@ -37,9 +37,9 @@ void CompressedRGBDFrameMessage::extract_rgb_image_data(std::vector<uint8_t>& rg
 
 void CompressedRGBDFrameMessage::set_compressed_image_sizes(const CompressedRGBDFrameHeaderMessage& headerMsg)
 {
-  m_depthImageSegment = std::make_pair(m_poseSegment.first + m_poseSegment.second, headerMsg.extract_depth_image_byte_size());
-  m_rgbImageSegment = std::make_pair(m_depthImageSegment.first + m_depthImageSegment.second, headerMsg.extract_rgb_image_byte_size());
-  m_data.resize(m_rgbImageSegment.first + m_rgbImageSegment.second);
+  m_depthImageSegment = std::make_pair(end_of(m_poseSegment), headerMsg.extract_depth_image_byte_size());
+  m_rgbImageSegment = std::make_pair(end_of(m_depthImageSegment), headerMsg.extract_rgb_image_byte_size());
+  m_data.resize(end_of(m_rgbImageSegment));
 }
 
 void CompressedRGBDFrameMessage::set_depth_image_data(const std::vector<uint8_t>& depthImageData)

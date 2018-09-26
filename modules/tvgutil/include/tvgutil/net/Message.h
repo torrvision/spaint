@@ -81,6 +81,16 @@ protected:
   {
     memcpy(&m_data[segment.first], reinterpret_cast<const char*>(&value), segment.second);
   }
+
+  //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Gets the end offset of the specified message segment.
+   *
+   * \param segment The segment.
+   * \return        The end offset of the segment.
+   */
+  static size_t end_of(const Segment& segment);
 };
 
 }
