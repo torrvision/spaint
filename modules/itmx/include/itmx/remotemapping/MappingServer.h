@@ -69,12 +69,12 @@ public:
   void get_pose(int clientID, ORUtils::SE3Pose& pose);
 
   /**
-   * \brief Grabs the image (if any) that the server has rendered for the specified client.
+   * \brief Gets the image (if any) that the server has rendered for the specified client.
    *
    * \param clientID  The ID of the client whose rendered image we want to get.
    * \return          A handle providing exclusive access to the image (if any) that the server has rendered for the specified client.
    */
-  MappingClientHandler::ORUChar4Image_Ptr_EH get_rendered_image(int clientID) const;
+  tvgutil::ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type get_rendered_image(int clientID) const;
 
   /**
    * \brief Gets the rendering request (if any) for the specified client.

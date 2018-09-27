@@ -39,9 +39,14 @@ const Vector2i& MappingClientHandler::get_depth_image_size() const
   return m_calib.intrinsics_d.imgSize;
 }
 
-MappingClientHandler::ORUChar4Image_Ptr_EH MappingClientHandler::get_rendered_image()
+ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type MappingClientHandler::get_rendered_image()
 {
   return make_exclusive_handle(m_renderedImage, m_renderedImageMutex);
+}
+
+ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type MappingClientHandler::get_rendering_request()
+{
+  return make_exclusive_handle(m_renderingRequestMessage, m_renderingRequestMutex);
 }
 
 const Vector2i& MappingClientHandler::get_rgb_image_size() const
@@ -68,7 +73,7 @@ void MappingClientHandler::run_iter()
 
         // Try to grab the rendered image to send across to the client, locking the associated mutex for the duration of the process.
         // If no image has been rendered for the client, early out.
-        ORUChar4Image_Ptr_EH imageHandle = get_rendered_image();
+        ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type imageHandle = get_rendered_image();
         if(!imageHandle->get()) break;
 
         // Prepare the rendering response message (we reuse an uncompressed RGB-D frame for this to avoid creating a new message type).
@@ -143,8 +148,8 @@ void MappingClientHandler::run_iter()
         if((m_connectionOk = read_message(renderingRequestMsg)))
         {
           // If that succeeds, store the request so that it can be picked up by the renderer, and send an acknowledgement to the client.
-          boost::lock_guard<boost::mutex> lock(m_renderingRequestMutex);
-          m_renderingRequestMessage = renderingRequestMsg;
+          ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type requestHandle = get_rendering_request();
+          requestHandle->get() = renderingRequestMsg;
           m_connectionOk = write_message(AckMessage());
         }
 

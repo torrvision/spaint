@@ -23,8 +23,6 @@ namespace itmx {
 class MappingClientHandler : public tvgutil::ClientHandler
 {
   //#################### TYPEDEFS ####################
-public:
-  typedef boost::shared_ptr<tvgutil::ExclusiveHandle<ORUChar4Image_Ptr> > ORUChar4Image_Ptr_EH;
 private:
   typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
   typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
@@ -61,7 +59,7 @@ public:
   /** The synchronisation mutex for the rendered image. */
   boost::mutex m_renderedImageMutex;
 
-  /** An optional rendering request, containing a pose (in the client's coordinate system) from which the client wants the server to render the scene. */
+  /** An optional request from the client for the server to render the scene. */
   boost::optional<RenderingRequestMessage> m_renderingRequestMessage;
 
   /** The synchronisation mutex for the rendering request. */
@@ -91,11 +89,18 @@ public:
   const Vector2i& get_depth_image_size() const;
 
   /**
-   * \brief Grabs the image (if any) that the server has rendered for the client.
+   * \brief Gets the image (if any) that the server has rendered for the client.
    *
    * \return  A handle providing exclusive access to the image (if any) that the server has rendered for the client.
    */
-  ORUChar4Image_Ptr_EH get_rendered_image();
+  tvgutil::ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type get_rendered_image();
+
+  /**
+   * \brief Gets the current request (if any) from the client for the server to render the scene.
+   *
+   * \return  A handle providing exclusive access to the request (if any) from the client for the server to render the scene.
+   */
+  tvgutil::ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type get_rendering_request();
 
   /**
    * \brief Gets the size of the colour images produced by the client.

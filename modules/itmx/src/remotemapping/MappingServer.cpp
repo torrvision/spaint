@@ -6,6 +6,7 @@
 #include "remotemapping/MappingServer.h"
 using boost::asio::ip::tcp;
 using namespace ITMLib;
+using namespace tvgutil;
 
 #include <iostream>
 
@@ -91,10 +92,10 @@ void MappingServer::get_pose(int clientID, ORUtils::SE3Pose& pose)
   clientHandler->m_poseDirty = true;
 }
 
-MappingClientHandler::ORUChar4Image_Ptr_EH MappingServer::get_rendered_image(int clientID) const
+ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type MappingServer::get_rendered_image(int clientID) const
 {
   ClientHandler_Ptr clientHandler = get_client_handler(clientID);
-  return clientHandler ? clientHandler->get_rendered_image() : MappingClientHandler::ORUChar4Image_Ptr_EH();
+  return clientHandler ? clientHandler->get_rendered_image() : ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type();
 }
 
 boost::optional<RenderingRequestMessage> MappingServer::get_rendering_request(int clientID) const
@@ -102,8 +103,8 @@ boost::optional<RenderingRequestMessage> MappingServer::get_rendering_request(in
   ClientHandler_Ptr clientHandler = get_client_handler(clientID);
   if(clientHandler)
   {
-    boost::lock_guard<boost::mutex> lock(clientHandler->m_renderingRequestMutex);
-    return clientHandler->m_renderingRequestMessage;
+    ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type requestHandle = clientHandler->get_rendering_request();
+    return requestHandle->get();
   }
   else return boost::none;
 }

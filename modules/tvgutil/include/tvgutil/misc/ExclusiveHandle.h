@@ -10,7 +10,7 @@
 
 namespace tvgutil {
 
-//#################### MAIN CLASS ####################
+//#################### MAIN TYPE ####################
 
 /**
  * \brief An instance of an instantiation of this class template can be used to provide exclusive access to an object.
@@ -82,6 +82,14 @@ boost::shared_ptr<ExclusiveHandle<T> > make_exclusive_handle(T& object, boost::m
 {
   return boost::shared_ptr<ExclusiveHandle<T> >(new ExclusiveHandle<T>(object, mutex));
 }
+
+//#################### HELPER TYPES ####################
+
+template <typename T>
+struct ExclusiveHandle_Ptr
+{
+  typedef boost::shared_ptr<ExclusiveHandle<T> > Type;
+};
 
 }
 

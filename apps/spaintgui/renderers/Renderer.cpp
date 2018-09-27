@@ -7,6 +7,7 @@
 using namespace ITMLib;
 using namespace ORUtils;
 using namespace rigging;
+using namespace tvgutil;
 
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
@@ -258,10 +259,10 @@ void Renderer::render_client_images() const
   std::vector<int> clients = mappingServer->get_active_clients();
   for(size_t i = 0, size = clients.size(); i < size; ++i)
   {
-    MappingClientHandler::ORUChar4Image_Ptr_EH imageHandle = mappingServer->get_rendered_image(clients[i]);
+    ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type imageHandle = mappingServer->get_rendered_image(clients[i]);
     if(!imageHandle) continue;
 
-    const boost::optional<RenderingRequestMessage>& request = mappingServer->get_rendering_request(clients[i]);
+    const boost::optional<RenderingRequestMessage> request = mappingServer->get_rendering_request(clients[i]);
     if(!request) continue;
 
     ORUChar4Image_Ptr& image = imageHandle->get();
