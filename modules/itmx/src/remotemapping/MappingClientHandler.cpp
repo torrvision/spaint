@@ -64,6 +64,11 @@ const Vector2i& MappingClientHandler::get_rgb_image_size() const
   return m_calib.intrinsics_rgb.imgSize;
 }
 
+const std::string& MappingClientHandler::get_scene_id() const
+{
+  return m_sceneID;
+}
+
 bool MappingClientHandler::images_dirty() const
 {
   return m_imagesDirty;
@@ -241,6 +246,11 @@ void MappingClientHandler::set_images_dirty(bool imagesDirty)
 void MappingClientHandler::set_pose_dirty(bool poseDirty)
 {
   m_poseDirty = poseDirty;
+}
+
+void MappingClientHandler::set_scene_id(const std::string& sceneID)
+{
+  m_sceneID = sceneID;
 }
 
 }

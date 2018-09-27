@@ -94,6 +94,14 @@ public:
   Vector2i get_rgb_image_size(int clientID) const;
 
   /**
+   * \brief Gets the scene ID that is associated with the specified client.
+   *
+   * \param clientID  The ID of the client whose scene ID we want to get.
+   * \return          The scene ID associated with the specified client, if the client is currently active, or the empty string otherwise.
+   */
+  std::string get_scene_id(int clientID) const;
+
+  /**
    * \brief Gets whether or not the specified client is currently active and ready to yield an RGB-D frame.
    *
    * \param clientID  The ID of the client to check.
@@ -108,6 +116,14 @@ public:
    * \return          true, if the client is currently active and may still have more RGB-D frames to yield, or false otherwise.
    */
   bool has_more_images(int clientID) const;
+
+  /**
+   * \brief Sets the scene ID that is associated with the specified client.
+   *
+   * \param clientID  The ID of the client whose scene ID we want to set.
+   * \param sceneID   The scene ID to associate with the client.
+   */
+  void set_scene_id(int clientID, const std::string& sceneID);
 };
 
 //#################### TYPEDEFS ####################

@@ -68,6 +68,9 @@ private:
   /** A place in which to store uncompressed RGB-D frame messages that can be used to send server-rendered images back to the client. */
   RGBDFrameMessage_Ptr m_renderingResponseMessage;
 
+  /** The scene ID that is associated with the client. */
+  std::string m_sceneID;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -117,6 +120,13 @@ public:
   tvgutil::ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type get_rendering_request();
 
   /**
+   * \brief Gets the scene ID that is associated with the client.
+   *
+   * \return  The scene ID that is associated with the client.
+   */
+  const std::string& get_scene_id() const;
+
+  /**
    * \brief Gets whether or not the images associated with the first message in the queue have already been read.
    *
    * \return  Whether or not the images associated with the first message in the queue have already been read.
@@ -159,6 +169,13 @@ public:
    * \param poseDirty Whether or not the pose associated with the first message in the queue has already been read.
    */
   void set_pose_dirty(bool poseDirty);
+
+  /**
+   * \brief Sets the scene ID that is associated with the client.
+   *
+   * \param sceneID The scene ID that is associated with the client.
+   */
+  void set_scene_id(const std::string& sceneID);
 };
 
 }

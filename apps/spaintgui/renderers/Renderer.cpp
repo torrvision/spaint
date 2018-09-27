@@ -275,9 +275,10 @@ void Renderer::render_client_images() const
     image->ChangeDims(request->extract_image_size());
 
     // Render the requested image for the client.
-    // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded.
+    // FIXME: The camera intrinsics shouldn't be hard-coded.
     // FIXME: The render states should be cached unless the size changes.
-    const std::string primarySceneID = Model::get_world_scene_id();
+    std::string primarySceneID = mappingServer->get_scene_id(clients[i]);
+    if(primarySceneID == "") primarySceneID = Model::get_world_scene_id();
     ITMIntrinsics intrinsics(image->noDims);
     VoxelRenderState_Ptr voxelRenderState;
     SurfelRenderState_Ptr surfelRenderState;

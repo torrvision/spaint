@@ -118,6 +118,12 @@ Vector2i MappingServer::get_rgb_image_size(int clientID) const
   return clientHandler ? clientHandler->get_rgb_image_size() : Vector2i();
 }
 
+std::string MappingServer::get_scene_id(int clientID) const
+{
+  ClientHandler_Ptr clientHandler = get_client_handler(clientID);
+  return clientHandler ? clientHandler->get_scene_id() : "";
+}
+
 bool MappingServer::has_images_now(int clientID) const
 {
   // Look up the handler for the client. If the client is no longer active, early out.
@@ -135,6 +141,12 @@ bool MappingServer::has_images_now(int clientID) const
 bool MappingServer::has_more_images(int clientID) const
 {
   return !has_finished(clientID);
+}
+
+void MappingServer::set_scene_id(int clientID, const std::string& sceneID)
+{
+  ClientHandler_Ptr clientHandler = get_client_handler(clientID);
+  if(clientHandler) clientHandler->set_scene_id(sceneID);
 }
 
 }
