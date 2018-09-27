@@ -39,26 +39,29 @@ ORUChar4Image_CPtr MappingClient::get_remote_image() const
 
   boost::lock_guard<boost::mutex> lock(m_interactionMutex);
 
+  // Ask the server to send across the RGB-D image it has rendered for this client.
   if(m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()))
   {
+    // Read the compressed RGB-D frame it sends back.
     CompressedRGBDFrameHeaderMessage headerMsg;
     if(m_stream.read(headerMsg.get_data_ptr(), headerMsg.get_size()))
     {
       CompressedRGBDFrameMessage frameMsg(headerMsg);
       if(m_stream.read(frameMsg.get_data_ptr(), frameMsg.get_size()))
       {
+        // Send an acknowledgement that we've received the frame.
         m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size());
 
-        // FIXME: Avoid recreating this every time.
+        // Uncompress the frame.
+        // FIXME: Avoid creating a new uncompressed frame every time.
         const Vector2i rgbImageSize = headerMsg.extract_rgb_image_size();
         const Vector2i depthImageSize = headerMsg.extract_depth_image_size();
         RGBDFrameMessage uncompressedFrameMsg(rgbImageSize, depthImageSize);
-
         m_frameCompressor->uncompress_rgbd_frame(frameMsg, uncompressedFrameMsg);
 
+        // Extract the colour image from the frame and use it to update the remote image for this client.
         if(!m_remoteImage) m_remoteImage.reset(new ORUChar4Image(rgbImageSize, true, false));
         m_remoteImage->ChangeDims(rgbImageSize);
-
         uncompressedFrameMsg.extract_rgb_image(m_remoteImage.get());
 
         return m_remoteImage;
@@ -66,6 +69,7 @@ ORUChar4Image_CPtr MappingClient::get_remote_image() const
     }
   }
 
+  // If anything went wrong, return a blank image.
   return ORUChar4Image_CPtr();
 }
 
