@@ -39,9 +39,9 @@ const Vector2i& MappingClientHandler::get_depth_image_size() const
   return m_calib.intrinsics_d.imgSize;
 }
 
-MappingClientHandler::RenderedImageHandler_Ptr MappingClientHandler::get_rendered_image()
+MappingClientHandler::ORUChar4Image_Ptr_EH MappingClientHandler::get_rendered_image()
 {
-  return RenderedImageHandler_Ptr(new RenderedImageHandler(this));
+  return make_exclusive_handle(m_renderedImage, m_renderedImageMutex);
 }
 
 const Vector2i& MappingClientHandler::get_rgb_image_size() const
@@ -68,17 +68,17 @@ void MappingClientHandler::run_iter()
 
         // Try to grab the rendered image to send across to the client, locking the associated mutex for the duration of the process.
         // If no image has been rendered for the client, early out.
-        RenderedImageHandler_Ptr imageHandler = get_rendered_image();
-        if(!imageHandler->get()) break;
+        ORUChar4Image_Ptr_EH imageHandle = get_rendered_image();
+        if(!imageHandle->get()) break;
 
         // Prepare the rendering response message (we reuse an uncompressed RGB-D frame for this to avoid creating a new message type).
-        if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandler->get()->noDims)
+        if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandle->get()->noDims)
         {
-          m_renderingResponseMessage.reset(new RGBDFrameMessage(imageHandler->get()->noDims, Vector2i(1,1)));
+          m_renderingResponseMessage.reset(new RGBDFrameMessage(imageHandle->get()->noDims, Vector2i(1,1)));
         }
 
         m_renderingResponseMessage->set_frame_index(-1);
-        m_renderingResponseMessage->set_rgb_image(imageHandler->get());
+        m_renderingResponseMessage->set_rgb_image(imageHandle->get());
 
         // Compress the rendering response message for transmission over the network.
         // FIXME: Consider using a separate frame compressor for rendering responses (to avoid continually resizing this one's internal images).

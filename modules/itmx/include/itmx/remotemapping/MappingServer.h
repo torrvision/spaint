@@ -71,12 +71,10 @@ public:
   /**
    * \brief Grabs the image (if any) that the server has rendered for the specified client.
    *
-   * \note  The returned handler locks the associated mutex until the caller has finished using the image, preventing a race condition.
-   *
    * \param clientID  The ID of the client whose rendered image we want to get.
-   * \return          A handler providing access to the image (if any) that the server has rendered for the specified client.
+   * \return          A handle providing exclusive access to the image (if any) that the server has rendered for the specified client.
    */
-  MappingClientHandler::RenderedImageHandler_Ptr get_rendered_image(int clientID) const;
+  MappingClientHandler::ORUChar4Image_Ptr_EH get_rendered_image(int clientID) const;
 
   /**
    * \brief Gets the rendering request (if any) for the specified client.

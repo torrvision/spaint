@@ -258,13 +258,13 @@ void Renderer::render_client_images() const
   std::vector<int> clients = mappingServer->get_active_clients();
   for(size_t i = 0, size = clients.size(); i < size; ++i)
   {
-    MappingClientHandler::RenderedImageHandler_Ptr imageHandler = mappingServer->get_rendered_image(clients[i]);
-    if(!imageHandler) continue;
+    MappingClientHandler::ORUChar4Image_Ptr_EH imageHandle = mappingServer->get_rendered_image(clients[i]);
+    if(!imageHandle) continue;
 
     const boost::optional<RenderingRequestMessage>& request = mappingServer->get_rendering_request(clients[i]);
     if(!request) continue;
 
-    ORUChar4Image_Ptr& image = imageHandler->get();
+    ORUChar4Image_Ptr& image = imageHandle->get();
     if(!image) image.reset(new ORUChar4Image(request->extract_image_size(), true, true));
     image->ChangeDims(request->extract_image_size());
 

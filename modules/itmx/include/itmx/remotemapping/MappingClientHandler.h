@@ -9,6 +9,7 @@
 #include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
 #include <tvgutil/containers/PooledQueue.h>
+#include <tvgutil/misc/ExclusiveHandle.h>
 #include <tvgutil/net/ClientHandler.h>
 
 #include "RenderingRequestMessage.h"
@@ -22,56 +23,11 @@ namespace itmx {
 class MappingClientHandler : public tvgutil::ClientHandler
 {
   //#################### TYPEDEFS ####################
+public:
+  typedef boost::shared_ptr<tvgutil::ExclusiveHandle<ORUChar4Image_Ptr> > ORUChar4Image_Ptr_EH;
 private:
   typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
   typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
-
-  //#################### NESTED TYPES ####################
-public:
-  /**
-   * \brief An instance of this class can be used to provide exclusive access to the image (if any) that the server has rendered for the client.
-   */
-  class RenderedImageHandler
-  {
-    //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
-  private:
-    /** The handler managing the connection to the client. */
-    MappingClientHandler *m_clientHandler;
-
-    /** The lock used to provide exclusive access to the image. */
-    boost::lock_guard<boost::mutex> m_lock;
-
-    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-  public:
-    /**
-     * \brief Constructs a rendered image handler.
-     *
-     * \param clientHandler The handler managing the connection to the client.
-     */
-    RenderedImageHandler(MappingClientHandler *clientHandler)
-    : m_clientHandler(clientHandler), m_lock(clientHandler->m_renderedImageMutex)
-    {}
-
-    //~~~~~~~~~~~~~~~~~~~~ COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ~~~~~~~~~~~~~~~~~~~~
-  private:
-    // Deliberately private and unimplemented.
-    RenderedImageHandler(const RenderedImageHandler&);
-    RenderedImageHandler& operator=(const RenderedImageHandler&);
-
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
-  public:
-    /**
-     * \brief Gets the image (if any) that the server has rendered for the client.
-     *
-     * \return  The image (if any) that the server has rendered for the client.
-     */
-    ORUChar4Image_Ptr& get()
-    {
-      return m_clientHandler->m_renderedImage;
-    }
-  };
-
-  typedef boost::shared_ptr<RenderedImageHandler> RenderedImageHandler_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
@@ -137,11 +93,9 @@ public:
   /**
    * \brief Grabs the image (if any) that the server has rendered for the client.
    *
-   * \note  The returned handler locks the associated mutex until the caller has finished using the image, preventing a race condition.
-   *
-   * \return  A handler providing access to the image (if any) that the server has rendered for the client.
+   * \return  A handle providing exclusive access to the image (if any) that the server has rendered for the client.
    */
-  RenderedImageHandler_Ptr get_rendered_image();
+  ORUChar4Image_Ptr_EH get_rendered_image();
 
   /**
    * \brief Gets the size of the colour images produced by the client.
