@@ -93,7 +93,6 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
 
   // If we're using a collaborative pipeline, make the primary subwindow render all of the scenes.
   if(pipelineType == "collaborative") config->subwindow(0).set_all_scenes_flag(true);
-  else config->subwindow(0).set_remote_flag(true);
 
   return config;
 }

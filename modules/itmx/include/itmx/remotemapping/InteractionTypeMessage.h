@@ -20,6 +20,9 @@ enum InteractionType
   /** An interaction in which the client asks the server to send across its rendered image of the scene for that client. */
   IT_GETRENDEREDIMAGE,
 
+  /** An interaction in which the client asks the server whether it has ever rendered an image of the scene for that client. */
+  IT_HASRENDEREDIMAGE,
+
   /** An interaction in which the client sends a single RGB-D frame to the server. */
   IT_SENDFRAME,
 

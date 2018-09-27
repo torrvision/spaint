@@ -94,7 +94,12 @@ void MappingClientHandler::run_iter()
         // Try to grab the rendered image to send across to the client, locking the associated mutex for the duration of the process.
         // If no image has been rendered for the client, early out.
         ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type imageHandle = get_rendered_image();
-        if(!imageHandle->get()) break;
+        if(!imageHandle->get())
+        {
+          std::cerr << "Warning: Client " << m_clientID << " attempted to read a non-existent server-rendered image and is probably deadlocked.\n";
+          m_connectionOk = false;
+          break;
+        }
 
         // Prepare the rendering response message (we reuse an uncompressed RGB-D frame for this to avoid creating a new message type).
         if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandle->get()->noDims)
@@ -113,6 +118,13 @@ void MappingClientHandler::run_iter()
         AckMessage ackMsg;
         m_connectionOk = m_connectionOk && write_message(m_headerMessage) && write_message(*m_frameMessage) && read_message(ackMsg);
 
+        break;
+      }
+      case IT_HASRENDEREDIMAGE:
+      {
+        // Send a message to the client indicating whether or not an image has ever been rendered for it, and wait for an acknowledgement before proceeding.
+        AckMessage ackMsg;
+        m_connectionOk = m_connectionOk && write_message(SimpleMessage<bool>(m_renderedImage.get() != NULL)) && read_message(ackMsg);
         break;
       }
       case IT_SENDFRAME:

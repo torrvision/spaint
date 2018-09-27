@@ -837,6 +837,7 @@ void Application::process_renderer_input()
     {
       subwindow.set_type(*type);
       subwindow.set_surfel_flag(m_inputState.key_down(KEYCODE_LSHIFT));
+      subwindow.set_remote_flag(m_inputState.key_down(KEYCODE_LCTRL));
     }
   }
 }

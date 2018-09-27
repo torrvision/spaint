@@ -35,36 +35,45 @@ MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr MappingClient::begin_push_
 ORUChar4Image_CPtr MappingClient::get_remote_image() const
 {
   AckMessage ackMsg;
-  InteractionTypeMessage interactionTypeMsg(IT_GETRENDEREDIMAGE);
+  InteractionTypeMessage interactionTypeMsg(IT_HASRENDEREDIMAGE);
 
   boost::lock_guard<boost::mutex> lock(m_interactionMutex);
 
-  // Ask the server to send across the RGB-D image it has rendered for this client.
+  // Ask the server whether it has ever rendered an RGB-D image for this client.
   if(m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()))
   {
-    // Read the compressed RGB-D frame it sends back.
-    CompressedRGBDFrameHeaderMessage headerMsg;
-    if(m_stream.read(headerMsg.get_data_ptr(), headerMsg.get_size()))
+    SimpleMessage<bool> flag;
+    if(m_stream.read(flag.get_data_ptr(), flag.get_size()) && m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size()) && flag.extract_value())
     {
-      CompressedRGBDFrameMessage frameMsg(headerMsg);
-      if(m_stream.read(frameMsg.get_data_ptr(), frameMsg.get_size()))
+      // If it has, ask it to send across the RGB-D image it has rendered for this client.
+      interactionTypeMsg.set_value(IT_GETRENDEREDIMAGE);
+      if(m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()))
       {
-        // Send an acknowledgement that we've received the frame.
-        m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size());
+        // Read the compressed RGB-D frame it sends across.
+        CompressedRGBDFrameHeaderMessage headerMsg;
+        if(m_stream.read(headerMsg.get_data_ptr(), headerMsg.get_size()))
+        {
+          CompressedRGBDFrameMessage frameMsg(headerMsg);
+          if(m_stream.read(frameMsg.get_data_ptr(), frameMsg.get_size()))
+          {
+            // Send an acknowledgement that we've received the frame.
+            m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size());
 
-        // Uncompress the frame.
-        // FIXME: Avoid creating a new uncompressed frame every time.
-        const Vector2i rgbImageSize = headerMsg.extract_rgb_image_size();
-        const Vector2i depthImageSize = headerMsg.extract_depth_image_size();
-        RGBDFrameMessage uncompressedFrameMsg(rgbImageSize, depthImageSize);
-        m_frameCompressor->uncompress_rgbd_frame(frameMsg, uncompressedFrameMsg);
+            // Uncompress the frame.
+            // FIXME: Avoid creating a new uncompressed frame every time.
+            const Vector2i rgbImageSize = headerMsg.extract_rgb_image_size();
+            const Vector2i depthImageSize = headerMsg.extract_depth_image_size();
+            RGBDFrameMessage uncompressedFrameMsg(rgbImageSize, depthImageSize);
+            m_frameCompressor->uncompress_rgbd_frame(frameMsg, uncompressedFrameMsg);
 
-        // Extract the colour image from the frame and use it to update the remote image for this client.
-        if(!m_remoteImage) m_remoteImage.reset(new ORUChar4Image(rgbImageSize, true, false));
-        m_remoteImage->ChangeDims(rgbImageSize);
-        uncompressedFrameMsg.extract_rgb_image(m_remoteImage.get());
+            // Extract the colour image from the frame and use it to update the remote image for this client.
+            if(!m_remoteImage) m_remoteImage.reset(new ORUChar4Image(rgbImageSize, true, false));
+            m_remoteImage->ChangeDims(rgbImageSize);
+            uncompressedFrameMsg.extract_rgb_image(m_remoteImage.get());
 
-        return m_remoteImage;
+            return m_remoteImage;
+          }
+        }
       }
     }
   }
