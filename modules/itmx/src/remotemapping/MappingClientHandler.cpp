@@ -34,9 +34,19 @@ MappingClientHandler::MappingClientHandler(int clientID, const boost::shared_ptr
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+const ITMLib::ITMRGBDCalib& MappingClientHandler::get_calib() const
+{
+  return m_calib;
+}
+
 const Vector2i& MappingClientHandler::get_depth_image_size() const
 {
   return m_calib.intrinsics_d.imgSize;
+}
+
+const MappingClientHandler::RGBDFrameMessageQueue_Ptr& MappingClientHandler::get_frame_message_queue()
+{
+  return m_frameMessageQueue;
 }
 
 ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type MappingClientHandler::get_rendered_image()
@@ -47,6 +57,16 @@ ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type MappingClientHandler::get_rendered_
 ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type MappingClientHandler::get_rendering_request()
 {
   return make_exclusive_handle(m_renderingRequestMessage, m_renderingRequestMutex);
+}
+
+bool MappingClientHandler::images_dirty() const
+{
+  return m_imagesDirty;
+}
+
+bool MappingClientHandler::pose_dirty() const
+{
+  return m_poseDirty;
 }
 
 const Vector2i& MappingClientHandler::get_rgb_image_size() const
@@ -199,6 +219,16 @@ void MappingClientHandler::run_pre()
     // Signal to the client that the server is ready.
     m_connectionOk = write_message(AckMessage());
   }
+}
+
+void MappingClientHandler::set_images_dirty(bool imagesDirty)
+{
+  m_imagesDirty = imagesDirty;
+}
+
+void MappingClientHandler::set_pose_dirty(bool poseDirty)
+{
+  m_poseDirty = poseDirty;
 }
 
 }

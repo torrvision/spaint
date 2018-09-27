@@ -27,8 +27,8 @@ private:
   typedef tvgutil::PooledQueue<RGBDFrameMessage_Ptr> RGBDFrameMessageQueue;
   typedef boost::shared_ptr<RGBDFrameMessageQueue> RGBDFrameMessageQueue_Ptr;
 
-  //#################### PUBLIC VARIABLES ####################
-public:
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** The calibration parameters of the camera associated with the client. */
   ITMLib::ITMRGBDCalib m_calib;
 
@@ -82,11 +82,25 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets the calibration parameters of the camera associated with the client.
+   *
+   * \return  The calibration parameters of the camera associated with the client.
+   */
+  const ITMLib::ITMRGBDCalib& get_calib() const;
+
+  /**
    * \brief Gets the size of the depth images produced by the client.
    *
    * \return  The size of the depth images produced by the client.
    */
   const Vector2i& get_depth_image_size() const;
+
+  /**
+   * \brief Gets the queue containing the RGB-D frame messages received from the client.
+   *
+   * \return The queue containing the RGB-D frame messages received from the client.
+   */
+  const RGBDFrameMessageQueue_Ptr& get_frame_message_queue();
 
   /**
    * \brief Gets the image (if any) that the server has rendered for the client.
@@ -103,6 +117,20 @@ public:
   tvgutil::ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type get_rendering_request();
 
   /**
+   * \brief Gets whether or not the images associated with the first message in the queue have already been read.
+   *
+   * \return  Whether or not the images associated with the first message in the queue have already been read.
+   */
+  bool images_dirty() const;
+
+  /**
+   * \brief Gets whether or not the pose associated with the first message in the queue has already been read.
+   *
+   * \return  Whether or not the pose associated with the first message in the queue has already been read.
+   */
+  bool pose_dirty() const;
+
+  /**
    * \brief Gets the size of the colour images produced by the client.
    *
    * \return  The size of the colour images produced by the client.
@@ -117,6 +145,20 @@ public:
 
   /** Override */
   virtual void run_pre();
+
+  /**
+   * \brief Sets whether or not the images associated with the first message in the queue have already been read.
+   *
+   * \param imagesDirty Whether or not the images associated with the first message in the queue have already been read.
+   */
+  void set_images_dirty(bool imagesDirty);
+
+  /**
+   * \brief Sets whether or not the pose associated with the first message in the queue has already been read.
+   *
+   * \param poseDirty Whether or not the pose associated with the first message in the queue has already been read.
+   */
+  void set_pose_dirty(bool poseDirty);
 };
 
 }

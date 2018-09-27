@@ -26,7 +26,7 @@ ITMRGBDCalib MappingServer::get_calib(int clientID) const
 {
   // FIXME: What to do when the client no longer exists needs more thought.
   ClientHandler_Ptr clientHandler = get_client_handler(clientID);
-  return clientHandler ? clientHandler->m_calib : ITMRGBDCalib();
+  return clientHandler ? clientHandler->get_calib() : ITMRGBDCalib();
 }
 
 Vector2i MappingServer::get_depth_image_size(int clientID) const
@@ -44,10 +44,11 @@ void MappingServer::get_images(int clientID, ORUChar4Image *rgb, ORShortImage *r
 
   // If the images of the first message on the queue have already been read, it's time to
   // move on to the next frame, so pop the message from the queue and reset the flags.
-  if(clientHandler->m_imagesDirty)
+  if(clientHandler->images_dirty())
   {
-    clientHandler->m_frameMessageQueue->pop();
-    clientHandler->m_imagesDirty = clientHandler->m_poseDirty = false;
+    clientHandler->get_frame_message_queue()->pop();
+    clientHandler->set_images_dirty(false);
+    clientHandler->set_pose_dirty(false);
   }
 
   // Extract the images from the first message on the queue. This will block until the queue
@@ -55,7 +56,7 @@ void MappingServer::get_images(int clientID, ORUChar4Image *rgb, ORShortImage *r
 #if DEBUGGING
   std::cout << "Peeking for message" << std::endl;
 #endif
-  RGBDFrameMessage_Ptr msg = clientHandler->m_frameMessageQueue->peek();
+  RGBDFrameMessage_Ptr msg = clientHandler->get_frame_message_queue()->peek();
 #if DEBUGGING
   std::cout << "Extracting images for frame " << msg->extract_frame_index() << std::endl;
 #endif
@@ -63,7 +64,7 @@ void MappingServer::get_images(int clientID, ORUChar4Image *rgb, ORShortImage *r
   msg->extract_depth_image(rawDepth);
 
   // Record the fact that we've now read the images from the first message on the queue.
-  clientHandler->m_imagesDirty = true;
+  clientHandler->set_images_dirty(true);
 }
 
 void MappingServer::get_pose(int clientID, ORUtils::SE3Pose& pose)
@@ -74,22 +75,23 @@ void MappingServer::get_pose(int clientID, ORUtils::SE3Pose& pose)
 
   // If the pose of the first message on the queue has already been read, it's time to
   // move on to the next frame, so pop the message from the queue and reset the flags.
-  if(clientHandler->m_poseDirty)
+  if(clientHandler->pose_dirty())
   {
-    clientHandler->m_frameMessageQueue->pop();
-    clientHandler->m_imagesDirty = clientHandler->m_poseDirty = false;
+    clientHandler->get_frame_message_queue()->pop();
+    clientHandler->set_images_dirty(false);
+    clientHandler->set_pose_dirty(false);
   }
 
   // Extract the pose from the first message on the queue. This will block until the queue
   // has a message from which to extract the pose.
-  RGBDFrameMessage_Ptr msg = clientHandler->m_frameMessageQueue->peek();
+  RGBDFrameMessage_Ptr msg = clientHandler->get_frame_message_queue()->peek();
 #if DEBUGGING
   std::cout << "Extracting pose for frame " << msg->extract_frame_index() << std::endl;
 #endif
   pose = msg->extract_pose();
 
   // Record the fact that we've now read the pose from the first message on the queue.
-  clientHandler->m_poseDirty = true;
+  clientHandler->set_pose_dirty(true);
 }
 
 ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type MappingServer::get_rendered_image(int clientID) const
@@ -123,8 +125,8 @@ bool MappingServer::has_images_now(int clientID) const
   if(!clientHandler) return false;
 
   // Calculate the effective queue size of the client (this excludes any message that we have already started reading).
-  size_t effectiveQueueSize = clientHandler->m_frameMessageQueue->size();
-  if(clientHandler->m_imagesDirty || clientHandler->m_poseDirty) --effectiveQueueSize;
+  size_t effectiveQueueSize = clientHandler->get_frame_message_queue()->size();
+  if(clientHandler->images_dirty() || clientHandler->pose_dirty()) --effectiveQueueSize;
 
   // Return whether or not the effective queue size is non-zero (i.e. there are new messages we haven't looked at).
   return effectiveQueueSize > 0;
