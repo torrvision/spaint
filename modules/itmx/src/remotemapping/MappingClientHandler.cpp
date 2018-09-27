@@ -59,6 +59,11 @@ ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type MappingClie
   return make_exclusive_handle(m_renderingRequestMessage, m_renderingRequestMutex);
 }
 
+const Vector2i& MappingClientHandler::get_rgb_image_size() const
+{
+  return m_calib.intrinsics_rgb.imgSize;
+}
+
 bool MappingClientHandler::images_dirty() const
 {
   return m_imagesDirty;
@@ -67,11 +72,6 @@ bool MappingClientHandler::images_dirty() const
 bool MappingClientHandler::pose_dirty() const
 {
   return m_poseDirty;
-}
-
-const Vector2i& MappingClientHandler::get_rgb_image_size() const
-{
-  return m_calib.intrinsics_rgb.imgSize;
 }
 
 void MappingClientHandler::run_iter()
