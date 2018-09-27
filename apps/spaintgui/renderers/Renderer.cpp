@@ -253,39 +253,39 @@ bool Renderer::get_supersampling_enabled() const
 
 void Renderer::render_client_images() const
 {
+  // If a mapping server is not running, early out.
   MappingServer_CPtr mappingServer = m_model->get_mapping_server();
   if(!mappingServer) return;
 
+  // Otherwise, for each client of the mapping server:
   std::vector<int> clients = mappingServer->get_active_clients();
   for(size_t i = 0, size = clients.size(); i < size; ++i)
   {
-    ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type imageHandle = mappingServer->get_rendered_image(clients[i]);
-    if(!imageHandle) continue;
-
+    // Get the most recent rendering request from the client.
     const boost::optional<RenderingRequestMessage> request = mappingServer->get_rendering_request(clients[i]);
     if(!request) continue;
 
+    // Get a handle to the image into which to write.
+    ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type imageHandle = mappingServer->get_rendered_image(clients[i]);
+    if(!imageHandle) continue;
+
+    // Make sure the image exists and is of the right size to store the response to the request.
     ORUChar4Image_Ptr& image = imageHandle->get();
     if(!image) image.reset(new ORUChar4Image(request->extract_image_size(), true, true));
     image->ChangeDims(request->extract_image_size());
 
-    // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded like this.
+    // Render the requested image for the client.
+    // FIXME: The primary scene ID and camera intrinsics shouldn't be hard-coded.
+    // FIXME: The render states should be cached unless the size changes.
     const std::string primarySceneID = Model::get_world_scene_id();
     ITMIntrinsics intrinsics(image->noDims);
-
-    // FIXME: The render states should be cached unless the size changes.
     VoxelRenderState_Ptr voxelRenderState;
     SurfelRenderState_Ptr surfelRenderState;
     const bool surfelFlag = false;
+
     render_all_reconstructed_scenes(
-      request->extract_pose(),
-      primarySceneID,
-      static_cast<VisualisationGenerator::VisualisationType>(request->extract_visualisation_type()),
-      voxelRenderState,
-      surfelRenderState,
-      intrinsics,
-      surfelFlag,
-      image
+      request->extract_pose(), primarySceneID, static_cast<VisualisationGenerator::VisualisationType>(request->extract_visualisation_type()),
+      voxelRenderState, surfelRenderState, intrinsics, surfelFlag, image
     );
   }
 }
@@ -396,9 +396,10 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     }
 
     MappingClient_CPtr mappingClient = m_model->get_mapping_client(sceneID);
+
     if(mappingClient && subwindow.get_remote_flag())
     {
-      // TODO: Comment here.
+      // Get the latest image (if any) rendered by the mapping server for this client, and render it if it exists.
       ORUChar4Image_CPtr remoteImage = mappingClient->get_remote_image();
       if(remoteImage) render_image(remoteImage);
     }
@@ -408,7 +409,8 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
       Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
       ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
-      if(subwindow.get_all_scenes_flag())
+      const VisualisationGenerator::VisualisationType type = subwindow.get_type();
+      if(subwindow.get_all_scenes_flag() && type != VisualisationGenerator::VT_INPUT_COLOUR && type != VisualisationGenerator::VT_INPUT_DEPTH)
       {
         // Render all the reconstructed scenes in the same subwindow, with appropriate depth testing.
         render_all_reconstructed_scenes(pose, subwindow, viewIndex);
