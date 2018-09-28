@@ -7,6 +7,7 @@
 #define H_TVGUTIL_MESSAGE
 
 #include <cstddef>
+#include <cstring>
 #include <vector>
 
 namespace tvgutil {
