@@ -118,8 +118,12 @@ bool Application::run()
     // Render the scene.
     m_renderer->render(m_fracWindowPos, m_renderFiducials);
 
-    // If we're running a mapping server, render any scene images requested by remote clients.
-    if(m_pipeline->get_model()->get_mapping_server()) m_renderer->render_client_images();
+    // If we're running a mapping server and we want to render any scene images requested by remote clients, do so.
+    const Model_CPtr model = m_pipeline->get_model();
+    if(model->get_mapping_server() && model->get_settings()->get_first_value<bool>("Application.renderClientImages", false))
+    {
+      m_renderer->render_client_images();
+    }
 
     // If the application is unpaused, run the mode-specific section of the pipeline for the active scene.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_active_scene_id(), get_monocular_render_state());
