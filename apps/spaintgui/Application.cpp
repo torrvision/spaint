@@ -21,6 +21,7 @@ using namespace ITMLib;
 
 #include <itmx/persistence/ImagePersister.h>
 #include <itmx/persistence/PosePersister.h>
+#include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
 #include <rigging/MoveableCamera.h>
@@ -116,6 +117,9 @@ bool Application::run()
 
     // Render the scene.
     m_renderer->render(m_fracWindowPos, m_renderFiducials);
+
+    // If we're running a mapping server, render any scene images requested by remote clients.
+    if(m_pipeline->get_model()->get_mapping_server()) m_renderer->render_client_images();
 
     // If the application is unpaused, run the mode-specific section of the pipeline for the active scene.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_active_scene_id(), get_monocular_render_state());
@@ -240,8 +244,16 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
+    const Model_CPtr& model = m_pipeline->get_model();
+    const Settings_CPtr& settings = model->get_settings();
+    const SLAMState_CPtr slamState = model->get_slam_state(Model::get_world_scene_id());
+    const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
+
+    const int subwindowImageWidth = settings->get_first_value<int>("Application.subwindowImageWidth", rgbImageSize.width);
+    const int subwindowImageHeight = settings->get_first_value<int>("Application.subwindowImageHeight", rgbImageSize.height);
+
     m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(
-      i, m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size(), m_pipeline->get_type()
+      i, Vector2i(subwindowImageWidth, subwindowImageHeight), m_pipeline->get_type()
     );
   }
 
@@ -485,6 +497,7 @@ void Application::process_camera_input()
   }
 
   // If the active sub-window is in free camera mode, allow the user to move its camera around.
+  const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
   if(activeSubwindow.get_camera_mode() == Subwindow::CM_FREE)
   {
     // Compute the linear and angular speeds to use, based on the time elapsed since we last processed camera input.
@@ -549,7 +562,6 @@ void Application::process_camera_input()
     // and are in free camera mode to have the same pose as this one.
     if(m_usePoseMirroring)
     {
-      const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
       for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
       {
         Subwindow& subwindow = subwindowConfiguration->subwindow(i);
@@ -558,6 +570,17 @@ void Application::process_camera_input()
           subwindow.get_camera()->set_from(*camera);
         }
       }
+    }
+  }
+
+  // If one of the sub-windows has its remote flag set and a mapping client is active for its scene, send a rendering request to the mapping server.
+  for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    const Subwindow& subwindow = subwindowConfiguration->subwindow(i);
+    const MappingClient_Ptr& mappingClient = m_pipeline->get_model()->get_mapping_client(subwindow.get_scene_id());
+    if(mappingClient && subwindow.get_remote_flag())
+    {
+      mappingClient->update_rendering_request(subwindow.get_image()->noDims, CameraPoseConverter::camera_to_pose(*subwindow.get_camera()), subwindow.get_type());
     }
   }
 }
@@ -814,6 +837,7 @@ void Application::process_renderer_input()
     {
       subwindow.set_type(*type);
       subwindow.set_surfel_flag(m_inputState.key_down(KEYCODE_LSHIFT));
+      subwindow.set_remote_flag(m_inputState.key_down(KEYCODE_LCTRL));
     }
   }
 }
@@ -1101,12 +1125,9 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-#if 0
-  const Vector2i& mainImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
-#else
-  const Vector2i mainImageSize(640, 480);
-#endif
-  Vector2i windowViewportSize((int)ROUND(mainImageSize.width / mainSubwindow.width()), (int)ROUND(mainImageSize.height / mainSubwindow.height()));
+  const int mainViewportWidth = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.mainViewportWidth", 640);
+  const int mainViewportHeight = m_pipeline->get_model()->get_settings()->get_first_value<int>("Application.mainViewportHeight", 480);
+  const Vector2i windowViewportSize((int)ROUND(mainViewportWidth / mainSubwindow.width()), (int)ROUND(mainViewportHeight / mainSubwindow.height()));
 
   const std::string title = m_pipeline->get_model()->get_mapping_server() ? "SemanticPaint - Server" : "SemanticPaint";
   m_renderer.reset(new WindowedRenderer(title, m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));

@@ -13,15 +13,15 @@ namespace itmx {
 RGBDCalibrationMessage::RGBDCalibrationMessage()
 {
   m_depthCompressionTypeSegment = std::make_pair(0, sizeof(DepthCompressionType));
-  m_rgbCompressionTypeSegment = std::make_pair(m_depthCompressionTypeSegment.first + m_depthCompressionTypeSegment.second, sizeof(RGBCompressionType));
+  m_rgbCompressionTypeSegment = std::make_pair(end_of(m_depthCompressionTypeSegment), sizeof(RGBCompressionType));
   m_calibSegment = std::make_pair(
-    m_rgbCompressionTypeSegment.first + m_rgbCompressionTypeSegment.second,
+    end_of(m_rgbCompressionTypeSegment),
     sizeof(Vector2f) + sizeof(ITMDisparityCalib::TrafoType) + // disparityCalib
     sizeof(Vector2i) + sizeof(Vector4f) +                     // intrinsics_d
     sizeof(Vector2i) + sizeof(Vector4f) +                     // intrinsics_rgb
     sizeof(Matrix4f)                                          // trafo_rgb_to_depth
   );
-  m_data.resize(m_calibSegment.first + m_calibSegment.second);
+  m_data.resize(end_of(m_calibSegment));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -58,12 +58,12 @@ ITMRGBDCalib RGBDCalibrationMessage::extract_calib() const
 
 DepthCompressionType RGBDCalibrationMessage::extract_depth_compression_type() const
 {
-  return *reinterpret_cast<const DepthCompressionType*>(&m_data[m_depthCompressionTypeSegment.first]);
+  return read_simple<DepthCompressionType>(m_depthCompressionTypeSegment);
 }
 
 RGBCompressionType RGBDCalibrationMessage::extract_rgb_compression_type() const
 {
-  return *reinterpret_cast<const RGBCompressionType*>(&m_data[m_rgbCompressionTypeSegment.first]);
+  return read_simple<RGBCompressionType>(m_rgbCompressionTypeSegment);
 }
 
 void RGBDCalibrationMessage::set_calib(const ITMRGBDCalib& calib)
@@ -93,12 +93,12 @@ void RGBDCalibrationMessage::set_calib(const ITMRGBDCalib& calib)
 
 void RGBDCalibrationMessage::set_depth_compression_type(DepthCompressionType depthCompressionType)
 {
-  memcpy(&m_data[m_depthCompressionTypeSegment.first], reinterpret_cast<const char*>(&depthCompressionType), m_depthCompressionTypeSegment.second);
+  write_simple(depthCompressionType, m_depthCompressionTypeSegment);
 }
 
 void RGBDCalibrationMessage::set_rgb_compression_type(RGBCompressionType rgbCompressionType)
 {
-  memcpy(&m_data[m_rgbCompressionTypeSegment.first], reinterpret_cast<const char*>(&rgbCompressionType), m_rgbCompressionTypeSegment.second);
+  write_simple(rgbCompressionType, m_rgbCompressionTypeSegment);
 }
 
 }

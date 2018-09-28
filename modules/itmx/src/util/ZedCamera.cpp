@@ -13,7 +13,7 @@ namespace itmx {
 //#################### SINGLETON IMPLEMENTATION ####################
 
 ZedCamera::ZedCamera(int gpuID)
-: m_depthConfidenceThreshold(0.3f),
+: m_depthConfidenceThreshold(0.5f),
   m_newImagesNeeded(true),
   m_newPoseNeeded(true)
 {
@@ -22,10 +22,10 @@ ZedCamera::ZedCamera(int gpuID)
 
   // Set up the initialisation parameters for the camera.
   sl::InitParameters initParams;
-  initParams.camera_resolution = sl::RESOLUTION_VGA;
+  initParams.camera_resolution = sl::RESOLUTION_HD720;
   initParams.coordinate_system = sl::COORDINATE_SYSTEM_IMAGE;
   initParams.coordinate_units = sl::UNIT_METER;
-  initParams.depth_mode = sl::DEPTH_MODE_QUALITY;
+  initParams.depth_mode = sl::DEPTH_MODE_ULTRA;
   cuCtxGetCurrent(&initParams.sdk_cuda_ctx);
   initParams.sdk_gpu_id = gpuID;
 

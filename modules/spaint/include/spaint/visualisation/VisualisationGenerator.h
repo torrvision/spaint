@@ -9,6 +9,10 @@
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
 
+#ifdef WITH_OPENCV
+#include <opencv2/opencv.hpp>
+#endif
+
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
@@ -137,15 +141,6 @@ public:
                                     const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
-   * \brief Gets a Lambertian raycast of a voxel scene from the default pose (the current camera pose).
-   *
-   * \param output          The location into which to put the output image.
-   * \param liveRenderState The render state corresponding to the live camera pose for the voxel scene.
-   * \param postprocessor   An optional function with which to postprocess the raycast before returning it.
-   */
-  void get_default_raycast(const ORUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
-
-  /**
    * \brief Gets the depth image from the most recently processed frame for a scene.
    *
    * \param output  The location into which to put the output image.
@@ -180,12 +175,12 @@ private:
   void make_postprocessed_cpu_copy(const ORUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const ORUChar4Image_Ptr& outputRaycast) const;
 
   /**
-   * \brief Prepares to copy a visualisation image into the specified output image.
+   * \brief Resizes the input image into the output image.
    *
-   * \param input   The size of the visualisation image to be copied.
-   * \param output  The output image to which the visualisation image will be copied.
+   * \param input   The input image.
+   * \param output  The output image.
    */
-  void prepare_to_copy_visualisation(const Vector2i& inputSize, const ORUChar4Image_Ptr& output) const;
+  void resize_into(const ORUChar4Image_Ptr& output, const ORUChar4Image *input) const;
 };
 
 //#################### TYPEDEFS ####################

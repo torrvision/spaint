@@ -12,6 +12,9 @@
 using boost::asio::ip::tcp;
 using namespace tvgutil;
 
+#include "remotemapping/InteractionTypeMessage.h"
+#include "remotemapping/RenderingRequestMessage.h"
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -27,6 +30,56 @@ MappingClient::MappingClient(const std::string& host, const std::string& port, p
 MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr MappingClient::begin_push_frame_message()
 {
   return m_frameMessageQueue.begin_push();
+}
+
+ORUChar4Image_CPtr MappingClient::get_remote_image() const
+{
+  AckMessage ackMsg;
+  InteractionTypeMessage interactionTypeMsg(IT_HASRENDEREDIMAGE);
+
+  boost::lock_guard<boost::mutex> lock(m_interactionMutex);
+
+  // Ask the server whether it has ever rendered an RGB-D image for this client.
+  if(m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()))
+  {
+    SimpleMessage<bool> flag;
+    if(m_stream.read(flag.get_data_ptr(), flag.get_size()) && m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size()) && flag.extract_value())
+    {
+      // If it has, ask it to send across the RGB-D image it has rendered for this client.
+      interactionTypeMsg.set_value(IT_GETRENDEREDIMAGE);
+      if(m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()))
+      {
+        // Read the compressed RGB-D frame it sends across.
+        CompressedRGBDFrameHeaderMessage headerMsg;
+        if(m_stream.read(headerMsg.get_data_ptr(), headerMsg.get_size()))
+        {
+          CompressedRGBDFrameMessage frameMsg(headerMsg);
+          if(m_stream.read(frameMsg.get_data_ptr(), frameMsg.get_size()))
+          {
+            // Send an acknowledgement that we've received the frame.
+            m_stream.write(ackMsg.get_data_ptr(), ackMsg.get_size());
+
+            // Uncompress the frame.
+            // FIXME: Avoid creating a new uncompressed frame every time.
+            const Vector2i rgbImageSize = headerMsg.extract_rgb_image_size();
+            const Vector2i depthImageSize = headerMsg.extract_depth_image_size();
+            RGBDFrameMessage uncompressedFrameMsg(rgbImageSize, depthImageSize);
+            m_frameCompressor->uncompress_rgbd_frame(frameMsg, uncompressedFrameMsg);
+
+            // Extract the colour image from the frame and use it to update the remote image for this client.
+            if(!m_remoteImage) m_remoteImage.reset(new ORUChar4Image(rgbImageSize, true, false));
+            m_remoteImage->ChangeDims(rgbImageSize);
+            uncompressedFrameMsg.extract_rgb_image(m_remoteImage.get());
+
+            return m_remoteImage;
+          }
+        }
+      }
+    }
+  }
+
+  // If anything went wrong, return a blank image.
+  return ORUChar4Image_CPtr();
 }
 
 void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
@@ -57,6 +110,26 @@ void MappingClient::send_calibration_message(const RGBDCalibrationMessage& msg)
   boost::thread messageSender(&MappingClient::run_message_sender, this);
 }
 
+void MappingClient::update_rendering_request(const Vector2i& imgSize, const ORUtils::SE3Pose& pose, int visualisationType)
+{
+  AckMessage ackMsg;
+  InteractionTypeMessage interactionTypeMsg(IT_UPDATERENDERINGREQUEST);
+
+  RenderingRequestMessage requestMsg;
+  requestMsg.set_image_size(imgSize);
+  requestMsg.set_pose(pose);
+  requestMsg.set_visualisation_type(visualisationType);
+
+  boost::lock_guard<boost::mutex> lock(m_interactionMutex);
+
+  // First send the interaction type message, then send the rendering request message,
+  // then wait for an acknowledgement from the server. We chain all of these with &&
+  // so as to early out in case of failure.
+  m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size()) &&
+  m_stream.write(requestMsg.get_data_ptr(), requestMsg.get_size()) && 
+  m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void MappingClient::run_message_sender()
@@ -64,6 +137,7 @@ void MappingClient::run_message_sender()
   AckMessage ackMsg;
   CompressedRGBDFrameHeaderMessage headerMsg;
   CompressedRGBDFrameMessage frameMsg(headerMsg);
+  InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
 
   bool connectionOk = true;
 
@@ -77,12 +151,18 @@ void MappingClient::run_message_sender()
     // the actual frame data.
     m_frameCompressor->compress_rgbd_frame(*msg, headerMsg, frameMsg);
 
-    // First send the header message, then send the frame message, then wait for an acknowledgement
-    // from the server. We chain all of these with && so as to early out in case of failure.
-    connectionOk = connectionOk
-      && m_stream.write(headerMsg.get_data_ptr(), headerMsg.get_size())
-      && m_stream.write(frameMsg.get_data_ptr(), frameMsg.get_size())
-      && m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
+    {
+      boost::lock_guard<boost::mutex> lock(m_interactionMutex);
+
+      // First send the interaction type message, then send the frame header message, then send
+      // the frame message itself, then wait for an acknowledgement from the server. We chain
+      // all of these with && so as to early out in case of failure.
+      connectionOk = connectionOk
+        && m_stream.write(interactionTypeMsg.get_data_ptr(), interactionTypeMsg.get_size())
+        && m_stream.write(headerMsg.get_data_ptr(), headerMsg.get_size())
+        && m_stream.write(frameMsg.get_data_ptr(), frameMsg.get_size())
+        && m_stream.read(ackMsg.get_data_ptr(), ackMsg.get_size());
+    }
 
     // Remove the frame message that we have just sent from the queue.
     m_frameMessageQueue.pop();

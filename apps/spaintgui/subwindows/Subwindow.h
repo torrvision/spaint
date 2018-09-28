@@ -53,6 +53,9 @@ private:
   /** The original size of the image in which to store the scene visualisation for the sub-window. */
   Vector2i m_originalImgSize;
 
+  /** A flag indicating whether or not to ask the mapping server to render the image for this sub-window. */
+  bool m_remoteFlag;
+
   /** The ID of the primary scene to render in the sub-window. */
   std::string m_sceneID;
 
@@ -108,6 +111,13 @@ public:
   const rigging::CompositeCamera_Ptr& get_camera() const;
 
   /**
+   * \brief Gets the camera intrinsics to use when rendering scene visualisations for the sub-window.
+   *
+   * \return  The camera intrinsics to use when rendering scene visualisations for the sub-window.
+   */
+  ITMLib::ITMIntrinsics get_camera_intrinsics() const;
+
+  /**
    * \brief Gets the current camera mode.
    *
    * \return  The current camera mode.
@@ -141,6 +151,13 @@ public:
    * \return  The original size of the image in which to store the scene visualisation for the sub-window.
    */
   const Vector2i& get_original_image_size() const;
+
+  /**
+   * \brief Gets a flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   *
+   * \return  A flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   */
+  bool get_remote_flag() const;
 
   /**
    * \brief Gets the ID of the primary scene to render in the sub-window.
@@ -232,6 +249,13 @@ public:
    * \param cameraUpVector  The up vector to use when rotating the camera.
    */
   void set_camera_up_vector(const Eigen::Vector3f& cameraUpVector);
+
+  /**
+   * \brief Sets a flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   *
+   * \param remoteFlag  A flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   */
+  void set_remote_flag(bool remoteFlag);
 
   /**
    * \brief Sets a flag indicating whether or not to render a surfel visualisation rather than a voxel one.

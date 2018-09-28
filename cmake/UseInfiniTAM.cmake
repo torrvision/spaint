@@ -23,7 +23,7 @@ SET(InfiniTAM_ITMLib_LIBRARY debug ${InfiniTAM_ITMLib_LIBRARY_DEBUG} optimized $
 SET(InfiniTAM_MiniSlamGraphLib_LIBRARY debug ${InfiniTAM_MiniSlamGraphLib_LIBRARY_DEBUG} optimized ${InfiniTAM_MiniSlamGraphLib_LIBRARY_RELEASE})
 SET(InfiniTAM_ORUtils_LIBRARY debug ${InfiniTAM_ORUtils_LIBRARY_DEBUG} optimized ${InfiniTAM_ORUtils_LIBRARY_RELEASE})
 
-SET(InfiniTAM_LIBRARIES ${InfiniTAM_FernRelocLib_LIBRARY} ${InfiniTAM_InputSource_LIBRARY} ${InfiniTAM_ITMLib_LIBRARY} ${InfiniTAM_MiniSlamGraphLib_LIBRARY} ${InfiniTAM_ORUtils_LIBRARY})
+SET(InfiniTAM_LIBRARIES ${InfiniTAM_InputSource_LIBRARY} ${InfiniTAM_ITMLib_LIBRARY} ${InfiniTAM_FernRelocLib_LIBRARY} ${InfiniTAM_MiniSlamGraphLib_LIBRARY} ${InfiniTAM_ORUtils_LIBRARY})
 
 INCLUDE_DIRECTORIES(${InfiniTAM_INCLUDE_DIR})
 

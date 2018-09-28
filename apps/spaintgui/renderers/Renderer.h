@@ -150,6 +150,11 @@ public:
   bool get_supersampling_enabled() const;
 
   /**
+   * \brief Renders any images that were requested by clients of the mapping server (if one is active).
+   */
+  void render_client_images() const;
+
+  /**
    * \brief Sets whether or not to use median filtering when rendering the scene raycast.
    *
    * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.
@@ -251,13 +256,30 @@ private:
   const boost::optional<spaint::VisualisationGenerator::Postprocessor>& get_postprocessor() const;
 
   /**
+   * \brief Renders all the reconstructed scenes into an image, with appropriate depth testing.
+   *
+   * \param primaryPose               The camera pose in the primary scene.
+   * \param primarySceneID            The ID of the primary scene.
+   * \param primaryVisualisationType  The type of visualisation to use for the primary scene.
+   * \param voxelRenderState          The voxel render state to use for intermediate storage (if relevant).
+   * \param surfelRenderState         The surfel render state to use for intermediate storage (if relevant).
+   * \param intrinsics                The intrinsics to use when rendering synthetic scene visualisations.
+   * \param surfelFlag                Whether or not to render a surfel visualisation rather than a voxel one.
+   * \param output                    The location into which to put the output image.
+   */
+  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, const std::string& primarySceneID,
+                                       spaint::VisualisationGenerator::VisualisationType primaryVisualisationType,
+                                       VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                                       const ITMLib::ITMIntrinsics& intrinsics, bool surfelFlag, const ORUChar4Image_Ptr& output) const;
+
+  /**
    * \brief Renders all the reconstructed scenes into a sub-window, with appropriate depth testing.
    *
-   * \param pose      The camera pose.
-   * \param subwindow The sub-window into which to render.
-   * \param viewIndex The index of the free camera view for the sub-window.
+   * \param primaryPose The camera pose in the primary scene.
+   * \param subwindow   The sub-window into which to render.
+   * \param viewIndex   The index of the free camera view for the sub-window.
    */
-  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const;
+  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, Subwindow& subwindow, int viewIndex) const;
 
   /**
    * \brief Renders a colour image over the contents of the current subwindow.
