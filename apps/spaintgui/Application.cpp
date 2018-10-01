@@ -255,9 +255,10 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
     const int subwindowImageWidth = settings->get_first_value<int>("Application.subwindowImageWidth", rgbImageSize.width);
     const int subwindowImageHeight = settings->get_first_value<int>("Application.subwindowImageHeight", rgbImageSize.height);
+    const std::string collaborativeAgentPrefix = settings->get_first_value<std::string>("Application.collaborativeAgentPrefix", "Local");
 
     m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(
-      i, Vector2i(subwindowImageWidth, subwindowImageHeight), m_pipeline->get_type()
+      i, Vector2i(subwindowImageWidth, subwindowImageHeight), m_pipeline->get_type(), collaborativeAgentPrefix
     );
   }
 
