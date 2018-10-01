@@ -34,7 +34,7 @@ struct SubwindowSpecifier
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindowCount, const Vector2i& imgSize, const std::string& pipelineType)
+SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindowCount, const Vector2i& imgSize, const std::string& pipelineType, const std::string& agentPrefix)
 {
   SubwindowConfiguration_Ptr config;
   if(subwindowCount > 0) config.reset(new SubwindowConfiguration);
@@ -57,7 +57,7 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
 
       if(pipelineType == "semantic")            specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR));
       else if(pipelineType == "objective")      specifiers.push_back(SubwindowSpecifier(objectSceneID, VisualisationGenerator::VT_SCENE_COLOUR));
-      else if(pipelineType == "collaborative")  specifiers.push_back(SubwindowSpecifier("Local1", VisualisationGenerator::VT_SCENE_COLOUR));
+      else if(pipelineType == "collaborative")  specifiers.push_back(SubwindowSpecifier(agentPrefix + "1", VisualisationGenerator::VT_SCENE_COLOUR));
       else                                      specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_COLOUR));
 
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), specifiers[0].m_sceneID, specifiers[0].m_visualisationType, imgSize));
@@ -80,11 +80,11 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
       const float y = 0.333f;
       config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1 - x, 1), worldSceneID, VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y), worldSceneID, VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(0, y), Vector2f(x, 1 - y), "Local1", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(0, 1 - y), Vector2f(x, 1), "Local2", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(1 - x, 0), Vector2f(1, y), "Local3", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(1 - x, y), Vector2f(1, 1 - y), "Local4", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(1 - x, 1 - y), Vector2f(1, 1), "Local5", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, y), Vector2f(x, 1 - y), agentPrefix + "1", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, 1 - y), Vector2f(x, 1), agentPrefix + "2", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(1 - x, 0), Vector2f(1, y), agentPrefix + "3", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(1 - x, y), Vector2f(1, 1 - y), agentPrefix + "4", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(1 - x, 1 - y), Vector2f(1, 1), agentPrefix + "5", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
       break;
     }
     default:
