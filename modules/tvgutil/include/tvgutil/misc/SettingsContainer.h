@@ -97,6 +97,17 @@ public:
     return MapUtil::lookup(m_settings, key, defaultEmptyVector);
   }
 
+  /**
+   * \brief Gets whether or not the specified setting has any values.
+   *
+   * \param key The name of the setting to check.
+   * \return    true, if the setting has values, or false otherwise.
+   */
+  bool has_values(const std::string& key) const
+  {
+    return MapUtil::contains(m_settings, key);
+  }
+
   //#################### STREAM OPERATORS ####################
 public:
   /**
