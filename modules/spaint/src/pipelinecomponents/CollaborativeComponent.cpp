@@ -405,7 +405,7 @@ void CollaborativeComponent::run_relocalisation()
 #endif
 
     // Attempt to relocalise the synthetic images using the relocaliser for the target scene.
-    Relocaliser_Ptr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
+    Relocaliser_CPtr relocaliserI = m_context->get_relocaliser(m_bestCandidate->m_sceneI);
     std::vector<Relocaliser::Result> results = relocaliserI->relocalise(rgb.get(), depth.get(), m_bestCandidate->m_depthIntrinsicsI);
     boost::optional<Relocaliser::Result> result = results.empty() ? boost::none : boost::optional<Relocaliser::Result>(results[0]);
 
