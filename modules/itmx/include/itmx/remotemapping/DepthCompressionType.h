@@ -10,14 +10,16 @@ namespace itmx {
 
 /**
  * \brief The values of this enumeration can be used to specify a compression mode for depth images.
+ *
+ * \note  Do not change the enum values without making sure that all clients have been updated accordingly.
  */
 enum DepthCompressionType
 {
   /** The depth images will not be compressed. */
-  DEPTH_COMPRESSION_NONE,
+  DEPTH_COMPRESSION_NONE = 0,
 
   /** The depth images will be compressed using lossless PNG compression (requires OpenCV). */
-  DEPTH_COMPRESSION_PNG,
+  DEPTH_COMPRESSION_PNG = 1,
 };
 
 }
