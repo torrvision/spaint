@@ -543,7 +543,7 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
  *
  * \param sceneParams The scene parameters to modify.
  */
-void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMSceneParams &sceneParams)
+void set_scene_params_from_global_options(const Settings_CPtr& settings, ITMSceneParams& sceneParams)
 {
 #define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
 
@@ -563,7 +563,7 @@ void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMScen
  *
  * \param surfelSceneParams The surfel scene parameters to modify.
  */
-void set_surfel_scene_params_from_global_options(const Settings_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
+void set_surfel_scene_params_from_global_options(const Settings_CPtr& settings, ITMSurfelSceneParams& surfelSceneParams)
 {
 #define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
 
@@ -762,12 +762,6 @@ try
 
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
-#if 1
-  // FIXME: This is to allow large-scale scenes to work. We should do this properly.
-  settings->sceneParams.voxelSize = 0.015f;
-  settings->sceneParams.mu = settings->sceneParams.voxelSize * 4;
-#endif
-
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
@@ -876,6 +870,13 @@ try
   }
   else
   {
+    // Set a reasonable default for the voxel size (this can be overridden using a configuration file).
+    if(!settings->has_values("SceneParams.voxelSize"))
+    {
+      settings->sceneParams.voxelSize = 0.015f;
+      settings->sceneParams.mu = settings->sceneParams.voxelSize * 4;
+    }
+
     // Set up the image source engines, mapping modes, tracking modes and tracker configurations.
     std::vector<CompositeImageSourceEngine_Ptr> imageSourceEngines;
     std::vector<SLAMComponent::MappingMode> mappingModes;
