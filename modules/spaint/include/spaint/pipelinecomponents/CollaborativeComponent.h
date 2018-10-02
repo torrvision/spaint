@@ -34,6 +34,9 @@ private:
   /** The timer used to compute the time spent collaborating. */
   boost::optional<boost::timer::cpu_timer> m_collaborationTimer;
 
+  /** Whether or not to attempt to verify relocalisations that have been reported as poor, not just good ones. */
+  bool m_considerPoorRelocalisations;
+
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
 
