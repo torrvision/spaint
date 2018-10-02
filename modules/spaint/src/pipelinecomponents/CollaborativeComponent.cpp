@@ -38,6 +38,7 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
 {
   const Settings_CPtr& settings = context->get_settings();
   const std::string settingsNamespace = "CollaborativeComponent.";
+  m_considerPoorRelocalisations = settings->get_first_value<bool>(settingsNamespace + "considerPoorRelocalisations", false);
   m_stopAtFirstConsistentReconstruction = settings->get_first_value<bool>(settingsNamespace + "stopAtFirstConsistentReconstruction", false);
   m_timeCollaboration = settings->get_first_value<bool>(settingsNamespace + "timeCollaboration", false);
 
@@ -415,7 +416,7 @@ void CollaborativeComponent::run_relocalisation()
     // If relocalisation succeeded, verify the result by thresholding the difference between the
     // source depth image and a rendered depth image of the target scene at the relevant pose.
     bool verified = false;
-    if(result && result->quality == Relocaliser::RELOCALISATION_GOOD)
+    if(result && (result->quality == Relocaliser::RELOCALISATION_GOOD || m_considerPoorRelocalisations))
     {
 #ifdef WITH_OPENCV
       // Render synthetic images of the target scene from the relevant pose.
