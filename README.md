@@ -93,10 +93,10 @@ the remaining optional libraries in order to enable full functionality.
     Default: Disabled
     Flag: WITH_ARRAYFIRE
 
-  - Boost (version 1.56.0)
+  - Boost (version 1.58.0)
     Status: Required
 
-  - CUDA (version 8.0)
+  - CUDA (version 7.5 or above)
     Status: Optional (needed for GPU acceleration)
     Default: Enabled
     Flag: WITH_CUDA
