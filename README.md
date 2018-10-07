@@ -56,6 +56,16 @@ If you make use of or build on our Grove relocaliser, please consider citing:
 }
 ```
 
+If you make use of or build on our Collaborative SLAM approach, please consider citing:
+```
+@article{Golodetz2018,
+  author = {Stuart Golodetz* and Tommaso Cavallari* and Nicholas A Lord* and Victor A Prisacariu and David W Murray and Philip H S Torr},
+  title = {{Collaborative Large-Scale Dense 3D Reconstruction with Online Inter-Agent Pose Optimisation}},
+  journal = {IEEE Transactions on Visualization and Computer Graphics (ISMAR Special Issue)},
+  year = {2018}
+}
+```
+
 # Installation Guide
 
 ## 1. Building the System
