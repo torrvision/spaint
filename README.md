@@ -281,6 +281,7 @@ Contact details are: [philip.torr@eng.ox.ac.uk](mailto:philip.torr@eng.ox.ac.uk)
 
 # History
 
+* 2018-OCT-17: third public release
 * 2017-AUG-08: second public release
 * 2015-SEP-26: first public release
 * 2015-JUL-23: initial draft
