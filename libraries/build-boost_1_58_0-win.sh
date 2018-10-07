@@ -1,5 +1,8 @@
 #! /bin/bash -e
 
+# Check that vsdevcmd is on the system path.
+../require-vsdevcmd.sh
+
 LOG=../build-boost_1_58_0.log
 
 # Check that valid parameters have been specified.
