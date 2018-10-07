@@ -152,13 +152,13 @@ the remaining optional libraries in order to enable full functionality.
 
 Common steps on all platforms:
 
-  1. Choose a root directory, hereafter referred to as <root>.
+  1. Choose a root directory, hereafter referred to as `<root>`.
 
-  2. Clone the InfiniTAM repository into <root>/InfiniTAM.
+  2. Clone the InfiniTAM repository into `<root>/InfiniTAM`.
 
-  3. Build the infinitam_v3.5 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
+  3. Build the infinitam_v3.5 branch of InfiniTAM using CMake (using `<root>/InfiniTAM/InfiniTAM/build` as your build directory).
 
-  4. Clone SemanticPaint into <root>/spaint, e.g.
+  4. Clone SemanticPaint into `<root>/spaint`, e.g.
 
      ```
      $ git clone git@github.com:torrvision/spaint.git spaint
@@ -178,7 +178,7 @@ Common steps on all platforms:
      $ ./build-win.sh 12 Release
      ```
 
-  2. Run the CMake GUI and specify <root>/spaint/build as the build directory.
+  2. Run the CMake GUI and specify `<root>/spaint/build` as the build directory.
 
   3. Enable any optional libraries you want and supply the paths.
 
@@ -217,7 +217,7 @@ Common steps on all platforms:
 ## 2. Running the System
 
 The build process will build various applications, libraries and test
-programs in &lt;root&gt;/build. The main application can be found at:
+programs in `<root>/build`. The main application can be found at:
 
 ```
 <root>/build/bin/apps/spaintgui/spaintgui
@@ -238,7 +238,7 @@ The arguments specify a text file containing calibration parameters,
 and masks for the RGB and depth images in the input sequence.
 
 Note that spaintgui also supports its own saving/loading of sequences
-to/from the <root>/build/bin/apps/spaintgui/sequences subdirectory.
+to/from the `<root>/build/bin/apps/spaintgui/sequences` subdirectory.
 These can be loaded straightforwardly via:
 
 ```
