@@ -120,7 +120,7 @@ bool Application::run()
 
     // If we're running a mapping server and we want to render any scene images requested by remote clients, do so.
     const Model_CPtr model = m_pipeline->get_model();
-    if(model->get_mapping_server() && model->get_settings()->get_first_value<bool>("Application.renderClientImages", false))
+    if(model->get_mapping_server() && model->get_settings()->get_first_value<bool>("Application.renderClientImages", true))
     {
       m_renderer->render_client_images();
     }
