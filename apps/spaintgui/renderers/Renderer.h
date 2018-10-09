@@ -321,10 +321,10 @@ private:
    *
    * \param sceneID         The ID of the reconstructed scene to augment.
    * \param pose            The camera pose.
-   * \param cameraMode      The camera mode.
+   * \param subwindow       The sub-window into which to render.
    * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const;
+  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, const Subwindow& subwindow, bool renderFiducials) const;
 
 #ifdef WITH_GLUT
   /**

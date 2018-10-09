@@ -53,7 +53,6 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 : m_context(context),
   m_detectFiducials(detectFiducials),
   m_fallibleTracker(NULL),
-  m_fiducialDetector(fiducialDetector),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
@@ -120,6 +119,9 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Add the scene to the list of existing scenes.
   context->add_scene_id(sceneID);
+
+  // Set the fiducial detector (if any).
+  m_context->set_fiducial_detector(sceneID, fiducialDetector);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -338,9 +340,10 @@ bool SLAMComponent::process_frame()
 
   // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
   // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.
-  if(m_fiducialDetector && m_detectFiducials && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
+  FiducialDetector_CPtr fiducialDetector = m_context->get_fiducial_detector(m_sceneID);
+  if(fiducialDetector && m_detectFiducials && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
-    slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState, FiducialDetector::PEM_RAYCAST));
+    slamState->update_fiducials(fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState, FiducialDetector::PEM_RAYCAST));
   }
 
   return true;
