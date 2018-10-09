@@ -423,7 +423,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
       }
 
       // Render the synthetic scene over the top of the reconstructed scene.
-      render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
+      render_synthetic_scene(sceneID, pose, subwindow, renderFiducials);
     }
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
@@ -684,7 +684,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   render_image(image);
 }
 
-void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, const Subwindow& subwindow, bool renderFiducials) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -692,9 +692,8 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
-    ORUtils::Vector2<int> depthImageSize = slamState->get_depth_image_size();
-    set_projection_matrix(slamState->get_intrinsics(), depthImageSize.width, depthImageSize.height);
+    const Vector2i subwindowImgSize = subwindow.get_image()->noDims;
+    set_projection_matrix(subwindow.get_camera_intrinsics(), subwindowImgSize.width, subwindowImgSize.height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -717,6 +716,7 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       // If we're rendering fiducials, render any that have been detected.
       if(renderFiducials)
       {
+        SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
         const std::map<std::string,Fiducial_Ptr>& fiducials = slamState->get_fiducials();
         for(std::map<std::string,Fiducial_Ptr>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
         {
@@ -730,7 +730,7 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       }
 
       // If the camera for the subwindow is in follow mode, render any overlay image generated during object segmentation.
-      if(cameraMode == Subwindow::CM_FOLLOW)
+      if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
       {
         const ORUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image(sceneID);
         if(segmentationImage) render_overlay(segmentationImage);
