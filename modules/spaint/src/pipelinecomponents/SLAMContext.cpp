@@ -19,6 +19,11 @@ void SLAMContext::add_scene_id(const std::string& sceneID)
   m_sceneIDs.push_back(sceneID);
 }
 
+const FiducialDetector_CPtr& SLAMContext::get_fiducial_detector(const std::string& sceneID) const
+{
+  return MapUtil::lookup(m_fiducialDetectors, sceneID, FiducialDetector_CPtr());
+}
+
 MappingClient_Ptr& SLAMContext::get_mapping_client(const std::string& sceneID)
 {
   return m_mappingClients[sceneID];
@@ -55,6 +60,11 @@ SLAMState_CPtr SLAMContext::get_slam_state(const std::string& sceneID) const
 {
   std::map<std::string,SLAMState_Ptr>::const_iterator it = m_slamStates.find(sceneID);
   return it != m_slamStates.end() ? it->second : SLAMState_CPtr();
+}
+
+void SLAMContext::set_fiducial_detector(const std::string& sceneID, const FiducialDetector_CPtr& fiducialDetector)
+{
+  m_fiducialDetectors[sceneID] = fiducialDetector;
 }
 
 }

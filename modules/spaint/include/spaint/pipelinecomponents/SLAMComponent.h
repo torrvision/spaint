@@ -13,7 +13,6 @@
 #include <itmx/trackers/FallibleTracker.h>
 
 #include "SLAMContext.h"
-#include "../fiducials/FiducialDetector.h"
 
 namespace spaint {
 
@@ -70,9 +69,6 @@ private:
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
   itmx::FallibleTracker *m_fallibleTracker;
-
-  /** The fiducial detector to use (if any). */
-  FiducialDetector_CPtr m_fiducialDetector;
 
   /** Whether or not to let the relocaliser know when no more calls will be made to its train or update functions. */
   bool m_finishTrainingEnabled;

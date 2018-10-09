@@ -16,6 +16,7 @@
 
 #include <orx/relocalisation/RefiningRelocaliser.h>
 
+#include "../fiducials/FiducialDetector.h"
 #include "../slamstate/SLAMState.h"
 
 namespace spaint {
@@ -32,6 +33,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The fiducial detectors used to recognise fiducials in the various scenes. */
+  std::map<std::string,FiducialDetector_CPtr> m_fiducialDetectors;
+
   /** The mapping clients (if any) to use to communicate with the remote mapping server regarding the various scenes. */
   std::map<std::string,itmx::MappingClient_Ptr> m_mappingClients;
 
@@ -67,6 +71,14 @@ public:
    * \param sceneID The scene ID to add.
    */
   void add_scene_id(const std::string& sceneID);
+
+  /**
+   * \brief Gets the fiducial detector for the specified scene (if any).
+   *
+   * \param sceneID The scene ID.
+   * \return        The fiducial detector for the specified scene (if any).
+   */
+  const FiducialDetector_CPtr& get_fiducial_detector(const std::string& sceneID) const;
 
   /**
    * \brief Gets the mapping client (if any) for the specified scene.
@@ -122,6 +134,14 @@ public:
    * \return        The SLAM state for the specified scene (if any), or null otherwise.
    */
   virtual SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
+
+  /**
+   * \brief Sets the fiducial detector for the specified scene.
+   *
+   * \param sceneID           The scene ID.
+   * \param fiducialDetector  The fiducial detector for the specified scene.
+   */
+  void set_fiducial_detector(const std::string& sceneID, const FiducialDetector_CPtr& fiducialDetector);
 };
 
 //#################### TYPEDEFS ####################
