@@ -86,7 +86,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
     m_imagePathGenerator.reset(tvgutil::SequentialPathGenerator(tvgutil::find_subdir_from_executable("reloc_images") / experimentTag));
     boost::filesystem::create_directories(m_imagePathGenerator->get_base_dir());
 
-    std::vector<std::string> sequenceSpecifiers = m_settings->get_values("sequenceSpecifiers");
+    std::vector<std::string> sequenceSpecifiers = m_settings->get_values<std::string>("sequenceSpecifiers");
     if(sequenceSpecifiers.size() < 2)
     {
       throw std::runtime_error("saveRelocalisationImages requires at least two sequenceSpecifiers (one for the training and one for the testing sequence)");
