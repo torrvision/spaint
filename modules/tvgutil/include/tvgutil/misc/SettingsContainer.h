@@ -88,8 +88,8 @@ public:
   /**
    * \brief Gets all values associated with the specified setting and converts them to the specified type.
    *
-   * \param key           The name of the setting whose values are to be looked up.
-   * \return              All values associated with the specified setting, or an empty vector otherwise.
+   * \param key The name of the setting whose values are to be looked up.
+   * \return    All values associated with the specified setting, or an empty vector otherwise.
    *
    * \throws boost::bad_lexical_cast  If the setting exists but at least one of its values (if any) cannot be converted to the specified type.
    */
