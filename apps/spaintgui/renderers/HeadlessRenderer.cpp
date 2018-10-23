@@ -9,10 +9,9 @@
 
 HeadlessRenderer::HeadlessRenderer(const Model_CPtr& model, bool verbose)
 : Renderer(model, SubwindowConfiguration::make_default(1, Vector2i(640, 480), ""), Vector2i(640, 480)),
-  m_frameIdx(0),
-  m_verbose(verbose)
+  m_frameIdx(0), m_verbose(verbose)
 {
-  // Note: we initialise a dummy subwindow configuration with a fixed size, but it will never be used in all practical scenarios.
+  // Note: We initialise a dummy subwindow configuration with a fixed size, but it will never be used in practice.
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -34,5 +33,5 @@ void HeadlessRenderer::render(const Vector2f& fracWindowPos, bool renderFiducial
     std::cout << "\rProcessing frame: " << m_frameIdx << std::flush;
   }
 
-  m_frameIdx++;
+  ++m_frameIdx;
 }

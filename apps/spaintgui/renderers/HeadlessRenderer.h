@@ -9,17 +9,17 @@
 #include "Renderer.h"
 
 /**
- * \brief An instance of this class can be used when running spaintgui in headless mode, removing the requirements for a GUI environment.
- *        The whole rendering phase is skipped, thus also speeding up the application.
+ * \brief An instance of this class can be used to run spaintgui in headless mode, removing the need for a GUI environment.
+ *        Rendering is skipped, which also makes reconstruction faster.
  */
 class HeadlessRenderer : public Renderer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The index of the currently rendered frame. */
+  /** The index of the next frame that will be rendered. */
   mutable uint m_frameIdx;
 
-  /** Whether or not the rendering is verbose (prints the current frame index). */
+  /** Whether or not to output the frame index at the end of each render call. */
   bool m_verbose;
 
   //#################### CONSTRUCTORS ####################
@@ -28,7 +28,7 @@ public:
    * \brief Constructs a headless renderer.
    *
    * \param model    The spaint model.
-   * \param verbose  Whether or not to print the current frame index when processing the render call.
+   * \param verbose  Whether or not to output the frame index at the end of each render call.
    */
   HeadlessRenderer(const Model_CPtr& model, bool verbose = false);
 
