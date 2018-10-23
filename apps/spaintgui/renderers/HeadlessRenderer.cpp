@@ -7,9 +7,9 @@
 
 //#################### CONSTRUCTORS ####################
 
-HeadlessRenderer::HeadlessRenderer(const Model_CPtr& model, bool verbose)
+HeadlessRenderer::HeadlessRenderer(const Model_CPtr& model)
 : Renderer(model, SubwindowConfiguration::make_default(1, Vector2i(640, 480), ""), Vector2i(640, 480)),
-  m_frameIdx(0), m_verbose(verbose)
+  m_frameIdx(0)
 {
   // Note: We initialise a dummy subwindow configuration with a fixed size, but it will never be used in practice.
 }
@@ -28,7 +28,7 @@ bool HeadlessRenderer::is_mono() const
 
 void HeadlessRenderer::render(const Vector2f& fracWindowPos, bool renderFiducials) const
 {
-  if(m_verbose)
+  if(get_model()->get_settings()->get_first_value<bool>("verbose"))
   {
     std::cout << "\rProcessing frame: " << m_frameIdx << std::flush;
   }

@@ -19,18 +19,14 @@ private:
   /** The index of the next frame that will be rendered. */
   mutable uint m_frameIdx;
 
-  /** Whether or not to output the frame index at the end of each render call. */
-  bool m_verbose;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a headless renderer.
    *
    * \param model    The spaint model.
-   * \param verbose  Whether or not to output the frame index at the end of each render call.
    */
-  HeadlessRenderer(const Model_CPtr& model, bool verbose = false);
+  explicit HeadlessRenderer(const Model_CPtr& model);
 
   //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
 private:

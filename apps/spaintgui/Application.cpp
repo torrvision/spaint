@@ -59,13 +59,12 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
   setup_labels();
   setup_meshing();
 
-  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-  bool headless = settings->get_first_value<bool>("headless");
+  Model_CPtr model = m_pipeline->get_model();
+  const Settings_CPtr& settings = model->get_settings();
 
-  if(headless)
+  if(settings->get_first_value<bool>("headless"))
   {
-    bool verbose = settings->get_first_value<bool>("verbose");
-    m_renderer.reset(new HeadlessRenderer(m_pipeline->get_model(), verbose));
+    m_renderer.reset(new HeadlessRenderer(model));
   }
   else
   {
