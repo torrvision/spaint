@@ -85,6 +85,29 @@ public:
     return values.empty() || values[0] == NOT_SET ? defaultValue : from_string<T>(values[0]);
   }
 
+  /**
+   * \brief Gets all values associated with the specified setting and converts them to the specified type.
+   *
+   * \param key The name of the setting whose values are to be looked up.
+   * \return    All values associated with the specified setting, or an empty vector otherwise.
+   *
+   * \throws boost::bad_lexical_cast  If the setting exists but at least one of its values (if any) cannot be converted to the specified type.
+   */
+  template <typename T>
+  std::vector<T> get_values(const std::string& key) const
+  {
+    static std::vector<std::string> defaultEmptyVector;
+    const std::vector<std::string>& values = MapUtil::lookup(m_settings, key, defaultEmptyVector);
+    if(values.empty() || values[0] == NOT_SET) return std::vector<T>();
+
+    std::vector<T> typedValues;
+    for(size_t i = 0, size = values.size(); i < size; ++i)
+    {
+      typedValues.push_back(from_string<T>(values[i]));
+    }
+    return typedValues;
+  }
+
   //#################### STREAM OPERATORS ####################
 public:
   /**
