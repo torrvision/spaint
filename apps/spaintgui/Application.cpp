@@ -34,7 +34,7 @@ using namespace spaint;
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
-#include "renderers/NullRenderer.h"
+#include "renderers/HeadlessRenderer.h"
 #ifdef WITH_OVR
 #include "renderers/RiftRenderer.h"
 #endif
@@ -65,7 +65,7 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
   if(headless)
   {
     bool verbose = settings->get_first_value<bool>("verbose");
-    m_renderer.reset(new NullRenderer(m_pipeline->get_model(), verbose));
+    m_renderer.reset(new HeadlessRenderer(m_pipeline->get_model(), verbose));
   }
   else
   {
