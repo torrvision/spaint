@@ -428,11 +428,8 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     args.detectFiducials = true;
   }
 
-  // If the user wants to run in headless mode, batch mode is implied (no way to control the application otherwise).
-  if(args.headless)
-  {
-    args.batch = true;
-  }
+  // If the user wants to run in headless mode, batch mode is implied (without a GUI, there is no other way to start the reconstruction).
+  if(args.headless) args.batch = true;
 
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
