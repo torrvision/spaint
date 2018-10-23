@@ -138,6 +138,15 @@ void VisualisationGenerator::generate_voxel_visualisation(const ORUChar4Image_Pt
                                               ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
+    case VT_SCENE_DEPTH:
+    {
+      // FIXME: This is a workaround that is needed because DepthToUchar4 is currently CPU-only.
+      static ORFloatImage_Ptr temp(new ORFloatImage(output->noDims, true, true));
+      generate_depth_from_voxels(temp, scene, pose, intrinsics, renderState, DepthVisualiser::DT_ORTHOGRAPHIC);
+      IITMVisualisationEngine::DepthToUchar4(output.get(), temp.get());
+      if(m_settings->deviceType == DEVICE_CUDA) output->UpdateDeviceFromHost();
+      return;
+    }
     case VT_SCENE_NORMAL:
     {
       m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, &intrinsics, renderState.get(), renderState->raycastImage,

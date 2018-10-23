@@ -832,8 +832,8 @@ void Application::process_renderer_input()
       m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_SCENE_SEMANTICFLAT :
       m_inputState.key_down(KEYCODE_5) ? VisualisationGenerator::VT_SCENE_COLOUR :
       m_inputState.key_down(KEYCODE_6) ? VisualisationGenerator::VT_SCENE_NORMAL :
-      m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_DEPTH :
-      m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_CONFIDENCE :
+      m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_CONFIDENCE :
+      m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_DEPTH :
       m_inputState.key_down(KEYCODE_9) ? VisualisationGenerator::VT_INPUT_COLOUR :
       m_inputState.key_down(KEYCODE_0) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_INPUT_DEPTH) :
       boost::none;
