@@ -609,7 +609,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
     ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
-    ("headless", po::bool_switch(&args.headless), "headless mode")
+    ("headless", po::bool_switch(&args.headless), "run in headless mode")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
@@ -715,7 +715,7 @@ try
     return 0;
   }
 
-  // If we are not running in headless mode, initialise the GUI subsystems.
+  // If we're not running in headless mode, initialise the GUI-only subsystems.
   if(!args.headless)
   {
     // Initialise SDL.
@@ -724,15 +724,15 @@ try
       quit("Error: Failed to initialise SDL.");
     }
 
-#ifdef WITH_GLUT
+  #ifdef WITH_GLUT
     // Initialise GLUT (used for text rendering only).
     glutInit(&argc, argv);
-#endif
+  #endif
 
-#ifdef WITH_OVR
+  #ifdef WITH_OVR
     // If we built with Rift support, initialise the Rift SDK.
     ovr_Initialize();
-#endif
+  #endif
   }
 
   // Find all available joysticks and report the number found to the user.
@@ -956,17 +956,17 @@ try
   app.set_save_models_on_exit(args.saveModelsOnExit);
   bool runSucceeded = app.run();
 
-#ifdef WITH_OVR
-  // If we built with Rift support, shut down the Rift SDK.
-  ovr_Shutdown();
-#endif
-
   // Close all open joysticks.
   joysticks.clear();
 
-  // If we are not running in headless mode, shut down the graphics subsystem.
+  // If we're not running in headless mode, shut down the GUI-only subsystems.
   if(!args.headless)
   {
+  #ifdef WITH_OVR
+    // If we built with Rift support, shut down the Rift SDK.
+    ovr_Shutdown();
+  #endif
+
     // Shut down SDL.
     SDL_Quit();
   }
