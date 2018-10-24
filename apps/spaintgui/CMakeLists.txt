@@ -76,11 +76,13 @@ core/SLAMPipeline.h
 
 ##
 SET(renderers_sources
+renderers/HeadlessRenderer.cpp
 renderers/Renderer.cpp
 renderers/WindowedRenderer.cpp
 )
 
 SET(renderers_headers
+renderers/HeadlessRenderer.h
 renderers/Renderer.h
 renderers/WindowedRenderer.h
 )
