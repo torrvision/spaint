@@ -47,10 +47,15 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
   m_tracker(tracker),
   m_visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType,IndexType>(settings->deviceType))
 {
-  // Construct the tracking controller, tracking state and view.
+  // Construct the tracking controller, tracking state, view and render state.
   m_trackingController.reset(new ITMLib::ITMTrackingController(m_tracker.get(), m_settings.get()));
   m_trackingState.reset(new ITMLib::ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
   m_view.reset(new ITMLib::ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == DEVICE_CUDA));
+  m_voxelRenderState.reset(ITMLib::ITMRenderStateFactory<IndexType>::CreateRenderState(
+    m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize),
+    m_scene->sceneParams,
+    m_settings->GetMemoryType()
+  ));
 
   // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
@@ -138,6 +143,14 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
   std::vector<Relocaliser::Result> refinedResults;
   float bestScore = static_cast<float>(INT_MAX);
 
+  // Reset the render state before raycasting (we do this once for each relocalisation attempt).
+  // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
+  //        to the program randomly crashing after a while. The crash may be occurring because we don't use this render
+  //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
+  //        currently reset the render state each time as a workaround. A mildly less costly alternative might
+  //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
+  m_voxelRenderState->Reset();
+
   // For each initial result from the inner relocaliser:
   for(size_t resultIdx = 0; resultIdx < initialResults.size(); ++resultIdx)
   {
@@ -147,18 +160,6 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     // Copy the depth and RGB images into the view.
     m_view->depth->SetFrom(depthImage, m_settings->deviceType == DEVICE_CUDA ? ORFloatImage::CUDA_TO_CUDA : ORFloatImage::CPU_TO_CPU);
     m_view->rgb->SetFrom(colourImage, m_settings->deviceType == DEVICE_CUDA ? ORUChar4Image::CUDA_TO_CUDA : ORUChar4Image::CPU_TO_CPU);
-
-    // Create a fresh render state ready for raycasting.
-    // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
-    //        to the program randomly crashing after a while. The crash may be occurring because we don't use this render
-    //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
-    //        currently create a fresh render state each time as a workaround. A mildly less costly alternative might
-    //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
-    m_voxelRenderState.reset(ITMLib::ITMRenderStateFactory<IndexType>::CreateRenderState(
-      m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
-      m_scene->sceneParams,
-      m_settings->GetMemoryType()
-    ));
 
     // Set up the tracking state using the initial pose.
     m_trackingState->pose_d->SetFrom(&initialPose);
