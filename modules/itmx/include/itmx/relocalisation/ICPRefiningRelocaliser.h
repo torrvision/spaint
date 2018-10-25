@@ -189,7 +189,7 @@ private:
   void save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const;
 
   /**
-   * \brief Scores a camera pose by computing the mean depth difference between the real depth image
+   * \brief Scores a proposed camera pose by computing the mean depth difference between the real depth image
    *        and a synthetic depth image rendered from it.
    *
    * \param pose  The pose to score.
