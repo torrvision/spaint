@@ -114,10 +114,7 @@ public:
    * \param key The name of the setting to check.
    * \return    true, if the setting has values, or false otherwise.
    */
-  bool has_values(const std::string& key) const
-  {
-    return MapUtil::contains(m_settings, key);
-  }
+  bool has_values(const std::string& key) const;
 
   //#################### STREAM OPERATORS ####################
 public:
