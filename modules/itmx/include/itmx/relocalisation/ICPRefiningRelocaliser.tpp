@@ -186,7 +186,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       if(initialResults.size() > 1 && m_chooseBestResult)
       {
         // Score the refined result.
-        refinedResult.score = score_result(refinedResult);
+        refinedResult.score = score_pose(refinedResult.pose);
 
 #if DEBUGGING
         std::cout << resultIdx << ": " << refinedResult.score << '\n';
@@ -289,7 +289,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& rel
 }
 
 template <typename VoxelType, typename IndexType>
-float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& result) const
+float ICPRefiningRelocaliser<VoxelType,IndexType>::score_pose(const ORUtils::SE3Pose& pose) const
 {
 #ifdef WITH_OPENCV
   // Make an OpenCV wrapper of the current depth image.
@@ -299,7 +299,7 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_result(const Result& re
   // Render a synthetic depth image of the scene from the suggested pose.
   ORFloatImage_Ptr synthDepth(new ORFloatImage(m_view->depth->noDims, true, true));
   DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
-    synthDepth, m_scene, result.pose, m_view->calib.intrinsics_d, m_voxelRenderState,
+    synthDepth, m_scene, pose, m_view->calib.intrinsics_d, m_voxelRenderState,
     DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
   );
 
