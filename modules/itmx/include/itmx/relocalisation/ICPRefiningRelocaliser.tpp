@@ -200,11 +200,11 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
 
   start_timer(m_timerRefinement, false); // No need to synchronize the GPU again.
 
-  // Reset the render state before raycasting (we do it once for relocalisation attempt).
-  // FIXME: It would be nicer to simply reuse it, but unfortunately this leads
+  // Reset the render state before raycasting (we do this once for each relocalisation attempt).
+  // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
   //        to the program randomly crashing after a while. The crash may be occurring because we don't use this render
   //        state to integrate frames into the scene, but we haven't been able to pin this down yet. As a result, we
-  //        currently reset it each time as a workaround. A mildly less costly alternative might
+  //        currently reset the render state each time as a workaround. A mildly less costly alternative might
   //        be to pass in a render state that is being used elsewhere and reuse it here, but that feels messier.
   m_voxelRenderState->Reset();
 
@@ -326,7 +326,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     ORUtils::SE3Pose gtPose;
     gtPose.SetInvM(invPose);
 
-    // Render a synthetic depth image of the scene from the initial pose (which is always valid if we got here.
+    // Render a synthetic depth image of the scene from the initial pose (which is always valid if we got here).
     DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
       synthDepthF, m_scene, gtPose, m_view->calib.intrinsics_d, m_voxelRenderState,
       DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
