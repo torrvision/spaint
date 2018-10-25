@@ -108,6 +108,14 @@ public:
     return typedValues;
   }
 
+  /**
+   * \brief Gets whether or not the specified setting has any values.
+   *
+   * \param key The name of the setting to check.
+   * \return    true, if the setting has values, or false otherwise.
+   */
+  bool has_values(const std::string& key) const;
+
   //#################### STREAM OPERATORS ####################
 public:
   /**

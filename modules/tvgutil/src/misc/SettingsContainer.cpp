@@ -22,6 +22,11 @@ void SettingsContainer::add_value(const std::string& key, const std::string& val
   m_settings[key].push_back(value);
 }
 
+bool SettingsContainer::has_values(const std::string& key) const
+{
+  return MapUtil::contains(m_settings, key);
+}
+
 //#################### STREAM OPERATORS ####################
 
 std::ostream& operator<<(std::ostream& os, const SettingsContainer& rhs)
