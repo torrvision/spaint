@@ -97,7 +97,7 @@ void ScoreRelocaliser::finish_training()
   m_relocaliserState->lastExamplesAddedStartIdx = 0;
   m_relocaliserState->reservoirUpdateStartIdx = 0;
 
-  // Release the clusterer as well.
+  // Finally, release the example clusterer.
   m_exampleClusterer.reset();
 }
 
