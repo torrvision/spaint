@@ -160,7 +160,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_timerCandidateGeneration.start_nosync();
+    m_timerCandidateGeneration.start_nosync(); // No need to synchronize the GPU again.
     generate_pose_candidates();
     m_timerCandidateGeneration.stop_sync();
   }
@@ -202,7 +202,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     //            the candidates by quality, this has the effect of keeping only the best ones.
     m_poseCandidates->dataSize = m_maxPoseCandidatesAfterCull;
 
-    m_timerFirstTrim.stop_nosync();
+    m_timerFirstTrim.stop_nosync(); // No need to synchronize the GPU again.
   }
 
   m_poseCandidatesAfterCull = static_cast<uint32_t>(m_poseCandidates->dataSize);
@@ -238,20 +238,20 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     // Step 4(b): If pose update is enabled, optimise all remaining candidates, taking into account the newly selected inliers.
     if(m_poseUpdate)
     {
-      m_timerPrepareOptimisation[iteration].start_nosync();
+      m_timerPrepareOptimisation[iteration].start_nosync(); // No need to synchronize the GPU again.
       prepare_inliers_for_optimisation();
       m_timerPrepareOptimisation[iteration].stop_sync();
 
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "continuous optimization: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      m_timerOptimisation[iteration].start_nosync();
+      m_timerOptimisation[iteration].start_nosync(); // No need to synchronize the GPU again.
       update_candidate_poses();
       m_timerOptimisation[iteration].stop_sync();
     }
 
     // Step 4(c): Compute the energy for each candidate and sort them in non-increasing order of quality.
-    m_timerComputeEnergy[iteration].start_nosync();
+    m_timerComputeEnergy[iteration].start_nosync(); // No need to synchronize the GPU again.
     compute_energies_and_sort();
     m_timerComputeEnergy[iteration].stop_sync();
 
@@ -270,17 +270,17 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     m_timerInlierSampling[iteration].stop_sync();
 
     // Having selected the inlier points, find the best associated modes to use during optimisation.
-    m_timerPrepareOptimisation[iteration].start_nosync();
+    m_timerPrepareOptimisation[iteration].start_nosync(); // No need to synchronize the GPU again.
     prepare_inliers_for_optimisation();
     m_timerPrepareOptimisation[iteration].stop_sync();
 
     // Run the optimisation.
-    m_timerOptimisation[iteration].start_nosync();
+    m_timerOptimisation[iteration].start_nosync(); // No need to synchronize the GPU again.
     update_candidate_poses();
     m_timerOptimisation[iteration].stop_sync();
   }
 
-  m_timerTotal.stop_nosync();
+  m_timerTotal.stop_nosync(); // No need to synchronize the GPU again.
 
   // Make sure the pose candidates available on the host are up to date.
   update_host_pose_candidates();
