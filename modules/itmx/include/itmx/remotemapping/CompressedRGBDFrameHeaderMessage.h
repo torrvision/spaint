@@ -8,21 +8,29 @@
 
 #include <boost/cstdint.hpp>
 
-#include <tvgutil/net/Message.h>
+#include <ORUtils/Math.h>
+
+#include "MappingMessage.h"
 
 namespace itmx {
 
 /**
- * \brief An instance of this class represents a message containing the sizes (in bytes) of the compressed depth and RGB images for a single frame of compressed RGB-D data.
+ * \brief An instance of this class represents a message containing the sizes (in bytes) and dimensions of the compressed images for a single RGB-D frame.
  */
-class CompressedRGBDFrameHeaderMessage : public tvgutil::Message
+class CompressedRGBDFrameHeaderMessage : public MappingMessage
 {
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The byte segment within the message data that corresponds to the size in bytes of the compressed depth image. */
+  Segment m_depthImageByteSizeSegment;
+
+  /** The byte segment within the message data that corresponds to the dimensions of the compressed depth image. */
   Segment m_depthImageSizeSegment;
 
   /** The byte segment within the message data that corresponds to the size in bytes of the compressed RGB image. */
+  Segment m_rgbImageByteSizeSegment;
+
+  /** The byte segment within the message data that corresponds to the dimensions of the compressed RGB image. */
   Segment m_rgbImageSizeSegment;
 
   //#################### CONSTRUCTORS ####################
@@ -39,28 +47,56 @@ public:
    *
    * \return The size (in bytes) of the compressed depth image.
    */
-  uint32_t extract_depth_image_size() const;
+  uint32_t extract_depth_image_byte_size() const;
+
+  /**
+   * \brief Extracts the dimensions of the compressed depth image from the message.
+   *
+   * \return  The dimensions of the compressed depth image.
+   */
+  Vector2i extract_depth_image_size() const;
 
   /**
    * \brief Extracts the size (in bytes) of the compressed RGB image from the message.
    *
    * \return The size (in bytes) of the compressed RGB image.
    */
-  uint32_t extract_rgb_image_size() const;
+  uint32_t extract_rgb_image_byte_size() const;
 
   /**
-   * \brief Sets the size in bytes of the compressed depth image.
+   * \brief Extracts the dimensions of the compressed RGB image from the message.
    *
-   * \param depthImageSize The size in bytes of the compressed depth image.
+   * \return  The dimensions of the compressed RGB image.
    */
-  void set_depth_image_size(uint32_t depthImageSize);
+  Vector2i extract_rgb_image_size() const;
 
   /**
-   * \brief Sets the size in bytes of the compressed RGB image.
+   * \brief Sets the size (in bytes) of the compressed depth image.
    *
-   * \param rgbImageSize The size in bytes of the compressed RGB image.
+   * \param depthImageByteSize  The size (in bytes) of the compressed depth image.
    */
-  void set_rgb_image_size(uint32_t rgbImageSize);
+  void set_depth_image_byte_size(uint32_t depthImageByteSize);
+
+  /**
+   * \brief Sets the dimensions of the compressed depth image.
+   *
+   * \param depthImageSize  The dimensions of the compressed depth image.
+   */
+  void set_depth_image_size(const Vector2i& depthImageSize);
+
+  /**
+   * \brief Sets the size (in bytes) of the compressed RGB image.
+   *
+   * \param rgbImageByteSize  The size (in bytes) of the compressed RGB image.
+   */
+  void set_rgb_image_byte_size(uint32_t rgbImageByteSize);
+
+  /**
+   * \brief Sets the dimensions of the compressed RGB image.
+   *
+   * \param rgbImageSize  The dimensions of the compressed RGB image.
+   */
+  void set_rgb_image_size(const Vector2i& rgbImageSize);
 };
 
 }

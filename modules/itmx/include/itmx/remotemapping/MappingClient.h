@@ -32,8 +32,14 @@ private:
   /** A queue containing the RGB-D frame messages to be sent to the server. */
   RGBDFrameMessageQueue m_frameMessageQueue;
 
+  /** A mutex used to synchronise interactions with the server to avoid overlaps. */
+  mutable boost::mutex m_interactionMutex;
+
+  /** The image in which remote scene renderings retrieved from the server are stored. */
+  mutable ORUChar4Image_Ptr m_remoteImage;
+
   /** The TCP stream used as a wrapper around the connection to the server. */
-  boost::asio::ip::tcp::iostream m_stream;
+  mutable boost::asio::ip::tcp::iostream m_stream;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -54,11 +60,27 @@ public:
   RGBDFrameMessageQueue::PushHandler_Ptr begin_push_frame_message();
 
   /**
+   * \brief Gets the image in which remote scene renderings retrieved from the server are stored.
+   *
+   * \return  The image in which remote scene renderings retrieved from the server are stored.
+   */
+  ORUChar4Image_CPtr get_remote_image() const;
+
+  /**
    * \brief Sends a calibration message to the server.
    *
    * \param msg The message to send.
    */
   void send_calibration_message(const RGBDCalibrationMessage& msg);
+
+  /**
+   * \brief Sends a request to the server to render a visualisation of the scene for the client.
+   *
+   * \param imgSize       The size of image to render.
+   * \param pose          The pose (in the client's coordinate system) from which the server should render the scene.
+   * \param visualisation The type of visualisation to render.
+   */
+  void update_rendering_request(const Vector2i& imgSize, const ORUtils::SE3Pose& pose, int visualisationType);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

@@ -13,31 +13,53 @@ namespace itmx {
 
 CompressedRGBDFrameHeaderMessage::CompressedRGBDFrameHeaderMessage()
 {
-  m_depthImageSizeSegment = std::make_pair(0, sizeof(uint32_t));
-  m_rgbImageSizeSegment = std::make_pair(m_depthImageSizeSegment.second, sizeof(uint32_t));
-  m_data.resize(m_rgbImageSizeSegment.first + m_rgbImageSizeSegment.second);
+  m_depthImageByteSizeSegment = std::make_pair(0, sizeof(uint32_t));
+  m_depthImageSizeSegment = std::make_pair(end_of(m_depthImageByteSizeSegment), sizeof(Vector2i));
+  m_rgbImageByteSizeSegment = std::make_pair(end_of(m_depthImageSizeSegment), sizeof(uint32_t));
+  m_rgbImageSizeSegment = std::make_pair(end_of(m_rgbImageByteSizeSegment), sizeof(Vector2i));
+  m_data.resize(end_of(m_rgbImageSizeSegment));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-uint32_t CompressedRGBDFrameHeaderMessage::extract_depth_image_size() const
+uint32_t CompressedRGBDFrameHeaderMessage::extract_depth_image_byte_size() const
 {
-  return *reinterpret_cast<const uint32_t*>(&m_data[m_depthImageSizeSegment.first]);
+  return read_simple<uint32_t>(m_depthImageByteSizeSegment);
 }
 
-uint32_t CompressedRGBDFrameHeaderMessage::extract_rgb_image_size() const
+Vector2i CompressedRGBDFrameHeaderMessage::extract_depth_image_size() const
 {
-  return *reinterpret_cast<const uint32_t*>(&m_data[m_rgbImageSizeSegment.first]);
+  return read_simple<Vector2i>(m_depthImageSizeSegment);
 }
 
-void CompressedRGBDFrameHeaderMessage::set_depth_image_size(uint32_t depthImageSize)
+uint32_t CompressedRGBDFrameHeaderMessage::extract_rgb_image_byte_size() const
 {
-  memcpy(&m_data[m_depthImageSizeSegment.first], reinterpret_cast<const char*>(&depthImageSize), m_depthImageSizeSegment.second);
+  return read_simple<uint32_t>(m_rgbImageByteSizeSegment);
 }
 
-void CompressedRGBDFrameHeaderMessage::set_rgb_image_size(uint32_t rgbImageSize)
+Vector2i CompressedRGBDFrameHeaderMessage::extract_rgb_image_size() const
 {
-  memcpy(&m_data[m_rgbImageSizeSegment.first], reinterpret_cast<const char*>(&rgbImageSize), m_rgbImageSizeSegment.second);
+  return read_simple<Vector2i>(m_rgbImageSizeSegment);
+}
+
+void CompressedRGBDFrameHeaderMessage::set_depth_image_byte_size(uint32_t depthImageByteSize)
+{
+  write_simple(depthImageByteSize, m_depthImageByteSizeSegment);
+}
+
+void CompressedRGBDFrameHeaderMessage::set_depth_image_size(const Vector2i& depthImageSize)
+{
+  write_simple(depthImageSize, m_depthImageSizeSegment);
+}
+
+void CompressedRGBDFrameHeaderMessage::set_rgb_image_byte_size(uint32_t rgbImageByteSize)
+{
+  write_simple(rgbImageByteSize, m_rgbImageByteSizeSegment);
+}
+
+void CompressedRGBDFrameHeaderMessage::set_rgb_image_size(const Vector2i& rgbImageSize)
+{
+  write_simple(rgbImageSize, m_rgbImageSizeSegment);
 }
 
 }

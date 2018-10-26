@@ -8,9 +8,8 @@
 
 #include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
-#include <tvgutil/net/Message.h>
-
 #include "DepthCompressionType.h"
+#include "MappingMessage.h"
 #include "RGBCompressionType.h"
 
 namespace itmx {
@@ -18,7 +17,7 @@ namespace itmx {
 /**
  * \brief An instance of this class represents a message containing the calibration for an RGB-D camera.
  */
-class RGBDCalibrationMessage : public tvgutil::Message
+class RGBDCalibrationMessage : public MappingMessage
 {
   //#################### PRIVATE VARIABLES ####################
 private:

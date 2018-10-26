@@ -8,14 +8,14 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include <tvgutil/net/Message.h>
+#include "MappingMessage.h"
 
 namespace itmx {
 
 /**
  * \brief An instance of a class deriving from this one represents a message containing a single frame of RGB-D data (frame index + pose + RGB-D).
  */
-class BaseRGBDFrameMessage : public tvgutil::Message
+class BaseRGBDFrameMessage : public MappingMessage
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
