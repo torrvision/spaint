@@ -129,14 +129,14 @@ public:
   /**
    * \brief Gets whether or not the images associated with the first message in the queue have already been read.
    *
-   * \return  Whether or not the images associated with the first message in the queue have already been read.
+   * \return  true, if the images associated with the first message in the queue have already been read, or false otherwise.
    */
   bool images_dirty() const;
 
   /**
    * \brief Gets whether or not the pose associated with the first message in the queue has already been read.
    *
-   * \return  Whether or not the pose associated with the first message in the queue has already been read.
+   * \return  true, if the pose associated with the first message in the queue has already been read, or false otherwise.
    */
   bool pose_dirty() const;
 
