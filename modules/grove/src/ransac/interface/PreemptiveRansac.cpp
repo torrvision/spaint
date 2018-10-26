@@ -66,11 +66,11 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr& settings)
   // Each RANSAC iteration after the initial cull adds m_ransacInliersPerIteration inliers to the set, so we allocate enough space for all of them up-front.
   m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(log2(m_maxPoseCandidatesAfterCull)));
 
-  // We can update the candidate poses only if ALGLIB is available. Check and throw an exception otherwise.
+  // We can only update the candidate poses if ALGLIB is available. Check and throw an exception otherwise.
 #ifndef WITH_ALGLIB
   if(m_poseUpdate)
   {
-    throw std::runtime_error("Cannot run with poseUpdate enabled without ALGLIB. Rebuild with WITH_ALGLIB set to ON in CMake.");
+    throw std::runtime_error("Error: Enabling poseUpdate requires ALGLIB. Reconfigure in CMake with the WITH_ALGLIB option set to ON.");
   }
 #endif
 
@@ -398,7 +398,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
       alglib::minlmoptimize(state, alglib_func_l2, alglib_jac_l2, alglib_rep, &ptsForLM);
     }
   }
-  catch (const alglib::ap_error& e)
+  catch(const alglib::ap_error& e)
   {
     std::cout << "ALGLIB failed the optimisation for pose candidate: " << candidateIdx << ". Reason: " << e.msg << "\n";
     return false;
@@ -417,7 +417,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 
   return succeeded;
 #else
-  throw std::runtime_error("Cannot update candidate poses. Rebuild with WITH_ALGLIB set to ON in CMake.");
+  throw std::runtime_error("Error: Cannot update candidate poses. Reconfigure in CMake with the WITH_ALGLIB option set to ON.");
 #endif
 }
 
