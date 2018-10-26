@@ -39,11 +39,11 @@ inline void merge_predictions_for_keypoint(int x, int y, const ORUtils::VectorX<
   // Copy the leaf indices associated with the keypoint into a local array.
   const LeafIndices leafIndicesForKeypoint = leafIndices[keypointRasterIdx];
 
-  // Copy the input predictions associated with the keypoint's leaves into a contiguous local array (this makes it more efficient to access them later).
-  ScorePrediction inputPredictions[TREE_COUNT];
+  // Make an array of pointers to the input predictions associated with the keypoint's leaves (this makes indexing easier later).
+  const ScorePrediction *inputPredictions[TREE_COUNT];
   for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
-    inputPredictions[treeIdx] = predictionsBlock[leafIndicesForKeypoint[treeIdx]];
+    inputPredictions[treeIdx] = &predictionsBlock[leafIndicesForKeypoint[treeIdx]];
   }
 
   // Make an array of indices in which each element denotes the current mode to consider in each of the input predictions.
@@ -56,7 +56,8 @@ inline void merge_predictions_for_keypoint(int x, int y, const ORUtils::VectorX<
     currentModeIndices[treeIdx] = 0;
   }
 
-  ScorePrediction outputPrediction;
+  // Grab a reference to the output prediction, and set its initial size to zero.
+  ScorePrediction& outputPrediction = outputPredictions[keypointRasterIdx];
   outputPrediction.size = 0;
 
   // While the output prediction is not yet full:
@@ -72,9 +73,9 @@ inline void merge_predictions_for_keypoint(int x, int y, const ORUtils::VectorX<
       const int currentModeIdx = currentModeIndices[treeIdx];
 
       // If we've already considered all of the modes for this input prediction, skip it and continue.
-      if(currentModeIdx >= inputPredictions[treeIdx].size) continue;
+      if(currentModeIdx >= inputPredictions[treeIdx]->size) continue;
 
-      const Keypoint3DColourCluster& currentMode = inputPredictions[treeIdx].elts[currentModeIdx];
+      const Keypoint3DColourCluster& currentMode = inputPredictions[treeIdx]->elts[currentModeIdx];
 
       // If the biggest as-yet-unprocessed mode for this input prediction has more inliers than the current best mode:
       if(currentMode.nbInliers > bestNbInliers)
@@ -89,12 +90,9 @@ inline void merge_predictions_for_keypoint(int x, int y, const ORUtils::VectorX<
     if(bestNbInliers == 0) break;
 
     // Otherwise, copy the chosen mode into the output prediction, and increment the current mode index for the associated input prediction.
-    outputPrediction.elts[outputPrediction.size++] = inputPredictions[bestTreeIdx].elts[currentModeIndices[bestTreeIdx]];
+    outputPrediction.elts[outputPrediction.size++] = inputPredictions[bestTreeIdx]->elts[currentModeIndices[bestTreeIdx]];
     ++currentModeIndices[bestTreeIdx];
   }
-
-  // Finally, copy the output prediction into the output predictions image.
-  outputPredictions[keypointRasterIdx] = outputPrediction;
 }
 
 }
