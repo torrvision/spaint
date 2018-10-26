@@ -398,7 +398,7 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
       alglib::minlmoptimize(state, alglib_func_l2, alglib_jac_l2, alglib_rep, &ptsForLM);
     }
   }
-  catch (const alglib::ap_error& e)
+  catch(const alglib::ap_error& e)
   {
     std::cout << "ALGLIB failed the optimisation for pose candidate: " << candidateIdx << ". Reason: " << e.msg << "\n";
     return false;
