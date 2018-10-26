@@ -363,11 +363,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer(AverageTimer& time
 {
   if(!m_timersEnabled) return;
 
-#ifdef WITH_CUDA
-  ORcudaSafeCall(cudaDeviceSynchronize());
-#endif
-
-  timer.start();
+  timer.start_sync();
 }
 
 template <typename VoxelType, typename IndexType>
@@ -375,11 +371,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer(AverageTimer& timer
 {
   if(!m_timersEnabled) return;
 
-#ifdef WITH_CUDA
-  ORcudaSafeCall(cudaDeviceSynchronize());
-#endif
-
-  timer.stop();
+  timer.stop_sync();
 }
 
 }

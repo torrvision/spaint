@@ -139,7 +139,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
         speed-up of the system.
   */
 
-  m_timerTotal.start();
+  m_timerTotal.start_sync();
 
   // Copy the keypoints and predictions images into member variables to avoid explicitly passing them to every function.
   m_keypointsImage = keypointsImage;
@@ -150,9 +150,9 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_timerCandidateGeneration.start();
+    m_timerCandidateGeneration.start_nosync();
     generate_pose_candidates();
-    m_timerCandidateGeneration.stop();
+    m_timerCandidateGeneration.stop_sync();
   }
 
   // Reset the number of inliers ready for the new pose estimation.
@@ -164,7 +164,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   // Step 2: If necessary, aggressively cull the initial candidates to reduce the computational cost of the remaining steps.
   if(m_poseCandidates->dataSize > m_maxPoseCandidatesAfterCull)
   {
-    m_timerFirstTrim.start();
+    m_timerFirstTrim.start_sync();
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
@@ -183,16 +183,16 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "compute energies and sort: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      m_timerFirstComputeEnergy.start();
+      m_timerFirstComputeEnergy.start_sync();
       compute_energies_and_sort();
-      m_timerFirstComputeEnergy.stop();
+      m_timerFirstComputeEnergy.stop_sync();
     }
 
     // Step 2(c): Finally, trim the number of candidates down to the maximum number allowed. Since we previously sorted
     //            the candidates by quality, this has the effect of keeping only the best ones.
     m_poseCandidates->dataSize = m_maxPoseCandidatesAfterCull;
 
-    m_timerFirstTrim.stop();
+    m_timerFirstTrim.stop_nosync();
   }
 
   m_poseCandidatesAfterCull = static_cast<uint32_t>(m_poseCandidates->dataSize);
@@ -220,30 +220,30 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 #endif
 
     // Step 4(a): Sample a set of keypoints from the input image. Record that thay have been selected in the mask image, to avoid selecting them again.
-    m_timerInlierSampling[iteration].start();
+    m_timerInlierSampling[iteration].start_sync();
     const bool useMask = true;
     sample_inliers(useMask);
-    m_timerInlierSampling[iteration].stop();
+    m_timerInlierSampling[iteration].stop_sync();
 
     // Step 4(b): If pose update is enabled, optimise all remaining candidates, taking into account the newly selected inliers.
     if(m_poseUpdate)
     {
-      m_timerPrepareOptimisation[iteration].start();
+      m_timerPrepareOptimisation[iteration].start_nosync();
       prepare_inliers_for_optimisation();
-      m_timerPrepareOptimisation[iteration].stop();
+      m_timerPrepareOptimisation[iteration].stop_sync();
 
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "continuous optimization: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      m_timerOptimisation[iteration].start();
+      m_timerOptimisation[iteration].start_nosync();
       update_candidate_poses();
-      m_timerOptimisation[iteration].stop();
+      m_timerOptimisation[iteration].stop_sync();
     }
 
     // Step 4(c): Compute the energy for each candidate and sort them in non-increasing order of quality.
-    m_timerComputeEnergy[iteration].start();
+    m_timerComputeEnergy[iteration].start_nosync();
     compute_energies_and_sort();
-    m_timerComputeEnergy[iteration].stop();
+    m_timerComputeEnergy[iteration].stop_sync();
 
     // Step 4(d): Remove the worse half of the candidates.
     m_poseCandidates->dataSize /= 2;
@@ -255,22 +255,22 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   if(m_poseUpdate && iteration == 0 && m_poseCandidates->dataSize == 1)
   {
     // Sample some inliers.
-    m_timerInlierSampling[iteration].start();
+    m_timerInlierSampling[iteration].start_sync();
     sample_inliers(true);
-    m_timerInlierSampling[iteration].stop();
+    m_timerInlierSampling[iteration].stop_sync();
 
     // Having selected the inlier points, find the best associated modes to use during optimisation.
-    m_timerPrepareOptimisation[iteration].start();
+    m_timerPrepareOptimisation[iteration].start_nosync();
     prepare_inliers_for_optimisation();
-    m_timerPrepareOptimisation[iteration].stop();
+    m_timerPrepareOptimisation[iteration].stop_sync();
 
     // Run the optimisation.
-    m_timerOptimisation[iteration].start();
+    m_timerOptimisation[iteration].start_nosync();
     update_candidate_poses();
-    m_timerOptimisation[iteration].stop();
+    m_timerOptimisation[iteration].stop_sync();
   }
 
-  m_timerTotal.stop();
+  m_timerTotal.stop_nosync();
 
   // Make sure the pose candidates available on the host are up to date.
   update_host_pose_candidates();

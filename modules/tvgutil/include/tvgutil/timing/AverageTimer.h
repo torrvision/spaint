@@ -107,21 +107,51 @@ public:
 
   /**
    * \brief Starts the timer (this should be called prior before each run of the event).
+   *
+   * \note  The GPU will not be synchronised prior to starting the timer.
    */
-  void start()
+  void start_nosync()
   {
     m_t0 = boost::chrono::high_resolution_clock::now();
   }
 
   /**
-   * \brief Stops the timer (this should be called after each run of the event).
+   * \brief Starts the timer (this should be called prior before each run of the event).
+   *
+   * \note  The GPU will be synchronised prior to starting the timer.
    */
-  void stop()
+  void start_sync()
+  {
+#ifdef WITH_CUDA
+    ORcudaSafeCall(cudaDeviceSynchronize());
+#endif
+    start_nosync();
+  }
+
+  /**
+   * \brief Stops the timer (this should be called after each run of the event).
+   *
+   * \note  The GPU will not be synchronised prior to stopping the timer.
+   */
+  void stop_nosync()
   {
     boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
     m_lastDuration = boost::chrono::duration_cast<Scale>(t1 - m_t0);
     m_totalDuration += m_lastDuration;
     ++m_count;
+  }
+
+  /**
+   * \brief Stops the timer (this should be called after each run of the event).
+   *
+   * \note  The GPU will be synchronised prior to stopping the timer.
+   */
+  void stop_sync()
+  {
+#ifdef WITH_CUDA
+    ORcudaSafeCall(cudaDeviceSynchronize());
+#endif
+    stop_nosync();
   }
 };
 
@@ -145,18 +175,9 @@ std::ostream& operator<<(std::ostream& os, const AverageTimer<Scale>& rhs)
 
 #define AVG_TIME(target, scale, tag) \
   static tvgutil::AverageTimer<boost::chrono::scale> tag(#tag); \
-  tag.start(); \
+  tag.start_sync(); \
   target; \
-  tag.stop()
-
-#ifdef WITH_CUDA
-#define CUDA_AVG_TIME(target, scale, tag) \
-  static tvgutil::AverageTimer<boost::chrono::scale> tag(#tag); \
-  tag.start(); \
-  target; \
-  cudaDeviceSynchronize(); \
-  tag.stop()
-#endif
+  tag.stop_sync()
 
 }
 
