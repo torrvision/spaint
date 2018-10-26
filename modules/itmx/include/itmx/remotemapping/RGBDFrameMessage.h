@@ -62,6 +62,20 @@ public:
   void extract_rgb_image(ORUChar4Image *rgbImage) const;
 
   /**
+   * \brief Gets the size of the frame's depth image.
+   *
+   * \return  The size of the frame's depth image.
+   */
+  const Vector2i& get_depth_image_size() const;
+
+  /**
+   * \brief Gets the size of the frame's RGB image.
+   *
+   * \return  The size of the frame's RGB image.
+   */
+  const Vector2i& get_rgb_image_size() const;
+
+  /**
    * \brief Copies a depth image into the appropriate byte segment in the message.
    *
    * \param depthImage  The depth image.

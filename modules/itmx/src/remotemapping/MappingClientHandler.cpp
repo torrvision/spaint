@@ -13,6 +13,7 @@ using namespace tvgutil;
 #endif
 
 #include "remotemapping/InteractionTypeMessage.h"
+#include "remotemapping/RenderingRequestMessage.h"
 #include "remotemapping/RGBDCalibrationMessage.h"
 
 //#define DEBUGGING 1
@@ -33,9 +34,29 @@ MappingClientHandler::MappingClientHandler(int clientID, const boost::shared_ptr
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+const ITMLib::ITMRGBDCalib& MappingClientHandler::get_calib() const
+{
+  return m_calib;
+}
+
 const Vector2i& MappingClientHandler::get_depth_image_size() const
 {
   return m_calib.intrinsics_d.imgSize;
+}
+
+const MappingClientHandler::RGBDFrameMessageQueue_Ptr& MappingClientHandler::get_frame_message_queue()
+{
+  return m_frameMessageQueue;
+}
+
+ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type MappingClientHandler::get_rendered_image()
+{
+  return make_exclusive_handle(m_renderedImage, m_renderedImageMutex);
+}
+
+ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type MappingClientHandler::get_rendering_request()
+{
+  return make_exclusive_handle(m_renderingRequestMessage, m_renderingRequestMutex);
 }
 
 const Vector2i& MappingClientHandler::get_rgb_image_size() const
@@ -43,16 +64,74 @@ const Vector2i& MappingClientHandler::get_rgb_image_size() const
   return m_calib.intrinsics_rgb.imgSize;
 }
 
+const std::string& MappingClientHandler::get_scene_id() const
+{
+  return m_sceneID;
+}
+
+bool MappingClientHandler::images_dirty() const
+{
+  return m_imagesDirty;
+}
+
+bool MappingClientHandler::pose_dirty() const
+{
+  return m_poseDirty;
+}
+
 void MappingClientHandler::run_iter()
 {
-  InteractionTypeMessage interactionTypeMsg(IT_SENDFRAME);
+  InteractionTypeMessage interactionTypeMsg;
+  RenderingRequestMessage renderingRequestMsg;
 
-  // TODO: First, try to read an interaction type message.
-  if(true)
+  // First, try to read an interaction type message.
+  if((m_connectionOk = read_message(interactionTypeMsg)))
   {
     // If that succeeds, determine the type of interaction the client wants to have with the server and proceed accordingly.
     switch(interactionTypeMsg.extract_value())
     {
+      case IT_GETRENDEREDIMAGE:
+      {
+#if DEBUGGING
+        std::cout << "Receiving get rendered image request from client" << std::endl;
+#endif
+
+        // Try to grab the rendered image to send across to the client, locking the associated mutex for the duration of the process.
+        // If no image has been rendered for the client, early out.
+        ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type imageHandle = get_rendered_image();
+        if(!imageHandle->get())
+        {
+          std::cerr << "Warning: Client " << m_clientID << " attempted to read a non-existent server-rendered image and is probably deadlocked.\n";
+          m_connectionOk = false;
+          break;
+        }
+
+        // Prepare the rendering response message (we reuse an uncompressed RGB-D frame for this to avoid creating a new message type).
+        if(!m_renderingResponseMessage || m_renderingResponseMessage->get_rgb_image_size() != imageHandle->get()->noDims)
+        {
+          m_renderingResponseMessage.reset(new RGBDFrameMessage(imageHandle->get()->noDims, Vector2i(1,1)));
+        }
+
+        m_renderingResponseMessage->set_frame_index(-1);
+        m_renderingResponseMessage->set_rgb_image(imageHandle->get());
+
+        // Compress the rendering response message for transmission over the network.
+        // FIXME: Consider using a separate frame compressor for rendering responses (to avoid continually resizing this one's internal images).
+        m_frameCompressor->compress_rgbd_frame(*m_renderingResponseMessage, m_headerMessage, *m_frameMessage);
+
+        // Send the rendering response to the client, and wait for an acknowledgement before proceeding.
+        AckMessage ackMsg;
+        m_connectionOk = m_connectionOk && write_message(m_headerMessage) && write_message(*m_frameMessage) && read_message(ackMsg);
+
+        break;
+      }
+      case IT_HASRENDEREDIMAGE:
+      {
+        // Send a message to the client indicating whether or not an image has ever been rendered for it, and wait for an acknowledgement before proceeding.
+        AckMessage ackMsg;
+        m_connectionOk = m_connectionOk && write_message(SimpleMessage<bool>(m_renderedImage.get() != NULL)) && read_message(ackMsg);
+        break;
+      }
       case IT_SENDFRAME:
       {
 #if DEBUGGING
@@ -92,6 +171,23 @@ void MappingClientHandler::run_iter()
           #endif
 #endif
           }
+        }
+
+        break;
+      }
+      case IT_UPDATERENDERINGREQUEST:
+      {
+#if DEBUGGING
+        std::cout << "Receiving updated rendering request from client" << std::endl;
+#endif
+
+        // Try to read a rendering request message.
+        if((m_connectionOk = read_message(renderingRequestMsg)))
+        {
+          // If that succeeds, store the request so that it can be picked up by the renderer, and send an acknowledgement to the client.
+          ExclusiveHandle_Ptr<boost::optional<RenderingRequestMessage> >::Type requestHandle = get_rendering_request();
+          requestHandle->get() = renderingRequestMsg;
+          m_connectionOk = write_message(AckMessage());
         }
 
         break;
@@ -140,6 +236,21 @@ void MappingClientHandler::run_pre()
     // Signal to the client that the server is ready.
     m_connectionOk = write_message(AckMessage());
   }
+}
+
+void MappingClientHandler::set_images_dirty(bool imagesDirty)
+{
+  m_imagesDirty = imagesDirty;
+}
+
+void MappingClientHandler::set_pose_dirty(bool poseDirty)
+{
+  m_poseDirty = poseDirty;
+}
+
+void MappingClientHandler::set_scene_id(const std::string& sceneID)
+{
+  m_sceneID = sceneID;
 }
 
 }
