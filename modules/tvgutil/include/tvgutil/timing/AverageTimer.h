@@ -123,7 +123,7 @@ public:
   void start_sync()
   {
 #ifdef WITH_CUDA
-    ORcudaSafeCall(cudaDeviceSynchronize());
+    cudaDeviceSynchronize();
 #endif
     start_nosync();
   }
@@ -149,7 +149,7 @@ public:
   void stop_sync()
   {
 #ifdef WITH_CUDA
-    ORcudaSafeCall(cudaDeviceSynchronize());
+    cudaDeviceSynchronize();
 #endif
     stop_nosync();
   }
