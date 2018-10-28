@@ -121,7 +121,7 @@ protected:
   explicit DecisionForest(const std::string& filename);
 
   /**
-   * \brief Creates a balanced decision forest with random split functions, using parameters specified by the user.
+   * \brief Constructs a balanced decision forest with random split functions, using parameters specified by the user.
    *
    * \param settings  The settings used to create the forest.
    */
@@ -246,6 +246,9 @@ private:
                    uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves);
 #endif
 
+  /**
+   * \brief TODO
+   */
   int create_node(uint32_t treeIdx, uint32_t nbTrees, uint32_t depthLeft, uint32_t outputIdx,
                   uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves);
 };

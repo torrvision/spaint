@@ -40,8 +40,8 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::Settings
 {
   const std::string settingsNamespace = "DecisionForest.";
 
-  const uint32_t treeDepth = settings->get_first_value<uint32_t>(settingsNamespace + "treeDepth", 15);
   const float depthFeatureRatio = settings->get_first_value<float>(settingsNamespace + "depthFeatureRatio", 0.5f);
+  const uint32_t treeDepth = settings->get_first_value<uint32_t>(settingsNamespace + "treeDepth", 15);
   const bool useFixedThresholds = settings->get_first_value<bool>(settingsNamespace + "useFixedThresholds", true);
 
   // Derived params for completely balanced trees.
@@ -130,7 +130,7 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::Settings
 
 #ifdef WITH_SCOREFORESTS
 template <typename DescriptorType, int TreeCount>
-DecisionForest<DescriptorType, TreeCount>::DecisionForest(const EnsembleLearner& pretrainedForest)
+DecisionForest<DescriptorType,TreeCount>::DecisionForest(const EnsembleLearner& pretrainedForest)
 {
   // Convert list of nodes into an appropriate image.
   const uint32_t nbTrees = pretrainedForest.GetNbTrees();
