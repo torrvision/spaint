@@ -16,7 +16,7 @@ DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const std::stri
 : Base(filename)
 {}
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const tvgutil::SettingsContainer_CPtr& settings)
 : Base(settings)
 {}

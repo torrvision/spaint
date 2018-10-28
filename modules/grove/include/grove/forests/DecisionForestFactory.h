@@ -56,7 +56,7 @@ struct DecisionForestFactory
   /**
    * \brief Constructs a balanced decision forest with random split functions, using parameters specified by the user.
    *
-   * \param settings   The settings to use to generate the forest.
+   * \param settings   The settings to use to create the forest.
    * \param deviceType The device on which the decision forest should operate.
    * \return           The constructed forest.
    *

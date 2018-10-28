@@ -52,7 +52,7 @@ public:
   /**
    * \brief Constructs a balanced decision forest with random split functions, using parameters specified by the user.
    *
-   * \param settings  The settings used to create the forest.
+   * \param settings  The settings to use to create the forest.
    */
   explicit DecisionForest_CPU(const tvgutil::SettingsContainer_CPtr& settings);
 
