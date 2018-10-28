@@ -12,6 +12,8 @@
 
 #include <ORUtils/Image.h>
 
+#include <tvgutil/misc/SettingsContainer.h>
+
 //#################### FORWARD DECLARATIONS ####################
 
 #ifdef WITH_SCOREFORESTS
@@ -90,6 +92,9 @@ protected:
   /** The number of leaves in each tree. */
   std::vector<uint32_t> m_nbLeavesPerTree;
 
+  /** The depth of each tree. */
+  std::vector<uint32_t> m_nbLevelsPerTree;
+
   /** The number of nodes in each tree. */
   std::vector<uint32_t> m_nbNodesPerTree;
 
@@ -114,6 +119,13 @@ protected:
    * \throws std::runtime_error If the forest cannot be loaded.
    */
   explicit DecisionForest(const std::string& filename);
+
+  /**
+   * \brief Constructs a balanced decision forest with random split functions, using parameters specified by the user.
+   *
+   * \param settings  The settings to use to create the forest.
+   */
+  explicit DecisionForest(const tvgutil::SettingsContainer_CPtr& settings);
 
 #ifdef WITH_SCOREFORESTS
   /**
@@ -233,6 +245,22 @@ private:
   int convert_node(const Learner *learner, uint32_t nodeIdx, uint32_t treeIdx, uint32_t nbTrees, uint32_t outputIdx,
                    uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves);
 #endif
+
+  /**
+   * \brief Creates a single node in a balanced decision tree.
+   *        This function is recursive: if called with the root of a tree, it creates the entire tree.
+   *
+   * \param treeIdx             The index of the tree in the forest that we're creating.
+   * \param nbTrees             The number of trees in the forest, used to compute offsets in the outputNodes array.
+   * \param depthLeft           A counter keeping track of how many more levels of the tree we need to create before reaching the leaves.
+   * \param outputIdx           The y-index of the node in outputNodes (x coordinate: treeIdx) where we want to store the created node.
+   * \param outputFirstFreeIdx  The first free y-index in outputNodes (x coordinate: treeIdx), used to allocate the node children.
+   * \param outputNodes         A pointer to the m_nodeImage data. Nodes of each tree are stored in columns of the image.
+   * \param outputNbLeaves      Input-Output: the content of the variable is increased by the total number of leaves
+   *                            descending from the current node. Used to allocate unique leaf identifiers.
+   */
+  int create_node(uint32_t treeIdx, uint32_t nbTrees, uint32_t depthLeft, uint32_t outputIdx,
+                  uint32_t outputFirstFreeIdx, NodeEntry *outputNodes, uint32_t& outputNbLeaves);
 };
 
 }

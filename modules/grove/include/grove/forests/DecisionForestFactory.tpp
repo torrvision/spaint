@@ -61,4 +61,26 @@ DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const EnsembleLearn
 }
 #endif
 
+template <typename DescriptorType, int TreeCount>
+typename DecisionForestFactory<DescriptorType,TreeCount>::Forest_Ptr
+DecisionForestFactory<DescriptorType,TreeCount>::make_randomly_generated_forest(const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType)
+{
+  Forest_Ptr forest;
+
+  if(deviceType == DEVICE_CUDA)
+  {
+#ifdef WITH_CUDA
+    forest.reset(new DecisionForest_CUDA<DescriptorType,TreeCount>(settings));
+#else
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+#endif
+  }
+  else
+  {
+    forest.reset(new DecisionForest_CPU<DescriptorType,TreeCount>(settings));
+  }
+
+  return forest;
+}
+
 }

@@ -49,6 +49,13 @@ public:
    */
   explicit DecisionForest_CPU(const std::string& filename);
 
+  /**
+   * \brief Constructs a balanced decision forest with random split functions, using parameters specified by the user.
+   *
+   * \param settings  The settings to use to create the forest.
+   */
+  explicit DecisionForest_CPU(const tvgutil::SettingsContainer_CPtr& settings);
+
 #ifdef WITH_SCOREFORESTS
   /**
    * \brief Constructs a decision forest by converting an EnsembleLearner that was pre-trained using ScoreForests.

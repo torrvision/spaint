@@ -35,9 +35,102 @@ DecisionForest<DescriptorType,TreeCount>::DecisionForest(const std::string& file
   load_structure_from_file(filename);
 }
 
+template<typename DescriptorType, int TreeCount>
+DecisionForest<DescriptorType,TreeCount>::DecisionForest(const tvgutil::SettingsContainer_CPtr& settings)
+{
+  const std::string settingsNamespace = "DecisionForest.";
+
+  const float depthFeatureRatio = settings->get_first_value<float>(settingsNamespace + "depthFeatureRatio", 0.5f);
+  const uint32_t treeDepth = settings->get_first_value<uint32_t>(settingsNamespace + "treeDepth", 15);
+  const bool useFixedThresholds = settings->get_first_value<bool>(settingsNamespace + "useFixedThresholds", true);
+
+  // Derived params for completely balanced trees.
+  const uint32_t nbNodesPerTree = (1 << (treeDepth + 1)) - 1;
+  const uint32_t nbLeavesPerTree = 1 << treeDepth;
+
+  std::cout << "Creating " << TREE_COUNT << " trees of depth " << treeDepth << " with " << nbNodesPerTree << " nodes and " << nbLeavesPerTree << " leaves each.\n";
+
+  // Clear the current forest.
+  m_nodeImage.reset();
+  m_nbNodesPerTree.clear();
+  m_nbLeavesPerTree.clear();
+  m_nbLevelsPerTree.clear();
+  m_nbTotalLeaves = 0;
+
+  // Setup structure.
+  for(int i = 0; i < TREE_COUNT; ++i)
+  {
+    m_nbLevelsPerTree.push_back(treeDepth);
+    m_nbNodesPerTree.push_back(nbNodesPerTree);
+    m_nbLeavesPerTree.push_back(nbLeavesPerTree);
+
+    m_nbTotalLeaves += nbLeavesPerTree;
+  }
+
+  // Allocate node texture.
+  const orx::MemoryBlockFactory& mbf = orx::MemoryBlockFactory::instance();
+  m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(TREE_COUNT, nbNodesPerTree));
+  m_nodeImage->Clear();
+
+  uint32_t currentLeafIdx = 0;
+  NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
+
+  // Fill the trees with nodes.
+  for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
+  {
+    // Count the number of leaves in each tree to make sure everything works out.
+    uint32_t nbLeavesBefore = currentLeafIdx;
+
+    // Recursive call: we set the first free entry to 1, since we reserve 0 for the root of the tree.
+    create_node(treeIdx, TREE_COUNT, treeDepth, 0, 1, forestData, currentLeafIdx);
+
+    uint32_t nbLeaves = currentLeafIdx - nbLeavesBefore;
+
+    std::cout << "Created tree " << treeIdx << ", has " << nbNodesPerTree << " nodes and " << nbLeaves << " leaves." << std::endl;
+  }
+
+  tvgutil::RandomNumberGenerator rng(42);
+
+  // Parameters used to generate the feature thresholds in case useFixedThresholds is false (computed from the original forest trained on office).
+  const float depthMu = 20.09f;
+  const float depthSigma = 947.24f;
+  const float rgbMu = -2.85f;
+  const float rgbSigma = 72.98f;
+
+  // Fill the trees with feature thresholds and indices.
+  for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
+  {
+    for(uint32_t nodeIdx = 0; nodeIdx < nbNodesPerTree; ++nodeIdx)
+    {
+      NodeEntry& node = forestData[nodeIdx * TREE_COUNT + treeIdx];
+
+      if(node.leafIdx >= 0) // Is a leaf.
+        continue;
+
+      // Whether or not to generate a depth feature (feature idx in 0..127).
+      bool depthFeature = rng.generate_real_from_uniform(0.f, 1.f) < depthFeatureRatio;
+
+      // Generate a feature index and threshold.
+      if(depthFeature)
+      {
+        node.featureIdx = rng.generate_int_from_uniform(0, 127);
+        node.featureThreshold = useFixedThresholds ? 0.0f : rng.generate_from_gaussian(depthMu, depthSigma);
+      }
+      else
+      {
+        node.featureIdx = rng.generate_int_from_uniform(128, 255);
+        node.featureThreshold = useFixedThresholds ? 0.0f : rng.generate_from_gaussian(rgbMu, rgbSigma);
+      }
+    }
+  }
+
+  // NOPs if we use the CPU only implementation
+  m_nodeImage->UpdateDeviceFromHost();
+}
+
 #ifdef WITH_SCOREFORESTS
 template <typename DescriptorType, int TreeCount>
-DecisionForest<DescriptorType, TreeCount>::DecisionForest(const EnsembleLearner& pretrainedForest)
+DecisionForest<DescriptorType,TreeCount>::DecisionForest(const EnsembleLearner& pretrainedForest)
 {
   // Convert list of nodes into an appropriate image.
   const uint32_t nbTrees = pretrainedForest.GetNbTrees();
@@ -335,5 +428,43 @@ int DecisionForest<DescriptorType,TreeCount>::convert_node(const Learner *tree, 
   return outputFirstFreeIdx;
 }
 #endif
+
+template<typename DescriptorType, int TreeCount>
+int DecisionForest<DescriptorType,TreeCount>::create_node(uint32_t treeIdx, uint32_t nbTrees, uint32_t depthLeft, uint32_t outputIdx, uint32_t outputFirstFreeIdx,
+                                                          typename DecisionForest<DescriptorType,TreeCount>::NodeEntry *outputNodes, uint32_t& outputNbLeaves)
+{
+  NodeEntry& outputNode = outputNodes[outputIdx * nbTrees + treeIdx];
+
+  // If we are creating a leaf
+  if(depthLeft == 0)
+  {
+    outputNode.leftChildIdx = -1; // Is a leaf
+    outputNode.featureIdx = 0;
+    outputNode.featureThreshold = 0.f;
+    // outputFirstFreeIdx does not change
+
+    // Post-increment to get the current leaf index.
+    outputNode.leafIdx = outputNbLeaves++;
+  }
+  else
+  {
+    outputNode.leafIdx = -1; // Not a leaf
+
+    // Reserve 2 entries for the child nodes.
+    outputNode.leftChildIdx = outputFirstFreeIdx++;
+    const uint32_t rightChildIdx = outputFirstFreeIdx++; // No need to store it in the texture since it's always leftChildIdx + 1
+
+    outputNode.featureIdx = 0.0; // Will be filled later.
+    outputNode.featureThreshold = 0.0; // Will be filled later.
+
+    // Recursively create the left child and its descendants.
+    outputFirstFreeIdx = create_node(treeIdx, nbTrees, depthLeft - 1, outputNode.leftChildIdx, outputFirstFreeIdx, outputNodes, outputNbLeaves);
+
+    // Same for right child and descendants.
+    outputFirstFreeIdx = create_node(treeIdx, nbTrees, depthLeft - 1, rightChildIdx, outputFirstFreeIdx, outputNodes, outputNbLeaves);
+  }
+
+  return outputFirstFreeIdx;
+}
 
 }

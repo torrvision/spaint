@@ -16,6 +16,11 @@ DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const std::stri
 : Base(filename)
 {}
 
+template <typename DescriptorType, int TreeCount>
+DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const tvgutil::SettingsContainer_CPtr& settings)
+: Base(settings)
+{}
+
 #ifdef WITH_SCOREFORESTS
 template <typename DescriptorType, int TreeCount>
 DecisionForest_CPU<DescriptorType,TreeCount>::DecisionForest_CPU(const EnsembleLearner& pretrainedForest)
