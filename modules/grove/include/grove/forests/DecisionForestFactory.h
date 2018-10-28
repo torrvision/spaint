@@ -40,17 +40,6 @@ struct DecisionForestFactory
    */
   static Forest_Ptr make_forest(const std::string& filename, DeviceType deviceType);
 
-  /**
-   * \brief Constructs a decision forest by generating a branching structure according to some parameters.
-   *
-   * \param settings   The settings used to generate the forest.
-   * \param deviceType The device on which the decision forest should operate.
-   * \return           The constructed forest.
-   *
-   * \throws std::runtime_error If the forest cannot be created.
-   */
-  static Forest_Ptr make_randomly_generated_forest(const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
-
 #ifdef WITH_SCOREFORESTS
   /**
    * \brief Constructs a decision forest by converting an EnsembleLearner that was pre-trained using ScoreForests.
@@ -63,6 +52,17 @@ struct DecisionForestFactory
    */
   static Forest_Ptr make_forest(const EnsembleLearner& pretrainedForest, DeviceType deviceType);
 #endif
+
+  /**
+   * \brief Constructs a balanced decision forest with random split functions, using parameters specified by the user.
+   *
+   * \param settings   The settings to use to generate the forest.
+   * \param deviceType The device on which the decision forest should operate.
+   * \return           The constructed forest.
+   *
+   * \throws std::runtime_error If the forest cannot be created.
+   */
+  static Forest_Ptr make_randomly_generated_forest(const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
 };
 
 }
