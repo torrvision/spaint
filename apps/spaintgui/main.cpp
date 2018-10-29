@@ -290,9 +290,9 @@ std::string make_tracker_config(CommandLineArguments& args)
       {
         if(args.poseFileMasks.size() < i)
         {
-          // If this happens it's because at least one mask was specified with the -p flag,
-          // otherwise postprocess_arguments would have taken care of supplying the default masks.
-          throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
+          // If this happens, it's because the pose file mask for at least one sequence was specified with the -p flag
+          // (otherwise postprocess_arguments would have taken care of supplying the default masks).
+          throw std::runtime_error("Error: Not enough pose file masks have been specified with the -p flag.");
         }
 
         result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + ",initialFrameNo=" + boost::lexical_cast<std::string>(args.initialFrameNumber) + "</params></tracker>";
@@ -348,7 +348,7 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
   // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth/RGB/pose mask flags may be specified, but not both.\n";
     return false;
   }
 
@@ -379,7 +379,7 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since colour might be missing).
+    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since the colour ones might be missing).
     const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
     const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
 
@@ -403,7 +403,8 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     }
     else
     {
-      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. Manually specify the masks using the -d and -r options.\n";
+      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. "
+                << "Manually specify the masks using the -d, -p and -r options.\n";
       return false;
     }
   }
