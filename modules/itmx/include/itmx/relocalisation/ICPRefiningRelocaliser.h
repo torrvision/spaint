@@ -52,7 +52,7 @@ private:
   /** The depth visualiser. */
   DepthVisualiser_CPtr m_depthVisualiser;
 
-  /** The path generator used to find the ground truth poses. */
+  /** The path generator used to find the ground truth pose files. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_gtPathGenerator;
 
   /** The path generator used when saving the relocalised images. */
@@ -88,7 +88,7 @@ private:
   /** Whether or not timers are enabled and stats are printed on destruction. */
   bool m_timersEnabled;
 
-  /** The path to a file where to save the average relocalisation times. */
+  /** The path to a file in which to save the average relocalisation times. */
   std::string m_timersOutputFile;
 
   /** The timer used to profile the training calls. */
@@ -200,16 +200,16 @@ private:
   /**
    * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
-   * \param timer            The timer to start.
-   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before starting the timer.
+   * \param timer           The timer to start.
+   * \param cudaSynchronize Whether or not to call cudaDeviceSynchronize before starting the timer.
    */
   void start_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 
   /**
    * \brief Stops the specified timer (waiting for all CUDA operations to terminate first, if necessary).
    *
-   * \param timer The timer to stop.
-   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before stopping the timer.
+   * \param timer           The timer to stop.
+   * \param cudaSynchronize Whether or not to call cudaDeviceSynchronize before stopping the timer.
    */
   void stop_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 };
