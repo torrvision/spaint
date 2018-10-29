@@ -190,6 +190,54 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
 }
 
 /**
+ * \brief Copies any (voxel) scene parameters that have been specified in the configuration file across to the actual scene parameters object.
+ *
+ * \param settings  The settings for the application.
+ */
+void copy_scene_params(const Settings_Ptr& settings)
+{
+#define COPY_PARAM(type, name, defaultValue) settings->sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
+
+  // Note: The default values are taken from InfiniTAM.
+  COPY_PARAM(int, maxW, 100);
+  COPY_PARAM(float, mu, 0.02f);
+  COPY_PARAM(bool, stopIntegratingAtMaxW, false);
+  COPY_PARAM(float, viewFrustum_max, 3.0f);
+  COPY_PARAM(float, viewFrustum_min, 0.2f);
+  COPY_PARAM(float, voxelSize, 0.005f);
+
+#undef COPY_PARAM
+}
+
+/**
+ * \brief Copies any surfel scene parameters that have been specified in the configuration file across to the actual surfel scene parameters object.
+ *
+ * \param settings  The settings for the application.
+ */
+void copy_surfel_scene_params(const Settings_Ptr& settings)
+{
+#define COPY_PARAM(type, name, defaultValue) settings->surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
+
+  // Note: The default values are taken from InfiniTAM.
+  COPY_PARAM(float, deltaRadius, 0.5f);
+  COPY_PARAM(float, gaussianConfidenceSigma, 0.6f);
+  COPY_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
+  COPY_PARAM(float, maxMergeDist, 0.01f);
+  COPY_PARAM(float, maxSurfelRadius, 0.004f);
+  COPY_PARAM(float, minRadiusOverlapFactor, 3.5f);
+  COPY_PARAM(float, stableSurfelConfidence, 25.0f);
+  COPY_PARAM(int, supersamplingFactor, 4);
+  COPY_PARAM(float, trackingSurfelMaxDepth, 1.0f);
+  COPY_PARAM(float, trackingSurfelMinConfidence, 5.0f);
+  COPY_PARAM(int, unstableSurfelPeriod, 20);
+  COPY_PARAM(int, unstableSurfelZOffset, 10000000);
+  COPY_PARAM(bool, useGaussianSampleConfidence, true);
+  COPY_PARAM(bool, useSurfelMerging, true);
+
+#undef COPY_PARAM
+}
+
+/**
  * \brief Attempts to make a camera subengine to read images from any suitable camera that is attached.
  *
  * \param args  The program's command-line arguments.
@@ -440,54 +488,6 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
 }
 
 /**
- * \brief Sets the scene parameters from GlobalParameters, allowing the user to specify ad hoc values for voxel size, truncation distance, etc...
- *
- * \param sceneParams The scene parameters to modify.
- */
-void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMSceneParams &sceneParams)
-{
-#define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
-
-  // Use the default values from InfiniTAM.
-  GET_PARAM(int, maxW, 100);
-  GET_PARAM(float, mu, 0.02f);
-  GET_PARAM(bool, stopIntegratingAtMaxW, false);
-  GET_PARAM(float, viewFrustum_max, 3.0f);
-  GET_PARAM(float, viewFrustum_min, 0.2f);
-  GET_PARAM(float, voxelSize, 0.005f);
-
-#undef GET_PARAM
-}
-
-/**
- * \brief Sets the surfel scene parameters from GlobalParameters, allowing the user to specify ad hoc values for surfel radius, etc...
- *
- * \param surfelSceneParams The surfel scene parameters to modify.
- */
-void set_surfel_scene_params_from_global_options(const Settings_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
-{
-#define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
-
-  // Use the default values from InfiniTAM.
-  GET_PARAM(float, deltaRadius, 0.5f);
-  GET_PARAM(float, gaussianConfidenceSigma, 0.6f);
-  GET_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
-  GET_PARAM(float, maxMergeDist, 0.01f);
-  GET_PARAM(float, maxSurfelRadius, 0.004f);
-  GET_PARAM(float, minRadiusOverlapFactor, 3.5f);
-  GET_PARAM(float, stableSurfelConfidence, 25.0f);
-  GET_PARAM(int, supersamplingFactor, 4);
-  GET_PARAM(float, trackingSurfelMaxDepth, 1.0f);
-  GET_PARAM(float, trackingSurfelMinConfidence, 5.0f);
-  GET_PARAM(int, unstableSurfelPeriod, 20);
-  GET_PARAM(int, unstableSurfelZOffset, 10000000);
-  GET_PARAM(bool, useGaussianSampleConfidence, true);
-  GET_PARAM(bool, useSurfelMerging, true);
-
-#undef GET_PARAM
-}
-
-/**
  * \brief Parses any command-line arguments passed in by the user and adds them to the application settings.
  *
  * \param argc      The command-line argument count.
@@ -569,7 +569,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   // Post-process any registered options and add them to the settings.
   if(!postprocess_arguments(args, options, vm, settings)) return false;
 
-  std::cout << "Global settings:\n" << *settings << '\n';
+  // Print the settings for the application so that the user can see them.
+  std::cout << "Settings:\n" << *settings << '\n';
 
   // If the user specifies the --help flag, print a help message.
   if(vm.count("help"))
@@ -651,10 +652,11 @@ try
   afcu::setNativeId(0);
 #endif
 
-  // Set scene parameters from configuration.
-  set_scene_params_from_global_options(settings, settings->sceneParams);
-  set_surfel_scene_params_from_global_options(settings, settings->surfelSceneParams);
+  // Copy any scene parameters that have been set in the configuration file across to the actual scene parameters objects.
+  copy_scene_params(settings);
+  copy_surfel_scene_params(settings);
 
+  // Set the failure behaviour of the relocaliser.
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
   // Pass the device type to the memory block factory.
