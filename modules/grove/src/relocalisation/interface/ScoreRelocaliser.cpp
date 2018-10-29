@@ -43,9 +43,6 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
   m_maxClusterCount = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxClusterCount", ScorePrediction::Capacity);
   m_minClusterSize = m_settings->get_first_value<uint32_t>(settingsNamespace + "minClusterSize", 20);
 
-  // Decide whether we want to use a completely random forest instead of the pretrained one.
-  bool m_useRandomForest = m_settings->get_first_value<bool>(settingsNamespace + "randomlyGenerateForest", false);
-
   // Check that the maximum number of clusters to store in each leaf is within range.
   if(m_maxClusterCount > ScorePrediction::Capacity)
   {
@@ -59,20 +56,15 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
   m_leafIndicesImage = mbf.make_image<LeafIndices>();
   m_predictionsImage = mbf.make_image<ScorePrediction>();
 
-  // Instantiate the sub-algorithms.
+  // Instantiate the sub-components.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, deviceType);
 
-  if(m_useRandomForest)
-  {
-    m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_randomly_generated_forest(m_settings, deviceType);
-  }
-  else
-  {
-    m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
-  }
+  m_scoreForest = m_settings->get_first_value<bool>(settingsNamespace + "randomlyGenerateForest", false)
+    ? DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_randomly_generated_forest(m_settings, deviceType)
+    : DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
 
   m_reservoirCount = m_scoreForest->get_nb_leaves();
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, deviceType);
 
   // Set up the relocaliser's internal state.
   m_relocaliserState.reset(new ScoreRelocaliserState);
