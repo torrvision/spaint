@@ -89,10 +89,10 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
     std::vector<std::string> sequenceSpecifiers = m_settings->get_values<std::string>("sequenceSpecifiers");
     if(sequenceSpecifiers.size() < 2)
     {
-      throw std::runtime_error("saveRelocalisationImages requires at least two sequenceSpecifiers (one for the training and one for the testing sequence)");
+      throw std::runtime_error("Error: saveRelocalisationImages requires at least two sequence specifiers (one for the training and one for the testing sequence).");
     }
 
-    std::cout << "Reading GT poses from: " << sequenceSpecifiers[1] << "\n";
+    std::cout << "Reading ground truth poses from: " << sequenceSpecifiers[1] << "\n";
     m_gtPathGenerator.reset(tvgutil::SequentialPathGenerator(sequenceSpecifiers[1]));
 
     // Output the directory we're using (for debugging purposes).
@@ -101,14 +101,14 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
 
   if(m_saveTimes)
   {
-    // Forcefully enable timers.
+    // Enable the timers.
     m_timersEnabled = true;
 
-    // Make sure the directory where we want to save the relocalisation times exists.
+    // Ensure that the directory in which we want to save the relocalisation times exists.
     boost::filesystem::path timersOutputFolder(tvgutil::find_subdir_from_executable("reloc_times"));
     boost::filesystem::create_directories(timersOutputFolder);
 
-    // Prepare the output filename.
+    // Construct the output filename.
     m_timersOutputFile = (timersOutputFolder / (experimentTag + ".txt")).string();
   }
 }
@@ -129,15 +129,16 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::~ICPRefiningRelocaliser()
 
   if(m_saveTimes)
   {
-    std::cout << "Saving relocalisation average times in: " << m_timersOutputFile << "\n";
-    std::ofstream out(m_timersOutputFile.c_str());
+    std::cout << "Saving average relocalisation times in: " << m_timersOutputFile << '\n';
+
+    std::ofstream fs(m_timersOutputFile.c_str());
 
     // Output the average durations.
-    out << m_timerTraining.average_duration().count() << " "
-        << m_timerUpdate.average_duration().count() << " "
-        << m_timerInitialRelocalisation.average_duration().count() << " "
-        << m_timerRefinement.average_duration().count() << " "
-        << m_timerRelocalisation.average_duration().count() << "\n";
+    fs << m_timerTraining.average_duration().count() << " "
+       << m_timerUpdate.average_duration().count() << " "
+       << m_timerInitialRelocalisation.average_duration().count() << " "
+       << m_timerRefinement.average_duration().count() << " "
+       << m_timerRelocalisation.average_duration().count() << "\n";
   }
 }
 
