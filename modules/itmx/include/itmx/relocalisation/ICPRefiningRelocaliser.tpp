@@ -304,7 +304,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     }
   }
 
-  // Render and save the best initial and refined poses if needed.
+  // If requested, render images from the best initial and refined poses, and save them to disk.
   if(m_saveImages)
   {
 #if WITH_OPENCV
