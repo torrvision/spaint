@@ -99,7 +99,9 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
   else if(trackerType == "robustvicon")
   {
 #ifdef WITH_VICON
-    fallibleTracker = new RobustViconTracker(trackerParams, "kinect", rgbImageSize, depthImageSize, settings, lowLevelEngine);
+    // FIXME: The Vicon interface should ultimately be instantiated elsewhere and passed in.
+    ViconInterface_CPtr vicon(new ViconInterface(trackerParams));
+    fallibleTracker = new RobustViconTracker(vicon, "kinect", rgbImageSize, depthImageSize, settings, lowLevelEngine);
     tracker = fallibleTracker;
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
@@ -110,7 +112,9 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
   else if(trackerType == "vicon")
   {
 #ifdef WITH_VICON
-    fallibleTracker = new ViconTracker(trackerParams, "kinect");
+    // FIXME: The Vicon interface should ultimately be instantiated elsewhere and passed in.
+    ViconInterface_CPtr vicon(new ViconInterface(trackerParams));
+    fallibleTracker = new ViconTracker(vicon, "kinect");
     tracker = fallibleTracker;
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.

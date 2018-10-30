@@ -6,16 +6,10 @@
 #ifndef H_ITMX_VICONTRACKER
 #define H_ITMX_VICONTRACKER
 
-#include <map>
 #include <string>
 
-#include <boost/optional.hpp>
-
-#include <Eigen/Dense>
-
-#include <vicon/Client.h>
-
 #include "FallibleTracker.h"
+#include "../util/ViconInterface.h"
 
 namespace itmx {
 
@@ -32,31 +26,18 @@ private:
   /** The name given to the camera subject in the Vicon software. */
   std::string m_subjectName;
 
-  /** The Vicon client. */
-  ViconDataStreamSDK::CPP::Client m_vicon;
+  /** The Vicon interface. */
+  ViconInterface_CPtr m_vicon;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a Vicon tracker.
    *
-   * \param host        The host on which the Vicon software is running (e.g. "<IP address>:<port>").
+   * \param vicon       The Vicon interface.
    * \param subjectName The name given to the camera subject in the Vicon software.
    */
-  ViconTracker(const std::string& host, const std::string& subjectName);
-
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destroys the Vicon tracker.
-   */
-  ~ViconTracker();
-
-  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
-private:
-  /** Deliberately private and unimplemented. */
-  ViconTracker(const ViconTracker&);
-  ViconTracker& operator=(const ViconTracker&);
+  ViconTracker(const ViconInterface_CPtr& vicon, const std::string& subjectName);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -71,18 +52,6 @@ public:
 
   /** Override */
   virtual void TrackCamera(ITMLib::ITMTrackingState *trackingState, const ITMLib::ITMView *view);
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Attempts to get the positions of the markers for the Vicon subject with the specified name.
-   *
-   * This may fail if we move out of the range of the cameras or some of the markers are occluded.
-   *
-   * \param subjectName The name of the subject.
-   * \return            The positions of the markers for the subject, indexed by name, or boost::none if they are temporarily unavailable.
-   */
-  boost::optional<std::map<std::string,Eigen::Vector3f> > try_get_marker_positions(const std::string& subjectName) const;
 };
 
 }

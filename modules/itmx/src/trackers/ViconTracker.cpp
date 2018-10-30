@@ -20,32 +20,9 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-ViconTracker::ViconTracker(const std::string& host, const std::string& subjectName)
-: m_subjectName(subjectName)
-{
-  // Connect to the Vicon system.
-  if(m_vicon.Connect(host).Result != Result::Success || !m_vicon.IsConnected().Connected)
-  {
-    throw std::runtime_error("Could not connect to the Vicon system");
-  }
-
-  // Set up the Vicon client.
-  m_vicon.EnableMarkerData();
-  m_vicon.EnableSegmentData();
-  m_vicon.EnableUnlabeledMarkerData();
-  m_vicon.SetAxisMapping(Direction::Right, Direction::Down, Direction::Forward);
-  m_vicon.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
-}
-
-//#################### DESTRUCTOR ####################
-
-ViconTracker::~ViconTracker()
-{
-  m_vicon.DisableMarkerData();
-  m_vicon.DisableSegmentData();
-  m_vicon.DisableUnlabeledMarkerData();
-  m_vicon.Disconnect();
-}
+ViconTracker::ViconTracker(const ViconInterface_CPtr& vicon, const std::string& subjectName)
+: m_subjectName(subjectName), m_vicon(vicon)
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -66,9 +43,6 @@ bool ViconTracker::requiresPointCloudRendering() const
 
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
-  // If there's no frame currently available, early out.
-  if(m_vicon.GetFrame().Result != Result::Success) return;
-
 #define DEBUG_OUTPUT 0
 
   std::ostream& fs = std::cout;
@@ -76,14 +50,22 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 #if DEBUG_OUTPUT
   // Output the current frame number for debugging purposes.
   fs << "\n#####\n";
-  fs << "Frame " << m_vicon.GetFrameNumber().FrameNumber << "\n\n";
+  fs << "Frame " << m_vicon->get_frame_number() << "\n\n";
 #endif
 
   // Attempt to get the marker positions for the camera subject.
-  boost::optional<std::map<std::string,Eigen::Vector3f> > maybeMarkerPositions = try_get_marker_positions(m_subjectName);
+  boost::optional<std::map<std::string,Eigen::Vector3f> > maybeMarkerPositions = m_vicon->try_get_marker_positions(m_subjectName);
   m_lostTracking = !maybeMarkerPositions;
   if(m_lostTracking) return;
   const std::map<std::string,Eigen::Vector3f>& markerPositions = *maybeMarkerPositions;
+
+  // Check that all of the essential markers are present. If not, early out.
+  const std::string centreMarker = "centre", frontMarker = "front", leftMarker = "left", rightMarker = "right";
+  if(!MapUtil::contains(markerPositions, centreMarker) || !MapUtil::contains(markerPositions, frontMarker) ||
+     !MapUtil::contains(markerPositions, leftMarker) || !MapUtil::contains(markerPositions, rightMarker))
+  {
+    return;
+  }
 
 #if DEBUG_OUTPUT
   // Output the marker positions for debugging purposes.
@@ -95,9 +77,9 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 #endif
 
   // Calculate the camera's v axis using the positions of the markers on top of the camera.
-  const Eigen::Vector3f& c = MapUtil::lookup(markerPositions, "centre");
-  const Eigen::Vector3f& l = MapUtil::lookup(markerPositions, "left");
-  const Eigen::Vector3f& r = MapUtil::lookup(markerPositions, "right");
+  const Eigen::Vector3f& c = MapUtil::lookup(markerPositions, centreMarker);
+  const Eigen::Vector3f& l = MapUtil::lookup(markerPositions, leftMarker);
+  const Eigen::Vector3f& r = MapUtil::lookup(markerPositions, rightMarker);
   Eigen::Vector3f v = (r - c).cross(l - c).normalized();
 
 #if DEBUG_OUTPUT
@@ -106,7 +88,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 #endif
 
   // Calculate the camera's n axis by projecting a vector from the right marker to the front marker into the plane defined by the markers on top of the camera.
-  const Eigen::Vector3f& f = MapUtil::lookup(markerPositions, "front");
+  const Eigen::Vector3f& f = MapUtil::lookup(markerPositions, frontMarker);
   Eigen::Vector3f n = f - r;
   n = (n - ((n.dot(v)) * v)).normalized();
 
@@ -141,41 +123,6 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   fs.flush();
 
 #undef DEBUG_OUTPUT
-}
-
-//#################### PRIVATE MEMBER FUNCTIONS ####################
-
-boost::optional<std::map<std::string,Eigen::Vector3f> > ViconTracker::try_get_marker_positions(const std::string& subjectName) const
-{
-  std::map<std::string,Eigen::Vector3f> result;
-
-  unsigned int markerCount = m_vicon.GetMarkerCount(subjectName).MarkerCount;
-  for(unsigned int i = 0; i < markerCount; ++i)
-  {
-    // Get the name of the marker and its position in the Vicon coordinate system.
-    std::string markerName = m_vicon.GetMarkerName(subjectName, i).MarkerName;
-    Output_GetMarkerGlobalTranslation trans = m_vicon.GetMarkerGlobalTranslation(subjectName, markerName);
-
-    // If we can't currently get the position of the marker:
-    if(trans.Occluded)
-    {
-      // If the marker is essential, early out; if not, just skip it.
-      if(markerName == "centre" || markerName == "front" || markerName == "left" || markerName == "right") return boost::none;
-      else continue;
-    }
-
-    // Transform the marker position from the Vicon coordinate system to our one (the Vicon coordinate system is in mm, whereas ours is in metres).
-    Eigen::Vector3f pos(
-      static_cast<float>(trans.Translation[0] / 1000),
-      static_cast<float>(trans.Translation[1] / 1000),
-      static_cast<float>(trans.Translation[2] / 1000)
-    );
-
-    // Record the position in the map.
-    result.insert(std::make_pair(markerName, pos));
-  }
-
-  return result;
 }
 
 }
