@@ -15,10 +15,11 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-RobustViconTracker::RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+RobustViconTracker::RobustViconTracker(const ViconInterface_CPtr& vicon, const std::string& subjectName,
+                                       const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                        const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine)
 {
-  m_viconTracker.reset(new ViconTracker(host, subjectName));
+  m_viconTracker.reset(new ViconTracker(vicon, subjectName));
   m_icpTracker.reset(ITMTrackerFactory::Instance().Make(
     rgbImageSize, depthImageSize, settings.get(), lowLevelEngine.get(), NULL, &settings->sceneParams
   ));

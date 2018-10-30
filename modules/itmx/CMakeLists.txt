@@ -212,6 +212,11 @@ include/itmx/util/ColourConversion_Shared.h
 include/itmx/util/RGBDUtil.h
 )
 
+IF(WITH_VICON)
+  SET(util_sources ${util_sources} src/util/ViconInterface.cpp)
+  SET(util_headers ${util_headers} include/itmx/util/ViconInterface.h)
+ENDIF()
+
 IF(WITH_ZED)
   SET(util_sources ${util_sources} src/util/ZedCamera.cpp)
   SET(util_headers ${util_headers} include/itmx/util/ZedCamera.h)
