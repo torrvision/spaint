@@ -49,12 +49,12 @@ public:
    * \brief Detects fiducials in a view of a 3D scene.
    *
    * \param view                A view of the 3D scene.
-   * \param pose                The pose from which the view was captured.
+   * \param depthPose           The pose from which the depth image in the view was captured.
    * \param renderState         A render state corresponding to the camera pose.
    * \param poseEstimationMode  The mode to use when estimating the poses of the fiducials.
    * \return                    Measurements of the fiducials (if any) that have been detected in the view.
    */
-  virtual std::map<std::string,FiducialMeasurement> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
+  virtual std::map<std::string,FiducialMeasurement> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& depthPose, const VoxelRenderState_CPtr& renderState,
                                                                      PoseEstimationMode poseEstimationMode) const = 0;
 
   //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
