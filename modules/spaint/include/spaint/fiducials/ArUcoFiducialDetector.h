@@ -109,20 +109,6 @@ private:
    * \return            The 3D point in world space corresponding to the fiducial corner (if any), or boost::none otherwise.
    */
   boost::optional<Vector3f> pick_corner_from_raycast(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const;
-
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Attempts to make a pose matrix from three corner points of an ArUco marker.
-   *
-   * \param v0  The first corner point.
-   * \param v1  The second corner point.
-   * \param v2  The third corner point.
-   * \return    The pose matrix, if all three corner points exist, or boost::none otherwise.
-   */
-  static boost::optional<ORUtils::SE3Pose> make_pose_from_corners(const boost::optional<Vector3f>& v0,
-                                                                  const boost::optional<Vector3f>& v1,
-                                                                  const boost::optional<Vector3f>& v2);
 };
 
 }
