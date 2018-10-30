@@ -41,7 +41,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual std::map<std::string,FiducialMeasurement> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
+  virtual std::map<std::string,FiducialMeasurement> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& depthPose, const VoxelRenderState_CPtr& renderState,
                                                                      PoseEstimationMode poseEstimationMode) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -53,28 +53,30 @@ private:
    *        either the live depth image or a raycast of the scene. The sole advantage of this approach is that it can produce
    *        poses when neither of those two sources of information are available.
    *
-   * \param ids     The IDs of the fiducials that have been detected in the live colour image.
-   * \param corners The corners of the fiducials that have been detected in the live colour image.
-   * \param view    The view of the scene containing the live images.
-   * \param pose    The current estimate of the camera pose (used to map between eye space and world space).
-   * \return        The constructed set of fiducial measurements.
+   * \param ids       The IDs of the fiducials that have been detected in the live colour image.
+   * \param corners   The corners of the fiducials that have been detected in the live colour image.
+   * \param view      The view of the scene containing the live images.
+   * \param depthPose The current estimate of the depth camera pose (used to map between eye space and world space).
+   * \return          The constructed set of fiducial measurements.
    */
-  std::vector<boost::optional<FiducialMeasurement> > construct_measurements_from_colour(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
-                                                                                        const View_CPtr& view, const ORUtils::SE3Pose& pose) const;
+  std::vector<boost::optional<FiducialMeasurement> >
+  construct_measurements_from_colour(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
+                                     const View_CPtr& view, const ORUtils::SE3Pose& depthPose) const;
 
   /**
    * \brief Constructs a set of fiducial measurements by back-projecting the detected fiducial corners in the live colour image
    *        into 3D using depth values from the live depth image, and then using the back-projected corners to determine poses
    *        for the fiducials in both eye and world space.
    *
-   * \param ids     The IDs of the fiducials that have been detected in the live colour image.
-   * \param corners The corners of the fiducials that have been detected in the live colour image.
-   * \param view    The view of the scene containing the live images.
-   * \param pose    The current estimate of the camera pose (used to map between eye space and world space).
-   * \return        The constructed set of fiducial measurements.
+   * \param ids       The IDs of the fiducials that have been detected in the live colour image.
+   * \param corners   The corners of the fiducials that have been detected in the live colour image.
+   * \param view      The view of the scene containing the live images.
+   * \param depthPose The current estimate of the depth camera pose (used to map between eye space and world space).
+   * \return          The constructed set of fiducial measurements.
    */
-  std::vector<boost::optional<FiducialMeasurement> > construct_measurements_from_depth(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
-                                                                                       const View_CPtr& view, const ORUtils::SE3Pose& pose) const;
+  std::vector<boost::optional<FiducialMeasurement> >
+  construct_measurements_from_depth(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
+                                    const View_CPtr& view, const ORUtils::SE3Pose& depthPose) const;
 
   /**
    * \brief Constructs a set of fiducial measurements by looking up in a raycast of the scene the 3D points in world space
@@ -84,11 +86,12 @@ private:
    * \param ids         The IDs of the fiducials that have been detected in the live colour image.
    * \param corners     The corners of the fiducials that have been detected in the live colour image.
    * \param renderState The render state containing the scene raycast.
-   * \param pose        The current estimate of the camera pose (used to map between world space and eye space).
+   * \param depthPose   The current estimate of the depth camera pose (used to map between world space and eye space).
    * \return            The constructed set of fiducial measurements.
    */
-  std::vector<boost::optional<FiducialMeasurement> > construct_measurements_from_raycast(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
-                                                                                         const VoxelRenderState_CPtr& renderState, const ORUtils::SE3Pose& pose) const;
+  std::vector<boost::optional<FiducialMeasurement> >
+  construct_measurements_from_raycast(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
+                                      const VoxelRenderState_CPtr& renderState, const ORUtils::SE3Pose& depthPose) const;
 
   /**
    * \brief Tries to determine the 3D point in eye space that corresponds to a fiducial corner in the live colour image
