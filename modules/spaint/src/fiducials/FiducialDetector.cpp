@@ -13,6 +13,26 @@ namespace spaint {
 
 //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
 
+FiducialMeasurement
+FiducialDetector::make_measurement_from_eye_pose(const std::string& fiducialID,
+                                                 const boost::optional<ORUtils::SE3Pose>& fiducialPoseEye,
+                                                 const boost::optional<ORUtils::SE3Pose>& cameraPoseWorld)
+{
+  boost::optional<ORUtils::SE3Pose> fiducialPoseWorld;
+  if(fiducialPoseEye && cameraPoseWorld) fiducialPoseWorld.reset(fiducialPoseEye->GetM() * cameraPoseWorld->GetM());
+  return FiducialMeasurement(fiducialID, fiducialPoseEye, fiducialPoseWorld);
+}
+
+FiducialMeasurement
+FiducialDetector::make_measurement_from_world_pose(const std::string& fiducialID,
+                                                   const boost::optional<ORUtils::SE3Pose>& fiducialPoseWorld,
+                                                   const boost::optional<ORUtils::SE3Pose>& cameraPoseWorld)
+{
+  boost::optional<ORUtils::SE3Pose> fiducialPoseEye;
+  if(fiducialPoseWorld && cameraPoseWorld) fiducialPoseEye.reset(fiducialPoseWorld->GetM() * cameraPoseWorld->GetInvM());
+  return FiducialMeasurement(fiducialID, fiducialPoseEye, fiducialPoseWorld);
+}
+
 boost::optional<ORUtils::SE3Pose> FiducialDetector::make_pose_from_corners(const boost::optional<Vector3f>& v0,
                                                                            const boost::optional<Vector3f>& v1,
                                                                            const boost::optional<Vector3f>& v2)
