@@ -8,7 +8,6 @@
 #include <cmath>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/optional.hpp>
 
 #include <opencv2/aruco.hpp>
 #include <opencv2/calib3d.hpp>
@@ -20,9 +19,7 @@ using namespace ITMLib;
 
 #include <itmx/ocv/OpenCVUtil.h>
 #include <itmx/picking/PickerFactory.h>
-#include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
-using namespace rigging;
 
 #include <orx/base/MemoryBlockFactory.h>
 using namespace orx;
@@ -154,10 +151,9 @@ ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>&
       pick_corner_from_depth(corners[i][0], view)
     );
 
-    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld;
-    if(fiducialPoseEye) fiducialPoseWorld.reset(fiducialPoseEye->GetM() * depthPose.GetM());
-
-    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
+    measurements.push_back(make_measurement_from_eye_pose(
+      boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, depthPose
+    ));
   }
 
   return measurements;
@@ -177,10 +173,9 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
       pick_corner_from_raycast(corners[i][0], renderState)
     );
 
-    boost::optional<ORUtils::SE3Pose> fiducialPoseEye;
-    if(fiducialPoseWorld) fiducialPoseEye.reset(fiducialPoseWorld->GetM() * depthPose.GetInvM());
-
-    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
+    measurements.push_back(make_measurement_from_world_pose(
+      boost::lexical_cast<std::string>(ids[i]), fiducialPoseWorld, depthPose
+    ));
   }
 
   return measurements;

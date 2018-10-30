@@ -60,6 +60,31 @@ public:
   //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
 protected:
   /**
+   * \brief Constructs a fiducial measurement from the fiducial's eye pose (if known) and the
+   *        world pose of the camera from which the fiducial was viewed (if known).
+   *
+   * \param fiducialID      The ID of the fiducial.
+   * \param fiducialPoseEye The fiducial's eye pose (if known).
+   * \param cameraPoseWorld The world pose of the camera from which the fiducial was viewed (if known).
+   * \return                The constructed fiducial measurement.
+   */
+  static FiducialMeasurement make_measurement_from_eye_pose(const std::string& fiducialID,
+                                                            const boost::optional<ORUtils::SE3Pose>& fiducialPoseEye,
+                                                            const boost::optional<ORUtils::SE3Pose>& cameraPoseWorld);
+  /**
+   * \brief Constructs a fiducial measurement from the fiducial's world pose (if known) and the
+   *        world pose of the camera from which the fiducial was viewed (if known).
+   *
+   * \param fiducialID        The ID of the fiducial.
+   * \param fiducialPoseWorld The fiducial's world pose (if known).
+   * \param cameraPoseWorld   The world pose of the camera from which the fiducial was viewed (if known).
+   * \return                  The constructed fiducial measurement.
+   */
+  static FiducialMeasurement make_measurement_from_world_pose(const std::string& fiducialID,
+                                                              const boost::optional<ORUtils::SE3Pose>& fiducialPoseWorld,
+                                                              const boost::optional<ORUtils::SE3Pose>& cameraPoseWorld);
+
+  /**
    * \brief Attempts to make a pose matrix from three corner points.
    *
    * \param v0  The first corner point.
