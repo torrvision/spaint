@@ -56,6 +56,20 @@ public:
    */
   virtual std::map<std::string,FiducialMeasurement> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
                                                                      PoseEstimationMode poseEstimationMode) const = 0;
+
+  //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Attempts to make a pose matrix from three corner points.
+   *
+   * \param v0  The first corner point.
+   * \param v1  The second corner point.
+   * \param v2  The third corner point.
+   * \return    The pose matrix, if all three corner points exist, or boost::none otherwise.
+   */
+  static boost::optional<ORUtils::SE3Pose> make_pose_from_corners(const boost::optional<Vector3f>& v0,
+                                                                  const boost::optional<Vector3f>& v1,
+                                                                  const boost::optional<Vector3f>& v2);
 };
 
 //#################### TYPEDEFS ####################
