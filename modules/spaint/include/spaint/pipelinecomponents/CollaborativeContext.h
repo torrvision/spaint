@@ -40,8 +40,8 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  virtual const CollaborativePoseOptimiser_Ptr& get_collaborative_pose_optimiser();
-  virtual CollaborativePoseOptimiser_CPtr get_collaborative_pose_optimiser() const;
+  const CollaborativePoseOptimiser_Ptr& get_collaborative_pose_optimiser();
+  CollaborativePoseOptimiser_CPtr get_collaborative_pose_optimiser() const;
 };
 
 //#################### TYPEDEFS ####################
