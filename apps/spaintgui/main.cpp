@@ -34,10 +34,6 @@
 #include <OVR_CAPI.h>
 #endif
 
-#ifdef WITH_OPENCV
-#include <spaint/fiducials/ArUcoFiducialDetector.h>
-#endif
-
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #include <itmx/imagesources/RemoteImageSourceEngine.h>
 #ifdef WITH_ZED
@@ -81,6 +77,7 @@ struct CommandLineArguments
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
+  std::string fiducialDetectorType;
   std::string globalPosesSpecifier;
   bool headless;
   std::string host;
@@ -107,7 +104,9 @@ struct CommandLineArguments
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
+  bool useVicon;
   bool verbose;
+  std::string viconHost;
 
   // Derived arguments
   boost::optional<bf::path> modelDir;
@@ -130,6 +129,7 @@ struct CommandLineArguments
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
+      ADD_SETTING(fiducialDetectorType);
       ADD_SETTING(globalPosesSpecifier);
       ADD_SETTING(headless);
       ADD_SETTING(host);
@@ -156,7 +156,9 @@ struct CommandLineArguments
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
       ADD_SETTING(trackSurfels);
+      ADD_SETTING(useVicon);
       ADD_SETTING(verbose);
+      ADD_SETTING(viconHost);
     #undef ADD_SETTINGS
     #undef ADD_SETTING
   }
@@ -562,6 +564,21 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
   // (there is no way to control the application without the UI anyway).
   if(args.headless) args.batch = true;
 
+  // If the user wants to use a Vicon fiducial detector or a Vicon-based tracker, make sure that the Vicon system it needs is enabled.
+  if(args.fiducialDetectorType == "vicon")
+  {
+    args.useVicon = true;
+  }
+
+  for(size_t i = 0, size = args.trackerSpecifiers.size(); i < size; ++i)
+  {
+    const std::string trackerSpecifier = boost::to_lower_copy(args.trackerSpecifiers[i]);
+    if(trackerSpecifier.find("vicon") != std::string::npos)
+    {
+      args.useVicon = true;
+    }
+  }
+
   // If the user wants to use a collaborative pipeline, but doesn't specify any disk sequences,
   // make sure a mapping server is started.
   if(args.pipelineType == "collaborative" && args.sequenceSpecifiers.empty())
@@ -609,6 +626,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
+    ("fiducialDetectorType", po::value<std::string>(&args.fiducialDetectorType)->default_value("aruco"), "fiducial detector type (aruco)")
     ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
     ("headless", po::bool_switch(&args.headless), "run in headless mode")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
@@ -627,7 +645,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
+    ("useVicon", po::bool_switch(&args.useVicon)->default_value(false), "whether or not to use the Vicon system")
     ("verbose,v", po::bool_switch(&args.verbose), "enable verbose output")
+    ("viconHost", po::value<std::string>(&args.viconHost)->default_value("192.168.0.101"), "Vicon host")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -812,12 +832,6 @@ try
       if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
     }
 
-    // Construct the fiducial detector (if any).
-    FiducialDetector_CPtr fiducialDetector;
-  #ifdef WITH_OPENCV
-    fiducialDetector.reset(new ArUcoFiducialDetector(settings));
-  #endif
-
     // Construct the pipeline itself.
     const size_t maxLabelCount = 10;
     SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
@@ -833,7 +847,6 @@ try
         mappingMode,
         trackingMode,
         args.modelDir,
-        fiducialDetector,
         args.detectFiducials
       ));
     }
@@ -850,7 +863,6 @@ try
         mappingMode,
         trackingMode,
         args.modelDir,
-        fiducialDetector,
         args.detectFiducials
       ));
     }
@@ -864,7 +876,6 @@ try
         make_tracker_config(args),
         mappingMode,
         trackingMode,
-        fiducialDetector,
         args.detectFiducials,
         !args.trackObject
       ));
@@ -915,12 +926,6 @@ try
       trackerConfigs.push_back("<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>");
     }
 
-    // Construct the fiducial detector (if any).
-    FiducialDetector_CPtr fiducialDetector;
-  #ifdef WITH_OPENCV
-    fiducialDetector.reset(new ArUcoFiducialDetector(settings));
-  #endif
-
     // Construct the pipeline itself.
     const CollaborationMode collaborationMode = args.collaborationMode == "batch" ? CM_BATCH : CM_LIVE;
     pipeline.reset(new CollaborativePipeline(
@@ -930,7 +935,6 @@ try
       trackerConfigs,
       mappingModes,
       trackingModes,
-      fiducialDetector,
       args.detectFiducials,
       mappingServer,
       collaborationMode

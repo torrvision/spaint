@@ -72,6 +72,14 @@ private:
   /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
 
+  /** The factory used to construct trackers. */
+  itmx::TrackerFactory m_trackerFactory;
+
+#ifdef WITH_VICON
+  /** The interface to the Vicon system (if we're using it). */
+  itmx::ViconInterface_Ptr m_vicon;
+#endif
+
   /** The visualisation generator that is used to render a scene. */
   spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
@@ -179,6 +187,29 @@ public:
    * \return  The InfiniTAM engine used for rendering a surfel scene.
    */
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const;
+
+  /**
+   * \brief Gets the factory used to construct trackers.
+   *
+   * \return  The factory used to construct trackers.
+   */
+  virtual const itmx::TrackerFactory& get_tracker_factory() const;
+
+#ifdef WITH_VICON
+  /**
+   * \brief Gets the interface to the Vicon system (if we're using it).
+   *
+   * \return  The interface to the Vicon system (if we're using it).
+   */
+  virtual const itmx::ViconInterface_Ptr& get_vicon();
+
+  /**
+   * \brief Gets the interface to the Vicon system (if we're using it).
+   *
+   * \return  The interface to the Vicon system (if we're using it).
+   */
+  virtual itmx::ViconInterface_CPtr get_vicon() const;
+#endif
 
   /**
    * \brief Gets the visualisation generator that is used to render a scene.

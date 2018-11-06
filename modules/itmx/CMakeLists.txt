@@ -184,15 +184,8 @@ IF(WITH_OVR)
 ENDIF()
 
 IF(WITH_VICON)
-  SET(trackers_sources ${trackers_sources}
-    src/trackers/RobustViconTracker.cpp
-    src/trackers/ViconTracker.cpp
-  )
-
-  SET(trackers_headers ${trackers_headers}
-    include/itmx/trackers/RobustViconTracker.h
-    include/itmx/trackers/ViconTracker.h
-  )
+  SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/itmx/trackers/ViconTracker.h)
 ENDIF()
 
 IF(WITH_ZED)
