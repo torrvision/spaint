@@ -38,18 +38,18 @@ struct CollaborativeRelocalisation
   /** The index of the frame in scene j's trajectory that is being relocalised against scene i. */
   int m_frameIndexJ;
 
-  /** TODO */
+  /** The quality of the initial relocalisation result (before verification). */
   orx::Relocaliser::Quality m_initialRelocalisationQuality;
 
   /** The local pose of the frame being relocalised in scene j's coordinate system. */
   ORUtils::SE3Pose m_localPoseJ;
 
 #ifdef WITH_OPENCV
-  /** TODO */
+  /** The (masked) mean difference between the synthetic depth images we render of scenes i and j during relocalisation. */
   cv::Scalar m_meanDepthDiff;
 #endif
 
-  /** TODO */
+  /** The estimated relative transformation (if determined) from scene j's coordinate system to scene i's coordinate system. */
   boost::optional<ORUtils::SE3Pose> m_relativePose;
 
   /** The ID of scene i. */
@@ -58,7 +58,7 @@ struct CollaborativeRelocalisation
   /** The ID of scene j. */
   std::string m_sceneJ;
 
-  /** TODO */
+  /** The fraction of pixels in the synthetic depth image we render of scene i (the target scene) that have valid depths. */
   float m_targetValidFraction;
 
   //#################### CONSTRUCTORS ####################
