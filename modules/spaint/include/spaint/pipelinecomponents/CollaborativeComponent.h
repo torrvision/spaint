@@ -108,7 +108,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Attempts to estimate the poses of the different scenes involved in the collaborative reconstruction.
    */
   void run_collaborative_pose_estimation();
 
@@ -125,32 +125,41 @@ private:
   std::list<CollaborativeRelocalisation> generate_sequential_candidate() const;
 
   /**
-   * \brief TODO
+   * \brief Returns whether or not the specified candidate relocalisation is verified.
+   *
+   * \param candidate The candidate relocalisation.
+   * \return          true, if the candidate relocalisation is verified, or false otherwise.
    */
   bool is_verified(const CollaborativeRelocalisation& candidate) const;
 
   /**
-   * \brief TODO
+   * \brief Outputs the results of the collaborative pose estimation process (for debugging purposes).
    */
   void output_results() const;
 
   /**
-   * \brief TODO
+   * \brief Runs the relocalisation thread, repeatedly attempting scheduled relocalisations until the collaborative component is destroyed.
    */
   void run_relocalisation();
 
   /**
-   * \brief TODO
+   * \brief Scores all of the specified candidate relocalisations to allow one of them to be chosen for a relocalisation attempt.
+   *
+   * \param candidates  The candidate relocalisations to score.
    */
   void score_candidates(std::list<CollaborativeRelocalisation>& candidates) const;
 
   /**
-   * \brief TODO
+   * \brief Tries to schedule a candidate relocalisation.
+   *
+   * \note  If an existing relocalisation attempt is in progress, this will early out and do nothing.
    */
   void try_schedule_relocalisation();
 
   /**
-   * \brief TODO
+   * \brief Updates the trajectories for each of the different scenes with the poses of the most recent frames (if successfully tracked).
+   *
+   * \return  true, if at least one of the scenes is still being reconstructed, or false otherwise.
    */
   bool update_trajectories();
 };
