@@ -6,6 +6,8 @@
 #include "util/ViconInterface.h"
 using namespace ViconDataStreamSDK::CPP;
 
+#include <iostream>
+
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
@@ -15,8 +17,10 @@ ViconInterface::ViconInterface(const std::string& host)
   // Connect to the Vicon system.
   if(m_vicon.Connect(host).Result != Result::Success || !m_vicon.IsConnected().Connected)
   {
-    throw std::runtime_error("Could not connect to the Vicon system");
+    throw std::runtime_error("Error: Failed to connect to the Vicon system");
   }
+
+  std::cout << "Connected to the Vicon system" << std::endl;
 
   // Set up the Vicon client.
   m_vicon.EnableMarkerData();
@@ -41,6 +45,16 @@ ViconInterface::~ViconInterface()
 unsigned int ViconInterface::get_frame_number() const
 {
   return m_vicon.GetFrameNumber().FrameNumber;
+}
+
+const boost::optional<Matrix4f>& ViconInterface::get_world_to_vicon_transform() const
+{
+  return m_worldToViconTransform;
+}
+
+void ViconInterface::set_world_to_vicon_transform(const Matrix4f& worldToViconTransform)
+{
+  m_worldToViconTransform = worldToViconTransform;
 }
 
 boost::optional<std::map<std::string,Eigen::Vector3f> > ViconInterface::try_get_marker_positions(const std::string& subjectName) const

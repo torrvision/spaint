@@ -27,7 +27,6 @@ using namespace tvgutil;
 #endif
 
 #ifdef WITH_VICON
-#include "trackers/RobustViconTracker.h"
 #include "trackers/ViconTracker.h"
 #endif
 
@@ -37,13 +36,13 @@ using namespace tvgutil;
 
 namespace itmx {
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 Tracker_Ptr TrackerFactory::make_tracker_from_file(const std::string& trackerConfigFilename, bool trackSurfels,
                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                    const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                    const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                                   const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
+                                                   const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag) const
 {
   Tree tree = PropertyUtil::load_properties_from_xml_file(trackerConfigFilename);
   Tree trackerTree = tree.get_child("tracker");
@@ -54,87 +53,30 @@ Tracker_Ptr TrackerFactory::make_tracker_from_string(const std::string& trackerC
                                                      const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                      const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                      const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                                     const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
+                                                     const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag) const
 {
   Tree tree = PropertyUtil::load_properties_from_xml_string(trackerConfig);
   Tree trackerTree = tree.get_child("tracker");
   return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag);
 }
 
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+#ifdef WITH_VICON
+void TrackerFactory::set_vicon(const ViconInterface_CPtr& vicon)
+{
+  m_vicon = vicon;
+}
+#endif
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::string trackerParams, bool trackSurfels,
                                                 const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                 const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                 const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                                const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
+                                                const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag) const
 {
   ITMTracker *tracker = NULL;
 
-  // If the user wants to construct a non-InfiniTAM tracker (e.g. a Rift or Vicon tracker),
-  // try to construct it, falling back on the InfiniTAM tracker if it doesn't work.
-  if(trackerType == "remote")
-  {
-    tracker = new RemoteTracker(mappingServer, boost::lexical_cast<int>(trackerParams));
-  }
-  else if(trackerType == "rift")
-  {
-#ifdef WITH_OVR
-    // If the Rift isn't available, make sure that we're not trying to use the Rift tracker.
-    if(ovrHmd_Detect() == 0)
-    {
-      trackerType = "infinitam";
-      trackerParams = "";
-    }
-    else
-    {
-      tracker = new RiftTracker;
-    }
-#else
-    // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
-    trackerType = "infinitam";
-    trackerParams = "";
-#endif
-  }
-  else if(trackerType == "robustvicon")
-  {
-#ifdef WITH_VICON
-    // FIXME: The Vicon interface should ultimately be instantiated elsewhere and passed in.
-    ViconInterface_CPtr vicon(new ViconInterface(trackerParams));
-    fallibleTracker = new RobustViconTracker(vicon, "kinect", rgbImageSize, depthImageSize, settings, lowLevelEngine);
-    tracker = fallibleTracker;
-#else
-    // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
-    trackerType = "infinitam";
-    trackerParams = "";
-#endif
-  }
-  else if(trackerType == "vicon")
-  {
-#ifdef WITH_VICON
-    // FIXME: The Vicon interface should ultimately be instantiated elsewhere and passed in.
-    ViconInterface_CPtr vicon(new ViconInterface(trackerParams));
-    fallibleTracker = new ViconTracker(vicon, "kinect");
-    tracker = fallibleTracker;
-#else
-    // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
-    trackerType = "infinitam";
-    trackerParams = "";
-#endif
-  }
-  else if(trackerType == "zed")
-  {
-#ifdef WITH_ZED
-    tracker = new ZedTracker(ZedCamera::instance());
-#else
-    // If we haven't built with Zed support, make sure that we're not trying to use the Zed tracker.
-    trackerType = "infinitam";
-    trackerParams = "";
-#endif
-  }
-
-  // If we reach this point, either we were already trying to use the InfiniTAM tracker, or construction
-  // of a different tracker failed. In either case, we will now use the InfiniTAM tracker.
   if(trackerType == "infinitam")
   {
     // If no parameters were specified for the InfiniTAM tracker, use the default ones. The defaults
@@ -151,6 +93,41 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
       lowLevelEngine.get(), imuCalibrator.get(), &settings->sceneParams
     );
   }
+  else if(trackerType == "remote")
+  {
+    tracker = new RemoteTracker(mappingServer, boost::lexical_cast<int>(trackerParams));
+  }
+  else if(trackerType == "rift")
+  {
+#ifdef WITH_OVR
+    if(ovrHmd_Detect() != 0) tracker = new RiftTracker;
+    else throw std::runtime_error("Error: The Rift is not currently available. Did you install the driver and plug it in?");
+#else
+    throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
+#endif
+  }
+  else if(trackerType == "vicon")
+  {
+#ifdef WITH_VICON
+    if(m_vicon)
+    {
+      ViconTracker::TrackingMode trackingMode = trackerParams == "absolute" ? ViconTracker::TM_ABSOLUTE : ViconTracker::TM_RELATIVE;
+      fallibleTracker = new ViconTracker(m_vicon, "kinect", trackingMode);
+      tracker = fallibleTracker;
+    }
+    else throw std::runtime_error("Error: The Vicon interface is null (try adding --useVicon to the command line).");
+#else
+    throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
+#endif
+  }
+  else if(trackerType == "zed")
+  {
+#ifdef WITH_ZED
+    tracker = new ZedTracker(ZedCamera::instance());
+#else
+    throw std::runtime_error("Error: Zed support not currently available. Reconfigure in CMake with the WITH_ZED option set to on.");
+#endif
+  }
 
   // Finally, return the constructed tracker, making sure to prevent double deletion if it will be added to a composite.
   return nestingFlag == NESTED ? Tracker_Ptr(tracker, boost::serialization::null_deleter()) : Tracker_Ptr(tracker);
@@ -160,7 +137,7 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                          const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                          const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                         const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag)
+                                         const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag) const
 {
   std::string trackerType, trackerParams;
   PropertyUtil::get_required_property(trackerTree, "<xmlattr>.type", trackerType);

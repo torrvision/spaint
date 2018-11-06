@@ -16,6 +16,8 @@
 
 #include <vicon/Client.h>
 
+#include <ORUtils/Math.h>
+
 namespace itmx {
 
 /**
@@ -27,6 +29,9 @@ class ViconInterface
 private:
   /** The Vicon client. */
   mutable ViconDataStreamSDK::CPP::Client m_vicon;
+
+  /** The relative transformation from world space to Vicon space (if known). */
+  boost::optional<Matrix4f> m_worldToViconTransform;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -60,6 +65,20 @@ public:
   unsigned int get_frame_number() const;
 
   /**
+   * \brief Gets the relative transformation from world space to Vicon space (if known).
+   *
+   * \return  The relative transformation from world space to Vicon space, if known, or boost::none otherwise.
+   */
+  const boost::optional<Matrix4f>& get_world_to_vicon_transform() const;
+
+  /**
+   * \brief Sets the relative transformation from world space to Vicon space.
+   *
+   * \param worldToViconTransform The relative transformation from world space to Vicon space.
+   */
+  void set_world_to_vicon_transform(const Matrix4f& worldToViconTransform);
+
+  /**
    * \brief Attempts to get the positions of the markers for the Vicon subject with the specified name.
    *
    * This may fail if we move out of the range of the cameras or some of the markers are occluded.
@@ -72,6 +91,7 @@ public:
 
 //#################### TYPEDEFS ####################
 
+typedef boost::shared_ptr<ViconInterface> ViconInterface_Ptr;
 typedef boost::shared_ptr<const ViconInterface> ViconInterface_CPtr;
 
 }
