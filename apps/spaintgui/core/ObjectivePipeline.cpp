@@ -19,12 +19,12 @@ using namespace tvgutil;
 ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                      const CompositeImageSourceEngine_Ptr& imageSourceEngine, const std::string& trackerConfig,
                                      SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
-                                     const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, bool mirrorWorldPose)
+                                     bool detectFiducials, bool mirrorWorldPose)
 : MultiScenePipeline("objective", settings, resourcesDir, maxLabelCount)
 {
   const std::string worldSceneID = Model::get_world_scene_id();
   SingleRGBDImagePipe_Ptr pipe(new SingleRGBDImagePipe(imageSourceEngine));
-  m_slamComponents[worldSceneID].reset(new SLAMComponent(m_model, worldSceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));
+  m_slamComponents[worldSceneID].reset(new SLAMComponent(m_model, worldSceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, detectFiducials));
   m_objectSegmentationComponents[worldSceneID].reset(new ObjectSegmentationComponent(m_model, worldSceneID, pipe));
 
   const std::string objectSceneID = "Object";

@@ -25,7 +25,6 @@ public:
    * \param trackerConfig     The tracker configuration to use when reconstructing either scene.
    * \param mappingMode       The mapping mode that the world scene's SLAM component should use.
    * \param trackingMode      The tracking mode that the world scene's SLAM component should use.
-   * \param fiducialDetector  The fiducial detector to use (if any).
    * \param detectFiducials   Whether or not to initially detect fiducials in the 3D scene.
    * \param mirrorWorldPose   Whether or not to mirror the world pose when reconstructing the object.
    */
@@ -33,7 +32,6 @@ public:
                     const CompositeImageSourceEngine_Ptr& imageSourceEngine, const std::string& trackerConfig,
                     spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                     spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS,
-                    const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),
                     bool detectFiducials = false, bool mirrorWorldPose = true);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

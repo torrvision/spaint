@@ -12,6 +12,10 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
 #include <itmx/remotemapping/MappingServer.h>
+#include <itmx/trackers/TrackerFactory.h>
+#ifdef WITH_VICON
+#include <itmx/util/ViconInterface.h>
+#endif
 
 #include <orx/relocalisation/RefiningRelocaliser.h>
 
@@ -50,6 +54,11 @@ public:
   virtual const std::string& get_resources_dir() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;
+  virtual const itmx::TrackerFactory& get_tracker_factory() const = 0;
+#ifdef WITH_VICON
+  virtual const itmx::ViconInterface_Ptr& get_vicon() = 0;
+  virtual itmx::ViconInterface_CPtr get_vicon() const = 0;
+#endif
   virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
