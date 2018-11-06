@@ -43,6 +43,17 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 #############################
 
 ##
+SET(collaboration_sources
+src/collaboration/CollaborativePoseOptimiser.cpp
+)
+
+SET(collaboration_headers
+include/spaint/collaboration/CollaborationMode.h
+include/spaint/collaboration/CollaborativePoseOptimiser.h
+include/spaint/collaboration/CollaborativeRelocalisation.h
+)
+
+##
 SET(features_sources
 src/features/FeatureCalculatorFactory.cpp
 )
@@ -546,6 +557,7 @@ include/spaint/visualisation/shared/SemanticVisualiser_Shared.h
 #################################################################
 
 SET(sources
+${collaboration_sources}
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
@@ -578,6 +590,7 @@ ${visualisation_interface_sources}
 )
 
 SET(headers
+${collaboration_headers}
 ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
@@ -662,6 +675,7 @@ ENDIF()
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP(collaboration FILES ${collaboration_sources} ${collaboration_headers})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
