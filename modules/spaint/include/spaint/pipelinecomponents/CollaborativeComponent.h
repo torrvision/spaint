@@ -40,7 +40,7 @@ private:
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
 
-  /** TODO */
+  /** Render states used when rendering synthetic depth images during relocalisation. */
   std::map<std::string, VoxelRenderState_Ptr> m_depthRenderStates;
 
   /** The current frame index (in practice, the number of times that run_collaborative_pose_estimation has been called). */
@@ -64,7 +64,7 @@ private:
   /** The results of every relocalisation that has been attempted. */
   std::deque<CollaborativeRelocalisation> m_results;
 
-  /** TODO */
+  /** Render states used when rendering synthetic colour images during relocalisation. */
   std::map<std::string, VoxelRenderState_Ptr> m_rgbRenderStates;
 
   /** A random number generator. */
@@ -115,12 +115,20 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Randomly generates at most the specified number of candidate relocalisations.
+   *
+   * \note  If any candidates are generated, they will be scored, and one of them will then be selected for scheduling.
+   * \note  The collaborative reconstruction must involve at least two scenes for candidates to be generated (since otherwise no relocalisation is needed).
+   *
+   * \param desiredCandidateCount The desired number of candidates to generate (at most this number will be generated).
+   * \return                      The generated candidate relocalisations (if any).
    */
   std::list<CollaborativeRelocalisation> generate_random_candidates(size_t desiredCandidateCount) const;
 
   /**
-   * \brief TODO
+   * \brief Randomly picks a scene pair (i,j), and then tries to generate a candidate relocalisation of the next untried frame (if any) of scene j against scene i.
+   *
+   * \return  The generate candidate relocalisation (if any).
    */
   std::list<CollaborativeRelocalisation> generate_sequential_candidate() const;
 
