@@ -157,7 +157,10 @@ bool CollaborativePoseOptimiser::add_relative_transform_sample_sub(const std::st
 #endif
 
   // Try to find an existing cluster that contains a sample that is sufficiently similar to the new sample.
-  // If we find one, add the sample to that cluster and early out.
+  // If we find one, add the sample to that cluster and early out. Additionally, if the cluster we've just
+  // modified is now a confident one, and we're in live mode, decrease the sizes of all other multi-sample
+  // clusters (i.e. perform hysteresis), to make it easier for the effects of any incorrect samples that
+  // have been added (which is more likely in live mode) to be mitigated over time.
   std::vector<SE3PoseCluster>& clusters = m_relativeTransformSamples[std::make_pair(sceneI, sceneJ)];
   for(size_t i = 0, clusterCount = clusters.size(); i < clusterCount; ++i)
   {
@@ -171,7 +174,6 @@ bool CollaborativePoseOptimiser::add_relative_transform_sample_sub(const std::st
         {
           if(mode == CM_LIVE)
           {
-            // TODO: Hysteresis
             for(size_t k = 0; k < clusterCount; ++k)
             {
               if(k != i && clusters[k].size() > 1)
