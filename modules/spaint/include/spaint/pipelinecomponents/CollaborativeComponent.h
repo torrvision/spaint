@@ -28,7 +28,7 @@ class CollaborativeComponent
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The best relocalisation candidate, as chosen by the scheduler. This will be the next relocalisation attempted. */
   boost::shared_ptr<CollaborativeRelocalisation> m_bestCandidate;
 
   /** The timer used to compute the time spent collaborating. */
@@ -43,25 +43,25 @@ private:
   /** TODO */
   std::map<std::string, VoxelRenderState_Ptr> m_depthRenderStates;
 
-  /** TODO */
+  /** The current frame index (in practice, the number of times that run_collaborative_pose_estimation has been called). */
   int m_frameIndex;
 
-  /** TODO */
+  /** The mode in which the collaboration reconstruction should run. */
   CollaborationMode m_mode;
 
-  /** TODO */
+  /** The mutex used to synchronise scheduling and relocalisation. */
   boost::mutex m_mutex;
 
-  /** TODO */
+  /** A condition variable used to tell the relocalisation thread when a candidate relocalisation has been scheduled. */
   boost::condition_variable m_readyToRelocalise;
 
   /** Whether or not the current reconstruction is consistent (i.e. all scenes are connected to the primary one). */
   bool m_reconstructionIsConsistent;
 
-  /** TODO */
+  /** The thread on which relocalisations should be attempted. */
   boost::thread m_relocalisationThread;
 
-  /** TODO */
+  /** The results of every relocalisation that has been attempted. */
   std::deque<CollaborativeRelocalisation> m_results;
 
   /** TODO */
@@ -73,16 +73,16 @@ private:
   /** Whether or not to stop at the first consistent reconstruction. */
   bool m_stopAtFirstConsistentReconstruction;
 
-  /** TODO */
+  /** A flag used to ensure that the relocalisation thread terminates cleanly when the collaborative component is destroyed. */
   boost::atomic<bool> m_stopRelocalisationThread;
 
   /** Whether or not to compute the time spent collaborating. */
   bool m_timeCollaboration;
 
-  /** TODO */
+  /** The trajectories followed by the cameras that reconstructed each of the different scenes (only poses where tracking succeeded are stored). */
   std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
 
-  /** TODO */
+  /** The indices of the frames that have already been tried when attempting to relocalise one scene against another. */
   std::map<std::pair<std::string,std::string>,std::set<int> > m_triedFrameIndices;
 
   /** A visualisation generator that is specific to this collaborative component. We avoid sharing one with other components for thread-safety reasons. */
@@ -94,7 +94,7 @@ public:
    * \brief Constructs a collaborative component.
    *
    * \param context The shared context needed for collaborative SLAM.
-   * \param mode    TODO
+   * \param mode    The mode in which the collaborative reconstruction should run.
    */
   CollaborativeComponent(const CollaborativeContext_Ptr& context, CollaborationMode mode);
 
