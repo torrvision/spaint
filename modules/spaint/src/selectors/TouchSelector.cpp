@@ -61,7 +61,7 @@ void TouchSelector::accept(const SelectorVisitor& visitor) const
   visitor.visit(*this);
 }
 
-ITMUChar4Image_CPtr TouchSelector::generate_touch_image(const View_CPtr& view) const
+ORUChar4Image_CPtr TouchSelector::generate_touch_image(const View_CPtr& view) const
 {
   return m_touchDetector->generate_touch_image(view);
 }
@@ -84,7 +84,7 @@ void TouchSelector::update(const InputState& inputState, const SLAMState_CPtr& s
 {
   // Detect any points that the user is touching in the scene.
   MoveableCamera_CPtr camera(new SimpleCamera(CameraPoseConverter::pose_to_camera(slamState->get_pose())));
-  ITMFloatImage_Ptr depthImage(slamState->get_view()->depth, boost::serialization::null_deleter());
+  ORFloatImage_Ptr depthImage(slamState->get_view()->depth, boost::serialization::null_deleter());
   TIME(std::vector<Eigen::Vector2i> touchPoints = m_touchDetector->determine_touch_points(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
 #if DEBUGGING
   std::cout << runningTouchDetectorOnFrame << '\n';

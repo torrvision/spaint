@@ -47,10 +47,10 @@ public:
   virtual void reset();
 
   /** Override */
-  virtual ITMUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  virtual ORUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   /** Override */
-  virtual ITMUChar4Image_CPtr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
+  virtual ORUChar4Image_CPtr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -61,7 +61,7 @@ private:
    * \param pose        The camera pose from which the scene is being viewed.
    * \param renderState The render state corresponding to the camera.
    */
-  ITMUCharImage_CPtr make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  ORUCharImage_CPtr make_change_mask(const ORFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   /**
    * \brief Makes a mask denoting the location of the user's hand as seen from the camera.
@@ -70,7 +70,7 @@ private:
    * \param pose        The camera pose from which the scene is being viewed.
    * \param renderState The render state corresponding to the camera.
    */
-  ITMUCharImage_CPtr make_hand_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  ORUCharImage_CPtr make_hand_mask(const ORFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:

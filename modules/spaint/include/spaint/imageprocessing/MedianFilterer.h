@@ -51,7 +51,7 @@ public:
    * \param input   The input image.
    * \param output  The output image.
    */
-  void operator()(const ITMUChar4Image_CPtr& input, const ITMUChar4Image_Ptr& output) const;
+  void operator()(const ORUChar4Image_CPtr& input, const ORUChar4Image_Ptr& output) const;
 };
 
 }
