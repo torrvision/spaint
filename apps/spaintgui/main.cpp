@@ -35,14 +35,17 @@
 #endif
 
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
+#include <itmx/imagesources/RemoteImageSourceEngine.h>
 #ifdef WITH_ZED
 #include <itmx/imagesources/ZedImageSourceEngine.h>
 #endif
 
 #include <orx/base/MemoryBlockFactory.h>
+#include <orx/geometry/GeometryUtil.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 
+#include "core/CollaborativePipeline.h"
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 #include "core/SLAMPipeline.h"
@@ -70,11 +73,14 @@ struct CommandLineArguments
   bool batch;
   std::string calibrationFilename;
   bool cameraAfterDisk;
+  std::string collaborationMode;
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
   std::string fiducialDetectorType;
+  std::string globalPosesSpecifier;
   bool headless;
+  std::string host;
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
@@ -82,11 +88,14 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::string port;
   std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
+  bool profileMemory;
   std::string relocaliserType;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
+  bool runServer;
   bool saveMeshOnExit;
   bool saveModelsOnExit;
   std::vector<std::string> sequenceSpecifiers;
@@ -116,11 +125,14 @@ struct CommandLineArguments
     #define ADD_SETTINGS(arg) for(size_t i = 0; i < arg.size(); ++i) { settings->add_value(#arg, boost::lexical_cast<std::string>(arg[i])); }
       ADD_SETTING(batch);
       ADD_SETTING(calibrationFilename);
+      ADD_SETTING(collaborationMode);
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
       ADD_SETTING(fiducialDetectorType);
+      ADD_SETTING(globalPosesSpecifier);
       ADD_SETTING(headless);
+      ADD_SETTING(host);
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
@@ -128,11 +140,14 @@ struct CommandLineArguments
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
+      ADD_SETTING(port);
       ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
+      ADD_SETTING(profileMemory);
       ADD_SETTING(relocaliserType);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
+      ADD_SETTING(runServer);
       ADD_SETTING(saveMeshOnExit);
       ADD_SETTING(saveModelsOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
@@ -240,6 +255,34 @@ void copy_surfel_scene_params(const Settings_Ptr& settings)
 }
 
 /**
+ * \brief Attempts to load a set of global poses from a file specified by a global poses specifier.
+ *
+ * \param globalPosesSpecifier  The global poses specifier.
+ * \return                      The global poses from the file, if possible, or an empty map otherwise.
+ */
+std::map<std::string,DualQuatd> load_global_poses(const std::string& globalPosesSpecifier)
+{
+  std::map<std::string,DualQuatd> globalPoses;
+
+  // Determine the file from which to load the global poses.
+  const std::string dirName = "global_poses";
+  const bf::path p = bf::is_regular(globalPosesSpecifier) ? globalPosesSpecifier : find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
+
+  // Try to read the poses from the file. If we can't, throw.
+  std::ifstream fs(p.string().c_str());
+  if(!fs) throw std::runtime_error("Error: Could not open global poses file");
+
+  std::string id;
+  DualQuatd dq;
+  while(fs >> id >> dq)
+  {
+    globalPoses.insert(std::make_pair(id, dq));
+  }
+
+  return globalPoses;
+}
+
+/**
  * \brief Attempts to make a camera subengine to read images from any suitable camera that is attached.
  *
  * \param args  The program's command-line arguments.
@@ -305,6 +348,10 @@ std::string make_tracker_config(CommandLineArguments& args)
 {
   std::string result;
 
+  // If the user wants to use global poses for the scenes, load them from disk.
+  std::map<std::string,DualQuatd> globalPoses;
+  if(args.globalPosesSpecifier != "") globalPoses = load_global_poses(args.globalPosesSpecifier);
+
   // Determine the number of different trackers that will be needed.
   size_t trackerCount = args.sequenceSpecifiers.size();
   if(trackerCount == 0 || args.cameraAfterDisk) ++trackerCount;
@@ -345,7 +392,31 @@ std::string make_tracker_config(CommandLineArguments& args)
           throw std::runtime_error("Error: Not enough pose file masks have been specified with the -p flag.");
         }
 
+        // If we're using global poses for the scenes:
+        if(!globalPoses.empty())
+        {
+          // Try to find the global pose for this scene based on the sequence specifier.
+          const std::string sequenceID = args.sequenceDirs[i].stem().string();
+          std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sequenceID);
+
+          // If that doesn't work, try to find the global pose based on the scene ID.
+          if(it == globalPoses.end())
+          {
+            // FIXME: We shouldn't hard-code "Local" here - it's based on knowing how CollaborativePipeline assigns scene names.
+            const std::string sceneID = i == 0 ? Model::get_world_scene_id() : "Local" + boost::lexical_cast<std::string>(i);
+            it = globalPoses.find(sceneID);
+          }
+
+          // If we now have a global pose, specify the creation of a global tracker that uses it. If not, throw.
+          if(it != globalPoses.end()) result += "<tracker type='global'><params>" + boost::lexical_cast<std::string>(it->second) + "</params>";
+          else throw std::runtime_error("Error: Global pose for sequence '" + sequenceID + "' not found");
+        }
+
+        // Specify the creation of a file-based tracker that reads poses from disk.
         result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + ",initialFrameNo=" + boost::lexical_cast<std::string>(args.initialFrameNumber) + "</params></tracker>";
+
+        // If we're using global poses for the scenes, add the necessary closing tag for the global tracker.
+        if(!globalPoses.empty()) result += "</tracker>";
       }
       else
       {
@@ -395,10 +466,10 @@ void parse_configuration_file(const std::string& filename, const po::options_des
  */
 bool postprocess_arguments(CommandLineArguments& args, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
 {
-  // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
+  // If the user specifies both sequence and explicit depth/RGB/pose masks, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth/RGB/pose mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth/RGB/pose masks may be specified, but not both.\n";
     return false;
   }
 
@@ -469,6 +540,16 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     }
   }
 
+  // If the user wants to use global poses for the scenes, make sure that each disk sequence has a tracker specifier set to Disk.
+  if(args.globalPosesSpecifier != "")
+  {
+    args.trackerSpecifiers.resize(args.sequenceSpecifiers.size());
+    for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
+    {
+      args.trackerSpecifiers[i] = "Disk";
+    }
+  }
+
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
 
@@ -498,6 +579,25 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     }
   }
 
+  // If the user wants to use a collaborative pipeline, but doesn't specify any disk sequences,
+  // make sure a mapping server is started.
+  if(args.pipelineType == "collaborative" && args.sequenceSpecifiers.empty())
+  {
+    args.runServer = true;
+  }
+
+  // If the user tries to run the application in both batch mode and server mode, print an error message.
+  // It doesn't make sense to combine the two modes: server mode is intended to make sure that fusion
+  // starts as soon as frames arrive from a client; batch mode is intended to make sure that the user
+  // cannot quit the application during experiments, and that the application quits automatically once
+  // an experiment is finished. Both modes initially unpause the fusion process, but they are otherwise
+  // intended for completely different use cases and should not be combined (indeed, they conflict).
+  if(args.batch && args.runServer)
+  {
+    std::cout << "Error: Cannot enable both batch mode and server mode at the same time.\n";
+    return false;
+  }
+
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
 
@@ -522,18 +622,24 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("batch", po::bool_switch(&args.batch), "enable batch mode")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("collaborationMode", po::value<std::string>(&args.collaborationMode)->default_value("batch"), "collaboration mode (batch|live)")
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
     ("fiducialDetectorType", po::value<std::string>(&args.fiducialDetectorType)->default_value("aruco"), "fiducial detector type (aruco)")
+    ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
     ("headless", po::bool_switch(&args.headless), "run in headless mode")
+    ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("modelSpecifier,m", po::value<std::string>(&args.modelSpecifier)->default_value(""), "model specifier")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("port", po::value<std::string>(&args.port)->default_value("7851"), "remote mapping port")
+    ("profileMemory", po::bool_switch(&args.profileMemory)->default_value(false), "whether or not to profile the memory usage")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
+    ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
     ("saveModelsOnExit", po::bool_switch(&args.saveModelsOnExit), "save a model of each voxel scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
@@ -682,87 +788,166 @@ try
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
-  // Construct the image source engine.
-  boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
-
-  // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
-  if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
+  // Run a remote mapping server if requested.
+  MappingServer_Ptr mappingServer;
+  if(args.runServer)
   {
-    const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
-    imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
-  }
-
-  // Add a subengine for each disk sequence specified.
-  for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
-  {
-    const std::string& depthImageMask = args.depthImageMasks[i];
-    const std::string& rgbImageMask = args.rgbImageMasks[i];
-
-    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-    ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-      args.prefetchBufferCapacity
-    ));
-  }
-
-  // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
-  if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
-  {
-    ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
-    if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
+    const MappingServer::Mode mode = args.pipelineType == "collaborative" ? MappingServer::SM_MULTI_CLIENT : MappingServer::SM_SINGLE_CLIENT;
+    mappingServer.reset(new MappingServer(mode));
+    mappingServer->start();
   }
 
   // Construct the pipeline.
-  const size_t maxLabelCount = 10;
-  SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
-  SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-
   MultiScenePipeline_Ptr pipeline;
-  if(args.pipelineType == "slam")
+  if(args.pipelineType != "collaborative")
   {
-    pipeline.reset(new SLAMPipeline(
-      settings,
-      Application::resources_dir().string(),
-      imageSourceEngine,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
-      args.modelDir,
-      args.detectFiducials
-    ));
+    // Construct the image source engine.
+    boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
+
+    // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
+    if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
+    {
+      const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
+      imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
+    }
+
+    // Add a subengine for each disk sequence specified.
+    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    {
+      const std::string& depthImageMask = args.depthImageMasks[i];
+      const std::string& rgbImageMask = args.rgbImageMasks[i];
+
+      std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
+      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        args.prefetchBufferCapacity
+      ));
+    }
+
+    // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+    if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
+    {
+      ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
+      if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
+    }
+
+    // Construct the pipeline itself.
+    const size_t maxLabelCount = 10;
+    SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
+    SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
+
+    if(args.pipelineType == "slam")
+    {
+      pipeline.reset(new SLAMPipeline(
+        settings,
+        Application::resources_dir().string(),
+        imageSourceEngine,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        args.modelDir,
+        args.detectFiducials
+      ));
+    }
+    else if(args.pipelineType == "semantic")
+    {
+      const unsigned int seed = 12345;
+      pipeline.reset(new SemanticPipeline(
+        settings,
+        Application::resources_dir().string(),
+        maxLabelCount,
+        imageSourceEngine,
+        seed,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        args.modelDir,
+        args.detectFiducials
+      ));
+    }
+    else if(args.pipelineType == "objective")
+    {
+      pipeline.reset(new ObjectivePipeline(
+        settings,
+        Application::resources_dir().string(),
+        maxLabelCount,
+        imageSourceEngine,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        args.detectFiducials,
+        !args.trackObject
+      ));
+    }
+    else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
   }
-  else if(args.pipelineType == "semantic")
+  else
   {
-    const unsigned int seed = 12345;
-    pipeline.reset(new SemanticPipeline(
+    // Set a reasonable default for the voxel size (this can be overridden using a configuration file).
+    if(!settings->has_values("SceneParams.voxelSize"))
+    {
+      settings->sceneParams.voxelSize = 0.015f;
+      settings->sceneParams.mu = settings->sceneParams.voxelSize * 4;
+    }
+
+    // Set up the image source engines, mapping modes, tracking modes and tracker configurations.
+    std::vector<CompositeImageSourceEngine_Ptr> imageSourceEngines;
+    std::vector<SLAMComponent::MappingMode> mappingModes;
+    std::vector<SLAMComponent::TrackingMode> trackingModes;
+    std::vector<std::string> trackerConfigs;
+
+    // Add an image source engine for each disk sequence specified.
+    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    {
+      const std::string& depthImageMask = args.depthImageMasks[i];
+      const std::string& rgbImageMask = args.rgbImageMasks[i];
+
+      const bf::path calibrationPath = args.sequenceDirs[i] / "calib.txt";
+      const std::string calibrationFilename = bf::exists(calibrationPath) ? calibrationPath.string() : args.calibrationFilename;
+
+      std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
+      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+        new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        args.prefetchBufferCapacity
+      ));
+
+      imageSourceEngines.push_back(imageSourceEngine);
+    }
+
+    // Set up the mapping modes, tracking modes and tracker configurations.
+    // FIXME: We don't always want to read the poses from disk - make it possible to run the normal tracker instead.
+    for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
+    {
+      mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
+      trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
+      trackerConfigs.push_back("<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>");
+    }
+
+    // Construct the pipeline itself.
+    const CollaborationMode collaborationMode = args.collaborationMode == "batch" ? CM_BATCH : CM_LIVE;
+    pipeline.reset(new CollaborativePipeline(
       settings,
       Application::resources_dir().string(),
-      maxLabelCount,
-      imageSourceEngine,
-      seed,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
-      args.modelDir,
-      args.detectFiducials
-    ));
-  }
-  else if(args.pipelineType == "objective")
-  {
-    pipeline.reset(new ObjectivePipeline(
-      settings,
-      Application::resources_dir().string(),
-      maxLabelCount,
-      imageSourceEngine,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
+      imageSourceEngines,
+      trackerConfigs,
+      mappingModes,
+      trackingModes,
       args.detectFiducials,
-      !args.trackObject
+      mappingServer,
+      collaborationMode
     ));
   }
-  else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
+
+  // If a remote host was specified, set up a mapping client for the world scene.
+  if(args.host != "")
+  {
+    std::cout << "Setting mapping client for host '" << args.host << "' and port '" << args.port << "'\n";
+    const pooled_queue::PoolEmptyStrategy poolEmptyStrategy = settings->get_first_value<pooled_queue::PoolEmptyStrategy>("MappingClient.poolEmptyStrategy", pooled_queue::PES_DISCARD);
+    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host, args.port, poolEmptyStrategy)));
+  }
 
 #ifdef WITH_LEAP
   // Set the ID of the fiducial to use for the Leap Motion (if any).
@@ -771,7 +956,9 @@ try
 
   // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
-  app.set_batch_mode_enabled(args.batch);
+  if(args.batch) app.set_batch_mode_enabled(true);
+  if(args.runServer) app.set_server_mode_enabled(true);
+  app.set_save_memory_usage(args.profileMemory);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   app.set_save_models_on_exit(args.saveModelsOnExit);
   bool runSucceeded = app.run();

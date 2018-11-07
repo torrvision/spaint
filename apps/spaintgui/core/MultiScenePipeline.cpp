@@ -74,15 +74,12 @@ void MultiScenePipeline::reset_scene(const std::string& sceneID)
   MapUtil::call_if_found(m_slamComponents, sceneID, boost::bind(&SLAMComponent::reset_scene, _1));
 }
 
-bool MultiScenePipeline::run_main_section()
+std::set<std::string> MultiScenePipeline::run_main_section()
 {
-  bool result = true;
+  std::set<std::string> result;
   for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
-    if(!it->second->process_frame())
-    {
-      if(it->first == Model::get_world_scene_id()) result = false;
-    }
+    if(it->second->process_frame()) result.insert(it->first);
   }
   return result;
 }

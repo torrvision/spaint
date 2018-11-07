@@ -32,6 +32,7 @@ using namespace grove;
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 using namespace itmx;
 
+#include <orx/relocalisation/BackgroundRelocaliser.h>
 #include <orx/relocalisation/NullRelocaliser.h>
 #include <orx/relocalisation/Relocaliser.h>
 using namespace orx;
@@ -100,7 +101,6 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   slamState->set_tracking_state(TrackingState_Ptr(new ITMTrackingState(trackedImageSize, memoryType)));
-  m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 
   // Set up the relocaliser.
   setup_relocaliser();
@@ -114,6 +114,12 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Set up the scene.
   reset_scene();
+
+  // Update the initial pose.
+  m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
+
+  // Add the scene to the list of existing scenes.
+  context->add_scene_id(sceneID);
 
   // Set up the fiducial detector (if any).
   setup_fiducial_detector();
@@ -290,10 +296,11 @@ bool SLAMComponent::process_frame()
     }
 
     // If a mapping client is active:
-    if(m_mappingClient)
+    const MappingClient_Ptr& mappingClient = m_context->get_mapping_client(m_sceneID);
+    if(mappingClient)
     {
       // Send the current frame to the remote mapping server.
-      MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = m_mappingClient->begin_push_frame_message();
+      MappingClient::RGBDFrameMessageQueue::PushHandler_Ptr pushHandler = mappingClient->begin_push_frame_message();
       boost::optional<RGBDFrameMessage_Ptr&> elt = pushHandler->get();
       if(elt)
       {
@@ -327,15 +334,17 @@ bool SLAMComponent::process_frame()
     m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib.intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
   }
 
-  // If we're using a composite image source engine and the current sub-engine has run out of images, disable fusion.
+  // If we're using a composite image source engine, the current sub-engine has run out of images and we're not using global poses, disable fusion.
   CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
-  if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
+  const bool usingGlobalPoses = m_context->get_settings()->get_first_value<std::string>("globalPosesSpecifier", "") != "";
+  if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages() && !usingGlobalPoses) m_fusionEnabled = false;
 
   // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
   // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.
-  if(m_fiducialDetector && m_detectFiducials && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
+  FiducialDetector_CPtr fiducialDetector = m_context->get_fiducial_detector(m_sceneID);
+  if(fiducialDetector && m_detectFiducials && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
-    slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d));
+    slamState->update_fiducials(fiducialDetector->detect_fiducials(view, *trackingState->pose_d));
   }
 
   return true;
@@ -379,6 +388,8 @@ void SLAMComponent::save_models(const std::string& outputDir) const
   const std::string configFilename = outputDir + "/settings.ini";
   {
     std::ofstream fs(configFilename.c_str());
+    fs << "relocaliserType = " << m_relocaliserType << '\n';
+    fs << '\n';
     fs << "[SceneParams]\n";
     fs << "mu = " << sceneParams.mu << '\n';
     fs << "viewFrustum_max = " << sceneParams.viewFrustum_max << '\n';
@@ -408,10 +419,10 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 
 void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
 {
-  m_mappingClient = mappingClient;
+  m_context->get_mapping_client(m_sceneID) = mappingClient;
 
   // If we're using a mapping client, send an initial calibration message across to the server.
-  if(m_mappingClient)
+  if(mappingClient)
   {
     SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
 
@@ -428,7 +439,7 @@ void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
 #endif
 
     std::cout << "Sending calibration message" << std::endl;
-    m_mappingClient->send_calibration_message(calibMsg);
+    mappingClient->send_calibration_message(calibMsg);
   }
 }
 
@@ -532,7 +543,7 @@ void SLAMComponent::setup_fiducial_detector()
 #endif
   }
 
-  m_fiducialDetector = fiducialDetector;
+  m_context->set_fiducial_detector(m_sceneID, fiducialDetector);
 }
 
 void SLAMComponent::setup_relocaliser()
@@ -571,7 +582,16 @@ void SLAMComponent::setup_relocaliser()
     std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
 
     // Load the relocaliser from the specified file.
-    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType);
+    int deviceCount = 1;
+    cudaGetDeviceCount(&deviceCount);
+    if(deviceCount > 1)
+    {
+      ORcudaSafeCall(cudaSetDevice(1));
+      Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType);
+      innerRelocaliser.reset(new BackgroundRelocaliser(scoreRelocaliser, 1));
+      ORcudaSafeCall(cudaSetDevice(0));
+    }
+    else innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType);
 #endif
   }
   else if(m_relocaliserType == "ferns")

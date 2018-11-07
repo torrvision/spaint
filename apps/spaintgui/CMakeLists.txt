@@ -60,6 +60,7 @@ commands/MarkVoxelsCommand.h
 
 ##
 SET(core_sources
+core/CollaborativePipeline.cpp
 core/Model.cpp
 core/MultiScenePipeline.cpp
 core/ObjectivePipeline.cpp
@@ -68,6 +69,7 @@ core/SLAMPipeline.cpp
 )
 
 SET(core_headers
+core/CollaborativePipeline.h
 core/Model.h
 core/MultiScenePipeline.h
 core/ObjectivePipeline.h
