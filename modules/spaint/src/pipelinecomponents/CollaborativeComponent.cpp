@@ -38,7 +38,7 @@ CollaborativeComponent::CollaborativeComponent(const CollaborativeContext_Ptr& c
 {
   const Settings_CPtr& settings = context->get_settings();
   const std::string settingsNamespace = "CollaborativeComponent.";
-  m_considerPoorRelocalisations = settings->get_first_value<bool>(settingsNamespace + "considerPoorRelocalisations", false);
+  m_considerPoorRelocalisations = settings->get_first_value<bool>(settingsNamespace + "considerPoorRelocalisations", mode == CM_LIVE);
   m_stopAtFirstConsistentReconstruction = settings->get_first_value<bool>(settingsNamespace + "stopAtFirstConsistentReconstruction", false);
   m_timeCollaboration = settings->get_first_value<bool>(settingsNamespace + "timeCollaboration", false);
 
@@ -210,7 +210,11 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
 bool CollaborativeComponent::is_verified(const CollaborativeRelocalisation& candidate) const
 {
 #ifdef WITH_OPENCV
-  return candidate.m_meanDepthDiff(0) < 5.0f && candidate.m_targetValidFraction >= 0.5f;
+  // Note: In live mode, we use a slightly more tolerant threshold because the relocalisers have been less thoroughly trained.
+  // FIXME: This is a bit hacky - we might want to improve this in the future.
+  const float depthDiffThreshold = m_mode == CM_LIVE ? 10.0f : 5.0f;
+
+  return candidate.m_meanDepthDiff(0) < depthDiffThreshold && candidate.m_targetValidFraction >= 0.5f;
 #else
   return true;
 #endif
@@ -511,6 +515,10 @@ void CollaborativeComponent::run_relocalisation()
 #endif
       m_bestCandidate.reset();
     }
+
+    // In live mode, allow a bit of extra time for training before running the next relocalisation.
+    // FIXME: This is a bit hacky - we might want to improve this in the future.
+    if(m_mode == CM_LIVE) boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
   }
 }
 
