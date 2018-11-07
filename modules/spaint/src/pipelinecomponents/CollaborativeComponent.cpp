@@ -177,6 +177,7 @@ std::list<CollaborativeRelocalisation> CollaborativeComponent::generate_sequenti
   const int sceneCount = static_cast<int>(m_trajectories.size());
   if(sceneCount < 2) return std::list<CollaborativeRelocalisation>();
 
+  // Randomly select two different scenes.
   std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it1 = m_trajectories.begin();
   std::map<std::string,std::deque<ORUtils::SE3Pose> >::const_iterator it2 = m_trajectories.begin();
   ++it2;
@@ -362,7 +363,7 @@ void CollaborativeComponent::run_relocalisation()
       {
         m_readyToRelocalise.wait(lock);
 
-        // TODO: Comment here.
+        // If the collaborative component is terminating, stop attempting relocalisations and let the thread terminate.
         if(m_stopRelocalisationThread) return;
       }
     }

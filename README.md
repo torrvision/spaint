@@ -61,7 +61,11 @@ If you make use of or build on our Collaborative SLAM approach, please consider 
 @article{Golodetz2018,
   author = {Stuart Golodetz* and Tommaso Cavallari* and Nicholas A Lord* and Victor A Prisacariu and David W Murray and Philip H S Torr},
   title = {{Collaborative Large-Scale Dense 3D Reconstruction with Online Inter-Agent Pose Optimisation}},
-  journal = {IEEE Transactions on Visualization and Computer Graphics (ISMAR Special Issue)},
+  journal = {IEEE Transactions on Visualization and Computer Graphics},
+  volume = {24},
+  number = {11},
+  pages = {2895-2905},
+  month = {November},
   year = {2018}
 }
 ```

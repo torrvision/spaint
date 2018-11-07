@@ -34,6 +34,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTBB.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
@@ -98,6 +99,7 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 SET(fiducials_sources
 src/fiducials/AveragingFiducial.cpp
 src/fiducials/Fiducial.cpp
+src/fiducials/FiducialDetector.cpp
 src/fiducials/FiducialMeasurement.cpp
 src/fiducials/FiducialPoseEstimator.cpp
 src/fiducials/SimpleFiducial.cpp

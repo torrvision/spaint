@@ -35,7 +35,7 @@ using namespace spaint;
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
-#include "renderers/NullRenderer.h"
+#include "renderers/HeadlessRenderer.h"
 #ifdef WITH_OVR
 #include "renderers/RiftRenderer.h"
 #endif
@@ -60,13 +60,12 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
   setup_labels();
   setup_meshing();
 
-  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-  bool headless = settings->get_first_value<bool>("headless");
+  Model_CPtr model = m_pipeline->get_model();
+  const Settings_CPtr& settings = model->get_settings();
 
-  if(headless)
+  if(settings->get_first_value<bool>("headless"))
   {
-    bool verbose = settings->get_first_value<bool>("verbose");
-    m_renderer.reset(new NullRenderer(m_pipeline->get_model(), verbose));
+    m_renderer.reset(new HeadlessRenderer(model));
   }
   else
   {
@@ -98,9 +97,9 @@ bool Application::run()
     if(!m_paused)
     {
       // Run the main section of the pipeline.
-      const size_t scenesFused = m_pipeline->run_main_section();
+      const std::set<std::string> scenesProcessed = m_pipeline->run_main_section();
 
-      if(scenesFused > 0)
+      if(!scenesProcessed.empty())
       {
         // If a frame debug hook is active, call it.
         if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
@@ -832,8 +831,8 @@ void Application::process_renderer_input()
       m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_SCENE_SEMANTICFLAT :
       m_inputState.key_down(KEYCODE_5) ? VisualisationGenerator::VT_SCENE_COLOUR :
       m_inputState.key_down(KEYCODE_6) ? VisualisationGenerator::VT_SCENE_NORMAL :
-      m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_DEPTH :
-      m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_CONFIDENCE :
+      m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_CONFIDENCE :
+      m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_DEPTH :
       m_inputState.key_down(KEYCODE_9) ? VisualisationGenerator::VT_INPUT_COLOUR :
       m_inputState.key_down(KEYCODE_0) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_INPUT_DEPTH) :
       boost::none;
@@ -931,22 +930,16 @@ void Application::save_current_memory_usage()
 
 void Application::save_mesh() const
 {
+  // If meshing is disabled, early out.
   if(!m_meshingEngine) return;
 
+  // Look up the IDs of all of the scenes we are reconstructing.
   Model_CPtr model = m_pipeline->get_model();
   const Settings_CPtr& settings = model->get_settings();
-
-  // Get all scene IDs.
   const std::vector<std::string> sceneIDs = model->get_scene_ids();
 
   // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "");
-  if(meshBaseName == "")
-  {
-    // Not using the default parameter of the settings->get_first_value call because
-    // experimentTag is a registered program option in main.cpp, with a default value of "".
-    meshBaseName = "spaint-" + TimeUtil::get_iso_timestamp();
-  }
+  std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp());
 
   // Determine the directory into which to save the meshes, and make sure that it exists.
   boost::filesystem::path dir = find_subdir_from_executable("meshes");
@@ -958,42 +951,32 @@ void Application::save_mesh() const
   {
     const std::string& sceneID = sceneIDs[sceneIdx];
     std::cout << "Meshing " << sceneID << " scene.\n";
-
     SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-    // Construct the mesh (specify a maximum number of triangles to avoid crash on Titan Black cards).
+    // Construct the mesh (specifying a maximum number of triangles to avoid running out of memory on less powerful GPUs, e.g. the Titan Black).
     Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
     m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-    // Will store the relative transform between the World scene and the current one.
+    // If there is a pose optimiser, try to get the relative transform from this scene's coordinate system to the World scene's coordinate system.
     boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform;
-
-    // If there is a pose optimiser, try to find a relative transform between this scene and the World.
     if(model->get_collaborative_pose_optimiser() && sceneID != Model::get_world_scene_id())
     {
       relativeTransform = model->get_collaborative_pose_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
     }
 
-    // If we have a relative transform, we need to update every triangle in the mesh.
-    // We do this on the CPU since this is not currently a time-sensitive operation.
-    // Might want to use a proper CUDA kernel in the future.
+    // If we managed to get the relative transform, we need to update every triangle in the mesh. We do this on the CPU, since this is not currently
+    // a time-sensitive operation. (We might want to use a proper CUDA kernel in the future.)
     if(relativeTransform)
     {
-      const Matrix4f transform = relativeTransform->first.GetM();
-
-      // Need to copy the triangles on the CPU to transform them.
+      // First of all, allocate a memory block on the CPU to hold a copy of the mesh triangles, and copy them into it. Note that this copy could have
+      // been avoided if the mesh was already allocated on the CPU, but that would have made the meshing itself slower.
       typedef ITMMesh::Triangle Triangle;
       typedef ORUtils::MemoryBlock<Triangle> TriangleBlock;
-
-      // CPU-only allocation.
       boost::shared_ptr<TriangleBlock> triangles(new TriangleBlock(mesh->noMaxTriangles, MEMORYDEVICE_CPU));
-
-      // Copy them from the mesh.
-      // The update could be done in place if the mesh was allocated on the CPU, might be a future optimisation.
-      // Not really needed right now since if the mesh was allocated on the CPU then the meshing would have been much slower, thus not really worth the optimisation.
       triangles->SetFrom(mesh->triangles, mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CUDA_TO_CPU : TriangleBlock::CPU_TO_CPU);
 
-      // Now perform the update.
+      // Next, transform each triangle using the relative transform determined above.
+      const Matrix4f transform = relativeTransform->first.GetM();
       Triangle *trianglesData = triangles->GetData(MEMORYDEVICE_CPU);
       for(size_t triangleIdx = 0; triangleIdx < mesh->noTotalTriangles; ++triangleIdx)
       {
@@ -1002,13 +985,12 @@ void Application::save_mesh() const
         trianglesData[triangleIdx].p2  = transform * trianglesData[triangleIdx].p2;
       }
 
-      // Put them back.
+      // Finally, copy the updated triangles back into the mesh.
       mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
     }
 
-    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".ply");
-
     // Save the mesh to disk.
+    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".ply");
     std::cout << "Saving mesh to: " << meshPath << '\n';
     mesh->WritePLY(meshPath.string().c_str());
   }

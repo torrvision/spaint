@@ -34,10 +34,6 @@
 #include <OVR_CAPI.h>
 #endif
 
-#ifdef WITH_OPENCV
-#include <spaint/fiducials/ArUcoFiducialDetector.h>
-#endif
-
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
 #include <itmx/imagesources/RemoteImageSourceEngine.h>
 #ifdef WITH_ZED
@@ -81,6 +77,7 @@ struct CommandLineArguments
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
+  std::string fiducialDetectorType;
   std::string globalPosesSpecifier;
   bool headless;
   std::string host;
@@ -107,7 +104,9 @@ struct CommandLineArguments
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
+  bool useVicon;
   bool verbose;
+  std::string viconHost;
 
   // Derived arguments
   boost::optional<bf::path> modelDir;
@@ -130,6 +129,7 @@ struct CommandLineArguments
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
+      ADD_SETTING(fiducialDetectorType);
       ADD_SETTING(globalPosesSpecifier);
       ADD_SETTING(headless);
       ADD_SETTING(host);
@@ -156,7 +156,9 @@ struct CommandLineArguments
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
       ADD_SETTING(trackSurfels);
+      ADD_SETTING(useVicon);
       ADD_SETTING(verbose);
+      ADD_SETTING(viconHost);
     #undef ADD_SETTINGS
     #undef ADD_SETTING
   }
@@ -202,6 +204,54 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
     return NULL;
   }
   else return cameraSubengine;
+}
+
+/**
+ * \brief Copies any (voxel) scene parameters that have been specified in the configuration file across to the actual scene parameters object.
+ *
+ * \param settings  The settings for the application.
+ */
+void copy_scene_params(const Settings_Ptr& settings)
+{
+#define COPY_PARAM(type, name, defaultValue) settings->sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
+
+  // Note: The default values are taken from InfiniTAM.
+  COPY_PARAM(int, maxW, 100);
+  COPY_PARAM(float, mu, 0.02f);
+  COPY_PARAM(bool, stopIntegratingAtMaxW, false);
+  COPY_PARAM(float, viewFrustum_max, 3.0f);
+  COPY_PARAM(float, viewFrustum_min, 0.2f);
+  COPY_PARAM(float, voxelSize, 0.005f);
+
+#undef COPY_PARAM
+}
+
+/**
+ * \brief Copies any surfel scene parameters that have been specified in the configuration file across to the actual surfel scene parameters object.
+ *
+ * \param settings  The settings for the application.
+ */
+void copy_surfel_scene_params(const Settings_Ptr& settings)
+{
+#define COPY_PARAM(type, name, defaultValue) settings->surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
+
+  // Note: The default values are taken from InfiniTAM.
+  COPY_PARAM(float, deltaRadius, 0.5f);
+  COPY_PARAM(float, gaussianConfidenceSigma, 0.6f);
+  COPY_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
+  COPY_PARAM(float, maxMergeDist, 0.01f);
+  COPY_PARAM(float, maxSurfelRadius, 0.004f);
+  COPY_PARAM(float, minRadiusOverlapFactor, 3.5f);
+  COPY_PARAM(float, stableSurfelConfidence, 25.0f);
+  COPY_PARAM(int, supersamplingFactor, 4);
+  COPY_PARAM(float, trackingSurfelMaxDepth, 1.0f);
+  COPY_PARAM(float, trackingSurfelMinConfidence, 5.0f);
+  COPY_PARAM(int, unstableSurfelPeriod, 20);
+  COPY_PARAM(int, unstableSurfelZOffset, 10000000);
+  COPY_PARAM(bool, useGaussianSampleConfidence, true);
+  COPY_PARAM(bool, useSurfelMerging, true);
+
+#undef COPY_PARAM
 }
 
 /**
@@ -337,9 +387,9 @@ std::string make_tracker_config(CommandLineArguments& args)
       {
         if(args.poseFileMasks.size() < i)
         {
-          // If this happens it's because at least one mask was specified with the -p flag,
-          // otherwise postprocess_arguments would have taken care of supplying the default masks.
-          throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
+          // If this happens, it's because the pose file mask for at least one sequence was specified with the -p flag
+          // (otherwise postprocess_arguments would have taken care of supplying the default masks).
+          throw std::runtime_error("Error: Not enough pose file masks have been specified with the -p flag.");
         }
 
         // If we're using global poses for the scenes:
@@ -450,7 +500,7 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since colour might be missing).
+    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since the colour ones might be missing).
     const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
     const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
 
@@ -474,7 +524,8 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     }
     else
     {
-      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. Manually specify the masks using the -d and -r options.\n";
+      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. "
+                << "Manually specify the masks using the -d, -p and -r options.\n";
       return false;
     }
   }
@@ -513,6 +564,21 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
   // (there is no way to control the application without the UI anyway).
   if(args.headless) args.batch = true;
 
+  // If the user wants to use a Vicon fiducial detector or a Vicon-based tracker, make sure that the Vicon system it needs is enabled.
+  if(args.fiducialDetectorType == "vicon")
+  {
+    args.useVicon = true;
+  }
+
+  for(size_t i = 0, size = args.trackerSpecifiers.size(); i < size; ++i)
+  {
+    const std::string trackerSpecifier = boost::to_lower_copy(args.trackerSpecifiers[i]);
+    if(trackerSpecifier.find("vicon") != std::string::npos)
+    {
+      args.useVicon = true;
+    }
+  }
+
   // If the user wants to use a collaborative pipeline, but doesn't specify any disk sequences,
   // make sure a mapping server is started.
   if(args.pipelineType == "collaborative" && args.sequenceSpecifiers.empty())
@@ -539,54 +605,6 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
 }
 
 /**
- * \brief Sets the scene parameters from GlobalParameters, allowing the user to specify ad hoc values for voxel size, truncation distance, etc...
- *
- * \param sceneParams The scene parameters to modify.
- */
-void set_scene_params_from_global_options(const Settings_CPtr& settings, ITMSceneParams& sceneParams)
-{
-#define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
-
-  // Use the default values from InfiniTAM.
-  GET_PARAM(int, maxW, 100);
-  GET_PARAM(float, mu, 0.02f);
-  GET_PARAM(bool, stopIntegratingAtMaxW, false);
-  GET_PARAM(float, viewFrustum_max, 3.0f);
-  GET_PARAM(float, viewFrustum_min, 0.2f);
-  GET_PARAM(float, voxelSize, 0.005f);
-
-#undef GET_PARAM
-}
-
-/**
- * \brief Sets the surfel scene parameters from GlobalParameters, allowing the user to specify ad hoc values for surfel radius, etc...
- *
- * \param surfelSceneParams The surfel scene parameters to modify.
- */
-void set_surfel_scene_params_from_global_options(const Settings_CPtr& settings, ITMSurfelSceneParams& surfelSceneParams)
-{
-#define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
-
-  // Use the default values from InfiniTAM.
-  GET_PARAM(float, deltaRadius, 0.5f);
-  GET_PARAM(float, gaussianConfidenceSigma, 0.6f);
-  GET_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
-  GET_PARAM(float, maxMergeDist, 0.01f);
-  GET_PARAM(float, maxSurfelRadius, 0.004f);
-  GET_PARAM(float, minRadiusOverlapFactor, 3.5f);
-  GET_PARAM(float, stableSurfelConfidence, 25.0f);
-  GET_PARAM(int, supersamplingFactor, 4);
-  GET_PARAM(float, trackingSurfelMaxDepth, 1.0f);
-  GET_PARAM(float, trackingSurfelMinConfidence, 5.0f);
-  GET_PARAM(int, unstableSurfelPeriod, 20);
-  GET_PARAM(int, unstableSurfelZOffset, 10000000);
-  GET_PARAM(bool, useGaussianSampleConfidence, true);
-  GET_PARAM(bool, useSurfelMerging, true);
-
-#undef GET_PARAM
-}
-
-/**
  * \brief Parses any command-line arguments passed in by the user and adds them to the application settings.
  *
  * \param argc      The command-line argument count.
@@ -608,8 +626,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
+    ("fiducialDetectorType", po::value<std::string>(&args.fiducialDetectorType)->default_value("aruco"), "fiducial detector type (aruco)")
     ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
-    ("headless", po::bool_switch(&args.headless), "headless mode")
+    ("headless", po::bool_switch(&args.headless), "run in headless mode")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
@@ -626,7 +645,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
+    ("useVicon", po::bool_switch(&args.useVicon)->default_value(false), "whether or not to use the Vicon system")
     ("verbose,v", po::bool_switch(&args.verbose), "enable verbose output")
+    ("viconHost", po::value<std::string>(&args.viconHost)->default_value("192.168.0.101"), "Vicon host")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -674,7 +695,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   // Post-process any registered options and add them to the settings.
   if(!postprocess_arguments(args, options, vm, settings)) return false;
 
-  std::cout << "Global settings:\n" << *settings << '\n';
+  // Print the settings for the application so that the user can see them.
+  std::cout << "Settings:\n" << *settings << '\n';
 
   // If the user specifies the --help flag, print a help message.
   if(vm.count("help"))
@@ -715,7 +737,7 @@ try
     return 0;
   }
 
-  // If we are not running in headless mode, initialise the GUI subsystems.
+  // If we're not running in headless mode, initialise the GUI-only subsystems.
   if(!args.headless)
   {
     // Initialise SDL.
@@ -724,15 +746,15 @@ try
       quit("Error: Failed to initialise SDL.");
     }
 
-#ifdef WITH_GLUT
+  #ifdef WITH_GLUT
     // Initialise GLUT (used for text rendering only).
     glutInit(&argc, argv);
-#endif
+  #endif
 
-#ifdef WITH_OVR
+  #ifdef WITH_OVR
     // If we built with Rift support, initialise the Rift SDK.
     ovr_Initialize();
-#endif
+  #endif
   }
 
   // Find all available joysticks and report the number found to the user.
@@ -756,10 +778,11 @@ try
   afcu::setNativeId(0);
 #endif
 
-  // Set scene parameters from configuration.
-  set_scene_params_from_global_options(settings, settings->sceneParams);
-  set_surfel_scene_params_from_global_options(settings, settings->surfelSceneParams);
+  // Copy any scene parameters that have been set in the configuration file across to the actual scene parameters objects.
+  copy_scene_params(settings);
+  copy_surfel_scene_params(settings);
 
+  // Set the failure behaviour of the relocaliser.
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
   // Pass the device type to the memory block factory.
@@ -809,12 +832,6 @@ try
       if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
     }
 
-    // Construct the fiducial detector (if any).
-    FiducialDetector_CPtr fiducialDetector;
-  #ifdef WITH_OPENCV
-    fiducialDetector.reset(new ArUcoFiducialDetector(settings));
-  #endif
-
     // Construct the pipeline itself.
     const size_t maxLabelCount = 10;
     SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
@@ -830,7 +847,6 @@ try
         mappingMode,
         trackingMode,
         args.modelDir,
-        fiducialDetector,
         args.detectFiducials
       ));
     }
@@ -847,7 +863,6 @@ try
         mappingMode,
         trackingMode,
         args.modelDir,
-        fiducialDetector,
         args.detectFiducials
       ));
     }
@@ -861,7 +876,6 @@ try
         make_tracker_config(args),
         mappingMode,
         trackingMode,
-        fiducialDetector,
         args.detectFiducials,
         !args.trackObject
       ));
@@ -912,12 +926,6 @@ try
       trackerConfigs.push_back("<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>");
     }
 
-    // Construct the fiducial detector (if any).
-    FiducialDetector_CPtr fiducialDetector;
-  #ifdef WITH_OPENCV
-    fiducialDetector.reset(new ArUcoFiducialDetector(settings));
-  #endif
-
     // Construct the pipeline itself.
     const CollaborationMode collaborationMode = args.collaborationMode == "batch" ? CM_BATCH : CM_LIVE;
     pipeline.reset(new CollaborativePipeline(
@@ -927,7 +935,6 @@ try
       trackerConfigs,
       mappingModes,
       trackingModes,
-      fiducialDetector,
       args.detectFiducials,
       mappingServer,
       collaborationMode
@@ -956,17 +963,17 @@ try
   app.set_save_models_on_exit(args.saveModelsOnExit);
   bool runSucceeded = app.run();
 
-#ifdef WITH_OVR
-  // If we built with Rift support, shut down the Rift SDK.
-  ovr_Shutdown();
-#endif
-
   // Close all open joysticks.
   joysticks.clear();
 
-  // If we are not running in headless mode, shut down the graphics subsystem.
+  // If we're not running in headless mode, shut down the GUI-only subsystems.
   if(!args.headless)
   {
+  #ifdef WITH_OVR
+    // If we built with Rift support, shut down the Rift SDK.
+    ovr_Shutdown();
+  #endif
+
     // Shut down SDL.
     SDL_Quit();
   }

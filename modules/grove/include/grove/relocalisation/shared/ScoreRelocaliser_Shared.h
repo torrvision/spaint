@@ -39,7 +39,7 @@ inline void merge_predictions_for_keypoint(int x, int y, const ORUtils::VectorX<
   // Copy the leaf indices associated with the keypoint into a local array.
   const LeafIndices leafIndicesForKeypoint = leafIndices[keypointRasterIdx];
 
-  // Grab a reference to the input predictions associated with the keypoint's leaves into a contiguous local array (easier to index later).
+  // Make an array of pointers to the input predictions associated with the keypoint's leaves (this makes indexing easier later).
   const ScorePrediction *inputPredictions[TREE_COUNT];
   for(int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
@@ -56,8 +56,8 @@ inline void merge_predictions_for_keypoint(int x, int y, const ORUtils::VectorX<
     currentModeIndices[treeIdx] = 0;
   }
 
-  // Grab a reference to the output prediction.
-  ScorePrediction &outputPrediction = outputPredictions[keypointRasterIdx];
+  // Grab a reference to the output prediction, and set its initial size to zero.
+  ScorePrediction& outputPrediction = outputPredictions[keypointRasterIdx];
   outputPrediction.size = 0;
 
   // While the output prediction is not yet full:

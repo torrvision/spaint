@@ -46,6 +46,20 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
 
   // Set up the visualisation generator.
   m_visualisationGenerator.reset(new VisualisationGenerator(settings, m_labelManager, m_voxelVisualisationEngine, m_surfelVisualisationEngine));
+
+  // If we're using the Vicon system:
+  if(settings->get_first_value<bool>("useVicon"))
+  {
+  #ifdef WITH_VICON
+    // Set up the Vicon interface.
+    m_vicon.reset(new ViconInterface(settings->get_first_value<std::string>("viconHost")));
+
+    // Give the tracker factory access to the Vicon interface so that it can construct Vicon-based trackers.
+    m_trackerFactory.set_vicon(m_vicon);
+  #else
+    throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
+  #endif
+  }
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -111,6 +125,23 @@ Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() c
 {
   return m_surfelVisualisationEngine;
 }
+
+const TrackerFactory& Model::get_tracker_factory() const
+{
+  return m_trackerFactory;
+}
+
+#ifdef WITH_VICON
+const ViconInterface_Ptr& Model::get_vicon()
+{
+  return m_vicon;
+}
+
+ViconInterface_CPtr Model::get_vicon() const
+{
+  return m_vicon;
+}
+#endif
 
 VisualisationGenerator_CPtr Model::get_visualisation_generator() const
 {

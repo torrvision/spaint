@@ -30,7 +30,6 @@ using namespace grove;
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
-#include <itmx/trackers/TrackerFactory.h>
 using namespace itmx;
 
 #include <orx/relocalisation/BackgroundRelocaliser.h>
@@ -41,6 +40,9 @@ using namespace orx;
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
+#ifdef WITH_OPENCV
+#include "fiducials/ArUcoFiducialDetector.h"
+#endif
 #include "segmentation/SegmentationUtil.h"
 
 namespace spaint {
@@ -48,8 +50,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                             const std::string& trackerConfig, MappingMode mappingMode, TrackingMode trackingMode,
-                             const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
+                             const std::string& trackerConfig, MappingMode mappingMode, TrackingMode trackingMode, bool detectFiducials)
 : m_context(context),
   m_detectFiducials(detectFiducials),
   m_fallibleTracker(NULL),
@@ -120,8 +121,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   // Add the scene to the list of existing scenes.
   context->add_scene_id(sceneID);
 
-  // Set the fiducial detector (if any).
-  m_context->set_fiducial_detector(sceneID, fiducialDetector);
+  // Set up the fiducial detector (if any).
+  setup_fiducial_detector();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -343,7 +344,7 @@ bool SLAMComponent::process_frame()
   FiducialDetector_CPtr fiducialDetector = m_context->get_fiducial_detector(m_sceneID);
   if(fiducialDetector && m_detectFiducials && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
-    slamState->update_fiducials(fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState, FiducialDetector::PEM_RAYCAST));
+    slamState->update_fiducials(fiducialDetector->detect_fiducials(view, *trackingState->pose_d));
   }
 
   return true;
@@ -528,6 +529,23 @@ void SLAMComponent::process_relocalisation()
   }
 }
 
+void SLAMComponent::setup_fiducial_detector()
+{
+  const SpaintVoxelScene_CPtr scene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
+  const Settings_CPtr& settings = m_context->get_settings();
+
+  const std::string type = m_context->get_settings()->get_first_value<std::string>("fiducialDetectorType");
+  FiducialDetector_CPtr fiducialDetector;
+  if(type == "aruco")
+  {
+#ifdef WITH_OPENCV
+    fiducialDetector.reset(new ArUcoFiducialDetector(scene, settings, ArUcoFiducialDetector::PEM_RAYCAST));
+#endif
+  }
+
+  m_context->set_fiducial_detector(m_sceneID, fiducialDetector);
+}
+
 void SLAMComponent::setup_relocaliser()
 {
   const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
@@ -602,7 +620,7 @@ void SLAMComponent::setup_relocaliser()
 
   const bool trackSurfels = false;
   FallibleTracker *dummy;
-  Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
+  Tracker_Ptr tracker = m_context->get_tracker_factory().make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
     innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
@@ -618,7 +636,7 @@ void SLAMComponent::setup_tracker()
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
 
   m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-  m_tracker = TrackerFactory::make_tracker_from_string(
+  m_tracker = m_context->get_tracker_factory().make_tracker_from_string(
     m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker, mappingServer
   );
 }

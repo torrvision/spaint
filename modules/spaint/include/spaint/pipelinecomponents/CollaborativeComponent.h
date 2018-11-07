@@ -28,7 +28,7 @@ class CollaborativeComponent
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The best relocalisation candidate, as chosen by the scheduler. This will be the next relocalisation attempted. */
   boost::shared_ptr<CollaborativeRelocalisation> m_bestCandidate;
 
   /** The timer used to compute the time spent collaborating. */
@@ -40,31 +40,31 @@ private:
   /** The shared context needed for collaborative SLAM. */
   CollaborativeContext_Ptr m_context;
 
-  /** TODO */
+  /** Render states used when rendering synthetic depth images during relocalisation. */
   std::map<std::string, VoxelRenderState_Ptr> m_depthRenderStates;
 
-  /** TODO */
+  /** The current frame index (in practice, the number of times that run_collaborative_pose_estimation has been called). */
   int m_frameIndex;
 
-  /** TODO */
+  /** The mode in which the collaboration reconstruction should run. */
   CollaborationMode m_mode;
 
-  /** TODO */
+  /** The mutex used to synchronise scheduling and relocalisation. */
   boost::mutex m_mutex;
 
-  /** TODO */
+  /** A condition variable used to tell the relocalisation thread when a candidate relocalisation has been scheduled. */
   boost::condition_variable m_readyToRelocalise;
 
   /** Whether or not the current reconstruction is consistent (i.e. all scenes are connected to the primary one). */
   bool m_reconstructionIsConsistent;
 
-  /** TODO */
+  /** The thread on which relocalisations should be attempted. */
   boost::thread m_relocalisationThread;
 
-  /** TODO */
+  /** The results of every relocalisation that has been attempted. */
   std::deque<CollaborativeRelocalisation> m_results;
 
-  /** TODO */
+  /** Render states used when rendering synthetic colour images during relocalisation. */
   std::map<std::string, VoxelRenderState_Ptr> m_rgbRenderStates;
 
   /** A random number generator. */
@@ -73,16 +73,16 @@ private:
   /** Whether or not to stop at the first consistent reconstruction. */
   bool m_stopAtFirstConsistentReconstruction;
 
-  /** TODO */
+  /** A flag used to ensure that the relocalisation thread terminates cleanly when the collaborative component is destroyed. */
   boost::atomic<bool> m_stopRelocalisationThread;
 
   /** Whether or not to compute the time spent collaborating. */
   bool m_timeCollaboration;
 
-  /** TODO */
+  /** The trajectories followed by the cameras that reconstructed each of the different scenes (only poses where tracking succeeded are stored). */
   std::map<std::string,std::deque<ORUtils::SE3Pose> > m_trajectories;
 
-  /** TODO */
+  /** The indices of the frames that have already been tried when attempting to relocalise one scene against another. */
   std::map<std::pair<std::string,std::string>,std::set<int> > m_triedFrameIndices;
 
   /** A visualisation generator that is specific to this collaborative component. We avoid sharing one with other components for thread-safety reasons. */
@@ -94,7 +94,7 @@ public:
    * \brief Constructs a collaborative component.
    *
    * \param context The shared context needed for collaborative SLAM.
-   * \param mode    TODO
+   * \param mode    The mode in which the collaborative reconstruction should run.
    */
   CollaborativeComponent(const CollaborativeContext_Ptr& context, CollaborationMode mode);
 
@@ -108,49 +108,66 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Attempts to estimate the poses of the different scenes involved in the collaborative reconstruction.
    */
   void run_collaborative_pose_estimation();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Randomly generates at most the specified number of candidate relocalisations.
+   *
+   * \note  If any candidates are generated, they will be scored, and one of them will then be selected for scheduling.
+   * \note  The collaborative reconstruction must involve at least two scenes for candidates to be generated (since otherwise no relocalisation is needed).
+   *
+   * \param desiredCandidateCount The desired number of candidates to generate (at most this number will be generated).
+   * \return                      The generated candidate relocalisations (if any).
    */
   std::list<CollaborativeRelocalisation> generate_random_candidates(size_t desiredCandidateCount) const;
 
   /**
-   * \brief TODO
+   * \brief Randomly picks a scene pair (i,j), and then tries to generate a candidate relocalisation of the next untried frame (if any) of scene j against scene i.
+   *
+   * \return  The generate candidate relocalisation (if any).
    */
   std::list<CollaborativeRelocalisation> generate_sequential_candidate() const;
 
   /**
-   * \brief TODO
+   * \brief Returns whether or not the specified candidate relocalisation is verified.
+   *
+   * \param candidate The candidate relocalisation.
+   * \return          true, if the candidate relocalisation is verified, or false otherwise.
    */
   bool is_verified(const CollaborativeRelocalisation& candidate) const;
 
   /**
-   * \brief TODO
+   * \brief Outputs the results of the collaborative pose estimation process (for debugging purposes).
    */
   void output_results() const;
 
   /**
-   * \brief TODO
+   * \brief Runs the relocalisation thread, repeatedly attempting scheduled relocalisations until the collaborative component is destroyed.
    */
   void run_relocalisation();
 
   /**
-   * \brief TODO
+   * \brief Scores all of the specified candidate relocalisations to allow one of them to be chosen for a relocalisation attempt.
+   *
+   * \param candidates  The candidate relocalisations to score.
    */
   void score_candidates(std::list<CollaborativeRelocalisation>& candidates) const;
 
   /**
-   * \brief TODO
+   * \brief Tries to schedule a candidate relocalisation.
+   *
+   * \note  If an existing relocalisation attempt is in progress, this will early out and do nothing.
    */
   void try_schedule_relocalisation();
 
   /**
-   * \brief TODO
+   * \brief Updates the trajectories for each of the different scenes with the poses of the most recent frames (if successfully tracked).
+   *
+   * \return  true, if at least one of the scenes is still being reconstructed, or false otherwise.
    */
   bool update_trajectories();
 };

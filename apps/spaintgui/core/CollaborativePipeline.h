@@ -27,9 +27,6 @@ private:
   /** Whether or not the user wants fiducials to be detected. */
   bool m_detectFiducials;
 
-  /** The fiducial detector to use (if any). */
-  spaint::FiducialDetector_CPtr m_fiducialDetector;
-
   /** A flag indicating whether or not the "World" scene is being fed from a remote agent. */
   bool m_worldIsRemote;
 
@@ -40,14 +37,13 @@ public:
                         const std::vector<std::string>& trackerConfigs,
                         const std::vector<spaint::SLAMComponent::MappingMode>& mappingModes,
                         const std::vector<spaint::SLAMComponent::TrackingMode>& trackingModes,
-                        const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),
                         bool detectFiducials = false, const itmx::MappingServer_Ptr& mappingServer = itmx::MappingServer_Ptr(),
                         spaint::CollaborationMode collaborationMode = spaint::CM_LIVE);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual size_t run_main_section();
+  virtual std::set<std::string> run_main_section();
 
   /** Override */
   virtual void set_mode(Mode mode);

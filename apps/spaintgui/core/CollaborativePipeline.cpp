@@ -16,13 +16,12 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
                                              const std::vector<std::string>& trackerConfigs,
                                              const std::vector<SLAMComponent::MappingMode>& mappingModes,
                                              const std::vector<SLAMComponent::TrackingMode>& trackingModes,
-                                             const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials,
-                                             const MappingServer_Ptr& mappingServer, CollaborationMode collaborationMode)
+                                             bool detectFiducials, const MappingServer_Ptr& mappingServer,
+                                             CollaborationMode collaborationMode)
   // Note: A minimum of 2 labels is required (background and foreground).
 : MultiScenePipeline("collaborative", settings, resourcesDir, 2, mappingServer),
   m_collaborationStarted(false),
   m_detectFiducials(detectFiducials),
-  m_fiducialDetector(fiducialDetector),
   m_worldIsRemote(imageSourceEngines.empty())
 {
   if(imageSourceEngines.empty())
@@ -48,7 +47,7 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
     for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
     {
       const std::string sceneID = i == 0 ? Model::get_world_scene_id() : "Local" + boost::lexical_cast<std::string>(i);
-      m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngines[i], trackerConfigs[i], mappingModes[i], trackingModes[i], fiducialDetector, detectFiducials));
+      m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngines[i], trackerConfigs[i], mappingModes[i], trackingModes[i], detectFiducials));
     }
   }
 
@@ -58,19 +57,19 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-size_t CollaborativePipeline::run_main_section()
+std::set<std::string> CollaborativePipeline::run_main_section()
 {
   // If we're running a mapping server, add SLAM components for any newly-connected remote clients.
   if(m_model->get_mapping_server()) check_for_new_clients();
 
   // Run the main section of the pipeline.
-  size_t scenesFused = MultiScenePipeline::run_main_section();
+  const std::set<std::string> scenesProcessed = MultiScenePipeline::run_main_section();
 
   // Provided at least one of the scenes has started fusion, run the collaborative pose estimation process.
-  m_collaborationStarted = m_collaborationStarted || scenesFused > 0;
+  m_collaborationStarted = m_collaborationStarted || !scenesProcessed.empty();
   if(m_collaborationStarted) m_collaborativeComponent->run_collaborative_pose_estimation();
 
-  return scenesFused;
+  return scenesProcessed;
 }
 
 void CollaborativePipeline::set_mode(Mode mode)
@@ -91,7 +90,7 @@ void CollaborativePipeline::add_remote_slam_component(const std::string& sceneID
   const std::string trackerConfig = "<tracker type='remote'><params>" + boost::lexical_cast<std::string>(remoteClientID) + "</params></tracker>";
   const SLAMComponent::MappingMode mappingMode = SLAMComponent::MAP_VOXELS_ONLY;
   const SLAMComponent::TrackingMode trackingMode = SLAMComponent::TRACK_VOXELS;
-  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, m_fiducialDetector, m_detectFiducials));
+  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, m_detectFiducials));
   mappingServer->set_scene_id(remoteClientID, sceneID);
 }
 
