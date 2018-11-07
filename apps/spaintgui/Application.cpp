@@ -97,9 +97,9 @@ bool Application::run()
     if(!m_paused)
     {
       // Run the main section of the pipeline.
-      const size_t scenesFused = m_pipeline->run_main_section();
+      const std::set<std::string> scenesProcessed = m_pipeline->run_main_section();
 
-      if(scenesFused > 0)
+      if(!scenesProcessed.empty())
       {
         // If a frame debug hook is active, call it.
         if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());

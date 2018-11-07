@@ -43,7 +43,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual size_t run_main_section();
+  virtual std::set<std::string> run_main_section();
 
   /** Override */
   virtual void set_mode(Mode mode);

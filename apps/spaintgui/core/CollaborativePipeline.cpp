@@ -57,19 +57,19 @@ CollaborativePipeline::CollaborativePipeline(const Settings_Ptr& settings, const
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-size_t CollaborativePipeline::run_main_section()
+std::set<std::string> CollaborativePipeline::run_main_section()
 {
   // If we're running a mapping server, add SLAM components for any newly-connected remote clients.
   if(m_model->get_mapping_server()) check_for_new_clients();
 
   // Run the main section of the pipeline.
-  size_t scenesFused = MultiScenePipeline::run_main_section();
+  const std::set<std::string> scenesProcessed = MultiScenePipeline::run_main_section();
 
   // Provided at least one of the scenes has started fusion, run the collaborative pose estimation process.
-  m_collaborationStarted = m_collaborationStarted || scenesFused > 0;
+  m_collaborationStarted = m_collaborationStarted || !scenesProcessed.empty();
   if(m_collaborationStarted) m_collaborativeComponent->run_collaborative_pose_estimation();
 
-  return scenesFused;
+  return scenesProcessed;
 }
 
 void CollaborativePipeline::set_mode(Mode mode)
