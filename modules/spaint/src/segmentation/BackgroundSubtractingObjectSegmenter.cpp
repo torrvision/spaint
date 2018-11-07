@@ -30,7 +30,7 @@ void BackgroundSubtractingObjectSegmenter::reset()
   m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
 }
 
-ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ORUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // Set up the segmentation parameters.
   static int handComponentSizeThreshold = 100;
@@ -54,14 +54,14 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 #endif
 
   // Copy the current colour and depth input images across to the CPU.
-  ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
+  ORUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
   rgbInput->UpdateHostFromDevice();
 
-  ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
+  ORFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
 
   // Make the change mask.
-  ITMUCharImage_CPtr changeMask = make_change_mask(depthInput, pose, renderState);
+  ORUCharImage_CPtr changeMask = make_change_mask(depthInput, pose, renderState);
 
   // Make the hand mask.
   static cv::Mat1b handMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
@@ -125,13 +125,13 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   return m_targetMask;
 }
 
-ITMUChar4Image_CPtr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
+ORUChar4Image_CPtr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
 {
   // Copy the current colour and depth input images across to the CPU.
-  ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
+  ORUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
   rgbInput->UpdateHostFromDevice();
 
-  ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
+  ORFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
 
   // Train a colour appearance model to separate the user's hand from the scene background.
@@ -145,7 +145,7 @@ ITMUChar4Image_CPtr BackgroundSubtractingObjectSegmenter::train(const ORUtils::S
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ORUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ORFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // Set up the parameters for the change mask.
   static int centreDistThreshold = 70;            // pixels greater than this percentage distance from the centre of the image will be ignored
@@ -187,12 +187,12 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
 
   // Get a thresholded version of the live depth image.
-  ITMFloatImage_CPtr thresholdedRawDepth = m_touchDetector->get_thresholded_raw_depth();
+  ORFloatImage_CPtr thresholdedRawDepth = m_touchDetector->get_thresholded_raw_depth();
   thresholdedRawDepth->UpdateHostFromDevice();
   const float *thresholdedRawDepthPtr = thresholdedRawDepth->GetData(MEMORYDEVICE_CPU);
 
   // Get the depth raycast of the scene.
-  ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
+  ORFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
   depthRaycast->UpdateHostFromDevice();
   const float *depthRaycastPtr = depthRaycast->GetData(MEMORYDEVICE_CPU);
 
@@ -210,11 +210,11 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   cv::dilate(depthEdges, dilatedDepthEdges, kernel);
 
   // Get the difference between the live depth image and the depth raycast of the scene.
-  ITMFloatImage_CPtr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
+  ORFloatImage_CPtr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
   const float *diffRawRaycastPtr = diffRawRaycast->GetData(MEMORYDEVICE_CPU);
 
   // Make an initial change mask, starting from the whole image and filtering out pixels based on some simple criteria.
-  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(Vector2i(width, height), true, true));
+  static ORUCharImage_Ptr changeMask(new ORUCharImage(Vector2i(width, height), true, true));
   uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
   const double halfWidth = width / 2.0, halfHeight = height / 2.0;
   const int pixelCount = static_cast<int>(changeMask->dataSize);
@@ -453,7 +453,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   return changeMask;
 }
 
-ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ORUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ORFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);

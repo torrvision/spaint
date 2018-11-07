@@ -18,7 +18,7 @@ MedianFilterer::MedianFilterer(unsigned int kernelWidth, DeviceType deviceType)
 
 //#################### PUBLIC OPERATORS ####################
 
-void MedianFilterer::operator()(const ITMUChar4Image_CPtr& input, const ITMUChar4Image_Ptr& output) const
+void MedianFilterer::operator()(const ORUChar4Image_CPtr& input, const ORUChar4Image_Ptr& output) const
 try
 {
   if(!m_intermediate || ImageProcessor::image_size(input) != ImageProcessor::image_size(m_intermediate))
