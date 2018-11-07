@@ -115,7 +115,7 @@ static void copy_itm_to_af_cuda(const boost::shared_ptr<const ORUtils::Image<ITM
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const
+void ImageProcessor_CUDA::calculate_depth_difference(const ORFloatImage_CPtr& firstInputImage, const ORFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(firstInputImage, secondInputImage);
   check_image_size_equal(firstInputImage, outputImage);
@@ -135,43 +135,43 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
   ORcudaKernelCheck;
 }
 
-void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const
+void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ORFloatImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
   copy_af_to_itm_cuda<float,float>(inputImage, outputImage);
 }
 
-void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
+void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ORUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
   copy_af_to_itm_cuda<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
-void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
+void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ORUChar4Image_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
   copy_af_to_itm_cuda<unsigned char,Vector4u>(inputImage, outputImage);
 }
 
-void ImageProcessor_CUDA::copy_itm_to_af(const ITMFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+void ImageProcessor_CUDA::copy_itm_to_af(const ORFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
   copy_itm_to_af_cuda<float,float>(inputImage, outputImage);
 }
 
-void ImageProcessor_CUDA::copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+void ImageProcessor_CUDA::copy_itm_to_af(const ORUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
   copy_itm_to_af_cuda<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
-void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+void ImageProcessor_CUDA::copy_itm_to_af(const ORUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
   copy_itm_to_af_cuda<Vector4u,unsigned char>(inputImage, outputImage);
 }
 
-void ImageProcessor_CUDA::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
+void ImageProcessor_CUDA::set_on_threshold(const ORFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ORFloatImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
 
