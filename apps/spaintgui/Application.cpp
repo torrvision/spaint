@@ -968,21 +968,15 @@ void Application::save_mesh() const
     // a time-sensitive operation. (We might want to use a proper CUDA kernel in the future.)
     if(relativeTransform)
     {
-      const Matrix4f transform = relativeTransform->first.GetM();
-
-      // Need to copy the triangles on the CPU to transform them.
+      // First of all, allocate a memory block on the CPU to hold a copy of the mesh triangles, and copy them into it. Note that this copy could have
+      // been avoided if the mesh was already allocated on the CPU, but that would have made the meshing itself slower.
       typedef ITMMesh::Triangle Triangle;
       typedef ORUtils::MemoryBlock<Triangle> TriangleBlock;
-
-      // CPU-only allocation.
       boost::shared_ptr<TriangleBlock> triangles(new TriangleBlock(mesh->noMaxTriangles, MEMORYDEVICE_CPU));
-
-      // Copy them from the mesh.
-      // The update could be done in place if the mesh was allocated on the CPU, might be a future optimisation.
-      // Not really needed right now since if the mesh was allocated on the CPU then the meshing would have been much slower, thus not really worth the optimisation.
       triangles->SetFrom(mesh->triangles, mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CUDA_TO_CPU : TriangleBlock::CPU_TO_CPU);
 
-      // Now perform the update.
+      // Next, transform each triangle using the relative transform determined above.
+      const Matrix4f transform = relativeTransform->first.GetM();
       Triangle *trianglesData = triangles->GetData(MEMORYDEVICE_CPU);
       for(size_t triangleIdx = 0; triangleIdx < mesh->noTotalTriangles; ++triangleIdx)
       {
@@ -991,13 +985,12 @@ void Application::save_mesh() const
         trianglesData[triangleIdx].p2  = transform * trianglesData[triangleIdx].p2;
       }
 
-      // Put them back.
+      // Finally, copy the updated triangles back into the mesh.
       mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
     }
 
-    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".ply");
-
     // Save the mesh to disk.
+    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".ply");
     std::cout << "Saving mesh to: " << meshPath << '\n';
     mesh->WritePLY(meshPath.string().c_str());
   }
