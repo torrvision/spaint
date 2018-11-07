@@ -21,6 +21,7 @@ using namespace ITMLib;
 
 #include <itmx/persistence/ImagePersister.h>
 #include <itmx/persistence/PosePersister.h>
+#include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
 #include <rigging/MoveableCamera.h>
@@ -86,6 +87,9 @@ bool Application::run()
     if(m_batchModeEnabled) { if(eventQuit) return false; }
     else                   { if(eventQuit || escQuit) break; }
 
+    // If desired, save the memory usage for later analysis.
+    if(m_memoryUsageOutputStream) save_current_memory_usage();
+
     // Take action as relevant based on the current input state.
     process_input();
 
@@ -93,9 +97,9 @@ bool Application::run()
     if(!m_paused)
     {
       // Run the main section of the pipeline.
-      bool frameWasProcessed = m_pipeline->run_main_section();
+      const std::set<std::string> scenesProcessed = m_pipeline->run_main_section();
 
-      if(frameWasProcessed)
+      if(!scenesProcessed.empty())
       {
         // If a frame debug hook is active, call it.
         if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
@@ -112,6 +116,13 @@ bool Application::run()
 
     // Render the scene.
     m_renderer->render(m_fracWindowPos, m_renderFiducials);
+
+    // If we're running a mapping server and we want to render any scene images requested by remote clients, do so.
+    const Model_CPtr model = m_pipeline->get_model();
+    if(model->get_mapping_server() && model->get_settings()->get_first_value<bool>("Application.renderClientImages", true))
+    {
+      m_renderer->render_client_images();
+    }
 
     // If the application is unpaused, run the mode-specific section of the pipeline for the active scene.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_active_scene_id(), get_monocular_render_state());
@@ -146,6 +157,46 @@ void Application::set_server_mode_enabled(bool serverModeEnabled)
 void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
   m_frameDebugHook = frameDebugHook;
+}
+
+void Application::set_save_memory_usage(bool saveMemoryUsage)
+{
+  // If we're trying to turn off memory usage saving, reset the output stream and early out.
+  if(!saveMemoryUsage)
+  {
+    m_memoryUsageOutputStream.reset();
+    return;
+  }
+
+  // Otherwise, prepare the output stream:
+
+  // Step 1: Find the profiling subdirectory and make sure that it exists.
+  const boost::filesystem::path profilingSubdir = find_subdir_from_executable("profiling");
+  boost::filesystem::create_directories(profilingSubdir);
+
+  // Step 2: Determine the name of the file to which to save the memory usage. We base this on the
+  //         (global) experiment tag, if available, and the current timestamp if not.
+  std::string profilingFileName = m_pipeline->get_model()->get_settings()->get_first_value<std::string>("experimentTag", "");
+  if(profilingFileName == "") profilingFileName = "spaint-" + TimeUtil::get_iso_timestamp();
+  profilingFileName += ".csv";
+
+  // Step 3: Open the file and write a header row for the table. The table has three columns for each available GPU
+  //         (denoting the free, used and total memory on that GPU in MB at each frame).
+  const boost::filesystem::path profilingFile = profilingSubdir / profilingFileName;
+  m_memoryUsageOutputStream.reset(new std::ofstream(profilingFile.string().c_str()));
+  std::cout << "Saving memory usage information in: " << profilingFile << '\n';
+
+  int gpuCount = 0;
+  ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+  for(int i = 0; i < gpuCount; ++i)
+  {
+    cudaDeviceProp props;
+    ORcudaSafeCall(cudaGetDeviceProperties(&props, i));
+
+    *m_memoryUsageOutputStream << '(' << i << ')' << props.name << " - Free;" << '(' << i << ')' << props.name << " - Used;" << '(' << i << ')' << props.name << " - Total;";
+  }
+
+  *m_memoryUsageOutputStream << '\n';
 }
 
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
@@ -184,17 +235,7 @@ const Subwindow& Application::get_active_subwindow() const
 
 VoxelRenderState_CPtr Application::get_monocular_render_state() const
 {
-  const Subwindow& subwindow = get_active_subwindow();
-  switch(subwindow.get_camera_mode())
-  {
-    case Subwindow::CM_FOLLOW:
-      return m_pipeline->get_model()->get_slam_state(subwindow.get_scene_id())->get_live_voxel_render_state();
-    case Subwindow::CM_FREE:
-      return m_renderer->get_monocular_render_state(m_activeSubwindowIndex);
-    default:
-      // This should never happen.
-      throw std::runtime_error("Unknown camera mode");
-  }
+  return m_renderer->get_monocular_render_state(m_activeSubwindowIndex);
 }
 
 SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) const
@@ -213,9 +254,10 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
     const int subwindowImageWidth = settings->get_first_value<int>("Application.subwindowImageWidth", rgbImageSize.width);
     const int subwindowImageHeight = settings->get_first_value<int>("Application.subwindowImageHeight", rgbImageSize.height);
+    const std::string collaborativeAgentPrefix = settings->get_first_value<std::string>("Application.collaborativeAgentPrefix", "Local");
 
     m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(
-      i, Vector2i(subwindowImageWidth, subwindowImageHeight), m_pipeline->get_type()
+      i, Vector2i(subwindowImageWidth, subwindowImageHeight), m_pipeline->get_type(), collaborativeAgentPrefix
     );
   }
 
@@ -459,6 +501,7 @@ void Application::process_camera_input()
   }
 
   // If the active sub-window is in free camera mode, allow the user to move its camera around.
+  const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
   if(activeSubwindow.get_camera_mode() == Subwindow::CM_FREE)
   {
     // Compute the linear and angular speeds to use, based on the time elapsed since we last processed camera input.
@@ -523,7 +566,6 @@ void Application::process_camera_input()
     // and are in free camera mode to have the same pose as this one.
     if(m_usePoseMirroring)
     {
-      const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
       for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
       {
         Subwindow& subwindow = subwindowConfiguration->subwindow(i);
@@ -532,6 +574,17 @@ void Application::process_camera_input()
           subwindow.get_camera()->set_from(*camera);
         }
       }
+    }
+  }
+
+  // If one of the sub-windows has its remote flag set and a mapping client is active for its scene, send a rendering request to the mapping server.
+  for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    const Subwindow& subwindow = subwindowConfiguration->subwindow(i);
+    const MappingClient_Ptr& mappingClient = m_pipeline->get_model()->get_mapping_client(subwindow.get_scene_id());
+    if(mappingClient && subwindow.get_remote_flag())
+    {
+      mappingClient->update_rendering_request(subwindow.get_image()->noDims, CameraPoseConverter::camera_to_pose(*subwindow.get_camera()), subwindow.get_type());
     }
   }
 }
@@ -788,6 +841,7 @@ void Application::process_renderer_input()
     {
       subwindow.set_type(*type);
       subwindow.set_surfel_flag(m_inputState.key_down(KEYCODE_LSHIFT));
+      subwindow.set_remote_flag(m_inputState.key_down(KEYCODE_LCTRL));
     }
   }
 }
@@ -831,33 +885,115 @@ void Application::process_voice_input()
   }
 }
 
+void Application::save_current_memory_usage()
+{
+  // Make sure that the memory usage output stream has been initialised, and throw if not.
+  if(!m_memoryUsageOutputStream)
+  {
+    throw std::runtime_error("Error: Memory usage output stream has not been initialised");
+  }
+
+  // Find how many GPUs are available.
+  int gpuCount = 0;
+  ORcudaSafeCall(cudaGetDeviceCount(&gpuCount));
+
+  // Save the currently active GPU (we have to change the active GPU to query the memory usage
+  // of the other GPUs, and we want to restore the original GPU once we're done).
+  int originalGpu = -1;
+  ORcudaSafeCall(cudaGetDevice(&originalGpu));
+
+  // For each available GPU:
+  for(int i = 0; i < gpuCount; ++i)
+  {
+    // Set the GPU as active.
+    ORcudaSafeCall(cudaSetDevice(i));
+
+    // Look up its memory usage.
+    size_t freeMemory, totalMemory;
+    ORcudaSafeCall(cudaMemGetInfo(&freeMemory, &totalMemory));
+
+    // Convert the memory usage to MB.
+    const size_t bytesPerMb = 1024 * 1024;
+    const size_t freeMb = freeMemory / bytesPerMb;
+    const size_t usedMb = (totalMemory - freeMemory) / bytesPerMb;
+    const size_t totalMb = totalMemory / bytesPerMb;
+
+    // Save the memory usage to the output stream.
+    *m_memoryUsageOutputStream << freeMb << ";" << usedMb << ";" << totalMb << ";";
+  }
+
+  *m_memoryUsageOutputStream << '\n';
+
+  // Restore the GPU that was originally active.
+  ORcudaSafeCall(cudaSetDevice(originalGpu));
+}
+
 void Application::save_mesh() const
 {
+  // If meshing is disabled, early out.
   if(!m_meshingEngine) return;
 
+  // Look up the IDs of all of the scenes we are reconstructing.
   Model_CPtr model = m_pipeline->get_model();
   const Settings_CPtr& settings = model->get_settings();
+  const std::vector<std::string> sceneIDs = model->get_scene_ids();
 
-  const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
-  const std::string& sceneID = mainSubwindow.get_scene_id();
-  SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
+  // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
+  std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp());
 
-  // Construct the mesh, specifying a maximum number of triangles to avoid crashes on GPUs with limited memory (e.g. a Titan Black).
-  const unsigned int maxTriangles = 1 << 24;
-  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), maxTriangles));
-  m_meshingEngine->MeshScene(mesh.get(), scene.get());
+  // Determine the directory into which to save the meshes, and make sure that it exists.
+  boost::filesystem::path dir = find_subdir_from_executable("meshes");
+  if(sceneIDs.size() > 1) dir = dir / meshBaseName;
+  boost::filesystem::create_directories(dir);
 
-  // Find the meshes directory and make sure that it exists.
-  boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
-  boost::filesystem::create_directories(meshesSubdir);
+  // Mesh each scene independently.
+  for(size_t sceneIdx = 0; sceneIdx < sceneIDs.size(); ++sceneIdx)
+  {
+    const std::string& sceneID = sceneIDs[sceneIdx];
+    std::cout << "Meshing " << sceneID << " scene.\n";
+    SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-  // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".ply";
-  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
+    // Construct the mesh (specifying a maximum number of triangles to avoid running out of memory on less powerful GPUs, e.g. the Titan Black).
+    Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
+    m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-  // Save the mesh to disk.
-  std::cout << "Saving mesh to: " << meshPath << '\n';
-  mesh->WritePLY(meshPath.string().c_str());
+    // If there is a pose optimiser, try to get the relative transform from this scene's coordinate system to the World scene's coordinate system.
+    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform;
+    if(model->get_collaborative_pose_optimiser() && sceneID != Model::get_world_scene_id())
+    {
+      relativeTransform = model->get_collaborative_pose_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
+    }
+
+    // If we managed to get the relative transform, we need to update every triangle in the mesh. We do this on the CPU, since this is not currently
+    // a time-sensitive operation. (We might want to use a proper CUDA kernel in the future.)
+    if(relativeTransform)
+    {
+      // First of all, allocate a memory block on the CPU to hold a copy of the mesh triangles, and copy them into it. Note that this copy could have
+      // been avoided if the mesh was already allocated on the CPU, but that would have made the meshing itself slower.
+      typedef ITMMesh::Triangle Triangle;
+      typedef ORUtils::MemoryBlock<Triangle> TriangleBlock;
+      boost::shared_ptr<TriangleBlock> triangles(new TriangleBlock(mesh->noMaxTriangles, MEMORYDEVICE_CPU));
+      triangles->SetFrom(mesh->triangles, mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CUDA_TO_CPU : TriangleBlock::CPU_TO_CPU);
+
+      // Next, transform each triangle using the relative transform determined above.
+      const Matrix4f transform = relativeTransform->first.GetM();
+      Triangle *trianglesData = triangles->GetData(MEMORYDEVICE_CPU);
+      for(size_t triangleIdx = 0; triangleIdx < mesh->noTotalTriangles; ++triangleIdx)
+      {
+        trianglesData[triangleIdx].p0  = transform * trianglesData[triangleIdx].p0;
+        trianglesData[triangleIdx].p1  = transform * trianglesData[triangleIdx].p1;
+        trianglesData[triangleIdx].p2  = transform * trianglesData[triangleIdx].p2;
+      }
+
+      // Finally, copy the updated triangles back into the mesh.
+      mesh->triangles->SetFrom(triangles.get(), mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CPU_TO_CUDA : TriangleBlock::CPU_TO_CPU);
+    }
+
+    // Save the mesh to disk.
+    const boost::filesystem::path meshPath = dir / (meshBaseName + "_" + sceneID + ".ply");
+    std::cout << "Saving mesh to: " << meshPath << '\n';
+    mesh->WritePLY(meshPath.string().c_str());
+  }
 }
 
 void Application::save_models() const
@@ -897,11 +1033,11 @@ void Application::save_sequence_frame()
   }
 
   // Save the current input images.
-  ImagePersister::save_image_on_thread(slamState->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
-  ImagePersister::save_image_on_thread(slamState->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
+  ImagePersister::save_image_on_thread(slamState->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("frame-%06i.depth.png"));
+  ImagePersister::save_image_on_thread(slamState->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("frame-%06i.color.png"));
 
   // Save the inverse pose (i.e. the camera -> world transformation).
-  PosePersister::save_pose_on_thread(slamState->get_pose().GetInvM(), m_sequencePathGenerator->make_path("posem%06i.txt"));
+  PosePersister::save_pose_on_thread(slamState->get_pose().GetInvM(), m_sequencePathGenerator->make_path("frame-%06i.pose.txt"));
 
   m_sequencePathGenerator->increment_index();
 }
@@ -981,7 +1117,8 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
   const Vector2i windowViewportSize((int)ROUND(mainViewportWidth / mainSubwindow.width()), (int)ROUND(mainViewportHeight / mainSubwindow.height()));
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
+  const std::string title = m_pipeline->get_model()->get_mapping_server() ? "SemanticPaint - Server" : "SemanticPaint";
+  m_renderer.reset(new WindowedRenderer(title, m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
 }
 
 void Application::toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator)

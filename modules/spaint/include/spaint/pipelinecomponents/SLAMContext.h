@@ -11,6 +11,7 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
+#include <itmx/remotemapping/MappingClient.h>
 #include <itmx/remotemapping/MappingServer.h>
 #include <itmx/trackers/TrackerFactory.h>
 #ifdef WITH_VICON
@@ -19,6 +20,7 @@
 
 #include <orx/relocalisation/RefiningRelocaliser.h>
 
+#include "../fiducials/FiducialDetector.h"
 #include "../slamstate/SLAMState.h"
 
 namespace spaint {
@@ -35,8 +37,17 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The fiducial detectors used to recognise fiducials in the various scenes. */
+  std::map<std::string,FiducialDetector_CPtr> m_fiducialDetectors;
+
+  /** The mapping clients (if any) to use to communicate with the remote mapping server regarding the various scenes. */
+  std::map<std::string,itmx::MappingClient_Ptr> m_mappingClients;
+
   /** The relocalisers used to estimate the camera pose in the various scenes. */
   std::map<std::string,orx::RefiningRelocaliser_Ptr> m_relocalisers;
+
+  /** The IDs of all existing scenes. */
+  std::vector<std::string> m_sceneIDs;
 
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
@@ -64,6 +75,37 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Adds the specified scene ID to the list of existing scene IDs.
+   *
+   * \param sceneID The scene ID to add.
+   */
+  void add_scene_id(const std::string& sceneID);
+
+  /**
+   * \brief Gets the fiducial detector for the specified scene (if any).
+   *
+   * \param sceneID The scene ID.
+   * \return        The fiducial detector for the specified scene (if any).
+   */
+  const FiducialDetector_CPtr& get_fiducial_detector(const std::string& sceneID) const;
+
+  /**
+   * \brief Gets the mapping client (if any) for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The mapping client (if any) for the specified scene.
+   */
+  virtual itmx::MappingClient_Ptr& get_mapping_client(const std::string& sceneID);
+
+  /**
+   * \brief Gets the mapping client (if any) for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The mapping client (if any) for the specified scene.
+   */
+  virtual itmx::MappingClient_CPtr get_mapping_client(const std::string& sceneID) const;
+
+  /**
    * \brief Gets the relocaliser for the specified scene.
    *
    * \param sceneID The scene ID.
@@ -80,6 +122,13 @@ public:
   virtual orx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
 
   /**
+   * \brief Gets the IDs of all existing scenes.
+   *
+   * \return  The IDs of all existing scenes.
+   */
+  virtual const std::vector<std::string>& get_scene_ids() const;
+
+  /**
    * \brief Gets the SLAM state for the specified scene.
    *
    * \param sceneID The scene ID.
@@ -88,12 +137,20 @@ public:
   virtual const SLAMState_Ptr& get_slam_state(const std::string& sceneID);
 
   /**
-   * \brief Gets the SLAM state for the specified scene.
+   * \brief Gets the SLAM state for the specified scene (if any).
    *
    * \param sceneID The scene ID.
-   * \return        The SLAM state for the specified scene.
+   * \return        The SLAM state for the specified scene (if any), or null otherwise.
    */
   virtual SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
+
+  /**
+   * \brief Sets the fiducial detector for the specified scene.
+   *
+   * \param sceneID           The scene ID.
+   * \param fiducialDetector  The fiducial detector for the specified scene.
+   */
+  void set_fiducial_detector(const std::string& sceneID, const FiducialDetector_CPtr& fiducialDetector);
 };
 
 //#################### TYPEDEFS ####################

@@ -222,6 +222,8 @@ include/spaint/ogl/WrappedGLUT.h
 
 ##
 SET(pipelinecomponents_sources
+src/pipelinecomponents/CollaborativeComponent.cpp
+src/pipelinecomponents/CollaborativeContext.cpp
 src/pipelinecomponents/ObjectSegmentationComponent.cpp
 src/pipelinecomponents/ObjectSegmentationContext.cpp
 src/pipelinecomponents/PropagationComponent.cpp
@@ -232,6 +234,8 @@ src/pipelinecomponents/SmoothingComponent.cpp
 )
 
 SET(pipelinecomponents_headers
+include/spaint/pipelinecomponents/CollaborativeComponent.h
+include/spaint/pipelinecomponents/CollaborativeContext.h
 include/spaint/pipelinecomponents/ObjectSegmentationComponent.h
 include/spaint/pipelinecomponents/ObjectSegmentationContext.h
 include/spaint/pipelinecomponents/PropagationComponent.h

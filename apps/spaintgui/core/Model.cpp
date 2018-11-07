@@ -6,6 +6,7 @@
 #include "Model.h"
 using namespace ORUtils;
 using namespace itmx;
+using namespace orx;
 using namespace tvginput;
 
 #include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
@@ -80,6 +81,11 @@ LabelManager_CPtr Model::get_label_manager() const
 }
 
 const MappingServer_Ptr& Model::get_mapping_server()
+{
+  return m_mappingServer;
+}
+
+MappingServer_CPtr Model::get_mapping_server() const
 {
   return m_mappingServer;
 }
@@ -209,6 +215,21 @@ std::string Model::get_world_scene_id()
 }
 
 //#################### DISAMBIGUATORS ####################
+
+RefiningRelocaliser_Ptr& Model::get_relocaliser(const std::string& sceneID)
+{
+  return SLAMContext::get_relocaliser(sceneID);
+}
+
+RefiningRelocaliser_CPtr Model::get_relocaliser(const std::string& sceneID) const
+{
+  return SLAMContext::get_relocaliser(sceneID);
+}
+
+const std::vector<std::string>& Model::get_scene_ids() const
+{
+  return SLAMContext::get_scene_ids();
+}
 
 const SLAMState_Ptr& Model::get_slam_state(const std::string& sceneID)
 {
