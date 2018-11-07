@@ -930,22 +930,16 @@ void Application::save_current_memory_usage()
 
 void Application::save_mesh() const
 {
+  // If meshing is disabled, early out.
   if(!m_meshingEngine) return;
 
+  // Look up the IDs of all of the scenes we are reconstructing.
   Model_CPtr model = m_pipeline->get_model();
   const Settings_CPtr& settings = model->get_settings();
-
-  // Get all scene IDs.
   const std::vector<std::string> sceneIDs = model->get_scene_ids();
 
   // Determine the (base) filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
-  std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "");
-  if(meshBaseName == "")
-  {
-    // Not using the default parameter of the settings->get_first_value call because
-    // experimentTag is a registered program option in main.cpp, with a default value of "".
-    meshBaseName = "spaint-" + TimeUtil::get_iso_timestamp();
-  }
+  std::string meshBaseName = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp());
 
   // Determine the directory into which to save the meshes, and make sure that it exists.
   boost::filesystem::path dir = find_subdir_from_executable("meshes");
@@ -957,25 +951,21 @@ void Application::save_mesh() const
   {
     const std::string& sceneID = sceneIDs[sceneIdx];
     std::cout << "Meshing " << sceneID << " scene.\n";
-
     SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-    // Construct the mesh (specify a maximum number of triangles to avoid crash on Titan Black cards).
+    // Construct the mesh (specifying a maximum number of triangles to avoid running out of memory on less powerful GPUs, e.g. the Titan Black).
     Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
     m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-    // Will store the relative transform between the World scene and the current one.
+    // If there is a pose optimiser, try to get the relative transform from this scene's coordinate system to the World scene's coordinate system.
     boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform;
-
-    // If there is a pose optimiser, try to find a relative transform between this scene and the World.
     if(model->get_collaborative_pose_optimiser() && sceneID != Model::get_world_scene_id())
     {
       relativeTransform = model->get_collaborative_pose_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
     }
 
-    // If we have a relative transform, we need to update every triangle in the mesh.
-    // We do this on the CPU since this is not currently a time-sensitive operation.
-    // Might want to use a proper CUDA kernel in the future.
+    // If we managed to get the relative transform, we need to update every triangle in the mesh. We do this on the CPU, since this is not currently
+    // a time-sensitive operation. (We might want to use a proper CUDA kernel in the future.)
     if(relativeTransform)
     {
       const Matrix4f transform = relativeTransform->first.GetM();
