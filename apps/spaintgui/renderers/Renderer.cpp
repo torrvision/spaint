@@ -185,12 +185,14 @@ private:
 //#################### CONSTRUCTORS ####################
 
 Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
-: m_medianFilteringEnabled(true),
-  m_model(model),
+: m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
   m_supersamplingEnabled(false),
   m_windowViewportSize(windowViewportSize)
 {
+  const std::string pipelineType = model->get_settings()->get_first_value<std::string>("pipelineType");
+  m_medianFilteringEnabled = pipelineType == "semantic";
+
   // Reset the camera for each sub-window.
   for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
   {
