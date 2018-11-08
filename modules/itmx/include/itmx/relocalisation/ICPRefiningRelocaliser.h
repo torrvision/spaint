@@ -198,20 +198,32 @@ private:
   float score_pose(const ORUtils::SE3Pose& pose) const;
 
   /**
-   * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
+   * \brief Starts the specified timer (iff timers are enabled), without synchronising the GPU.
    *
-   * \param timer           The timer to start.
-   * \param cudaSynchronize Whether or not to call cudaDeviceSynchronize before starting the timer.
+   * \param timer The timer to start.
    */
-  void start_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
+  void start_timer_nosync(AverageTimer& timer) const;
 
   /**
-   * \brief Stops the specified timer (waiting for all CUDA operations to terminate first, if necessary).
+   * \brief Starts the specified timer (iff timers are enabled), after first synchronising the GPU.
    *
-   * \param timer           The timer to stop.
-   * \param cudaSynchronize Whether or not to call cudaDeviceSynchronize before stopping the timer.
+   * \param timer The timer to start.
    */
-  void stop_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
+  void start_timer_sync(AverageTimer& timer) const;
+
+  /**
+   * \brief Stops the specified timer (iff timers are enabled), without synchronising the GPU.
+   *
+   * \param timer The timer to stop.
+   */
+  void stop_timer_nosync(AverageTimer& timer) const;
+
+  /**
+   * \brief Stops the specified timer (iff timers are enabled), after first synchronising the GPU.
+   *
+   * \param timer The timer to stop.
+   */
+  void stop_timer_sync(AverageTimer& timer) const;
 };
 
 }

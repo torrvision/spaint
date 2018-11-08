@@ -180,16 +180,16 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
   initialPoses.clear();
 
   // Run the inner relocaliser. If it fails, save dummy poses and early out.
-  start_timer(m_timerRelocalisation);
-  start_timer(m_timerInitialRelocalisation, false); // No need to synchronize the GPU again.
+  start_timer_sync(m_timerRelocalisation);
+  start_timer_nosync(m_timerInitialRelocalisation); // No need to synchronize the GPU again.
   std::vector<Result> initialResults = m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
-  stop_timer(m_timerInitialRelocalisation);
+  stop_timer_sync(m_timerInitialRelocalisation);
 
   if(initialResults.empty())
   {
     Matrix4f invalidPose;
     invalidPose.setValues(std::numeric_limits<float>::quiet_NaN());
-    stop_timer(m_timerRelocalisation, false); // No need to synchronize the GPU again.
+    stop_timer_nosync(m_timerRelocalisation); // No need to synchronize the GPU again.
     save_poses(invalidPose, invalidPose);
     if(m_imagePathGenerator) m_imagePathGenerator->increment_index();
     if(m_gtPathGenerator) m_gtPathGenerator->increment_index();
@@ -199,7 +199,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
   std::vector<Relocaliser::Result> refinedResults;
   float bestScore = static_cast<float>(INT_MAX);
 
-  start_timer(m_timerRefinement, false); // No need to synchronize the GPU again.
+  start_timer_nosync(m_timerRefinement); // No need to synchronize the GPU again.
 
   // Reset the render state before raycasting (we do this once for each relocalisation attempt).
   // FIXME: It would be nicer to simply create the render state once and then reuse it, but unfortunately this leads
@@ -271,8 +271,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     }
   }
 
-  stop_timer(m_timerRefinement);
-  stop_timer(m_timerRelocalisation, false); // No need to synchronize the GPU again.
+  stop_timer_sync(m_timerRefinement);
+  stop_timer_nosync(m_timerRelocalisation); // No need to synchronize the GPU again.
 
   // Save the best initial and refined poses if needed.
   if(m_savePoses)
@@ -444,17 +444,17 @@ template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                                         const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
-  start_timer(m_timerTraining);
+  start_timer_sync(m_timerTraining);
   m_innerRelocaliser->train(colourImage, depthImage, depthIntrinsics, cameraPose);
-  stop_timer(m_timerTraining);
+  stop_timer_sync(m_timerTraining);
 }
 
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::update()
 {
-  start_timer(m_timerUpdate);
+  start_timer_sync(m_timerUpdate);
   m_innerRelocaliser->update();
-  stop_timer(m_timerUpdate);
+  stop_timer_sync(m_timerUpdate);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -539,21 +539,27 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_pose(const ORUtils::SE3
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer(AverageTimer& timer, bool cudaSynchronize) const
+void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer_nosync(AverageTimer& timer) const
 {
-  if(!m_timersEnabled) return;
-
-  if(cudaSynchronize) timer.start_sync();
-  else timer.start_nosync();
+  if(m_timersEnabled) timer.start_nosync();
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer(AverageTimer& timer, bool cudaSynchronize) const
+void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer_sync(AverageTimer& timer) const
 {
-  if(!m_timersEnabled) return;
+  if(m_timersEnabled) timer.start_sync();
+}
 
-  if(cudaSynchronize) timer.stop_sync();
-  else timer.stop_nosync();
+template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer_nosync(AverageTimer& timer) const
+{
+  if(m_timersEnabled) timer.stop_nosync();
+}
+
+template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer_sync(AverageTimer& timer) const
+{
+  if(m_timersEnabled) timer.stop_sync();
 }
 
 }
