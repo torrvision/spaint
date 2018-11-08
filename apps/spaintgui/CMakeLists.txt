@@ -40,6 +40,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseRealSense.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
@@ -75,6 +76,15 @@ core/ObjectivePipeline.h
 core/SemanticPipeline.h
 core/SLAMPipeline.h
 )
+
+##
+SET(debugging_sources)
+SET(debugging_headers)
+
+IF(BUILD_GROVE AND BUILD_SPAINTGUI_DEBUGHOOKS AND WITH_OPENCV)
+  SET(debugging_sources ${debugging_sources} debugging/RelocaliserFiguresGenerator.cpp)
+  SET(debugging_headers ${debugging_headers} debugging/RelocaliserFiguresGenerator.h)
+ENDIF()
 
 ##
 SET(renderers_sources
@@ -127,6 +137,7 @@ ENDIF()
 SET(sources
 ${commands_sources}
 ${core_sources}
+${debugging_sources}
 ${renderers_sources}
 ${subwindows_sources}
 ${toplevel_sources}
@@ -135,6 +146,7 @@ ${toplevel_sources}
 SET(headers
 ${commands_headers}
 ${core_headers}
+${debugging_headers}
 ${renderers_headers}
 ${subwindows_headers}
 ${toplevel_headers}
@@ -147,6 +159,7 @@ ${toplevel_headers}
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(debugging FILES ${debugging_sources} ${debugging_headers})
 SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
 SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 
@@ -192,6 +205,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkRealSense.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVicon.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkZed.cmake)
 
@@ -210,3 +224,4 @@ ENDIF()
 #############################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/apps/spaintgui/resources" DESTINATION "bin/apps/spaintgui")
