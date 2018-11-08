@@ -14,7 +14,17 @@
 #include "Application.h"
 
 #if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
-#include <af/cuda.h>
+  #ifdef _MSC_VER
+    // Suppress a VC++ warning that is produced when including ArrayFire headers.
+    #pragma warning(disable:4275)
+  #endif
+
+  #include <af/cuda.h>
+
+  #ifdef _MSC_VER
+    // Reenable the suppressed warning for the rest of the translation unit.
+    #pragma warning(default:4275)
+  #endif
 #endif
 
 #include <InputSource/IdleImageSourceEngine.h>
