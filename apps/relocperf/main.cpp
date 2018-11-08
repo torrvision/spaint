@@ -105,12 +105,12 @@ Eigen::Matrix4f read_pose_from_file(const fs::path& filename)
  *
  * \return The angular difference between the two transformations.
  */
-float angular_separation(const Eigen::Matrix3f &r1, const Eigen::Matrix3f &r2)
+float angular_separation(const Eigen::Matrix3f& r1, const Eigen::Matrix3f& r2)
 {
   // First calculate the rotation matrix which maps r1 to r2.
   Eigen::Matrix3f dr = r2 * r1.transpose();
 
-  // Then compute the corresponding angle-axis transform and return the angle.
+  // Then, compute the corresponding angle-axis transform and return the angle.
   Eigen::AngleAxisf aa(dr);
   return aa.angle();
 }
@@ -128,14 +128,11 @@ float angular_separation(const Eigen::Matrix3f &r1, const Eigen::Matrix3f &r2)
  *
  * \return Whether the two poses are similar enough.
  */
-bool pose_matches(const Eigen::Matrix4f &gtPose,
-                  const Eigen::Matrix4f &testPose,
-                  float &translationError,
-                  float &angleError)
+bool pose_matches(const Eigen::Matrix4f& gtPose, const Eigen::Matrix4f& testPose, float& translationError, float& angleError)
 {
   // 7-scenes thresholds.
   static const float translationMaxError = 0.05f;
-  static const float angleMaxError = 5.f * M_PI / 180.f;
+  static const float angleMaxError = 5.0f * static_cast<float>(M_PI) / 180.0f;
 
   const Eigen::Matrix3f gtR = gtPose.block<3, 3>(0, 0);
   const Eigen::Matrix3f testR = testPose.block<3, 3>(0, 0);
@@ -160,7 +157,7 @@ bool pose_matches(const Eigen::Matrix4f &gtPose,
  *
  * \return Whether the two poses are similar enough.
  */
-bool pose_matches(const Eigen::Matrix4f &gtPose, const Eigen::Matrix4f &testPose)
+bool pose_matches(const Eigen::Matrix4f& gtPose, const Eigen::Matrix4f& testPose)
 {
   float angleError, translationError;
 
@@ -175,7 +172,7 @@ bool pose_matches(const Eigen::Matrix4f &gtPose, const Eigen::Matrix4f &testPose
  *
  * \return Whether the pose stored in the file matches the ground truth pose. False if the file is missing.
  */
-bool pose_file_matches(const Eigen::Matrix4f &gtPose, const fs::path &poseFile)
+bool pose_file_matches(const Eigen::Matrix4f& gtPose, const fs::path& poseFile)
 {
   if(!fs::is_regular(poseFile)) return false;
 
@@ -345,7 +342,7 @@ struct Comparer
  *
  * \return The SequenceResults on this sequence.
  */
-SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relocFolder, const fs::path &statsFile)
+SequenceResults evaluate_sequence(const fs::path& gtFolder, const fs::path& relocFolder, const fs::path& statsFile)
 {
   SequenceResults res;
 
@@ -484,7 +481,7 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder, const fs::path &relo
  * \brief Print a variable allocating to it a certain width on screen.
  */
 template <typename T>
-void printWidth(const T &item, int width, bool leftAlign = false)
+void printWidth(const T& item, int width, bool leftAlign = false)
 {
   std::cerr << (leftAlign ? std::left : std::right) << std::setw(width) << std::fixed << std::setprecision(3) << item;
 }
@@ -534,16 +531,16 @@ int main(int argc, char *argv[])
 
   // Find the valid sequences in the dataset folder.
   const std::vector<std::string> sequenceNames = find_sequence_names(datasetFolder);
-  size_t sequenceNameMaxLength = 0;
+  int sequenceNameMaxLength = 0;
 
   std::map<std::string, SequenceResults> results;
 
   // Evaluate each sequence.
   for(size_t sequenceIdx = 0; sequenceIdx < sequenceNames.size(); ++sequenceIdx)
   {
-    const std::string &sequence = sequenceNames[sequenceIdx];
+    const std::string& sequence = sequenceNames[sequenceIdx];
 
-    sequenceNameMaxLength = std::max(sequenceNameMaxLength, sequence.length() + 2);
+    sequenceNameMaxLength = std::max(sequenceNameMaxLength, static_cast<int>(sequence.length()) + 2);
 
     // Compute the full paths.
     const fs::path gtPath = datasetFolder / sequence / (useValidation ? validationFolderName : testFolderName);
@@ -592,28 +589,27 @@ int main(int argc, char *argv[])
   std::cerr << '\n';
 
   // Compute percentages for each sequence and print everything.
-  for(const auto &sequence : sequenceNames)
+  for(const auto& sequence : sequenceNames)
   {
-    const auto &seqResult = results[sequence];
+    const auto& seqResult = results[sequence];
 
-    float relocPct =
-        static_cast<float>(seqResult.validPosesAfterReloc) / static_cast<float>(seqResult.poseCount) * 100.f;
+    float relocPct = static_cast<float>(seqResult.validPosesAfterReloc) / static_cast<float>(seqResult.poseCount) * 100.f;
     float icpPct = static_cast<float>(seqResult.validPosesAfterICP) / static_cast<float>(seqResult.poseCount) * 100.f;
     float finalPct = static_cast<float>(seqResult.validFinalPoses) / static_cast<float>(seqResult.poseCount) * 100.f;
 
     float avgTranslation = seqResult.sumRelocalisationTranslationalError / static_cast<float>(seqResult.poseCount);
-    float avgAngle = (seqResult.sumRelocalisationAngleError / static_cast<float>(seqResult.poseCount)) * 180 / M_PI;
+    float avgAngle = (seqResult.sumRelocalisationAngleError / static_cast<float>(seqResult.poseCount)) * 180 / static_cast<float>(M_PI);
 
     float avgSuccTranslation = seqResult.sumRelocalisationSuccessfulTranslationalError / static_cast<float>(seqResult.validPosesAfterReloc);
-    float avgSuccAngle = (seqResult.sumRelocalisationSuccessfulAngleError / static_cast<float>(seqResult.validPosesAfterReloc)) * 180 / M_PI;
+    float avgSuccAngle = (seqResult.sumRelocalisationSuccessfulAngleError / static_cast<float>(seqResult.validPosesAfterReloc)) * 180 / static_cast<float>(M_PI);
 
     float avgFailTranslation = seqResult.sumRelocalisationFailedTranslationalError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc);
-    float avgFailAngle = (seqResult.sumRelocalisationFailedAngleError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc)) * 180 / M_PI;
+    float avgFailAngle = (seqResult.sumRelocalisationFailedAngleError / static_cast<float>(seqResult.poseCount - seqResult.validPosesAfterReloc)) * 180 / static_cast<float>(M_PI);
 
-    float medianAngleError = seqResult.medianRelocalisationAngle * 180 / M_PI;
+    float medianAngleError = seqResult.medianRelocalisationAngle * 180 / static_cast<float>(M_PI);
     float medianTranslationError = seqResult.medianRelocalisationTranslation;
 
-    float medianICPAngleError = seqResult.medianICPAngle * 180 / M_PI;
+    float medianICPAngleError = seqResult.medianICPAngle * 180 / static_cast<float>(M_PI);
     float medianICPTranslationError = seqResult.medianICPTranslation;
 
 //    float medianFiniteAngleError = seqResult.medianFiniteRelocalisationAngle * 180 / M_PI;
@@ -671,9 +667,9 @@ int main(int argc, char *argv[])
 
   int poseCount = 0;
 
-  for(const auto &sequence : sequenceNames)
+  for(const auto& sequence : sequenceNames)
   {
-    const auto &seqResult = results[sequence];
+    const auto& seqResult = results[sequence];
 
     // Non-weighted average, we need percentages
     const float relocPct = static_cast<float>(seqResult.validPosesAfterReloc) / static_cast<float>(seqResult.poseCount);
@@ -701,17 +697,17 @@ int main(int argc, char *argv[])
     averageUpdateTimeSum += seqResult.averageUpdateTime;
   }
 
-  const float relocAvg = relocSum / sequenceNames.size() * 100.f;
-  const float icpAvg = icpSum / sequenceNames.size() * 100.f;
-  const float finalAvg = finalSum / sequenceNames.size() * 100.f;
+  const float relocAvg = relocSum / sequenceNames.size() * 100.0f;
+  const float icpAvg = icpSum / sequenceNames.size() * 100.0f;
+  const float finalAvg = finalSum / sequenceNames.size() * 100.0f;
 
-  const float relocWeightedAvg = relocRawSum / poseCount * 100.f;
-  const float icpWeightedAvg = icpRawSum / poseCount * 100.f;
-  const float finalWeightedAvg = finalRawSum / poseCount * 100.f;
+  const float relocWeightedAvg = relocRawSum / poseCount * 100.0f;
+  const float icpWeightedAvg = icpRawSum / poseCount * 100.0f;
+  const float finalWeightedAvg = finalRawSum / poseCount * 100.0f;
 
-  const float medianAngleAvg = medianAngleSum / sequenceNames.size() * 180.0f / M_PI;
+  const float medianAngleAvg = medianAngleSum / sequenceNames.size() * 180.0f / static_cast<float>(M_PI);
   const float medianTranslationAvg = medianTranslationSum / sequenceNames.size();
-  const float medianICPAngleAvg = medianICPAngleSum / sequenceNames.size() * 180.0f / M_PI;
+  const float medianICPAngleAvg = medianICPAngleSum / sequenceNames.size() * 180.0f / static_cast<float>(M_PI);
   const float medianICPTranslationAvg = medianICPTranslationSum / sequenceNames.size();
 
   const float averageICPTime = averageICPTimeSum / sequenceNames.size();
@@ -795,7 +791,7 @@ int main(int argc, char *argv[])
         bool icpSuccess = seqResult.icpResults[poseIdx];
 
         float relocTranslation = seqResult.relocalisationTranslationalErrors[poseIdx];
-        float relocAngle = seqResult.relocalisationAngularErrors[poseIdx] * 180 / M_PI;
+        float relocAngle = seqResult.relocalisationAngularErrors[poseIdx] * 180 / static_cast<float>(M_PI);
 
         relocSum += relocSuccess;
         icpSum += icpSuccess;
