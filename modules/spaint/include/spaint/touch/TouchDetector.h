@@ -7,7 +7,7 @@
 #define H_SPAINT_TOUCHDETECTOR
 
 #ifdef _MSC_VER
-  // Suppress a VC++ warning that is produced when including the ArrayFire header.
+  // Suppress a VC++ warning that is produced when including ArrayFire headers.
   #pragma warning(disable:4275)
 #endif
 

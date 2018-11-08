@@ -6,6 +6,7 @@
 #include "pipelinecomponents/CollaborativeComponent.h"
 using namespace ITMLib;
 using namespace ORUtils;
+using namespace itmx;
 
 #include <algorithm>
 
@@ -14,7 +15,6 @@ using boost::bind;
 
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
-using namespace itmx;
 #endif
 
 #include <orx/geometry/GeometryUtil.h>
