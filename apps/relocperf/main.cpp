@@ -31,66 +31,68 @@ static const std::string testFolderName = "test";
 //#################### FUNCTIONS ####################
 
 /**
- * \brief Finds the dataset sequences under a root folder.
+ * \brief Finds the names of all of the valid sequences within the specified dataset.
  *
- *        The assumption is that each valid sequence folder will have both
- *        "train" and "test" subfolders.
+ * \note  We define a "valid" sequence to be one whose directory contains both "train" and "test" subdirectories.
  *
- * \param dataset_path The path to a dataset.
- *
- * \return A list of sequence names.
+ * \param datasetRoot The root directory of the dataset.
+ * \return            The names of all of the valid sequences within the dataset, in lexicographic order.
  */
-std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
+std::vector<std::string> find_sequence_names(const fs::path& datasetRoot)
 {
   std::vector<std::string> sequences;
 
-  // Iterate over every subfolder of the dataset.
-  for(fs::directory_iterator it(dataset_path), end; it != end; ++it)
+  // For each subdirectory of the dataset root:
+  for(fs::directory_iterator it(datasetRoot), end; it != end; ++it)
   {
+    // Check to see whether it contains "train" and "test" subdirectories, and add it to the list of valid sequences if so.
     fs::path p = it->path();
-    fs::path train_path = p / trainFolderName;
-    fs::path test_path = p / testFolderName;
+    fs::path trainPath = p / trainFolderName;
+    fs::path testPath = p / testFolderName;
 
-    // If the current folder has both a train and test subfolder, we store its name as a valid sequence.
-    if(fs::is_directory(train_path) && fs::is_directory(test_path))
+    if(fs::is_directory(trainPath) && fs::is_directory(testPath))
     {
       sequences.push_back(p.filename().string());
     }
   }
 
-  // Sort sequence names because the directory iterator does not ensure ordering
+  // Finally, sort the list of sequences names (since the directory iterator does not guarantee any particular ordering).
   std::sort(sequences.begin(), sequences.end());
 
   return sequences;
 }
 
 /**
- * \brief Reads a rigid pose from disk. The pose has to be stored as a 4x4 row-major matrix.
+ * \brief Reads a 4x4 matrix from a file on disk (in row-major order).
  *
- * \param fileName The filename.
+ * \param filename  The name of the file containing the matrix.
+ * \return          The matrix.
  *
- * \return The rigid transformation.
- *
- * \throws std::runtime_error if the file is missing.
+ * \throws std::runtime_error If the file does not exist.
  */
-Eigen::Matrix4f read_pose_from_file(const fs::path &fileName)
+Eigen::Matrix4f read_pose_from_file(const fs::path& filename)
 {
-  if(!fs::is_regular(fileName)) throw std::runtime_error("File not found: " + fileName.string());
+  // Check whether or not the file exists, and throw if not.
+  if(!fs::is_regular(filename))
+  {
+    throw std::runtime_error("Error: File not found: " + filename.string());
+  }
 
-  std::ifstream in(fileName.c_str());
+  std::ifstream in(filename.c_str());
 
-  // The Matrix is stored in row-major order on disk.
+  // Read in the matrix (in row-major order).
   Eigen::Matrix4f res;
   in >> res(0, 0) >> res(0, 1) >> res(0, 2) >> res(0, 3);
   in >> res(1, 0) >> res(1, 1) >> res(1, 2) >> res(1, 3);
   in >> res(2, 0) >> res(2, 1) >> res(2, 2) >> res(2, 3);
   in >> res(3, 0) >> res(3, 1) >> res(3, 2) >> res(3, 3);
 
-  // If parsing the file failed for any reason, set the pose to NaNs.
-  if(!in)
-  {
-    res.setConstant(std::numeric_limits<float>::quiet_NaN());
-  }
+  // If anything went wrong during parsing, set all entries of the matrix to NaN.
+  // FIXME: This is a hack, based on the fact that some of the matrices we're reading containing NaNs, and
+  //        they're not saved in a consistent / platform-independent way. Trying to read them in will cause
+  //        the stream to fail, so we assume that whenever the stream fails, that was the cause, and set all
+  //        entries to NaN accordingly. We should fix this at some point, but it's fine for now.
+  if(!in) res.setConstant(std::numeric_limits<float>::quiet_NaN());
 
   return res;
 }
@@ -191,10 +193,7 @@ bool pose_file_matches(const Eigen::Matrix4f &gtPose, const fs::path &poseFile)
  *
  * \return Whether the pose stored in the file matches the ground truth pose. False if the file is missing.
  */
-bool pose_file_matches(const Eigen::Matrix4f &gtPose,
-                       const fs::path &poseFile,
-                       float &translationError,
-                       float &angleError)
+bool pose_file_matches(const Eigen::Matrix4f& gtPose, const fs::path& poseFile, float& translationError, float& angleError)
 {
   translationError = std::numeric_limits<float>::infinity();
   angleError = std::numeric_limits<float>::infinity();
