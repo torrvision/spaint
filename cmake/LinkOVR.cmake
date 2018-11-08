@@ -15,5 +15,9 @@ IF(WITH_OVR)
 
   IF(MSVC_IDE)
     TARGET_LINK_LIBRARIES(${targetname} winmm ws2_32)
+
+    IF(MSVC_VERSION GREATER_EQUAL 1900)
+      TARGET_LINK_LIBRARIES(${targetname} legacy_stdio_definitions)
+    ENDIF()
   ENDIF()
 ENDIF()
