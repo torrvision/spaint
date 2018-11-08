@@ -184,7 +184,8 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr& m
 
   // Will need dynamic cast from the relocaliser type to get the best poses and read the first
   ScoreRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreRelocaliser>(
-      boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser());
+    boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser()
+  );
 
   // Need to have the scene and renderState available.
   VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
@@ -211,13 +212,14 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr& m
 
   for(size_t candidateIdx = 0; candidateIdx < candidates.size(); ++candidateIdx)
   {
-    PoseCandidate &candidate = candidates[candidateIdx];
+    PoseCandidate& candidate = candidates[candidateIdx];
 
     ORUtils::SE3Pose pose;
     pose.SetInvM(candidate.cameraPose);
 
     model->get_visualisation_generator()->generate_voxel_visualisation(
-        rendered, voxelScene, pose, view->calib.intrinsics_d, liveVoxelRenderState, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN);
+      rendered, voxelScene, pose, view->calib.intrinsics_d, liveVoxelRenderState, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN
+    );
 
     cv::Mat raycastedPose = cv::Mat(480, 640, CV_8UC4, rendered->GetData(MEMORYDEVICE_CPU)).clone();
     cv::cvtColor(raycastedPose, raycastedPose, CV_RGBA2BGR);
@@ -298,8 +300,7 @@ void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr& m
       ptCamera[i] = project(candidate.pointsCamera[i], depthIntrinsics);
       ptCameraInt[i] = ptCamera[i].toInt();
       linearIdxDownsampled[i] = (view->depth->noDims.width / 4) * (ptCameraInt[i].y / 4) + ptCameraInt[i].x / 4;
-      predictions[i] =
-          scoreRelocaliser->get_predictions_image()->GetData(MEMORYDEVICE_CPU)[linearIdxDownsampled[i]];
+      predictions[i] = scoreRelocaliser->get_predictions_image()->GetData(MEMORYDEVICE_CPU)[linearIdxDownsampled[i]];
     }
 
     for (int i = 0; i < 3; ++i)
