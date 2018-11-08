@@ -13,7 +13,6 @@
 #include <itmx/trackers/FallibleTracker.h>
 
 #include "SLAMContext.h"
-#include "../fiducials/FiducialDetector.h"
 
 namespace spaint {
 
@@ -71,9 +70,6 @@ private:
   /** A pointer to a tracker that can detect tracking failures (if available). */
   itmx::FallibleTracker *m_fallibleTracker;
 
-  /** The fiducial detector to use (if any). */
-  FiducialDetector_CPtr m_fiducialDetector;
-
   /** Whether or not to let the relocaliser know when no more calls will be made to its train or update functions. */
   bool m_finishTrainingEnabled;
 
@@ -101,9 +97,6 @@ private:
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
-
-  /** The mapping client (if any) to use to communicate with the remote mapping server. */
-  itmx::MappingClient_Ptr m_mappingClient;
 
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
@@ -155,12 +148,10 @@ public:
    * \param trackerConfig     The tracker configuration to use.
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
-   * \param fiducialDetector  The fiducial detector to use (if any).
    * \param detectFiducials   Whether or not to initially detect fiducials in the scene.
    */
-  SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                const std::string& trackerConfig, MappingMode mappingMode = MAP_VOXELS_ONLY, TrackingMode trackingMode = TRACK_VOXELS,
-                const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(), bool detectFiducials = false);
+  SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine, const std::string& trackerConfig,
+                MappingMode mappingMode = MAP_VOXELS_ONLY, TrackingMode trackingMode = TRACK_VOXELS, bool detectFiducials = false);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -254,6 +245,11 @@ private:
    * \brief Perform relocalisation-specific operations (i.e. train a relocaliser if tracking succeeded or relocalise otherwise).
    */
   void process_relocalisation();
+
+  /**
+   * \brief Sets up the fiducial detector (if any).
+   */
+  void setup_fiducial_detector();
 
   /**
    * \brief Sets up the relocaliser.

@@ -8,9 +8,13 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include "FallibleTracker.h"
 #include "../base/ITMObjectPtrTypes.h"
 #include "../remotemapping/MappingServer.h"
-#include "FallibleTracker.h"
+
+#ifdef WITH_VICON
+#include "../util/ViconInterface.h"
+#endif
 
 namespace itmx {
 
@@ -34,7 +38,14 @@ private:
 private:
   typedef boost::property_tree::ptree Tree;
 
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+  //#################### PRIVATE VARIABLES ####################
+private:
+#ifdef WITH_VICON
+  /** The interface to the Vicon system (if we're using it). */
+  ViconInterface_CPtr m_vicon;
+#endif
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Makes a tracker based on the configuration specified in an XML file on disk.
@@ -51,12 +62,12 @@ public:
    * \param nestingFlag           A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                      The tracker.
    */
-  static Tracker_Ptr make_tracker_from_file(const std::string& trackerConfigFilename, bool trackSurfels,
-                                            const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                                            const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                            const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                            const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
-                                            NestingFlag nestingFlag = UNNESTED);
+  Tracker_Ptr make_tracker_from_file(const std::string& trackerConfigFilename, bool trackSurfels,
+                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                                     const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
+                                     const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                     const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
+                                     NestingFlag nestingFlag = UNNESTED) const;
 
   /**
    * \brief Makes a tracker based on the configuration specified in an XML string.
@@ -73,14 +84,23 @@ public:
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
-  static Tracker_Ptr make_tracker_from_string(const std::string& trackerConfig, bool trackSurfels,
-                                              const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                                              const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                              const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                              const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
-                                              NestingFlag nestingFlag = UNNESTED);
+  Tracker_Ptr make_tracker_from_string(const std::string& trackerConfig, bool trackSurfels,
+                                       const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                                       const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
+                                       const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                       const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
+                                       NestingFlag nestingFlag = UNNESTED) const;
 
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+#ifdef WITH_VICON
+  /**
+   * \brief Sets the interface to the Vicon system (if we're using it).
+   *
+   * \param vicon The interface to the Vicon system (if we're using it).
+   */
+  void set_vicon(const ViconInterface_CPtr& vicon);
+#endif
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
    * \brief Makes a "simple" tracker (i.e. a tracker that is not a composite, or one that is imported from a file)
@@ -99,11 +119,11 @@ private:
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
-  static Tracker_Ptr make_simple_tracker(std::string trackerType, std::string trackerParams, bool trackSurfels,
-                                         const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                                         const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                         const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                         const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag);
+  Tracker_Ptr make_simple_tracker(std::string trackerType, std::string trackerParams, bool trackSurfels,
+                                  const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                                  const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
+                                  const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                  const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag) const;
 
   /**
    * \brief Makes a tracker based on the configuration specified in a property tree.
@@ -120,12 +140,12 @@ private:
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
-  static Tracker_Ptr make_tracker(const Tree& trackerTree, bool trackSurfels,
-                                  const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                                  const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                  const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
-                                  const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
-                                  NestingFlag nestingFlag = UNNESTED);
+  Tracker_Ptr make_tracker(const Tree& trackerTree, bool trackSurfels,
+                           const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                           const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
+                           const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                           const MappingServer_Ptr& mappingServer = MappingServer_Ptr(),
+                           NestingFlag nestingFlag = UNNESTED) const;
 };
 
 }

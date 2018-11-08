@@ -60,6 +60,7 @@ commands/MarkVoxelsCommand.h
 
 ##
 SET(core_sources
+core/CollaborativePipeline.cpp
 core/Model.cpp
 core/MultiScenePipeline.cpp
 core/ObjectivePipeline.cpp
@@ -68,6 +69,7 @@ core/SLAMPipeline.cpp
 )
 
 SET(core_headers
+core/CollaborativePipeline.h
 core/Model.h
 core/MultiScenePipeline.h
 core/ObjectivePipeline.h
@@ -79,20 +81,20 @@ core/SLAMPipeline.h
 SET(debugging_sources)
 SET(debugging_headers)
 
-IF(BUILD_GROVE AND WITH_OPENCV)
+IF(BUILD_GROVE AND BUILD_SPAINTGUI_DEBUGHOOKS AND WITH_OPENCV)
   SET(debugging_sources ${debugging_sources} debugging/RelocaliserFiguresGenerator.cpp)
   SET(debugging_headers ${debugging_headers} debugging/RelocaliserFiguresGenerator.h)
 ENDIF()
 
 ##
 SET(renderers_sources
-renderers/NullRenderer.cpp
+renderers/HeadlessRenderer.cpp
 renderers/Renderer.cpp
 renderers/WindowedRenderer.cpp
 )
 
 SET(renderers_headers
-renderers/NullRenderer.h
+renderers/HeadlessRenderer.h
 renderers/Renderer.h
 renderers/WindowedRenderer.h
 )

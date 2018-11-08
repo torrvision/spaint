@@ -194,7 +194,7 @@ void RelocaliserApplication::run()
   AverageTimer<boost::chrono::milliseconds> trainingTimer("Training Timer");
   while((currentExample = read_example(m_trainingSequencePathGenerator)))
   {
-    trainingTimer.start();
+    trainingTimer.start_sync();
 
     prepare_example_images(*currentExample);
 
@@ -208,7 +208,7 @@ void RelocaliserApplication::run()
     m_trainingSequencePathGenerator->increment_index();
 
     // Stop the timer before the visualization calls.
-    trainingTimer.stop();
+    trainingTimer.stop_sync();
 
     // Update UI
     show_example(*currentExample);
@@ -221,7 +221,7 @@ void RelocaliserApplication::run()
   AverageTimer<boost::chrono::milliseconds> testingTimer("Testing Timer");
   while((currentExample = read_example(m_testingSequencePathGenerator)))
   {
-    testingTimer.start();
+    testingTimer.start_sync();
     prepare_example_images(*currentExample);
 
     // Now relocalise.
@@ -261,7 +261,7 @@ void RelocaliserApplication::run()
     m_outputPosesPathGenerator->increment_index();
 
     // Stop the timer before the visualization calls.
-    testingTimer.stop();
+    testingTimer.stop_sync();
 
     // Show the example and print whether the relocalisation succeeded or not.
     show_example(*currentExample, relocalisationSucceeded ? "Relocalisation OK" : "Relocalisation Failed");

@@ -34,12 +34,24 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTBB.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
 #############################
 # Specify the project files #
 #############################
+
+##
+SET(collaboration_sources
+src/collaboration/CollaborativePoseOptimiser.cpp
+)
+
+SET(collaboration_headers
+include/spaint/collaboration/CollaborationMode.h
+include/spaint/collaboration/CollaborativePoseOptimiser.h
+include/spaint/collaboration/CollaborativeRelocalisation.h
+)
 
 ##
 SET(features_sources
@@ -87,6 +99,7 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 SET(fiducials_sources
 src/fiducials/AveragingFiducial.cpp
 src/fiducials/Fiducial.cpp
+src/fiducials/FiducialDetector.cpp
 src/fiducials/FiducialMeasurement.cpp
 src/fiducials/FiducialPoseEstimator.cpp
 src/fiducials/SimpleFiducial.cpp
@@ -209,6 +222,8 @@ include/spaint/ogl/WrappedGLUT.h
 
 ##
 SET(pipelinecomponents_sources
+src/pipelinecomponents/CollaborativeComponent.cpp
+src/pipelinecomponents/CollaborativeContext.cpp
 src/pipelinecomponents/ObjectSegmentationComponent.cpp
 src/pipelinecomponents/ObjectSegmentationContext.cpp
 src/pipelinecomponents/PropagationComponent.cpp
@@ -219,6 +234,8 @@ src/pipelinecomponents/SmoothingComponent.cpp
 )
 
 SET(pipelinecomponents_headers
+include/spaint/pipelinecomponents/CollaborativeComponent.h
+include/spaint/pipelinecomponents/CollaborativeContext.h
 include/spaint/pipelinecomponents/ObjectSegmentationComponent.h
 include/spaint/pipelinecomponents/ObjectSegmentationContext.h
 include/spaint/pipelinecomponents/PropagationComponent.h
@@ -544,6 +561,7 @@ include/spaint/visualisation/shared/SemanticVisualiser_Shared.h
 #################################################################
 
 SET(sources
+${collaboration_sources}
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
@@ -576,6 +594,7 @@ ${visualisation_interface_sources}
 )
 
 SET(headers
+${collaboration_headers}
 ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
@@ -660,6 +679,7 @@ ENDIF()
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP(collaboration FILES ${collaboration_sources} ${collaboration_headers})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})

@@ -14,7 +14,17 @@
 #include "Application.h"
 
 #if defined(WITH_ARRAYFIRE) && defined(WITH_CUDA)
-#include <af/cuda.h>
+  #ifdef _MSC_VER
+    // Suppress a VC++ warning that is produced when including ArrayFire headers.
+    #pragma warning(disable:4275)
+  #endif
+
+  #include <af/cuda.h>
+
+  #ifdef _MSC_VER
+    // Reenable the suppressed warning for the rest of the translation unit.
+    #pragma warning(default:4275)
+  #endif
 #endif
 
 #include <InputSource/IdleImageSourceEngine.h>
@@ -34,19 +44,18 @@
 #include <OVR_CAPI.h>
 #endif
 
-#ifdef WITH_OPENCV
-#include <spaint/fiducials/ArUcoFiducialDetector.h>
-#endif
-
 #include <itmx/imagesources/AsyncImageSourceEngine.h>
+#include <itmx/imagesources/RemoteImageSourceEngine.h>
 #ifdef WITH_ZED
 #include <itmx/imagesources/ZedImageSourceEngine.h>
 #endif
 
 #include <orx/base/MemoryBlockFactory.h>
+#include <orx/geometry/GeometryUtil.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 
+#include "core/CollaborativePipeline.h"
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 #include "core/SLAMPipeline.h"
@@ -74,10 +83,14 @@ struct CommandLineArguments
   bool batch;
   std::string calibrationFilename;
   bool cameraAfterDisk;
+  std::string collaborationMode;
   std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   std::string experimentTag;
+  std::string fiducialDetectorType;
+  std::string globalPosesSpecifier;
   bool headless;
+  std::string host;
   int initialFrameNumber;
   std::string leapFiducialID;
   bool mapSurfels;
@@ -85,11 +98,14 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::string port;
   std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
+  bool profileMemory;
   std::string relocaliserType;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
+  bool runServer;
   bool saveMeshOnExit;
   bool saveModelsOnExit;
   std::vector<std::string> sequenceSpecifiers;
@@ -98,7 +114,9 @@ struct CommandLineArguments
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
+  bool useVicon;
   bool verbose;
+  std::string viconHost;
 
   // Derived arguments
   boost::optional<bf::path> modelDir;
@@ -117,10 +135,14 @@ struct CommandLineArguments
     #define ADD_SETTINGS(arg) for(size_t i = 0; i < arg.size(); ++i) { settings->add_value(#arg, boost::lexical_cast<std::string>(arg[i])); }
       ADD_SETTING(batch);
       ADD_SETTING(calibrationFilename);
+      ADD_SETTING(collaborationMode);
       ADD_SETTINGS(depthImageMasks);
       ADD_SETTING(detectFiducials);
       ADD_SETTING(experimentTag);
+      ADD_SETTING(fiducialDetectorType);
+      ADD_SETTING(globalPosesSpecifier);
       ADD_SETTING(headless);
+      ADD_SETTING(host);
       ADD_SETTING(initialFrameNumber);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
@@ -128,11 +150,14 @@ struct CommandLineArguments
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
+      ADD_SETTING(port);
       ADD_SETTINGS(poseFileMasks);
       ADD_SETTING(prefetchBufferCapacity);
+      ADD_SETTING(profileMemory);
       ADD_SETTING(relocaliserType);
       ADD_SETTING(renderFiducials);
       ADD_SETTINGS(rgbImageMasks);
+      ADD_SETTING(runServer);
       ADD_SETTING(saveMeshOnExit);
       ADD_SETTING(saveModelsOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
@@ -141,7 +166,9 @@ struct CommandLineArguments
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
       ADD_SETTING(trackSurfels);
+      ADD_SETTING(useVicon);
       ADD_SETTING(verbose);
+      ADD_SETTING(viconHost);
     #undef ADD_SETTINGS
     #undef ADD_SETTING
   }
@@ -187,6 +214,82 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
     return NULL;
   }
   else return cameraSubengine;
+}
+
+/**
+ * \brief Copies any (voxel) scene parameters that have been specified in the configuration file across to the actual scene parameters object.
+ *
+ * \param settings  The settings for the application.
+ */
+void copy_scene_params(const Settings_Ptr& settings)
+{
+#define COPY_PARAM(type, name, defaultValue) settings->sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
+
+  // Note: The default values are taken from InfiniTAM.
+  COPY_PARAM(int, maxW, 100);
+  COPY_PARAM(float, mu, 0.02f);
+  COPY_PARAM(bool, stopIntegratingAtMaxW, false);
+  COPY_PARAM(float, viewFrustum_max, 3.0f);
+  COPY_PARAM(float, viewFrustum_min, 0.2f);
+  COPY_PARAM(float, voxelSize, 0.005f);
+
+#undef COPY_PARAM
+}
+
+/**
+ * \brief Copies any surfel scene parameters that have been specified in the configuration file across to the actual surfel scene parameters object.
+ *
+ * \param settings  The settings for the application.
+ */
+void copy_surfel_scene_params(const Settings_Ptr& settings)
+{
+#define COPY_PARAM(type, name, defaultValue) settings->surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
+
+  // Note: The default values are taken from InfiniTAM.
+  COPY_PARAM(float, deltaRadius, 0.5f);
+  COPY_PARAM(float, gaussianConfidenceSigma, 0.6f);
+  COPY_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
+  COPY_PARAM(float, maxMergeDist, 0.01f);
+  COPY_PARAM(float, maxSurfelRadius, 0.004f);
+  COPY_PARAM(float, minRadiusOverlapFactor, 3.5f);
+  COPY_PARAM(float, stableSurfelConfidence, 25.0f);
+  COPY_PARAM(int, supersamplingFactor, 4);
+  COPY_PARAM(float, trackingSurfelMaxDepth, 1.0f);
+  COPY_PARAM(float, trackingSurfelMinConfidence, 5.0f);
+  COPY_PARAM(int, unstableSurfelPeriod, 20);
+  COPY_PARAM(int, unstableSurfelZOffset, 10000000);
+  COPY_PARAM(bool, useGaussianSampleConfidence, true);
+  COPY_PARAM(bool, useSurfelMerging, true);
+
+#undef COPY_PARAM
+}
+
+/**
+ * \brief Attempts to load a set of global poses from a file specified by a global poses specifier.
+ *
+ * \param globalPosesSpecifier  The global poses specifier.
+ * \return                      The global poses from the file, if possible, or an empty map otherwise.
+ */
+std::map<std::string,DualQuatd> load_global_poses(const std::string& globalPosesSpecifier)
+{
+  std::map<std::string,DualQuatd> globalPoses;
+
+  // Determine the file from which to load the global poses.
+  const std::string dirName = "global_poses";
+  const bf::path p = bf::is_regular(globalPosesSpecifier) ? globalPosesSpecifier : find_subdir_from_executable(dirName) / (globalPosesSpecifier + ".txt");
+
+  // Try to read the poses from the file. If we can't, throw.
+  std::ifstream fs(p.string().c_str());
+  if(!fs) throw std::runtime_error("Error: Could not open global poses file");
+
+  std::string id;
+  DualQuatd dq;
+  while(fs >> id >> dq)
+  {
+    globalPoses.insert(std::make_pair(id, dq));
+  }
+
+  return globalPoses;
 }
 
 /**
@@ -255,6 +358,10 @@ std::string make_tracker_config(CommandLineArguments& args)
 {
   std::string result;
 
+  // If the user wants to use global poses for the scenes, load them from disk.
+  std::map<std::string,DualQuatd> globalPoses;
+  if(args.globalPosesSpecifier != "") globalPoses = load_global_poses(args.globalPosesSpecifier);
+
   // Determine the number of different trackers that will be needed.
   size_t trackerCount = args.sequenceSpecifiers.size();
   if(trackerCount == 0 || args.cameraAfterDisk) ++trackerCount;
@@ -290,12 +397,36 @@ std::string make_tracker_config(CommandLineArguments& args)
       {
         if(args.poseFileMasks.size() < i)
         {
-          // If this happens it's because at least one mask was specified with the -p flag,
-          // otherwise postprocess_arguments would have taken care of supplying the default masks.
-          throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
+          // If this happens, it's because the pose file mask for at least one sequence was specified with the -p flag
+          // (otherwise postprocess_arguments would have taken care of supplying the default masks).
+          throw std::runtime_error("Error: Not enough pose file masks have been specified with the -p flag.");
         }
 
+        // If we're using global poses for the scenes:
+        if(!globalPoses.empty())
+        {
+          // Try to find the global pose for this scene based on the sequence specifier.
+          const std::string sequenceID = args.sequenceDirs[i].stem().string();
+          std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sequenceID);
+
+          // If that doesn't work, try to find the global pose based on the scene ID.
+          if(it == globalPoses.end())
+          {
+            // FIXME: We shouldn't hard-code "Local" here - it's based on knowing how CollaborativePipeline assigns scene names.
+            const std::string sceneID = i == 0 ? Model::get_world_scene_id() : "Local" + boost::lexical_cast<std::string>(i);
+            it = globalPoses.find(sceneID);
+          }
+
+          // If we now have a global pose, specify the creation of a global tracker that uses it. If not, throw.
+          if(it != globalPoses.end()) result += "<tracker type='global'><params>" + boost::lexical_cast<std::string>(it->second) + "</params>";
+          else throw std::runtime_error("Error: Global pose for sequence '" + sequenceID + "' not found");
+        }
+
+        // Specify the creation of a file-based tracker that reads poses from disk.
         result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + ",initialFrameNo=" + boost::lexical_cast<std::string>(args.initialFrameNumber) + "</params></tracker>";
+
+        // If we're using global poses for the scenes, add the necessary closing tag for the global tracker.
+        if(!globalPoses.empty()) result += "</tracker>";
       }
       else
       {
@@ -345,10 +476,10 @@ void parse_configuration_file(const std::string& filename, const po::options_des
  */
 bool postprocess_arguments(CommandLineArguments& args, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
 {
-  // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
+  // If the user specifies both sequence and explicit depth/RGB/pose masks, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth/RGB/pose masks may be specified, but not both.\n";
     return false;
   }
 
@@ -379,7 +510,7 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
       : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
     args.sequenceDirs.push_back(dir);
 
-    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since colour might be missing).
+    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since the colour ones might be missing).
     const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
     const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
 
@@ -403,7 +534,8 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     }
     else
     {
-      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. Manually specify the masks using the -d and -r options.\n";
+      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. "
+                << "Manually specify the masks using the -d, -p and -r options.\n";
       return false;
     }
   }
@@ -418,6 +550,16 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     }
   }
 
+  // If the user wants to use global poses for the scenes, make sure that each disk sequence has a tracker specifier set to Disk.
+  if(args.globalPosesSpecifier != "")
+  {
+    args.trackerSpecifiers.resize(args.sequenceSpecifiers.size());
+    for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
+    {
+      args.trackerSpecifiers[i] = "Disk";
+    }
+  }
+
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
 
@@ -428,64 +570,48 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     args.detectFiducials = true;
   }
 
-  // If the user wants to run in headless mode, batch mode is implied (no way to control the application otherwise).
-  if(args.headless)
+  // If the user wants to run in headless mode, make sure that batch mode is also enabled
+  // (there is no way to control the application without the UI anyway).
+  if(args.headless) args.batch = true;
+
+  // If the user wants to use a Vicon fiducial detector or a Vicon-based tracker, make sure that the Vicon system it needs is enabled.
+  if(args.fiducialDetectorType == "vicon")
   {
-    args.batch = true;
+    args.useVicon = true;
+  }
+
+  for(size_t i = 0, size = args.trackerSpecifiers.size(); i < size; ++i)
+  {
+    const std::string trackerSpecifier = boost::to_lower_copy(args.trackerSpecifiers[i]);
+    if(trackerSpecifier.find("vicon") != std::string::npos)
+    {
+      args.useVicon = true;
+    }
+  }
+
+  // If the user wants to use a collaborative pipeline, but doesn't specify any disk sequences,
+  // make sure a mapping server is started.
+  if(args.pipelineType == "collaborative" && args.sequenceSpecifiers.empty())
+  {
+    args.runServer = true;
+  }
+
+  // If the user tries to run the application in both batch mode and server mode, print an error message.
+  // It doesn't make sense to combine the two modes: server mode is intended to make sure that fusion
+  // starts as soon as frames arrive from a client; batch mode is intended to make sure that the user
+  // cannot quit the application during experiments, and that the application quits automatically once
+  // an experiment is finished. Both modes initially unpause the fusion process, but they are otherwise
+  // intended for completely different use cases and should not be combined (indeed, they conflict).
+  if(args.batch && args.runServer)
+  {
+    std::cout << "Error: Cannot enable both batch mode and server mode at the same time.\n";
+    return false;
   }
 
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
 
   return true;
-}
-
-/**
- * \brief Sets the scene parameters from GlobalParameters, allowing the user to specify ad hoc values for voxel size, truncation distance, etc...
- *
- * \param sceneParams The scene parameters to modify.
- */
-void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMSceneParams &sceneParams)
-{
-#define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
-
-  // Use the default values from InfiniTAM.
-  GET_PARAM(int, maxW, 100);
-  GET_PARAM(float, mu, 0.02f);
-  GET_PARAM(bool, stopIntegratingAtMaxW, false);
-  GET_PARAM(float, viewFrustum_max, 3.0f);
-  GET_PARAM(float, viewFrustum_min, 0.2f);
-  GET_PARAM(float, voxelSize, 0.005f);
-
-#undef GET_PARAM
-}
-
-/**
- * \brief Sets the surfel scene parameters from GlobalParameters, allowing the user to specify ad hoc values for surfel radius, etc...
- *
- * \param surfelSceneParams The surfel scene parameters to modify.
- */
-void set_surfel_scene_params_from_global_options(const Settings_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
-{
-#define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
-
-  // Use the default values from InfiniTAM.
-  GET_PARAM(float, deltaRadius, 0.5f);
-  GET_PARAM(float, gaussianConfidenceSigma, 0.6f);
-  GET_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
-  GET_PARAM(float, maxMergeDist, 0.01f);
-  GET_PARAM(float, maxSurfelRadius, 0.004f);
-  GET_PARAM(float, minRadiusOverlapFactor, 3.5f);
-  GET_PARAM(float, stableSurfelConfidence, 25.0f);
-  GET_PARAM(int, supersamplingFactor, 4);
-  GET_PARAM(float, trackingSurfelMaxDepth, 1.0f);
-  GET_PARAM(float, trackingSurfelMinConfidence, 5.0f);
-  GET_PARAM(int, unstableSurfelPeriod, 20);
-  GET_PARAM(int, unstableSurfelZOffset, 10000000);
-  GET_PARAM(bool, useGaussianSampleConfidence, true);
-  GET_PARAM(bool, useSurfelMerging, true);
-
-#undef GET_PARAM
 }
 
 /**
@@ -506,23 +632,32 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("batch", po::bool_switch(&args.batch), "enable batch mode")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("collaborationMode", po::value<std::string>(&args.collaborationMode)->default_value("batch"), "collaboration mode (batch|live)")
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
-    ("headless", po::bool_switch(&args.headless), "headless mode")
+    ("fiducialDetectorType", po::value<std::string>(&args.fiducialDetectorType)->default_value("aruco"), "fiducial detector type (aruco)")
+    ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
+    ("headless", po::bool_switch(&args.headless), "run in headless mode")
+    ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("modelSpecifier,m", po::value<std::string>(&args.modelSpecifier)->default_value(""), "model specifier")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("port", po::value<std::string>(&args.port)->default_value("7851"), "remote mapping port")
+    ("profileMemory", po::bool_switch(&args.profileMemory)->default_value(false), "whether or not to profile the memory usage")
     ("relocaliserType", po::value<std::string>(&args.relocaliserType)->default_value("forest"), "relocaliser type (ferns|forest|none)")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
+    ("runServer", po::bool_switch(&args.runServer), "run a remote mapping server")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
     ("saveModelsOnExit", po::bool_switch(&args.saveModelsOnExit), "save a model of each voxel scene on exiting the application")
     ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
+    ("useVicon", po::bool_switch(&args.useVicon)->default_value(false), "whether or not to use the Vicon system")
     ("verbose,v", po::bool_switch(&args.verbose), "enable verbose output")
+    ("viconHost", po::value<std::string>(&args.viconHost)->default_value("192.168.0.101"), "Vicon host")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -570,7 +705,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   // Post-process any registered options and add them to the settings.
   if(!postprocess_arguments(args, options, vm, settings)) return false;
 
-  std::cout << "Global settings:\n" << *settings << '\n';
+  // Print the settings for the application so that the user can see them.
+  std::cout << "Settings:\n" << *settings << '\n';
 
   // If the user specifies the --help flag, print a help message.
   if(vm.count("help"))
@@ -611,7 +747,7 @@ try
     return 0;
   }
 
-  // If we are not running in headless mode, initialise the GUI subsystems.
+  // If we're not running in headless mode, initialise the GUI-only subsystems.
   if(!args.headless)
   {
     // Initialise SDL.
@@ -620,15 +756,15 @@ try
       quit("Error: Failed to initialise SDL.");
     }
 
-#ifdef WITH_GLUT
+  #ifdef WITH_GLUT
     // Initialise GLUT (used for text rendering only).
     glutInit(&argc, argv);
-#endif
+  #endif
 
-#ifdef WITH_OVR
+  #ifdef WITH_OVR
     // If we built with Rift support, initialise the Rift SDK.
     ovr_Initialize();
-#endif
+  #endif
   }
 
   // Find all available joysticks and report the number found to the user.
@@ -652,105 +788,176 @@ try
   afcu::setNativeId(0);
 #endif
 
-  // Set scene parameters from configuration.
-  set_scene_params_from_global_options(settings, settings->sceneParams);
-  set_surfel_scene_params_from_global_options(settings, settings->surfelSceneParams);
+  // Copy any scene parameters that have been set in the configuration file across to the actual scene parameters objects.
+  copy_scene_params(settings);
+  copy_surfel_scene_params(settings);
 
+  // Set the failure behaviour of the relocaliser.
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
-  // Construct the image source engine.
-  boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
-
-  // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
-  if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
+  // Run a remote mapping server if requested.
+  MappingServer_Ptr mappingServer;
+  if(args.runServer)
   {
-    const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
-    imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
+    const MappingServer::Mode mode = args.pipelineType == "collaborative" ? MappingServer::SM_MULTI_CLIENT : MappingServer::SM_SINGLE_CLIENT;
+    mappingServer.reset(new MappingServer(mode));
+    mappingServer->start();
   }
-
-  // Add a subengine for each disk sequence specified.
-  for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
-  {
-    const std::string& depthImageMask = args.depthImageMasks[i];
-    const std::string& rgbImageMask = args.rgbImageMasks[i];
-
-    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-    ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-      args.prefetchBufferCapacity
-    ));
-  }
-
-  // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
-  if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
-  {
-    ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
-    if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
-  }
-
-  // Construct the fiducial detector (if any).
-  FiducialDetector_CPtr fiducialDetector;
-#ifdef WITH_OPENCV
-  fiducialDetector.reset(new ArUcoFiducialDetector(settings));
-#endif
 
   // Construct the pipeline.
-  const size_t maxLabelCount = 10;
-  SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
-  SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-
   MultiScenePipeline_Ptr pipeline;
-  if(args.pipelineType == "slam")
+  if(args.pipelineType != "collaborative")
   {
-    pipeline.reset(new SLAMPipeline(
-      settings,
-      Application::resources_dir().string(),
-      imageSourceEngine,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
-      args.modelDir,
-      fiducialDetector,
-      args.detectFiducials
-    ));
+    // Construct the image source engine.
+    boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
+
+    // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
+    if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
+    {
+      const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
+      imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
+    }
+
+    // Add a subengine for each disk sequence specified.
+    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    {
+      const std::string& depthImageMask = args.depthImageMasks[i];
+      const std::string& rgbImageMask = args.rgbImageMasks[i];
+
+      std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
+      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        args.prefetchBufferCapacity
+      ));
+    }
+
+    // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+    if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
+    {
+      ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
+      if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
+    }
+
+    // Construct the pipeline itself.
+    const size_t maxLabelCount = 10;
+    SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
+    SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
+
+    if(args.pipelineType == "slam")
+    {
+      pipeline.reset(new SLAMPipeline(
+        settings,
+        Application::resources_dir().string(),
+        imageSourceEngine,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        args.modelDir,
+        args.detectFiducials
+      ));
+    }
+    else if(args.pipelineType == "semantic")
+    {
+      const unsigned int seed = 12345;
+      pipeline.reset(new SemanticPipeline(
+        settings,
+        Application::resources_dir().string(),
+        maxLabelCount,
+        imageSourceEngine,
+        seed,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        args.modelDir,
+        args.detectFiducials
+      ));
+    }
+    else if(args.pipelineType == "objective")
+    {
+      pipeline.reset(new ObjectivePipeline(
+        settings,
+        Application::resources_dir().string(),
+        maxLabelCount,
+        imageSourceEngine,
+        make_tracker_config(args),
+        mappingMode,
+        trackingMode,
+        args.detectFiducials,
+        !args.trackObject
+      ));
+    }
+    else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
   }
-  else if(args.pipelineType == "semantic")
+  else
   {
-    const unsigned int seed = 12345;
-    pipeline.reset(new SemanticPipeline(
+    // Set a reasonable default for the voxel size (this can be overridden using a configuration file).
+    if(!settings->has_values("SceneParams.voxelSize"))
+    {
+      settings->sceneParams.voxelSize = 0.015f;
+      settings->sceneParams.mu = settings->sceneParams.voxelSize * 4;
+    }
+
+    // Set up the image source engines, mapping modes, tracking modes and tracker configurations.
+    std::vector<CompositeImageSourceEngine_Ptr> imageSourceEngines;
+    std::vector<SLAMComponent::MappingMode> mappingModes;
+    std::vector<SLAMComponent::TrackingMode> trackingModes;
+    std::vector<std::string> trackerConfigs;
+
+    // Add an image source engine for each disk sequence specified.
+    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    {
+      const std::string& depthImageMask = args.depthImageMasks[i];
+      const std::string& rgbImageMask = args.rgbImageMasks[i];
+
+      const bf::path calibrationPath = args.sequenceDirs[i] / "calib.txt";
+      const std::string calibrationFilename = bf::exists(calibrationPath) ? calibrationPath.string() : args.calibrationFilename;
+
+      std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
+      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+        new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+        args.prefetchBufferCapacity
+      ));
+
+      imageSourceEngines.push_back(imageSourceEngine);
+    }
+
+    // Set up the mapping modes, tracking modes and tracker configurations.
+    // FIXME: We don't always want to read the poses from disk - make it possible to run the normal tracker instead.
+    for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
+    {
+      mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
+      trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
+      trackerConfigs.push_back("<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>");
+    }
+
+    // Construct the pipeline itself.
+    const CollaborationMode collaborationMode = args.collaborationMode == "batch" ? CM_BATCH : CM_LIVE;
+    pipeline.reset(new CollaborativePipeline(
       settings,
       Application::resources_dir().string(),
-      maxLabelCount,
-      imageSourceEngine,
-      seed,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
-      args.modelDir,
-      fiducialDetector,
-      args.detectFiducials
-    ));
-  }
-  else if(args.pipelineType == "objective")
-  {
-    pipeline.reset(new ObjectivePipeline(
-      settings,
-      Application::resources_dir().string(),
-      maxLabelCount,
-      imageSourceEngine,
-      make_tracker_config(args),
-      mappingMode,
-      trackingMode,
-      fiducialDetector,
+      imageSourceEngines,
+      trackerConfigs,
+      mappingModes,
+      trackingModes,
       args.detectFiducials,
-      !args.trackObject
+      mappingServer,
+      collaborationMode
     ));
   }
-  else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
+
+  // If a remote host was specified, set up a mapping client for the world scene.
+  if(args.host != "")
+  {
+    std::cout << "Setting mapping client for host '" << args.host << "' and port '" << args.port << "'\n";
+    const pooled_queue::PoolEmptyStrategy poolEmptyStrategy = settings->get_first_value<pooled_queue::PoolEmptyStrategy>("MappingClient.poolEmptyStrategy", pooled_queue::PES_DISCARD);
+    pipeline->set_mapping_client(Model::get_world_scene_id(), MappingClient_Ptr(new MappingClient(args.host, args.port, poolEmptyStrategy)));
+  }
 
 #ifdef WITH_LEAP
   // Set the ID of the fiducial to use for the Leap Motion (if any).
@@ -759,22 +966,24 @@ try
 
   // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
-  app.set_batch_mode_enabled(args.batch);
+  if(args.batch) app.set_batch_mode_enabled(true);
+  if(args.runServer) app.set_server_mode_enabled(true);
+  app.set_save_memory_usage(args.profileMemory);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   app.set_save_models_on_exit(args.saveModelsOnExit);
   bool runSucceeded = app.run();
 
-#ifdef WITH_OVR
-  // If we built with Rift support, shut down the Rift SDK.
-  ovr_Shutdown();
-#endif
-
   // Close all open joysticks.
   joysticks.clear();
 
-  // If we are not running in headless mode, shut down the graphics subsystem.
+  // If we're not running in headless mode, shut down the GUI-only subsystems.
   if(!args.headless)
   {
+  #ifdef WITH_OVR
+    // If we built with Rift support, shut down the Rift SDK.
+    ovr_Shutdown();
+  #endif
+
     // Shut down SDL.
     SDL_Quit();
   }

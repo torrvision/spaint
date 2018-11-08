@@ -21,21 +21,21 @@ struct RelocaliserFiguresGenerator
    *
    * \param model The model containing the relocaliser.
    */
-  static void show_growing_leaf_modes(const Model_Ptr &model);
+  static void show_growing_leaf_modes(const Model_Ptr& model);
 
   /**
    * \brief Prints on screen the modes (centroid and covariances) contained in a predetermined set of leaves.
    *
    * \param model The model containing the relocaliser.
    */
-  static void show_leaf_modes(const Model_Ptr &model);
+  static void show_leaf_modes(const Model_Ptr& model);
 
   /**
    * \brief this function allows the inspection of the last candidate poses in a RANSAC pass, rendering and saving views from each.
    *
    * \param model The model containing the relocaliser.
    */
-  static void show_ransac_correspondences(const Model_Ptr &model);
+  static void show_ransac_correspondences(const Model_Ptr& model);
 };
 
 #endif

@@ -69,6 +69,22 @@ public:
   void get_pose(int clientID, ORUtils::SE3Pose& pose);
 
   /**
+   * \brief Gets the image (if any) that the server has rendered for the specified client.
+   *
+   * \param clientID  The ID of the client whose rendered image we want to get.
+   * \return          A handle providing exclusive access to the image (if any) that the server has rendered for the specified client.
+   */
+  tvgutil::ExclusiveHandle_Ptr<ORUChar4Image_Ptr>::Type get_rendered_image(int clientID) const;
+
+  /**
+   * \brief Gets the rendering request (if any) for the specified client.
+   *
+   * \param clientID  The ID of the client whose rendering request we want to get.
+   * \return          The rendering request (if any) for the specified client.
+   */
+  boost::optional<RenderingRequestMessage> get_rendering_request(int clientID) const;
+
+  /**
    * \brief Attempts to get the size of RGB image produced by the camera associated with the specified client.
    *
    * \param clientID  The ID of the client whose camera's RGB image size we want to get.
@@ -76,6 +92,14 @@ public:
    *                  if the client is currently active, or (0,0) otherwise.
    */
   Vector2i get_rgb_image_size(int clientID) const;
+
+  /**
+   * \brief Gets the scene ID that is associated with the specified client.
+   *
+   * \param clientID  The ID of the client whose scene ID we want to get.
+   * \return          The scene ID associated with the specified client, if the client is currently active, or the empty string otherwise.
+   */
+  std::string get_scene_id(int clientID) const;
 
   /**
    * \brief Gets whether or not the specified client is currently active and ready to yield an RGB-D frame.
@@ -92,6 +116,14 @@ public:
    * \return          true, if the client is currently active and may still have more RGB-D frames to yield, or false otherwise.
    */
   bool has_more_images(int clientID) const;
+
+  /**
+   * \brief Sets the scene ID that is associated with the specified client.
+   *
+   * \param clientID  The ID of the client whose scene ID we want to set.
+   * \param sceneID   The scene ID to associate with the client.
+   */
+  void set_scene_id(int clientID, const std::string& sceneID);
 };
 
 //#################### TYPEDEFS ####################

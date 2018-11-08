@@ -6,11 +6,21 @@
 #ifndef H_SPAINT_IMAGEPROCESSOR
 #define H_SPAINT_IMAGEPROCESSOR
 
+#ifdef _MSC_VER
+  // Suppress a VC++ warning that is produced when including ArrayFire headers.
+  #pragma warning(disable:4275)
+#endif
+
 #include <arrayfire.h>
+
+#ifdef _MSC_VER
+  // Reenable the suppressed warning for the rest of the translation unit.
+  #pragma warning(default:4275)
+#endif
 
 #include <ITMLib/ITMLibDefines.h>
 
-#include <itmx/base/ITMImagePtrTypes.h>
+#include <orx/base/ORImagePtrTypes.h>
 
 namespace spaint {
 
@@ -55,7 +65,7 @@ public:
    * \param secondInputImage The second input image.
    * \param outputImage      The image in which to store the result of the calculation.
    */
-  virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
+  virtual void calculate_depth_difference(const ORFloatImage_CPtr& firstInputImage, const ORFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies a floating-point ArrayFire image to an InfiniTAM image.
@@ -63,7 +73,7 @@ public:
    * \param inputImage  The input image.
    * \param outputImage The output image.
    */
-  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const = 0;
+  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ORFloatImage_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies a greyscale ArrayFire image to an InfiniTAM image.
@@ -71,7 +81,7 @@ public:
    * \param inputImage  The input image.
    * \param outputImage The output image.
    */
-  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const = 0;
+  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ORUCharImage_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies an RGBA ArrayFire image to an InfiniTAM image.
@@ -79,7 +89,7 @@ public:
    * \param inputImage  The input image.
    * \param outputImage The output image.
    */
-  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const = 0;
+  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ORUChar4Image_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies a floating-point InfiniTAM image to an ArrayFire image.
@@ -87,7 +97,7 @@ public:
    * \param inputImage  The input image.
    * \param outputImage The output image.
    */
-  virtual void copy_itm_to_af(const ITMFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
+  virtual void copy_itm_to_af(const ORFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies a greyscale InfiniTAM image to an ArrayFire image.
@@ -95,7 +105,7 @@ public:
    * \param inputImage  The input image.
    * \param outputImage The output image.
    */
-  virtual void copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
+  virtual void copy_itm_to_af(const ORUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies an RGBA InfiniTAM image to an ArrayFire image.
@@ -103,7 +113,7 @@ public:
    * \param inputImage  The input image.
    * \param outputImage The output image.
    */
-  virtual void copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
+  virtual void copy_itm_to_af(const ORUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Tests the pixels in the input image against a threshold using the specified comparison operator,
@@ -116,7 +126,7 @@ public:
    * \param value       The value to which to set a pixel in the output image when its corresponding input pixel passes the test.
    * \param outputImage The output image.
    */
-  virtual void set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const = 0;
+  virtual void set_on_threshold(const ORFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ORFloatImage_Ptr& outputImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

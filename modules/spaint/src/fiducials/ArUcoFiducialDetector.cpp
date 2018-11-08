@@ -8,21 +8,20 @@
 #include <cmath>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/optional.hpp>
 
 #include <opencv2/aruco.hpp>
 #include <opencv2/calib3d.hpp>
 
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace ITMLib;
 
 #include <ORUtils/ProjectionUtils.h>
 
 #include <itmx/ocv/OpenCVUtil.h>
 #include <itmx/picking/PickerFactory.h>
-#include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
-using namespace rigging;
 
 #include <orx/base/MemoryBlockFactory.h>
 using namespace orx;
@@ -31,14 +30,17 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-ArUcoFiducialDetector::ArUcoFiducialDetector(const Settings_CPtr& settings)
-: m_settings(settings)
+ArUcoFiducialDetector::ArUcoFiducialDetector(const SpaintVoxelScene_CPtr& scene, const Settings_CPtr& settings, PoseEstimationMode poseEstimationMode)
+: m_poseEstimationMode(poseEstimationMode),
+  m_scene(scene),
+  m_settings(settings),
+  m_voxelVisualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
-                                                                                  PoseEstimationMode poseEstimationMode) const
+std::map<std::string,FiducialMeasurement>
+ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& depthPose) const
 {
   std::map<std::string,FiducialMeasurement> result;
 
@@ -62,16 +64,16 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
 
   // Construct the fiducial measurements.
   std::vector<boost::optional<FiducialMeasurement> > measurements;
-  switch(poseEstimationMode)
+  switch(m_poseEstimationMode)
   {
     case PEM_COLOUR:
-      measurements = construct_measurements_from_colour(ids, corners, view, pose);
+      measurements = construct_measurements_from_colour(ids, corners, view, depthPose);
       break;
     case PEM_DEPTH:
-      measurements = construct_measurements_from_depth(ids, corners, view, pose);
+      measurements = construct_measurements_from_depth(ids, corners, view, depthPose);
       break;
     case PEM_RAYCAST:
-      measurements = construct_measurements_from_raycast(ids, corners, renderState, pose);
+      measurements = construct_measurements_from_raycast(ids, corners, view, depthPose);
       break;
     default:
       // This should never happen.
@@ -91,7 +93,7 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
 
 std::vector<boost::optional<FiducialMeasurement> >
 ArUcoFiducialDetector::construct_measurements_from_colour(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
-                                                          const View_CPtr& view, const ORUtils::SE3Pose& pose) const
+                                                          const View_CPtr& view, const ORUtils::SE3Pose& depthPose) const
 {
   std::vector<boost::optional<FiducialMeasurement> > measurements;
 
@@ -126,7 +128,7 @@ ArUcoFiducialDetector::construct_measurements_from_colour(const std::vector<int>
     fiducialToEye(3,2) = static_cast<float>(tvecs[i](2));
     fiducialToEye(3,3) = 1.0f;
 
-    const Matrix4f eyeToWorld = pose.GetInvM();
+    const Matrix4f eyeToWorld = depthPose.GetInvM();
     const Matrix4f fiducialToWorld = eyeToWorld * fiducialToEye;
 
     ORUtils::SE3Pose fiducialPoseWorld;
@@ -139,7 +141,7 @@ ArUcoFiducialDetector::construct_measurements_from_colour(const std::vector<int>
 
 std::vector<boost::optional<FiducialMeasurement> >
 ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
-                                                         const View_CPtr& view, const ORUtils::SE3Pose& pose) const
+                                                         const View_CPtr& view, const ORUtils::SE3Pose& depthPose) const
 {
   std::vector<boost::optional<FiducialMeasurement> > measurements;
 
@@ -154,10 +156,9 @@ ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>&
       pick_corner_from_depth(corners[i][0], view)
     );
 
-    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld;
-    if(fiducialPoseEye) fiducialPoseWorld.reset(fiducialPoseEye->GetM() * pose.GetM());
-
-    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
+    measurements.push_back(make_measurement_from_eye_pose(
+      boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, depthPose
+    ));
   }
 
   return measurements;
@@ -165,22 +166,33 @@ ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>&
 
 std::vector<boost::optional<FiducialMeasurement> >
 ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
-                                                           const VoxelRenderState_CPtr& renderState, const ORUtils::SE3Pose& pose) const
+                                                           const View_CPtr& view, const ORUtils::SE3Pose& depthPose) const
 {
   std::vector<boost::optional<FiducialMeasurement> > measurements;
 
+  if(!m_renderState) m_renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->rgb->noDims, m_scene->sceneParams, m_settings->GetMemoryType()));
+
+  // Raycast the scene from the pose of the colour camera.
+  const ORUtils::SE3Pose rgbPose = view->calib.trafo_rgb_to_depth.calib_inv * depthPose.GetM();
+  const ITMIntrinsics& rgbIntrinsics = view->calib.intrinsics_rgb;
+  m_voxelVisualisationEngine->FindVisibleBlocks(m_scene.get(), &rgbPose, &rgbIntrinsics, m_renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(m_scene.get(), &rgbPose, &rgbIntrinsics, m_renderState.get());
+  m_voxelVisualisationEngine->FindSurface(m_scene.get(), &rgbPose, &rgbIntrinsics, m_renderState.get());
+
+  // Try to determine the 3D points in world space corresponding to each fiducial's corners in the
+  // live colour image by looking them up in the raycast. If successful, use them to determine poses
+  // for the fiducial in both world and eye space, and record a fiducial measurement.
   for(size_t i = 0, size = corners.size(); i < size; ++i)
   {
     boost::optional<ORUtils::SE3Pose> fiducialPoseWorld = make_pose_from_corners(
-      pick_corner_from_raycast(corners[i][3], renderState),
-      pick_corner_from_raycast(corners[i][2], renderState),
-      pick_corner_from_raycast(corners[i][0], renderState)
+      pick_corner_from_raycast(corners[i][3]),
+      pick_corner_from_raycast(corners[i][2]),
+      pick_corner_from_raycast(corners[i][0])
     );
 
-    boost::optional<ORUtils::SE3Pose> fiducialPoseEye;
-    if(fiducialPoseWorld) fiducialPoseEye.reset(fiducialPoseWorld->GetM() * pose.GetInvM());
-
-    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
+    measurements.push_back(make_measurement_from_world_pose(
+      boost::lexical_cast<std::string>(ids[i]), fiducialPoseWorld, depthPose
+    ));
   }
 
   return measurements;
@@ -202,46 +214,18 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv
   else return boost::none;
 }
 
-boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
+boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const cv::Point2f& corner) const
 {
-  // FIXME: I'm currently assuming that there is an identity mapping between the depth and colour cameras - in general, this won't be the case.
-  const int width = renderState->raycastResult->noDims.x, height = renderState->raycastResult->noDims.y;
-  Vector2i p((int)CLAMP(ROUND(corner.x), 0, width - 1), (int)CLAMP(ROUND(corner.y), 0, height - 1));
+  const int width = m_renderState->raycastResult->noDims.x, height = m_renderState->raycastResult->noDims.y;
+  const Vector2i p((int)CLAMP(ROUND(corner.x), 0, width - 1), (int)CLAMP(ROUND(corner.y), 0, height - 1));
 
   if(!m_picker) m_picker = PickerFactory::make_picker(m_settings->deviceType);
 
   static boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > pickPointFloatMB = MemoryBlockFactory::instance().make_block<Vector3f>(1);
-  bool pickPointFound = m_picker->pick(p.x, p.y, renderState.get(), *pickPointFloatMB);
+  bool pickPointFound = m_picker->pick(p.x, p.y, m_renderState.get(), *pickPointFloatMB);
   if(!pickPointFound) return boost::none;
 
   return Picker::get_positions<Vector3f>(*pickPointFloatMB, m_settings->sceneParams.voxelSize)[0];
-}
-
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-
-boost::optional<ORUtils::SE3Pose> ArUcoFiducialDetector::make_pose_from_corners(const boost::optional<Vector3f>& v0,
-                                                                                const boost::optional<Vector3f>& v1,
-                                                                                const boost::optional<Vector3f>& v2)
-{
-  boost::optional<ORUtils::SE3Pose> pose;
-
-  if(v0 && v1 && v2)
-  {
-    Vector3f xp = (*v1 - *v0).normalised();
-    Vector3f yp = (*v2 - *v0).normalised();
-    Vector3f zp = ORUtils::cross(xp, yp);
-    yp = ORUtils::cross(zp, xp);
-
-    SimpleCamera cam(
-      Eigen::Vector3f(v0->x, v0->y, v0->z),
-      Eigen::Vector3f(zp.x, zp.y, zp.z),
-      Eigen::Vector3f(-yp.x, -yp.y, -yp.z)
-    );
-
-    pose = CameraPoseConverter::camera_to_pose(cam);
-  }
-
-  return pose;
 }
 
 }
