@@ -77,7 +77,7 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
   int exitCode = system(command.c_str());
   timer.stop();
 
-  float elapsedSeconds = bc::duration_cast<bc::seconds>(bc::nanoseconds(timer.elapsed().system + timer.elapsed().user)).count();
+  float elapsedSeconds = static_cast<float>(bc::duration_cast<bc::seconds>(bc::nanoseconds(timer.elapsed().system + timer.elapsed().user)).count());
 
   if(exitCode)
   {
