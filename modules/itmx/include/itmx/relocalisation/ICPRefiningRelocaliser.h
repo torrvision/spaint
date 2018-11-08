@@ -179,6 +179,15 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Makes a colourised version of a floating-point depth image and saves it to disk.
+   *
+   * \param depthF  The floating-point depth image to colourise and save.
+   * \param depthU  A temporary image in which to store the colourised version of the depth.
+   * \param pattern The pattern to use when constructing the name of the file into which to save the image.
+   */
+  void save_colourised_depth(const ORFloatImage *depthF, const ORUChar4Image_Ptr& depthU, const std::string& pattern) const;
+
+  /**
    * \brief Saves the relocalised and refined poses in text files so that they can be used later (e.g. for evaluation).
    *
    * \note Saving happens only if m_savePoses is true.

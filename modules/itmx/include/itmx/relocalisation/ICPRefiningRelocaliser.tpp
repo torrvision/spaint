@@ -330,20 +330,14 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
     );
 
-    m_visualisationEngine->DepthToUchar4(synthDepthU.get(), synthDepthF.get());
     cv::Mat gtDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
-    cv::Mat gtDepthU = cv::Mat(imgSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
-    cv::cvtColor(gtDepthU, gtDepthU, cv::COLOR_RGBA2BGR);
-    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.gt.png").string().c_str(), gtDepthU);
+    save_colourised_depth(synthDepthF.get(), synthDepthU, "image-%06i.gt.png");
 
     // Step 3: Copy the input depth image to the CPU. Then colourise it, convert it to BGR, and save it to disk.
     m_view->depth->UpdateHostFromDevice();
 
-    m_visualisationEngine->DepthToUchar4(synthDepthU.get(), m_view->depth);
     cv::Mat inputDepthF = cv::Mat(imgSize, CV_32FC1, m_view->depth->GetData(MEMORYDEVICE_CPU)).clone();
-    cv::Mat inputDepthU = cv::Mat(imgSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
-    cv::cvtColor(inputDepthU, inputDepthU, cv::COLOR_RGBA2BGR);
-    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.depth.png").string().c_str(), inputDepthU);
+    save_colourised_depth(m_view->depth, synthDepthU, "image-%06i.depth.png");
 
     // Step 4: Render a synthetic depth image of the scene from the initial relocalised pose (which is always valid if we got here).
     //         Then colourise it, convert it to BGR, and save it to disk.
@@ -352,11 +346,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
     );
 
-    m_visualisationEngine->DepthToUchar4(synthDepthU.get(), synthDepthF.get());
     cv::Mat initialDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
-    cv::Mat initialDepthU = cv::Mat(imgSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
-    cv::cvtColor(initialDepthU, initialDepthU, cv::COLOR_RGBA2BGR);
-    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.reloc.png").string().c_str(), initialDepthU);
+    save_colourised_depth(synthDepthF.get(), synthDepthU, "image-%06i.reloc.png");
 
     // Step 5: Compute the difference between the input depth image and the rendering from the ground truth pose.
     //         Saturate it at 30cm, colour-map it and save it to disk.
@@ -398,11 +389,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
         DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
       );
 
-      m_visualisationEngine->DepthToUchar4(synthDepthU.get(), synthDepthF.get());
       cv::Mat refinedDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
-      cv::Mat refinedDepthU = cv::Mat(imgSize, CV_8UC4, synthDepthU->GetData(MEMORYDEVICE_CPU)).clone();
-      cv::cvtColor(refinedDepthU, refinedDepthU, cv::COLOR_RGBA2BGR);
-      cv::imwrite(m_imagePathGenerator->make_path("image-%06i.icp.png").string().c_str(), refinedDepthU);
+      save_colourised_depth(synthDepthF.get(), synthDepthU, "image-%06i.icp.png");
 
       // Step 10: Compute the difference between the input depth image and the rendering from the refined pose.
       //          Saturate it at 30cm, colour-map it and save it to disk.
@@ -458,6 +446,17 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::update()
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::save_colourised_depth(const ORFloatImage *depthF, const ORUChar4Image_Ptr& depthU, const std::string& pattern) const
+{
+  m_visualisationEngine->DepthToUchar4(depthU.get(), depthF);
+  cv::Size imgSize(depthF->noDims.width, depthF->noDims.height);
+  cv::Mat cvDepthU = cv::Mat(imgSize, CV_8UC4, depthU->GetData(MEMORYDEVICE_CPU));
+  cv::Mat cvOutput;
+  cv::cvtColor(cvDepthU, cvOutput, cv::COLOR_RGBA2BGR);
+  cv::imwrite(m_imagePathGenerator->make_path(pattern).string().c_str(), cvOutput);
+}
 
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const
