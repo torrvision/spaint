@@ -33,7 +33,7 @@ namespace fs = boost::filesystem;
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model)
+void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr& model)
 {
   static uint32_t frameIdx = 0;
 
@@ -48,17 +48,14 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
 
   // Need to go through the ScoreRelocaliser interface.
   ScoreRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreRelocaliser>(
-      boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser());
+    boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser()
+  );
 
   std::vector<uint32_t> predictionIndices = list_of(3234)(4335)(4545)(6565)(6666);
 
   // Save cluster contents.
   {
-    const std::string fileName =
-        pathGenerator
-            .make_path(model->get_settings()->get_first_value<std::string>("experimentTag", "predictionClusters") +
-                       "_%04d.txt")
-            .string();
+    const std::string fileName = pathGenerator.make_path(model->get_settings()->get_first_value<std::string>("experimentTag", "predictionClusters") + "_%04d.txt").string();
 
     std::cout << "Saving clusters in " << fileName << '\n';
 
@@ -88,11 +85,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
 
   // Save reservoir contents
   {
-    const std::string fileName =
-        pathGenerator
-            .make_path(model->get_settings()->get_first_value<std::string>("experimentTag", "predictionClusters") +
-                       "_reservoirs_%04d.txt")
-            .string();
+    const std::string fileName = pathGenerator.make_path(model->get_settings()->get_first_value<std::string>("experimentTag", "predictionClusters") + "_reservoirs_%04d.txt").string();
 
     std::cout << "Saving reservoir contents in " << fileName << '\n';
 
@@ -118,7 +111,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr &model
   pathGenerator.increment_index();
 }
 
-void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
+void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr& model)
 {
   // The modes figure in the paper was obtained from the chess scene.
   // The figure showed the modes in a specific set of leaves after training, since the chess scene has 4000 training
@@ -134,7 +127,8 @@ void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
 
   // Need to go through the ScoreRelocaliser interface.
   ScoreRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreRelocaliser>(
-      boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser());
+    boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser()
+  );
 
   // Leaf indices selected randomly during the forest conversion step (for chess)
   //  std::vector<uint32_t> predictionIndices{5198, 447, 5438, 7355, 1649};
@@ -171,7 +165,7 @@ void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr &model)
   exit(0);
 }
 
-void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr &model)
+void RelocaliserFiguresGenerator::show_ransac_correspondences(const Model_Ptr& model)
 {
   // One of the figures in the paper was obtained from the stairs sequence, specifically from the 451th frame in that
   // sequence.
