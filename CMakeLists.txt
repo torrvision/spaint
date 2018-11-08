@@ -49,6 +49,7 @@ OPTION(BUILD_RAFL_APPS "Build the applications associated with rafl?" OFF)
 OPTION(BUILD_RELOCVIS "Build relocvis?" OFF)
 OPTION(BUILD_SPAINT "Build spaint?" ON)
 OPTION(BUILD_SPAINT_APPS "Build the applications associated with spaint?" ON)
+OPTION(BUILD_SPAINTGUI_DEBUGHOOKS "Build the debug hooks in spaintgui?" OFF)
 OPTION(BUILD_TESTS "Build the tests?" ON)
 
 IF(BUILD_APPS)
