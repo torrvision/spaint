@@ -134,11 +134,11 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::~ICPRefiningRelocaliser()
     std::ofstream fs(m_timersOutputFile.c_str());
 
     // Output the average durations.
-    fs << m_timerTraining.average_duration().count() << " "
-       << m_timerUpdate.average_duration().count() << " "
-       << m_timerInitialRelocalisation.average_duration().count() << " "
-       << m_timerRefinement.average_duration().count() << " "
-       << m_timerRelocalisation.average_duration().count() << "\n";
+    fs << m_timerTraining.average_duration().count() << ' '
+       << m_timerUpdate.average_duration().count() << ' '
+       << m_timerInitialRelocalisation.average_duration().count() << ' '
+       << m_timerRefinement.average_duration().count() << ' '
+       << m_timerRelocalisation.average_duration().count() << '\n';
   }
 }
 
