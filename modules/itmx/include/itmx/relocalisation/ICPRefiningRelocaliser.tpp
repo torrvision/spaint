@@ -324,39 +324,30 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     ORUtils::SE3Pose gtPose;
     gtPose.SetInvM(invPose);
 
-    // Step 2: Render a synthetic depth image of the scene from the ground truth pose. Then colourise it, convert it to BGR, and save it to disk.
+    // Step 2: Render a synthetic depth image of the scene from the ground truth pose, and save it to disk.
     DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
       synthDepthF, m_scene, gtPose, m_view->calib.intrinsics_d, m_voxelRenderState,
       DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
     );
 
-    cv::Mat gtDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
     save_colourised_depth(synthDepthF.get(), synthDepthU, "image-%06i.gt.png");
 
-    // Step 3: Copy the input depth image to the CPU. Then colourise it, convert it to BGR, and save it to disk.
+    // Step 3: Copy the input depth image to the CPU and save it to disk.
     m_view->depth->UpdateHostFromDevice();
-
-    cv::Mat inputDepthF = cv::Mat(imgSize, CV_32FC1, m_view->depth->GetData(MEMORYDEVICE_CPU)).clone();
     save_colourised_depth(m_view->depth, synthDepthU, "image-%06i.depth.png");
 
-    // Step 4: Render a synthetic depth image of the scene from the initial relocalised pose (which is always valid if we got here).
-    //         Then colourise it, convert it to BGR, and save it to disk.
+    // Step 4: Render a synthetic depth image of the scene from the initial relocalised pose (which is always valid if we got here), and save it to disk.
     DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
       synthDepthF, m_scene, initialResults[0].pose, m_view->calib.intrinsics_d, m_voxelRenderState,
       DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
     );
 
-    cv::Mat initialDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
     save_colourised_depth(synthDepthF.get(), synthDepthU, "image-%06i.reloc.png");
 
-    // Step 5: Compute the difference between the input depth image and the rendering from the ground truth pose.
-    //         Saturate it at 30cm, colour-map it and save it to disk.
-    cv::Mat gtDiff;
-    cv::absdiff(inputDepthF, gtDepthF, gtDiff);
-
-    gtDiff.convertTo(gtDiff, CV_8U, 255 / 0.3);
-    cv::applyColorMap(gtDiff, gtDiff, cv::COLORMAP_JET);
-    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.gtDiff.png").string().c_str(), gtDiff);
+    // Step 5: Compute the difference between the input depth image and the rendering from the ground truth pose, and save it to disk.
+    cv::Mat inputDepthF = cv::Mat(imgSize, CV_32FC1, m_view->depth->GetData(MEMORYDEVICE_CPU)).clone();
+    cv::Mat gtDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
+    compute_and_save_diff(inputDepthF, gtDepthF, "image-%06i.gtDiff.png");
 
     // Step 6: Compute the "score" for the ground truth pose and save it to disk.
     {
@@ -364,14 +355,9 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       fs << score_pose(gtPose) << "\n";
     }
 
-    // Step 7: Compute the difference between the input depth image and the rendering from the initial relocalised pose.
-    //         Saturate it at 30cm, colour-map it and save it to disk.
-    cv::Mat relocDiff;
-    cv::absdiff(inputDepthF, initialDepthF, relocDiff);
-
-    relocDiff.convertTo(relocDiff, CV_8U, 255 / 0.3);
-    cv::applyColorMap(relocDiff, relocDiff, cv::COLORMAP_JET);
-    cv::imwrite(m_imagePathGenerator->make_path("image-%06i.relocDiff.png").string().c_str(), relocDiff);
+    // Step 7: Compute the difference between the input depth image and the rendering from the initial relocalised pose, and save it to disk.
+    cv::Mat initialDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
+    compute_and_save_diff(inputDepthF, initialDepthF, "image-%06i.relocDiff.png");
 
     // Step 8: Compute the "score" for the initial relocalised pose and save it to disk.
     {
@@ -382,24 +368,17 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     // If there is a refined pose:
     if(!refinedResults.empty())
     {
-      // Step 9: Render a synthetic depth image of the scene from the refined pose (which is always valid if we got here).
-      //         Then colourise it, convert it to BGR and save it to disk.
+      // Step 9: Render a synthetic depth image of the scene from the refined pose (which is always valid if we got here), and save it to disk.
       DepthVisualisationUtil<VoxelType,IndexType>::generate_depth_from_voxels(
         synthDepthF, m_scene, refinedResults[0].pose, m_view->calib.intrinsics_d, m_voxelRenderState,
         DepthVisualiser::DT_ORTHOGRAPHIC, m_visualisationEngine, m_depthVisualiser, m_settings
       );
 
-      cv::Mat refinedDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
       save_colourised_depth(synthDepthF.get(), synthDepthU, "image-%06i.icp.png");
 
-      // Step 10: Compute the difference between the input depth image and the rendering from the refined pose.
-      //          Saturate it at 30cm, colour-map it and save it to disk.
-      cv::Mat refinedDiff;
-      cv::absdiff(inputDepthF, refinedDepthF, refinedDiff);
-
-      refinedDiff.convertTo(refinedDiff, CV_8U, 255 / 0.3);
-      cv::applyColorMap(refinedDiff, refinedDiff, cv::COLORMAP_JET);
-      cv::imwrite(m_imagePathGenerator->make_path("image-%06i.icpDiff.png").string().c_str(), refinedDiff);
+      // Step 10: Compute the difference between the input depth image and the rendering from the refined pose, and save it to disk.
+      cv::Mat refinedDepthF = cv::Mat(imgSize, CV_32FC1, synthDepthF->GetData(MEMORYDEVICE_CPU)).clone();
+      compute_and_save_diff(inputDepthF, refinedDepthF, "image-%06i.icpDiff.png");
 
       // Step 11: Compute the "score" for the refined pose and save it to disk.
       {
@@ -447,6 +426,19 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::update()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+#ifdef WITH_OPENCV
+template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType,IndexType>::compute_and_save_diff(const cv::Mat& depthImage1, const cv::Mat& depthImage2, const std::string& pattern) const
+{
+  cv::Mat diff;
+  cv::absdiff(depthImage1, depthImage2, diff);
+  diff.convertTo(diff, CV_8U, 255 / 0.3);
+  cv::applyColorMap(diff, diff, cv::COLORMAP_JET);
+  cv::imwrite(m_imagePathGenerator->make_path(pattern).string().c_str(), diff);
+}
+#endif
+
+#ifdef WITH_OPENCV
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::save_colourised_depth(const ORFloatImage *depthF, const ORUChar4Image_Ptr& depthU, const std::string& pattern) const
 {
@@ -457,6 +449,7 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::save_colourised_depth(const OR
   cv::cvtColor(cvDepthU, cvOutput, cv::COLOR_RGBA2BGR);
   cv::imwrite(m_imagePathGenerator->make_path(pattern).string().c_str(), cvOutput);
 }
+#endif
 
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const

@@ -8,6 +8,10 @@
 
 #include <boost/optional.hpp>
 
+#ifdef WITH_OPENCV
+#include <opencv2/core/core.hpp>
+#endif
+
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
@@ -178,6 +182,18 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+#ifdef WITH_OPENCV
+  /**
+   * \brief Computes a difference image between two depth images, and saves it to disk.
+   *
+   * \param depthImage1 The first depth image.
+   * \param depthImage2 The second depth image.
+   * \param pattern     The pattern to use when constructing the name of the file into which to save the difference image.
+   */
+  void compute_and_save_diff(const cv::Mat& depthImage1, const cv::Mat& depthImage2, const std::string& pattern) const;
+#endif
+
+#ifdef WITH_OPENCV
   /**
    * \brief Makes a colourised version of a floating-point depth image and saves it to disk.
    *
@@ -186,6 +202,7 @@ private:
    * \param pattern The pattern to use when constructing the name of the file into which to save the image.
    */
   void save_colourised_depth(const ORFloatImage *depthF, const ORUChar4Image_Ptr& depthU, const std::string& pattern) const;
+#endif
 
   /**
    * \brief Saves the relocalised and refined poses in text files so that they can be used later (e.g. for evaluation).
