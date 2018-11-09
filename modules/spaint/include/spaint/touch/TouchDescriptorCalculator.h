@@ -5,7 +5,17 @@
 #ifndef H_SPAINT_TOUCHDESCRIPTORCALCULATOR
 #define H_SPAINT_TOUCHDESCRIPTORCALCULATOR
 
+#ifdef _MSC_VER
+  // Suppress a VC++ warning that is produced when including ArrayFire headers.
+  #pragma warning(disable:4275)
+#endif
+
 #include <arrayfire.h>
+
+#ifdef _MSC_VER
+  // Reenable the suppressed warning for the rest of the translation unit.
+  #pragma warning(default:4275)
+#endif
 
 #include <rafl/base/Descriptor.h>
 

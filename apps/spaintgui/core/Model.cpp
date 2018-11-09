@@ -6,6 +6,7 @@
 #include "Model.h"
 using namespace ORUtils;
 using namespace itmx;
+using namespace orx;
 using namespace tvginput;
 
 #include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
@@ -45,6 +46,20 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
 
   // Set up the visualisation generator.
   m_visualisationGenerator.reset(new VisualisationGenerator(settings, m_labelManager, m_voxelVisualisationEngine, m_surfelVisualisationEngine));
+
+  // If we're using the Vicon system:
+  if(settings->get_first_value<bool>("useVicon"))
+  {
+  #ifdef WITH_VICON
+    // Set up the Vicon interface.
+    m_vicon.reset(new ViconInterface(settings->get_first_value<std::string>("viconHost")));
+
+    // Give the tracker factory access to the Vicon interface so that it can construct Vicon-based trackers.
+    m_trackerFactory.set_vicon(m_vicon);
+  #else
+    throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
+  #endif
+  }
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -66,6 +81,11 @@ LabelManager_CPtr Model::get_label_manager() const
 }
 
 const MappingServer_Ptr& Model::get_mapping_server()
+{
+  return m_mappingServer;
+}
+
+MappingServer_CPtr Model::get_mapping_server() const
 {
   return m_mappingServer;
 }
@@ -105,6 +125,23 @@ Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() c
 {
   return m_surfelVisualisationEngine;
 }
+
+const TrackerFactory& Model::get_tracker_factory() const
+{
+  return m_trackerFactory;
+}
+
+#ifdef WITH_VICON
+const ViconInterface_Ptr& Model::get_vicon()
+{
+  return m_vicon;
+}
+
+ViconInterface_CPtr Model::get_vicon() const
+{
+  return m_vicon;
+}
+#endif
 
 VisualisationGenerator_CPtr Model::get_visualisation_generator() const
 {
@@ -178,6 +215,21 @@ std::string Model::get_world_scene_id()
 }
 
 //#################### DISAMBIGUATORS ####################
+
+Relocaliser_Ptr& Model::get_relocaliser(const std::string& sceneID)
+{
+  return SLAMContext::get_relocaliser(sceneID);
+}
+
+Relocaliser_CPtr Model::get_relocaliser(const std::string& sceneID) const
+{
+  return SLAMContext::get_relocaliser(sceneID);
+}
+
+const std::vector<std::string>& Model::get_scene_ids() const
+{
+  return SLAMContext::get_scene_ids();
+}
 
 const SLAMState_Ptr& Model::get_slam_state(const std::string& sceneID)
 {

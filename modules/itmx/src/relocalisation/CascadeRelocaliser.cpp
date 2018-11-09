@@ -236,28 +236,16 @@ void CascadeRelocaliser::start_timer(AverageTimer& timer, bool cudaSynchronize) 
 {
   if(!m_timersEnabled) return;
 
-#ifdef WITH_CUDA
-  if(cudaSynchronize)
-  {
-    ORcudaSafeCall(cudaDeviceSynchronize());
-  }
-#endif
-
-  timer.start();
+  if(cudaSynchronize) timer.start_sync();
+  else timer.start_nosync();
 }
 
 void CascadeRelocaliser::stop_timer(AverageTimer& timer, bool cudaSynchronize) const
 {
   if(!m_timersEnabled) return;
 
-#ifdef WITH_CUDA
-  if(cudaSynchronize)
-  {
-    ORcudaSafeCall(cudaDeviceSynchronize());
-  }
-#endif
-
-  timer.stop();
+  if(cudaSynchronize) timer.stop_sync();
+  else timer.stop_nosync();
 }
 
 }

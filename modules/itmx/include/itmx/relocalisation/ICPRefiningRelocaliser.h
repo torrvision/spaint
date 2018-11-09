@@ -8,6 +8,10 @@
 
 #include <boost/optional.hpp>
 
+#ifdef WITH_OPENCV
+#include <opencv2/core/core.hpp>
+#endif
+
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
@@ -52,7 +56,7 @@ private:
   /** The depth visualiser. */
   DepthVisualiser_CPtr m_depthVisualiser;
 
-  /** The path generator used to find the ground truth poses. */
+  /** The path generator used to find the ground truth pose files. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_gtPathGenerator;
 
   /** The path generator used when saving the relocalised images. */
@@ -88,7 +92,7 @@ private:
   /** Whether or not timers are enabled and stats are printed on destruction. */
   bool m_timersEnabled;
 
-  /** The path to a file where to save the average relocalisation times. */
+  /** The path to a file in which to save the average relocalisation times. */
   std::string m_timersOutputFile;
 
   /** The timer used to profile the training calls. */
@@ -178,6 +182,28 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+#ifdef WITH_OPENCV
+  /**
+   * \brief Computes a difference image between two depth images, and saves it to disk.
+   *
+   * \param depthImage1 The first depth image.
+   * \param depthImage2 The second depth image.
+   * \param pattern     The pattern to use when constructing the name of the file into which to save the difference image.
+   */
+  void compute_and_save_diff(const cv::Mat& depthImage1, const cv::Mat& depthImage2, const std::string& pattern) const;
+#endif
+
+#ifdef WITH_OPENCV
+  /**
+   * \brief Makes a colourised version of a floating-point depth image and saves it to disk.
+   *
+   * \param depthF  The floating-point depth image to colourise and save.
+   * \param depthU  A temporary image in which to store the colourised version of the depth.
+   * \param pattern The pattern to use when constructing the name of the file into which to save the image.
+   */
+  void save_colourised_depth(const ORFloatImage *depthF, const ORUChar4Image_Ptr& depthU, const std::string& pattern) const;
+#endif
+
   /**
    * \brief Saves the relocalised and refined poses in text files so that they can be used later (e.g. for evaluation).
    *
@@ -189,7 +215,7 @@ private:
   void save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const;
 
   /**
-   * \brief Scores a camera pose by computing the mean depth difference between the real depth image
+   * \brief Scores a proposed camera pose by computing the mean depth difference between the real depth image
    *        and a synthetic depth image rendered from it.
    *
    * \param pose  The pose to score.
@@ -198,20 +224,32 @@ private:
   float score_pose(const ORUtils::SE3Pose& pose) const;
 
   /**
-   * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
+   * \brief Starts the specified timer (iff timers are enabled), without synchronising the GPU.
    *
-   * \param timer            The timer to start.
-   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before starting the timer.
+   * \param timer The timer to start.
    */
-  void start_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
+  void start_timer_nosync(AverageTimer& timer) const;
 
   /**
-   * \brief Stops the specified timer (waiting for all CUDA operations to terminate first, if necessary).
+   * \brief Starts the specified timer (iff timers are enabled), after first synchronising the GPU.
+   *
+   * \param timer The timer to start.
+   */
+  void start_timer_sync(AverageTimer& timer) const;
+
+  /**
+   * \brief Stops the specified timer (iff timers are enabled), without synchronising the GPU.
    *
    * \param timer The timer to stop.
-   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before stopping the timer.
    */
-  void stop_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
+  void stop_timer_nosync(AverageTimer& timer) const;
+
+  /**
+   * \brief Stops the specified timer (iff timers are enabled), after first synchronising the GPU.
+   *
+   * \param timer The timer to stop.
+   */
+  void stop_timer_sync(AverageTimer& timer) const;
 };
 
 }

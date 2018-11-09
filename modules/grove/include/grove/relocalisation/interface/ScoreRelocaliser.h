@@ -7,6 +7,7 @@
 #define H_GROVE_SCORERELOCALISER
 
 #include <boost/optional.hpp>
+#include <boost/thread.hpp>
 
 #include <ORUtils/DeviceType.h>
 
@@ -64,6 +65,9 @@ private:
 
   /** The image containing the indices of the forest leaves associated with the keypoint/descriptor pairs. */
   mutable LeafIndicesImage_Ptr m_leafIndicesImage;
+
+  /** The mutex used to synchronise access to the relocaliser in a multithreaded environment. */
+  mutable boost::recursive_mutex m_mutex;
 
   /** The image containing the forest predictions associated with the keypoint/descriptor pairs. */
   mutable ScorePredictionsImage_Ptr m_predictionsImage;

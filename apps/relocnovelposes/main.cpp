@@ -59,8 +59,7 @@ std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
   return sequences;
 }
 
-fs::path generate_path(const fs::path basePath, const std::string &mask,
-    int index)
+fs::path generate_path(const fs::path& basePath, const std::string& mask, int index)
 {
   char buf[2048];
   sprintf(buf, mask.c_str(), index);
@@ -85,14 +84,13 @@ Eigen::Matrix4f read_pose_from_file(const fs::path &fileName)
   return res;
 }
 
-std::vector<Eigen::Matrix4f> read_sequence_trajectory(const fs::path &basePath,
-    const std::string &fileMask)
+std::vector<Eigen::Matrix4f> read_sequence_trajectory(const fs::path& basePath, const std::string& fileMask)
 {
   std::vector<Eigen::Matrix4f> res;
 
   while (true)
   {
-    const fs::path posePath = generate_path(basePath, fileMask, res.size());
+    const fs::path posePath = generate_path(basePath, fileMask, static_cast<int>(res.size()));
 
     if (!fs::is_regular(posePath))
       break;
@@ -112,9 +110,7 @@ float angular_separation(const Eigen::Matrix3f& r1, const Eigen::Matrix3f& r2)
   return aa.angle();
 }
 
-bool pose_matches(const Eigen::Matrix4f &gtPose,
-    const Eigen::Matrix4f &testPose, float translationMaxError,
-    float angleMaxError)
+bool pose_matches(const Eigen::Matrix4f& gtPose, const Eigen::Matrix4f& testPose, float translationMaxError, float angleMaxError)
 {
   const Eigen::Matrix3f gtR = gtPose.block<3, 3>(0, 0);
   const Eigen::Matrix3f testR = testPose.block<3, 3>(0, 0);
@@ -146,12 +142,20 @@ typedef std::vector<TestICPPair> BinnedPoses;
 
 struct BinStats
 {
-  size_t totalPoses{0};
-  size_t successfulReloc{0};
-  size_t successfulICP{0};
+  size_t totalPoses;
+  size_t successfulReloc;
+  size_t successfulICP;
 
-  float relocPct {0.0f};
-  float icpPct {0.0f};
+  float relocPct;
+  float icpPct;
+
+  BinStats()
+  : totalPoses(0),
+    successfulReloc(0),
+    successfulICP(0),
+    relocPct(0.0f),
+    icpPct(0.0f)
+  {}
 };
 
 struct ErrorThreshold
@@ -159,8 +163,9 @@ struct ErrorThreshold
   float translationMaxError;
   float angleMaxError;
 
-  ErrorThreshold(float translationMaxError_, float angleMaxError_)
-  : translationMaxError(translationMaxError_), angleMaxError(angleMaxError_)
+  template <typename T>
+  ErrorThreshold(float translationMaxError_, T angleMaxError_)
+  : translationMaxError(translationMaxError_), angleMaxError(static_cast<float>(angleMaxError_))
   {}
 };
 
@@ -220,9 +225,9 @@ std::vector<BinnedPoses> classify_poses(
     currentPoses.testPose = testPose;
     currentPoses.relocPose = relocPose;
     currentPoses.icpPose = icpPose;
-    currentPoses.relocSucceeded = pose_matches(testPose, relocPose, 0.05f, 5.f * M_PI / 180.f);
-    currentPoses.icpSucceeded = pose_matches(testPose, icpPose, 0.05f, 5.f * M_PI / 180.f);
-    currentPoses.trainIdx = closestTrainingIdx;
+    currentPoses.relocSucceeded = pose_matches(testPose, relocPose, 0.05f, static_cast<float>(5.f * M_PI / 180.f));
+    currentPoses.icpSucceeded = pose_matches(testPose, icpPose, 0.05f, static_cast<float>(5.f * M_PI / 180.f));
+    currentPoses.trainIdx = static_cast<int>(closestTrainingIdx);
     currentPoses.testIdx = testIndex;
 
     // Store the test/icp pair in the right bucket
@@ -311,7 +316,7 @@ int main(int argc, char *argv[])
   // Find the valid sequences in the dataset folder.
   const std::vector<std::string> sequenceNames = find_sequence_names(datasetFolder);
 
-  std::map<std::string, std::vector<BinStats>> results;
+  std::map<std::string, std::vector<BinStats> > results;
 
   // Evaluate each sequence.
   for(size_t sequenceIdx = 0; sequenceIdx < sequenceNames.size(); ++sequenceIdx)
@@ -369,7 +374,7 @@ int main(int argc, char *argv[])
     {
       const BinStats& binStats = bins[binIdx];
       const float distThresh = binIdx < errorThresholds.size() ? errorThresholds[binIdx].translationMaxError : std::numeric_limits<float>::infinity();
-      const float angleThresh = binIdx < errorThresholds.size() ? errorThresholds[binIdx].angleMaxError * 180.0f / M_PI : std::numeric_limits<float>::infinity();
+      const float angleThresh = binIdx < errorThresholds.size() ? errorThresholds[binIdx].angleMaxError * 180.0f / static_cast<float>(M_PI) : std::numeric_limits<float>::infinity();
 
       if(binIdx == 0)
       {

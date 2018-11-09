@@ -20,14 +20,16 @@
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../scoreforests/ScorePrediction.h"
 
+//#################### FORWARD DECLARATIONS ####################
+
 #ifdef WITH_ALGLIB
- //#################### FORWARD DECLARATIONS ####################
 
 // Note: We forward declare these to avoid including the ALGLIB header, which causes NVCC warnings when compiling PreemptiveRansac_CUDA.
 namespace alglib {
   class real_1d_array;
   class real_2d_array;
 }
+
 #endif
 
 namespace grove {
@@ -299,7 +301,6 @@ private:
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
-
 #ifdef WITH_ALGLIB
   /**
    * \brief A function that ALGLIB can call to compute the energy of the candidate camera pose.

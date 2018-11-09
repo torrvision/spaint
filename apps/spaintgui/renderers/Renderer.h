@@ -150,6 +150,11 @@ public:
   bool get_supersampling_enabled() const;
 
   /**
+   * \brief Renders any images that were requested by clients of the mapping server (if one is active).
+   */
+  void render_client_images() const;
+
+  /**
    * \brief Sets whether or not to use median filtering when rendering the scene raycast.
    *
    * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.
@@ -238,12 +243,51 @@ private:
    * \param intrinsics        The intrinsics to use when rendering synthetic visualisations of the scene.
    * \param visualisationType The type of visualisation to generate.
    * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
-   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_visualisation(const ORUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
                               VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                              const ITMLib::ITMIntrinsics& intrinsics, spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
-                              const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
+                              const ITMLib::ITMIntrinsics& intrinsics, spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const;
+
+  /**
+   * \brief Gets the function (if any) with which to postprocess scene visualisations.
+   *
+   * \return  The function (if any) with which to postprocess scene visualisations.
+   */
+  const boost::optional<spaint::VisualisationGenerator::Postprocessor>& get_postprocessor() const;
+
+  /**
+   * \brief Renders all the reconstructed scenes into an image, with appropriate depth testing.
+   *
+   * \param primaryPose               The camera pose in the primary scene.
+   * \param primarySceneID            The ID of the primary scene.
+   * \param primaryVisualisationType  The type of visualisation to use for the primary scene.
+   * \param voxelRenderState          The voxel render state to use for intermediate storage (if relevant).
+   * \param surfelRenderState         The surfel render state to use for intermediate storage (if relevant).
+   * \param intrinsics                The intrinsics to use when rendering synthetic scene visualisations.
+   * \param surfelFlag                Whether or not to render a surfel visualisation rather than a voxel one.
+   * \param output                    The location into which to put the output image.
+   */
+  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, const std::string& primarySceneID,
+                                       spaint::VisualisationGenerator::VisualisationType primaryVisualisationType,
+                                       VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                                       const ITMLib::ITMIntrinsics& intrinsics, bool surfelFlag, const ORUChar4Image_Ptr& output) const;
+
+  /**
+   * \brief Renders all the reconstructed scenes into a sub-window, with appropriate depth testing.
+   *
+   * \param primaryPose The camera pose in the primary scene.
+   * \param subwindow   The sub-window into which to render.
+   * \param viewIndex   The index of the free camera view for the sub-window.
+   */
+  void render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPose, Subwindow& subwindow, int viewIndex) const;
+
+  /**
+   * \brief Renders a colour image over the contents of the current subwindow.
+   *
+   * \param image             The colour image.
+   * \param useAlphaBlending  Whether or not to use alpha blending.
+   */
+  void render_image(const ORUChar4Image_CPtr& image, bool useAlphaBlending = false) const;
 
   /**
    * \brief Renders a semi-transparent colour overlay over the existing scene.
@@ -277,10 +321,10 @@ private:
    *
    * \param sceneID         The ID of the reconstructed scene to augment.
    * \param pose            The camera pose.
-   * \param cameraMode      The camera mode.
+   * \param subwindow       The sub-window into which to render.
    * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const;
+  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, const Subwindow& subwindow, bool renderFiducials) const;
 
 #ifdef WITH_GLUT
   /**

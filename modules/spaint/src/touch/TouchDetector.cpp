@@ -10,13 +10,15 @@ using namespace rafl;
 #include <boost/format.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-#include <itmx/geometry/GeometryUtil.h>
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
 #include <itmx/util/RGBDUtil.h>
 #include <itmx/visualisation/DepthVisualiserFactory.h>
 using namespace itmx;
+
+#include <orx/geometry/GeometryUtil.h>
+using namespace orx;
 
 #include <tvgutil/misc/ArgUtil.h>
 using namespace tvgutil;
@@ -49,14 +51,14 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSe
   // Normal variables.
   m_changeMask(new af::array(imgSize.y, imgSize.x)),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
-  m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
+  m_depthRaycast(new ORFloatImage(imgSize, true, true)),
   m_depthVisualiser(DepthVisualiserFactory::make_depth_visualiser(itmSettings->deviceType)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageProcessor(ImageProcessorFactory::make_image_processor(itmSettings->deviceType)),
   m_imageWidth(imgSize.x),
   m_itmSettings(itmSettings),
-  m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
+  m_thresholdedRawDepth(new ORFloatImage(imgSize, true, true)),
   m_touchMask(new af::array(imgSize.y, imgSize.x, u8)),
   m_touchSettings(touchSettings)
 {
@@ -77,7 +79,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSe
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
+std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ORFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 try
 {
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
@@ -150,15 +152,15 @@ catch(af::exception&)
   return std::vector<Eigen::Vector2i>();
 }
 
-ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
+ORUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
 {
   static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
-  static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));
-  ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
+  static ORUCharImage_Ptr touchMask(new ORUCharImage(imgSize, true, true));
+  ORUChar4Image_Ptr touchImage(new ORUChar4Image(imgSize, true, false));
 
   // Get the current RGB and depth images.
-  const ITMUChar4Image *rgb = view->rgb;
-  const ITMFloatImage *depth = view->depth;
+  const ORUChar4Image *rgb = view->rgb;
+  const ORFloatImage *depth = view->depth;
 
   // Copy the touch mask across to an InfiniTAM image.
   m_imageProcessor->copy_af_to_itm(m_touchMask, touchMask);
@@ -216,24 +218,24 @@ ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) c
   return touchImage;
 }
 
-ITMFloatImage_CPtr TouchDetector::get_depth_raycast() const
+ORFloatImage_CPtr TouchDetector::get_depth_raycast() const
 {
   return m_depthRaycast;
 }
 
-ITMFloatImage_CPtr TouchDetector::get_diff_raw_raycast() const
+ORFloatImage_CPtr TouchDetector::get_diff_raw_raycast() const
 {
-  static ITMFloatImage_Ptr diffRawRaycast;
+  static ORFloatImage_Ptr diffRawRaycast;
   return m_imageProcessor->convert_af_to_itm(m_diffRawRaycast, diffRawRaycast);
 }
 
-ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
+ORUCharImage_CPtr TouchDetector::get_touch_mask() const
 {
-  static ITMUCharImage_Ptr touchMask;
+  static ORUCharImage_Ptr touchMask;
   return m_imageProcessor->convert_af_to_itm(m_touchMask, touchMask);
 }
 
-ITMFloatImage_CPtr TouchDetector::get_thresholded_raw_depth() const
+ORFloatImage_CPtr TouchDetector::get_thresholded_raw_depth() const
 {
   return m_thresholdedRawDepth;
 }
@@ -407,7 +409,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
   return bestCandidateID;
 }
 
-void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
+void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ORFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 {
   // Make a copy of the raw depth image in which any parts of the scene that are at a distance of > 2m are set to -1.
   // We deliberately ignore parts of the scene that are > 2m away, since although they are picked up by the camera,

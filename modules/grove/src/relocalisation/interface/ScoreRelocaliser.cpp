@@ -41,9 +41,6 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
   m_maxClusterCount = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxClusterCount", ScorePrediction::Capacity);
   m_minClusterSize = m_settings->get_first_value<uint32_t>(settingsNamespace + "minClusterSize", 20);
 
-  // Decide whether we want to use a completely random forest instead of the pretrained one.
-  bool m_useRandomForest = m_settings->get_first_value<bool>(settingsNamespace + "randomlyGenerateForest", false);
-
   // Check that the maximum number of clusters to store in each leaf is within range.
   if(m_maxClusterCount > ScorePrediction::Capacity)
   {
@@ -57,23 +54,15 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
   m_leafIndicesImage = mbf.make_image<LeafIndices>();
   m_predictionsImage = mbf.make_image<ScorePrediction>();
 
-  // Instantiate the sub-algorithms.
+  // Instantiate the sub-components.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, settingsNamespace + "PreemptiveRansac.", deviceType);
 
-  if(m_useRandomForest)
-  {
-    m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_randomly_generated_forest(m_settings, deviceType);
-  }
-  else
-  {
-    m_scoreForest = DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
-  }
+  m_scoreForest = m_settings->get_first_value<bool>(settingsNamespace + "randomlyGenerateForest", false)
+    ? DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_randomly_generated_forest(m_settings, deviceType)
+    : DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_forest(forestFilename, deviceType);
 
   m_reservoirCount = m_scoreForest->get_nb_leaves();
-  m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
-    m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, deviceType
-  );
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, settingsNamespace + "PreemptiveRansac.", deviceType);
 
   // Set up the relocaliser's internal state.
   m_relocaliserState.reset(new ScoreRelocaliserState);
@@ -88,6 +77,8 @@ ScoreRelocaliser::~ScoreRelocaliser() {}
 
 void ScoreRelocaliser::finish_training()
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   // First update all of the clusters.
   update_all_clusters();
 
@@ -95,6 +86,9 @@ void ScoreRelocaliser::finish_training()
   m_relocaliserState->exampleReservoirs.reset();
   m_relocaliserState->lastExamplesAddedStartIdx = 0;
   m_relocaliserState->reservoirUpdateStartIdx = 0;
+
+  // Finally, release the example clusterer.
+  m_exampleClusterer.reset();
 }
 
 void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate>& poseCandidates) const
@@ -166,6 +160,8 @@ void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
 
 std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   std::vector<Result> results;
 
   // Iff we have enough valid depth values, try to estimate the camera pose:
@@ -220,6 +216,16 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Imag
 
 void ScoreRelocaliser::reset()
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
+  // Set up the clusterer if it hasn't been allocated yet.
+  if(!m_exampleClusterer)
+  {
+    m_exampleClusterer = ExampleClustererFactory<ExampleType,ClusterType,PredictionType::Capacity>::make_clusterer(
+      m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize, m_deviceType
+    );
+  }
+
   // Set up the reservoirs if they haven't been allocated yet.
   if(!m_relocaliserState->exampleReservoirs)
   {
@@ -255,6 +261,8 @@ void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr& re
 void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                              const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   if(!m_relocaliserState->exampleReservoirs)
   {
     throw std::runtime_error("Error: finish_training() has been called; the relocaliser cannot be trained again until reset() is called");
@@ -286,6 +294,8 @@ void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImag
 
 void ScoreRelocaliser::update()
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   if(!m_relocaliserState->exampleReservoirs)
   {
     throw std::runtime_error("Error: finish_training() has been called; the relocaliser cannot be updated again until reset() is called");
@@ -309,6 +319,8 @@ void ScoreRelocaliser::update()
 
 void ScoreRelocaliser::update_all_clusters()
 {
+  boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
+
   // Repeatedly call update until we get back to the batch of reservoirs that was updated last time train() was called.
   while(m_relocaliserState->reservoirUpdateStartIdx != m_relocaliserState->lastExamplesAddedStartIdx)
   {

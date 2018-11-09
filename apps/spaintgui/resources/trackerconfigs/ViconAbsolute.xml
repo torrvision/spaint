@@ -1,0 +1,6 @@
+<tracker type='composite' policy='stoponfirstsuccess'>
+  <tracker type='vicon'>
+    <params>absolute</params>
+  </tracker>
+  <tracker type='infinitam'/>
+</tracker>

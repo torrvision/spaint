@@ -4,12 +4,12 @@
 
 OPTION(WITH_SCOREFORESTS "Build with ScoreForests support?" OFF)
 
-# Scoreforests needs C++11 support.
+# Note: ScoreForests needs C++11 support.
 IF(WITH_SCOREFORESTS AND WITH_C++11)
   INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseALGLIB.cmake)
   INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
-  SET(ScoreForests_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/" CACHE PATH "The ScoreForests main directory")
+  SET(ScoreForests_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/" CACHE PATH "The top-level ScoreForests directory")
   SET(ScoreForests_BUILD_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/build" CACHE PATH "The ScoreForests build directory")
 
   FIND_LIBRARY(ScoreForests_Datasets_LIBRARY_DEBUG Datasets HINTS "${ScoreForests_BUILD_DIR}/lib" "${ScoreForests_BUILD_DIR}/Datasets/Debug")
@@ -33,7 +33,7 @@ IF(WITH_SCOREFORESTS AND WITH_C++11)
   SET(ScoreForests_Learners_LIBRARY debug ${ScoreForests_Learners_LIBRARY_DEBUG} optimized ${ScoreForests_Learners_LIBRARY_RELEASE})
   SET(ScoreForests_StatisticalTools_LIBRARY debug ${ScoreForests_StatisticalTools_LIBRARY_DEBUG} optimized ${ScoreForests_StatisticalTools_LIBRARY_RELEASE})
 
-  # The order in the variables allows linking on Linux. Do not reorder.
+  # These libraries are ordered in such a way as to make linking work on Linux. Please do not reorder.
   SET(ScoreForests_LIBRARIES ${ScoreForests_Datasets_LIBRARY} ${ScoreForests_Learners_LIBRARY} ${ScoreForests_Features_LIBRARY} ${ScoreForests_Hashes_LIBRARY} ${ScoreForests_StatisticalTools_LIBRARY} ${ScoreForests_Helpers_LIBRARY})
 
   INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Datasets/include/Datasets")
@@ -46,6 +46,6 @@ IF(WITH_SCOREFORESTS AND WITH_C++11)
   ADD_DEFINITIONS(-DUSING_CMAKE)
   ADD_DEFINITIONS(-DWITH_SCOREFORESTS)
 ELSEIF(WITH_SCOREFORESTS)
-  MESSAGE(FATAL_ERROR "Scoreforests needs C++11 support to be enabled.")
+  MESSAGE(FATAL_ERROR "ScoreForests needs C++11 support to be enabled.")
 ENDIF()
 

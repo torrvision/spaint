@@ -4,6 +4,7 @@
  */
 
 #include "Subwindow.h"
+using namespace ITMLib;
 using namespace rigging;
 
 #include <spaint/util/CameraFactory.h>
@@ -15,9 +16,11 @@ using namespace tvgutil;
 //#################### CONSTRUCTORS ####################
 
 Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
-: m_bottomRight(bottomRight),
+: m_allScenesFlag(false),
+  m_bottomRight(bottomRight),
   m_cameraMode(CM_FOLLOW),
   m_originalImgSize(imgSize),
+  m_remoteFlag(false),
   m_sceneID(sceneID),
   m_surfelFlag(false),
   m_topLeft(topLeft),
@@ -34,9 +37,19 @@ const Vector2f& Subwindow::bottom_right() const
   return m_bottomRight;
 }
 
+bool Subwindow::get_all_scenes_flag() const
+{
+  return m_allScenesFlag;
+}
+
 const CompositeCamera_Ptr& Subwindow::get_camera() const
 {
   return m_camera;
+}
+
+ITMIntrinsics Subwindow::get_camera_intrinsics() const
+{
+  return ITMIntrinsics(m_image->noDims);
 }
 
 Subwindow::CameraMode Subwindow::get_camera_mode() const
@@ -62,6 +75,11 @@ ORUChar4Image_CPtr Subwindow::get_image() const
 const Vector2i& Subwindow::get_original_image_size() const
 {
   return m_originalImgSize;
+}
+
+bool Subwindow::get_remote_flag() const
+{
+  return m_remoteFlag;
 }
 
 const std::string& Subwindow::get_scene_id() const
@@ -117,6 +135,11 @@ void Subwindow::resize_image(const Vector2i& newImgSize)
   m_surfelRenderStates.clear();
 }
 
+void Subwindow::set_all_scenes_flag(bool allScenesFlag)
+{
+  m_allScenesFlag = allScenesFlag;
+}
+
 void Subwindow::set_camera_mode(CameraMode cameraMode)
 {
   m_cameraMode = cameraMode;
@@ -125,6 +148,11 @@ void Subwindow::set_camera_mode(CameraMode cameraMode)
 void Subwindow::set_camera_up_vector(const Eigen::Vector3f& cameraUpVector)
 {
   m_cameraUpVector = cameraUpVector;
+}
+
+void Subwindow::set_remote_flag(bool remoteFlag)
+{
+  m_remoteFlag = remoteFlag;
 }
 
 void Subwindow::set_surfel_flag(bool surfelFlag)

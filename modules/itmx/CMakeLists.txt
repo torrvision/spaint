@@ -141,7 +141,9 @@ src/remotemapping/CompressedRGBDFrameHeaderMessage.cpp
 src/remotemapping/CompressedRGBDFrameMessage.cpp
 src/remotemapping/MappingClient.cpp
 src/remotemapping/MappingClientHandler.cpp
+src/remotemapping/MappingMessage.cpp
 src/remotemapping/MappingServer.cpp
+src/remotemapping/RenderingRequestMessage.cpp
 src/remotemapping/RGBDCalibrationMessage.cpp
 src/remotemapping/RGBDFrameCompressor.cpp
 src/remotemapping/RGBDFrameMessage.cpp
@@ -155,7 +157,9 @@ include/itmx/remotemapping/DepthCompressionType.h
 include/itmx/remotemapping/InteractionTypeMessage.h
 include/itmx/remotemapping/MappingClient.h
 include/itmx/remotemapping/MappingClientHandler.h
+include/itmx/remotemapping/MappingMessage.h
 include/itmx/remotemapping/MappingServer.h
+include/itmx/remotemapping/RenderingRequestMessage.h
 include/itmx/remotemapping/RGBCompressionType.h
 include/itmx/remotemapping/RGBDCalibrationMessage.h
 include/itmx/remotemapping/RGBDFrameCompressor.h
@@ -182,15 +186,8 @@ IF(WITH_OVR)
 ENDIF()
 
 IF(WITH_VICON)
-  SET(trackers_sources ${trackers_sources}
-    src/trackers/RobustViconTracker.cpp
-    src/trackers/ViconTracker.cpp
-  )
-
-  SET(trackers_headers ${trackers_headers}
-    include/itmx/trackers/RobustViconTracker.h
-    include/itmx/trackers/ViconTracker.h
-  )
+  SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/itmx/trackers/ViconTracker.h)
 ENDIF()
 
 IF(WITH_ZED)
@@ -209,6 +206,11 @@ include/itmx/util/CameraPoseConverter.h
 include/itmx/util/ColourConversion_Shared.h
 include/itmx/util/RGBDUtil.h
 )
+
+IF(WITH_VICON)
+  SET(util_sources ${util_sources} src/util/ViconInterface.cpp)
+  SET(util_headers ${util_headers} include/itmx/util/ViconInterface.h)
+ENDIF()
 
 IF(WITH_ZED)
   SET(util_sources ${util_sources} src/util/ZedCamera.cpp)

@@ -6,16 +6,10 @@
 #ifndef H_ITMX_VICONTRACKER
 #define H_ITMX_VICONTRACKER
 
-#include <map>
 #include <string>
 
-#include <boost/optional.hpp>
-
-#include <Eigen/Dense>
-
-#include <vicon/Client.h>
-
 #include "FallibleTracker.h"
+#include "../util/ViconInterface.h"
 
 namespace itmx {
 
@@ -27,36 +21,55 @@ namespace itmx {
  */
 class ViconTracker : public FallibleTracker
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration denote the different tracking modes that the Vicon tracker can use.
+   */
+  enum TrackingMode
+  {
+    /**
+     * Use the relative transformations from Original Camera ("world") space to Current Camera space as the poses - see comments in TrackCamera.
+     * Fail until the relative transformation between Vicon and Original Camera space has been determined.
+     */
+    TM_ABSOLUTE,
+
+    /**
+     * Use the relative transformations from Original Marker space to Current Marker space as the poses - see comments in TrackCamera.
+     */
+    TM_RELATIVE,
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The name given to the camera subject in the Vicon software. */
+  /** The transformation from Original Camera ("world") space to Original Marker space (once computed) - see comments in TrackCamera. */
+  boost::optional<Matrix4f> m_aTw;
+
+  /** The name given in the Vicon software to the subject being tracked. */
   std::string m_subjectName;
 
-  /** The Vicon client. */
-  ViconDataStreamSDK::CPP::Client m_vicon;
+  /** The tracking mode (absolute or relative). */
+  TrackingMode m_trackingMode;
+
+  /** The Vicon interface. */
+  ViconInterface_CPtr m_vicon;
+
+  /** The transformation from Original Marker space to Vicon space (once computed) - see comments in TrackCamera. */
+  boost::optional<Matrix4f> m_vTa;
+
+  /** The transformation from Original Marker space to Original Camera ("world") space (once computed) - see comments in TrackCamera. */
+  boost::optional<Matrix4f> m_wTa;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a Vicon tracker.
    *
-   * \param host        The host on which the Vicon software is running (e.g. "<IP address>:<port>").
-   * \param subjectName The name given to the camera subject in the Vicon software.
+   * \param vicon         The Vicon interface.
+   * \param subjectName   The name given in the Vicon software to the subject being tracked.
+   * \param trackingMode  The tracking mode (absolute or relative).
    */
-  ViconTracker(const std::string& host, const std::string& subjectName);
-
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destroys the Vicon tracker.
-   */
-  ~ViconTracker();
-
-  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
-private:
-  /** Deliberately private and unimplemented. */
-  ViconTracker(const ViconTracker&);
-  ViconTracker& operator=(const ViconTracker&);
+  ViconTracker(const ViconInterface_CPtr& vicon, const std::string& subjectName, TrackingMode trackingMode);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -71,18 +84,6 @@ public:
 
   /** Override */
   virtual void TrackCamera(ITMLib::ITMTrackingState *trackingState, const ITMLib::ITMView *view);
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Attempts to get the positions of the markers for the Vicon subject with the specified name.
-   *
-   * This may fail if we move out of the range of the cameras or some of the markers are occluded.
-   *
-   * \param subjectName The name of the subject.
-   * \return            The positions of the markers for the subject, indexed by name, or boost::none if they are temporarily unavailable.
-   */
-  boost::optional<std::map<std::string,Eigen::Vector3f> > try_get_marker_positions(const std::string& subjectName) const;
 };
 
 }

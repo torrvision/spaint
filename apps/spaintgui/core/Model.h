@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_MODEL
 
 #include <spaint/markers/interface/VoxelMarker.h>
+#include <spaint/pipelinecomponents/CollaborativeContext.h>
 #include <spaint/pipelinecomponents/ObjectSegmentationContext.h>
 #include <spaint/pipelinecomponents/PropagationContext.h>
 #include <spaint/pipelinecomponents/SemanticSegmentationContext.h>
@@ -24,7 +25,8 @@
  * and labelling it interactively using various user input modalities.
  */
 class Model
-: public spaint::ObjectSegmentationContext,
+: public spaint::CollaborativeContext,
+  public spaint::ObjectSegmentationContext,
   public spaint::PropagationContext,
   public spaint::SemanticSegmentationContext,
   public spaint::SLAMContext,
@@ -69,6 +71,14 @@ private:
 
   /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
+
+  /** The factory used to construct trackers. */
+  itmx::TrackerFactory m_trackerFactory;
+
+#ifdef WITH_VICON
+  /** The interface to the Vicon system (if we're using it). */
+  itmx::ViconInterface_Ptr m_vicon;
+#endif
 
   /** The visualisation generator that is used to render a scene. */
   spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
@@ -123,6 +133,13 @@ public:
   virtual const itmx::MappingServer_Ptr& get_mapping_server();
 
   /**
+   * \brief Gets the remote mapping server (if any).
+   *
+   * \return  The remote mapping server (if any).
+   */
+  virtual itmx::MappingServer_CPtr get_mapping_server() const;
+
+  /**
    * \brief Gets the path to the resources directory.
    *
    * \return The path to the resources directory.
@@ -170,6 +187,29 @@ public:
    * \return  The InfiniTAM engine used for rendering a surfel scene.
    */
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const;
+
+  /**
+   * \brief Gets the factory used to construct trackers.
+   *
+   * \return  The factory used to construct trackers.
+   */
+  virtual const itmx::TrackerFactory& get_tracker_factory() const;
+
+#ifdef WITH_VICON
+  /**
+   * \brief Gets the interface to the Vicon system (if we're using it).
+   *
+   * \return  The interface to the Vicon system (if we're using it).
+   */
+  virtual const itmx::ViconInterface_Ptr& get_vicon();
+
+  /**
+   * \brief Gets the interface to the Vicon system (if we're using it).
+   *
+   * \return  The interface to the Vicon system (if we're using it).
+   */
+  virtual itmx::ViconInterface_CPtr get_vicon() const;
+#endif
 
   /**
    * \brief Gets the visualisation generator that is used to render a scene.
@@ -242,6 +282,9 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
+  virtual orx::Relocaliser_Ptr& get_relocaliser(const std::string& sceneID);
+  virtual orx::Relocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+  virtual const std::vector<std::string>& get_scene_ids() const;
   virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
   virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
 };

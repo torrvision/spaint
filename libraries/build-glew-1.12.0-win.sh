@@ -1,6 +1,6 @@
 #! /bin/bash -e
 
-# Check that msbuild is on the system path.
+# Check that devenv and msbuild are on the system path.
 ../require-devenv.sh
 ../require-msbuild.sh
 

@@ -32,6 +32,9 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** A flag indicating whether or not to render all scenes rather than just the primary one. */
+  bool m_allScenesFlag;
+
   /** The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_bottomRight;
 
@@ -50,7 +53,10 @@ private:
   /** The original size of the image in which to store the scene visualisation for the sub-window. */
   Vector2i m_originalImgSize;
 
-  /** The ID of the scene to render in the sub-window. */
+  /** A flag indicating whether or not to ask the mapping server to render the image for this sub-window. */
+  bool m_remoteFlag;
+
+  /** The ID of the primary scene to render in the sub-window. */
   std::string m_sceneID;
 
   /** A flag indicating whether or not to render a surfel visualisation rather than a voxel one. */
@@ -75,7 +81,7 @@ public:
    *
    * \param topLeft     The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]).
    * \param bottomRight The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]).
-   * \param sceneID     The ID of the scene to render in the sub-window.
+   * \param sceneID     The ID of the primary scene to render in the sub-window.
    * \param type        The type of scene visualisation to render in the sub-window.
    * \param imgSize     The size of image needed to store the scene visualisation for the sub-window.
    */
@@ -91,11 +97,25 @@ public:
   const Vector2f& bottom_right() const;
 
   /**
+   * \brief Gets a flag indicating whether or not to render all scenes rather than just the primary one.
+   *
+   * \return  A flag indicating whether or not to render all scenes rather than just the primary one.
+   */
+  bool get_all_scenes_flag() const;
+
+  /**
    * \brief Gets the camera from which to render the scene.
    *
    * \return  The camera from which to render the scene.
    */
   const rigging::CompositeCamera_Ptr& get_camera() const;
+
+  /**
+   * \brief Gets the camera intrinsics to use when rendering scene visualisations for the sub-window.
+   *
+   * \return  The camera intrinsics to use when rendering scene visualisations for the sub-window.
+   */
+  ITMLib::ITMIntrinsics get_camera_intrinsics() const;
 
   /**
    * \brief Gets the current camera mode.
@@ -133,9 +153,16 @@ public:
   const Vector2i& get_original_image_size() const;
 
   /**
-   * \brief Gets the ID of the scene to render in the sub-window.
+   * \brief Gets a flag indicating whether or not to ask the mapping server to render the image for this sub-window.
    *
-   * \return  The ID of the scene to render in the sub-window.
+   * \return  A flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   */
+  bool get_remote_flag() const;
+
+  /**
+   * \brief Gets the ID of the primary scene to render in the sub-window.
+   *
+   * \return  The ID of the primary scene to render in the sub-window.
    */
   const std::string& get_scene_id() const;
 
@@ -203,6 +230,13 @@ public:
   void resize_image(const Vector2i& newImgSize);
 
   /**
+   * \brief Sets a flag indicating whether or not to render all scenes rather than just the primary one.
+   *
+   * \param allScenesFlag A flag indicating whether or not to render all scenes rather than just the primary one.
+   */
+  void set_all_scenes_flag(bool allScenesFlag);
+
+  /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
@@ -215,6 +249,13 @@ public:
    * \param cameraUpVector  The up vector to use when rotating the camera.
    */
   void set_camera_up_vector(const Eigen::Vector3f& cameraUpVector);
+
+  /**
+   * \brief Sets a flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   *
+   * \param remoteFlag  A flag indicating whether or not to ask the mapping server to render the image for this sub-window.
+   */
+  void set_remote_flag(bool remoteFlag);
 
   /**
    * \brief Sets a flag indicating whether or not to render a surfel visualisation rather than a voxel one.
