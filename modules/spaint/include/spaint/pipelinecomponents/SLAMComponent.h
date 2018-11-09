@@ -247,6 +247,17 @@ private:
   void process_relocalisation();
 
   /**
+   * \brief Decorates the specified relocaliser with one that uses an ICP tracker to refine the results.
+   *
+   * \note  If the relocaliser is null, this simply returns a null relocaliser (this allows us to safely wrap relocalisers without performing a null check).
+   *
+   * \param relocaliser       The relocaliser to decorate.
+   * \param settingsNamespace TODO
+   * \return                  The decorated relocaliser.
+   */
+  orx::Relocaliser_Ptr refine_with_icp(const orx::Relocaliser_Ptr& relocaliser, const std::string& settingsNamespace) const;
+
+  /**
    * \brief Sets up the fiducial detector (if any).
    */
   void setup_fiducial_detector();

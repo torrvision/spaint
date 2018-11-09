@@ -87,14 +87,6 @@ public:
   /**
    * \brief Constructs a cascade relocaliser.
    *
-   * \param forestPath  The path to the file containing the forest for the relocaliser.
-   * \param settings    The settings to use when constructing the relocaliser.
-   */
-  CascadeRelocaliser(const std::string& forestPath, const Settings_CPtr& settings);
-
-  /**
-   * \brief Constructs an ICP-based refining relocaliser.
-   *
    * \param innerRelocaliser_Fast          The Fast relocaliser.
    * \param innerRelocaliser_Intermediate  The Intermediate relocaliser.
    * \param innerRelocaliser_Full          The Fast relocaliser.

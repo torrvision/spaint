@@ -530,6 +530,29 @@ void SLAMComponent::process_relocalisation()
   }
 }
 
+Relocaliser_Ptr SLAMComponent::refine_with_icp(const Relocaliser_Ptr& relocaliser, const std::string& settingsNamespace) const
+{
+  if(!relocaliser) return Relocaliser_Ptr();
+
+  const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
+  const Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
+  const Settings_CPtr& settings = m_context->get_settings();
+  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
+
+  std::string trackerConfig = "<tracker type='infinitam'>";
+  std::string trackerParams = settings->get_first_value<std::string>(settingsNamespace + "refinementTrackerParams", "");
+  if(trackerParams != "") trackerConfig += "<params>" + trackerParams + "</params>";
+  trackerConfig += "</tracker>";
+
+  const bool trackSurfels = false;
+  FallibleTracker *dummy;
+  Tracker_Ptr tracker = m_context->get_tracker_factory().make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
+
+  return Relocaliser_Ptr(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
+    relocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
+  ));
+}
+
 void SLAMComponent::setup_fiducial_detector()
 {
   const SpaintVoxelScene_CPtr scene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
@@ -582,8 +605,20 @@ void SLAMComponent::setup_relocaliser()
     m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocaliserForestPath);
     std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
 
-    // Construct the cascade relocaliser.
-    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(m_relocaliserForestPath, settings));
+    // Construct the inner SCoRe relocalisers.
+    ScoreRelocaliser_Ptr scoreRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Fast.", settings->deviceType);
+    ScoreRelocaliser_Ptr scoreRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Intermediate.", settings->deviceType);
+    ScoreRelocaliser_Ptr scoreRelocaliser_Full = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
+    scoreRelocaliser_Fast->set_relocaliser_state(scoreRelocaliser_Full->get_relocaliser_state());
+    scoreRelocaliser_Intermediate->set_relocaliser_state(scoreRelocaliser_Full->get_relocaliser_state());
+
+    // Decorate the SCoRe relocalisers with ones that use ICP tracking to refine the results.
+    Relocaliser_Ptr innerRelocaliser_Fast = refine_with_icp(scoreRelocaliser_Fast, settingsNamespace);
+    Relocaliser_Ptr innerRelocaliser_Intermediate = refine_with_icp(scoreRelocaliser_Intermediate, settingsNamespace);
+    Relocaliser_Ptr innerRelocaliser_Full = refine_with_icp(scoreRelocaliser_Full, settingsNamespace);
+
+    // Construct the cascade relocaliser itself.
+    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocaliser_Fast, innerRelocaliser_Intermediate, innerRelocaliser_Full, settings));
   #endif
   }
   else
@@ -629,18 +664,7 @@ void SLAMComponent::setup_relocaliser()
     else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
 
     // Now decorate this relocaliser with one that uses an ICP tracker to refine the results.
-    std::string trackerConfig = "<tracker type='infinitam'>";
-    std::string trackerParams = settings->get_first_value<std::string>(settingsNamespace + "refinementTrackerParams", "");
-    if(trackerParams != "") trackerConfig += "<params>" + trackerParams + "</params>";
-    trackerConfig += "</tracker>";
-
-    const bool trackSurfels = false;
-    FallibleTracker *dummy;
-    Tracker_Ptr tracker = m_context->get_tracker_factory().make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
-
-    m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-      innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
-    ));
+    m_context->get_relocaliser(m_sceneID) = refine_with_icp(innerRelocaliser, settingsNamespace);
   }
 }
 

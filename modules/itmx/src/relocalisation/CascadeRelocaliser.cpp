@@ -20,17 +20,6 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-CascadeRelocaliser::CascadeRelocaliser(const std::string& forestPath, const Settings_CPtr& settings)
-: m_settings(settings),
-  m_timerInitialRelocalisation("Initial Relocalisation"),
-  m_timerRefinement("ICP Refinement"),
-  m_timerRelocalisation("Relocalisation"),
-  m_timerTraining("Training"),
-  m_timerUpdate("Update")
-{
-  // TODO
-}
-
 CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser_Fast, const orx::Relocaliser_Ptr& innerRelocaliser_Intermediate,
                                        const orx::Relocaliser_Ptr& innerRelocaliser_Full, const Settings_CPtr& settings)
 : m_innerRelocaliser_Fast(innerRelocaliser_Fast),
