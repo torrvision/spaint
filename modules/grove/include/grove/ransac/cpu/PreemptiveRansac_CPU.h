@@ -35,8 +35,8 @@ public:
   /**
    * \brief Constructs an instance of PreemptiveRansac_CPU.
    *
-   * \param settings           A pointer to the settings used to configure the algorithm.
-   * \param settingsNamespace  The namespace used to read settings from the SettingsContainer.
+   * \param settings           The settings used to configure the algorithm.
+   * \param settingsNamespace  The namespace used to read settings from the settings container.
    */
   PreemptiveRansac_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace);
 

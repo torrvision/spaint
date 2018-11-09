@@ -25,7 +25,7 @@ struct PreemptiveRansacFactory
    * \brief Creates an instance of preemptive RANSAC.
    *
    * \param settings           The settings to use to configure the instance of preemptive RANSAC.
-   * \param settingsNamespace  The namespace used to read settings from the SettingsContainer.
+   * \param settingsNamespace  The namespace used to read settings from the settings container.
    * \param deviceType         The device on which the instance of preemptive RANSAC should operate.
    * \return                   The instance of preemptive RANSAC.
    */
