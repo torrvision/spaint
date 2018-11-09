@@ -11,7 +11,6 @@
 #include <orx/relocalisation/Relocaliser.h>
 
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
-#include <tvgutil/timing/AverageTimer.h>
 
 #include "../base/ITMObjectPtrTypes.h"
 
