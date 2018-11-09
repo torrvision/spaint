@@ -57,14 +57,14 @@ CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocali
 
   if(m_saveTimes)
   {
-    // Forcefully enable timers.
+    // Enable the timers.
     m_timersEnabled = true;
 
-    // Make sure the directory where we want to save the relocalisation times exists.
+    // Ensure that the directory in which we want to save the relocalisation times exists.
     boost::filesystem::path timersOutputFolder(tvgutil::find_subdir_from_executable("reloc_times"));
     boost::filesystem::create_directories(timersOutputFolder);
 
-    // Prepare the output filename.
+    // Construct the output filename.
     m_timersOutputFile = (timersOutputFolder / (experimentTag + ".txt")).string();
   }
 }
