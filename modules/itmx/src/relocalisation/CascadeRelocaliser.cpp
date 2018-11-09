@@ -121,15 +121,15 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   std::vector<Result> relocalisationResults;
 
   // Main timing section.
-  start_timer(m_timerRelocalisation);
+  start_timer_sync(m_timerRelocalisation);
 
   // 1. Run the fast inner relocaliser.
-  start_timer(m_timerInitialRelocalisation, false); // No need to synchronize the GPU again.
+  start_timer_nosync(m_timerInitialRelocalisation); // No need to synchronize the GPU again.
   relocalisationResults = relocalisationResults_Fast = m_innerRelocaliser_Fast->relocalise(colourImage, depthImage, depthIntrinsics);
-  stop_timer(m_timerInitialRelocalisation);
+  stop_timer_sync(m_timerInitialRelocalisation);
 
   // We time the following as "refinement".
-  start_timer(m_timerRefinement, false); // No need to synchronize the GPU again.
+  start_timer_nosync(m_timerRefinement); // No need to synchronize the GPU again.
 
   // If the fast relocaliser failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser (if enabled and available).
   if(m_relocaliserEnabled_Intermediate && m_innerRelocaliser_Intermediate && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate))
@@ -154,8 +154,8 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   }
 
   // Done.
-  stop_timer(m_timerRefinement);
-  stop_timer(m_timerRelocalisation, false); // No need to synchronize the GPU again.
+  stop_timer_sync(m_timerRefinement);
+  stop_timer_nosync(m_timerRelocalisation); // No need to synchronize the GPU again.
 
   // Save the best initial and refined poses if needed.
   if(m_savePoses)
@@ -209,16 +209,16 @@ void CascadeRelocaliser::save_to_disk(const std::string& outputFolder) const
 void CascadeRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
-  start_timer(m_timerTraining);
+  start_timer_sync(m_timerTraining);
   m_innerRelocaliser_Full->train(colourImage, depthImage, depthIntrinsics, cameraPose);
-  stop_timer(m_timerTraining);
+  stop_timer_sync(m_timerTraining);
 }
 
 void CascadeRelocaliser::update()
 {
-  start_timer(m_timerUpdate);
+  start_timer_sync(m_timerUpdate);
   m_innerRelocaliser_Full->update();
-  stop_timer(m_timerUpdate);
+  stop_timer_sync(m_timerUpdate);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -230,22 +230,6 @@ void CascadeRelocaliser::save_poses(const Matrix4f& relocalisedPose, const Matri
   PosePersister::save_pose_on_thread(relocalisedPose, m_posePathGenerator->make_path("pose-%06i.reloc.txt"));
   PosePersister::save_pose_on_thread(refinedPose, m_posePathGenerator->make_path("pose-%06i.icp.txt"));
   m_posePathGenerator->increment_index();
-}
-
-void CascadeRelocaliser::start_timer(AverageTimer& timer, bool cudaSynchronize) const
-{
-  if(!m_timersEnabled) return;
-
-  if(cudaSynchronize) timer.start_sync();
-  else timer.start_nosync();
-}
-
-void CascadeRelocaliser::stop_timer(AverageTimer& timer, bool cudaSynchronize) const
-{
-  if(!m_timersEnabled) return;
-
-  if(cudaSynchronize) timer.stop_sync();
-  else timer.stop_nosync();
 }
 
 }

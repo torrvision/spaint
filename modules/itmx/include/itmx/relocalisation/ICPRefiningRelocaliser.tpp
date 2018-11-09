@@ -530,28 +530,4 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_pose(const ORUtils::SE3
 #endif
 }
 
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer_nosync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.start_nosync();
-}
-
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer_sync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.start_sync();
-}
-
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer_nosync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.stop_nosync();
-}
-
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer_sync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.stop_sync();
-}
-
 }

@@ -22,10 +22,6 @@ namespace itmx {
  */
 class CascadeRelocaliser : public orx::Relocaliser
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef tvgutil::AverageTimer<boost::chrono::microseconds> AverageTimer;
-
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** The "Fast" relocaliser. */
@@ -69,9 +65,6 @@ private:
 
   /** The timer used to profile the relocalisation calls. */
   mutable AverageTimer m_timerRelocalisation;
-
-  /** Whether or not timers are enabled and stats are printed on destruction. */
-  bool m_timersEnabled;
 
   /** The path to a file where to save the average relocalisation times. */
   std::string m_timersOutputFile;
@@ -144,22 +137,6 @@ private:
    * \param refinedPose     The result of refining the relocalised pose.
    */
   void save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const;
-
-  /**
-   * \brief Starts the specified timer (waiting for all CUDA operations to terminate first, if necessary).
-   *
-   * \param timer            The timer to start.
-   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before starting the timer.
-   */
-  void start_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
-
-  /**
-   * \brief Stops the specified timer (waiting for all CUDA operations to terminate first, if necessary).
-   *
-   * \param timer The timer to stop.
-   * \param cudaSynchronize  Whether or not to call cudaDeviceSynchronize before stopping the timer.
-   */
-  void stop_timer(AverageTimer& timer, bool cudaSynchronize = true) const;
 };
 
 }

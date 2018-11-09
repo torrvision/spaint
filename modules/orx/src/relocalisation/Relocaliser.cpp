@@ -7,6 +7,12 @@
 
 namespace orx {
 
+//#################### CONSTRUCTORS ####################
+
+Relocaliser::Relocaliser()
+: m_timersEnabled(false)
+{}
+
 //#################### DESTRUCTOR ####################
 
 Relocaliser::~Relocaliser() {}
@@ -21,6 +27,28 @@ void Relocaliser::finish_training()
 void Relocaliser::update()
 {
   // No-op by default
+}
+
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
+void Relocaliser::start_timer_nosync(AverageTimer& timer) const
+{
+  if(m_timersEnabled) timer.start_nosync();
+}
+
+void Relocaliser::start_timer_sync(AverageTimer& timer) const
+{
+  if(m_timersEnabled) timer.start_sync();
+}
+
+void Relocaliser::stop_timer_nosync(AverageTimer& timer) const
+{
+  if(m_timersEnabled) timer.stop_nosync();
+}
+
+void Relocaliser::stop_timer_sync(AverageTimer& timer) const
+{
+  if(m_timersEnabled) timer.stop_sync();
 }
 
 }
