@@ -607,8 +607,8 @@ void SLAMComponent::setup_relocaliser()
     ScoreRelocaliser_Ptr scoreRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Fast.", settings->deviceType);
     ScoreRelocaliser_Ptr scoreRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Intermediate.", settings->deviceType);
     ScoreRelocaliser_Ptr scoreRelocaliser_Slow = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
-    scoreRelocaliser_Fast->set_relocaliser_state(scoreRelocaliser_Slow->get_relocaliser_state());
-    scoreRelocaliser_Intermediate->set_relocaliser_state(scoreRelocaliser_Slow->get_relocaliser_state());
+    scoreRelocaliser_Fast->set_backing_relocaliser(scoreRelocaliser_Slow);
+    scoreRelocaliser_Intermediate->set_backing_relocaliser(scoreRelocaliser_Slow);
 
     // Decorate the SCoRe relocalisers with ones that use ICP tracking to refine the results.
     Relocaliser_Ptr innerRelocaliser_Fast = refine_with_icp(scoreRelocaliser_Fast);
