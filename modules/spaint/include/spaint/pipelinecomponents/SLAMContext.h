@@ -18,7 +18,7 @@
 #include <itmx/util/ViconInterface.h>
 #endif
 
-#include <orx/relocalisation/RefiningRelocaliser.h>
+#include <orx/relocalisation/Relocaliser.h>
 
 #include "../fiducials/FiducialDetector.h"
 #include "../slamstate/SLAMState.h"
@@ -44,7 +44,7 @@ private:
   std::map<std::string,itmx::MappingClient_Ptr> m_mappingClients;
 
   /** The relocalisers used to estimate the camera pose in the various scenes. */
-  std::map<std::string,orx::RefiningRelocaliser_Ptr> m_relocalisers;
+  std::map<std::string,orx::Relocaliser_Ptr> m_relocalisers;
 
   /** The IDs of all existing scenes. */
   std::vector<std::string> m_sceneIDs;
@@ -111,7 +111,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual orx::RefiningRelocaliser_Ptr& get_relocaliser(const std::string& sceneID);
+  virtual orx::Relocaliser_Ptr& get_relocaliser(const std::string& sceneID);
 
   /**
    * \brief Gets the relocaliser for the specified scene.
@@ -119,7 +119,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual orx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+  virtual orx::Relocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
 
   /**
    * \brief Gets the IDs of all existing scenes.

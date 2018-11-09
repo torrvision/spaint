@@ -34,12 +34,12 @@ MappingClient_CPtr SLAMContext::get_mapping_client(const std::string& sceneID) c
   return MapUtil::lookup(m_mappingClients, sceneID, itmx::MappingClient_Ptr());
 }
 
-RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
+Relocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
 {
   return m_relocalisers[sceneID];
 }
 
-RefiningRelocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
+Relocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
 {
   return MapUtil::lookup(m_relocalisers, sceneID);
 }
