@@ -28,15 +28,24 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& 
   m_timerTraining("Training"),
   m_timerUpdate("Update")
 {
+  // Check that the cascade contains at least one relocaliser.
+  if(innerRelocalisers.empty())
+  {
+    throw std::runtime_error("Error: Cannot create an empty cascade relocaliser");
+  }
+
   // Configure the cascade relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "CascadeRelocaliser.";
   m_savePoses = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
-  m_relocaliserEnabled_Intermediate = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Intermediate", true);
-  m_relocaliserEnabled_Slow = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Slow", true);
-  m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f);
-  m_relocaliserThresholdScore_Slow = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Slow", 0.05f);
   m_timersEnabled = settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
+
+  m_enabledFlags.push_back(true); // the "Fast" relocaliser is currently always enabled
+  m_enabledFlags.push_back(settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Intermediate", true));
+  m_enabledFlags.push_back(settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Slow", true));
+
+  m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f));
+  m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Slow", 0.05f));
 
   // Get the (global) experiment tag.
   const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
@@ -80,15 +89,15 @@ CascadeRelocaliser::~CascadeRelocaliser()
 
   if(m_saveTimes)
   {
-    std::cout << "Saving relocalisation average times in: " << m_timersOutputFile << "\n";
+    std::cout << "Saving average relocalisation times in: " << m_timersOutputFile << '\n';
     std::ofstream out(m_timersOutputFile.c_str());
 
     // Output the average durations.
-    out << m_timerTraining.average_duration().count() << " "
-        << m_timerUpdate.average_duration().count() << " "
-        << m_timerInitialRelocalisation.average_duration().count() << " "
-        << m_timerRefinement.average_duration().count() << " "
-        << m_timerRelocalisation.average_duration().count() << "\n";
+    out << m_timerTraining.average_duration().count() << ' '
+        << m_timerUpdate.average_duration().count() << ' '
+        << m_timerInitialRelocalisation.average_duration().count() << ' '
+        << m_timerRefinement.average_duration().count() << ' '
+        << m_timerRelocalisation.average_duration().count() << '\n';
   }
 }
 
@@ -134,7 +143,7 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   start_timer_nosync(m_timerRefinement); // No need to synchronize the GPU again.
 
   // If the fast relocaliser failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser (if enabled and available).
-  if(m_relocaliserEnabled_Intermediate && m_innerRelocalisers[1] && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate))
+  if(m_enabledFlags[1] && m_innerRelocalisers[1] && (relocalisationResults.empty() || relocalisationResults[0].score > m_fallbackThresholds[0]))
   {
 #if DEBUGGING
     static int intermediateRelocalisationsCount = 0;
@@ -145,7 +154,7 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   }
 
   // Finally, run the normal relocaliser if all else failed.
-  if(m_relocaliserEnabled_Slow && m_innerRelocalisers[2] && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Slow))
+  if(m_enabledFlags[2] && m_innerRelocalisers[2] && (relocalisationResults.empty() || relocalisationResults[0].score > m_fallbackThresholds[1]))
   {
 #if DEBUGGING
     static int fullRelocalisationsCount = 0;

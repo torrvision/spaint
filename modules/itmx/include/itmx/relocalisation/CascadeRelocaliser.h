@@ -23,23 +23,17 @@ class CascadeRelocaliser : public orx::Relocaliser
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  /** Flags indicating whether or not the individual relocalisers in the cascade are enabled or not. */
+  std::deque<bool> m_enabledFlags;
+
+  /** The thresholds used to decide whether or not to fall back from one relocaliser in the cascade to the next. */
+  std::vector<float> m_fallbackThresholds;
+
   /** The individual relocalisers in the cascade. */
   std::vector<orx::Relocaliser_Ptr> m_innerRelocalisers;
 
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
-
-  /** Whether or not to enable relocalisation with the "Intermediate" relocaliser if the results of the fast one are not satisfactory. */
-  bool m_relocaliserEnabled_Intermediate;
-
-  /** Whether or not to enable relocalisation with the "Slow" relocaliser if the results of the previous one are not satisfactory. */
-  bool m_relocaliserEnabled_Slow;
-
-  /** The score threshold used when deciding if the "Intermediate" relocaliser has to be used. */
-  float m_relocaliserThresholdScore_Intermediate;
-
-  /** The score threshold used when deciding if the "Slow" relocaliser has to be used. */
-  float m_relocaliserThresholdScore_Slow;
 
   /** Whether or not to save the relocalised poses. */
   bool m_savePoses;
