@@ -122,6 +122,9 @@ private:
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;
 
+  /** The namespace associated with the settings that are specific to SLAM components. */
+  std::string m_settingsNamespace;
+
   /** The tracker. */
   Tracker_Ptr m_tracker;
 
@@ -252,10 +255,9 @@ private:
    * \note  If the relocaliser is null, this simply returns a null relocaliser (this allows us to safely wrap relocalisers without performing a null check).
    *
    * \param relocaliser       The relocaliser to decorate.
-   * \param settingsNamespace TODO
    * \return                  The decorated relocaliser.
    */
-  orx::Relocaliser_Ptr refine_with_icp(const orx::Relocaliser_Ptr& relocaliser, const std::string& settingsNamespace) const;
+  orx::Relocaliser_Ptr refine_with_icp(const orx::Relocaliser_Ptr& relocaliser) const;
 
   /**
    * \brief Sets up the fiducial detector (if any).

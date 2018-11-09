@@ -61,6 +61,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_relocaliserTrainingCount(0),
   m_relocaliserTrainingSkip(0),
   m_sceneID(sceneID),
+  m_settingsNamespace("SLAMComponent."),
   m_trackerConfig(trackerConfig),
   m_trackingMode(trackingMode)
 {
@@ -530,7 +531,7 @@ void SLAMComponent::process_relocalisation()
   }
 }
 
-Relocaliser_Ptr SLAMComponent::refine_with_icp(const Relocaliser_Ptr& relocaliser, const std::string& settingsNamespace) const
+Relocaliser_Ptr SLAMComponent::refine_with_icp(const Relocaliser_Ptr& relocaliser) const
 {
   if(!relocaliser) return Relocaliser_Ptr();
 
@@ -540,7 +541,7 @@ Relocaliser_Ptr SLAMComponent::refine_with_icp(const Relocaliser_Ptr& relocalise
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
   std::string trackerConfig = "<tracker type='infinitam'>";
-  std::string trackerParams = settings->get_first_value<std::string>(settingsNamespace + "refinementTrackerParams", "");
+  std::string trackerParams = settings->get_first_value<std::string>(m_settingsNamespace + "refinementTrackerParams", "");
   if(trackerParams != "") trackerConfig += "<params>" + trackerParams + "</params>";
   trackerConfig += "</tracker>";
 
@@ -577,10 +578,9 @@ void SLAMComponent::setup_relocaliser()
   const Settings_CPtr& settings = m_context->get_settings();
   m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
 
-  static const std::string settingsNamespace = "SLAMComponent.";
-  m_finishTrainingEnabled = settings->get_first_value<bool>(settingsNamespace + "finishTrainingEnabled", false);
-  m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
-  m_relocaliserTrainingSkip = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkip", 0);
+  m_finishTrainingEnabled = settings->get_first_value<bool>(m_settingsNamespace + "finishTrainingEnabled", false);
+  m_relocaliseEveryFrame = settings->get_first_value<bool>(m_settingsNamespace + "relocaliseEveryFrame", false);
+  m_relocaliserTrainingSkip = settings->get_first_value<size_t>(m_settingsNamespace + "relocaliserTrainingSkip", 0);
 
 #ifndef WITH_GROVE
   // If we're trying to use a Grove relocaliser and Grove has not been built, fall back to the ferns relocaliser and issue a warning.
@@ -595,7 +595,7 @@ void SLAMComponent::setup_relocaliser()
   if(m_relocaliserType == "cascade" || m_relocaliserType == "forest")
   {
     const std::string defaultRelocaliserForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
-    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocaliserForestPath);
+    m_relocaliserForestPath = settings->get_first_value<std::string>(m_settingsNamespace + "relocalisationForestPath", defaultRelocaliserForestPath);
     std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
   }
 
@@ -611,9 +611,9 @@ void SLAMComponent::setup_relocaliser()
     scoreRelocaliser_Intermediate->set_relocaliser_state(scoreRelocaliser_Full->get_relocaliser_state());
 
     // Decorate the SCoRe relocalisers with ones that use ICP tracking to refine the results.
-    Relocaliser_Ptr innerRelocaliser_Fast = refine_with_icp(scoreRelocaliser_Fast, settingsNamespace);
-    Relocaliser_Ptr innerRelocaliser_Intermediate = refine_with_icp(scoreRelocaliser_Intermediate, settingsNamespace);
-    Relocaliser_Ptr innerRelocaliser_Full = refine_with_icp(scoreRelocaliser_Full, settingsNamespace);
+    Relocaliser_Ptr innerRelocaliser_Fast = refine_with_icp(scoreRelocaliser_Fast);
+    Relocaliser_Ptr innerRelocaliser_Intermediate = refine_with_icp(scoreRelocaliser_Intermediate);
+    Relocaliser_Ptr innerRelocaliser_Full = refine_with_icp(scoreRelocaliser_Full);
 
     // Construct the cascade relocaliser itself.
     m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocaliser_Fast, innerRelocaliser_Intermediate, innerRelocaliser_Full, settings));
@@ -657,7 +657,7 @@ void SLAMComponent::setup_relocaliser()
     else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
 
     // Now decorate this relocaliser with one that uses an ICP tracker to refine the results.
-    m_context->get_relocaliser(m_sceneID) = refine_with_icp(innerRelocaliser, settingsNamespace);
+    m_context->get_relocaliser(m_sceneID) = refine_with_icp(innerRelocaliser);
   }
 }
 
