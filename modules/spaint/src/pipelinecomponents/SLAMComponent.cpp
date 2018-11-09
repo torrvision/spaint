@@ -28,7 +28,6 @@ using namespace grove;
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
 #include <itmx/relocalisation/FernRelocaliser.h>
-#include <itmx/relocalisation/CascadeRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 using namespace itmx;
@@ -574,9 +573,6 @@ void SLAMComponent::setup_relocaliser()
 
   // Construct a relocaliser of the specified type.
   Relocaliser_Ptr innerRelocaliser;
-  Relocaliser_Ptr innerRelocaliser_Fast;
-  Relocaliser_Ptr innerRelocaliser_Intermediate;
-
   if(m_relocaliserType == "forest")
   {
 #ifdef WITH_GROVE
@@ -586,18 +582,16 @@ void SLAMComponent::setup_relocaliser()
     std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
 
     // Load the relocaliser from the specified file.
-    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
-
-    // Also create a fast relocaliser from the same file.
-    innerRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Fast.", settings->deviceType);
-
-    // Also create an intermediate relocaliser from the same file.
-    innerRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Intermediate.", settings->deviceType);
-
-    // The fast and intermediate relocalisers share the state with the normal relocaliser (only the normal one will be trained and updated).
-    ScoreRelocaliserState_Ptr relocaliserState = boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser)->get_relocaliser_state();
-    boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser_Fast)->set_relocaliser_state(relocaliserState);
-    boost::dynamic_pointer_cast<ScoreRelocaliser>(innerRelocaliser_Intermediate)->set_relocaliser_state(relocaliserState);
+    int deviceCount = 1;
+    cudaGetDeviceCount(&deviceCount);
+    if(deviceCount > 1)
+    {
+      ORcudaSafeCall(cudaSetDevice(1));
+      Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
+      innerRelocaliser.reset(new BackgroundRelocaliser(scoreRelocaliser, 1));
+      ORcudaSafeCall(cudaSetDevice(0));
+    }
+    else innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
 #endif
   }
   else if(m_relocaliserType == "ferns")
@@ -628,29 +622,9 @@ void SLAMComponent::setup_relocaliser()
   FallibleTracker *dummy;
   Tracker_Ptr tracker = m_context->get_tracker_factory().make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
-  // Wrap the inner relocaliser in an ICP refiner.
-  innerRelocaliser.reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
+  m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
     innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
   ));
-
-  // Wrap the fast relocaliser as well (if instantiated).
-  if(innerRelocaliser_Fast)
-  {
-    innerRelocaliser_Fast.reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-      innerRelocaliser_Fast, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-      voxelScene, m_denseVoxelMapper, settings));
-  }
-
-  // Wrap the intermediate relocaliser as well (if instantiated).
-  if(innerRelocaliser_Intermediate)
-  {
-    innerRelocaliser_Intermediate.reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-      innerRelocaliser_Intermediate, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-      voxelScene, m_denseVoxelMapper, settings));
-  }
-
-  // Now create a CascadeRelocaliser that wraps the three relocalisers.
-  m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocaliser_Fast, innerRelocaliser_Intermediate, innerRelocaliser, settings));
 }
 
 void SLAMComponent::setup_tracker()
