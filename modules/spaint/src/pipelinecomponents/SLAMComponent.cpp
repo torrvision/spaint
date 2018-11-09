@@ -5,11 +5,13 @@
 
 #include "pipelinecomponents/SLAMComponent.h"
 
+#include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 namespace bf = boost::filesystem;
+using boost::assign::list_of;
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
@@ -616,7 +618,13 @@ void SLAMComponent::setup_relocaliser()
     Relocaliser_Ptr innerRelocaliser_Slow = refine_with_icp(scoreRelocaliser_Slow);
 
     // Construct the cascade relocaliser itself.
-    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocaliser_Fast, innerRelocaliser_Intermediate, innerRelocaliser_Slow, settings));
+    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(
+      list_of
+        (innerRelocaliser_Fast)
+        (innerRelocaliser_Intermediate)
+        (innerRelocaliser_Slow),
+      settings)
+    );
   #endif
   }
   else

@@ -20,19 +20,15 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser_Fast, const orx::Relocaliser_Ptr& innerRelocaliser_Intermediate,
-                                       const orx::Relocaliser_Ptr& innerRelocaliser_Slow, const Settings_CPtr& settings)
-: m_timerInitialRelocalisation("Initial Relocalisation"),
+CascadeRelocaliser::CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& innerRelocalisers, const Settings_CPtr& settings)
+: m_innerRelocalisers(innerRelocalisers),
+  m_timerInitialRelocalisation("Initial Relocalisation"),
   m_timerRefinement("ICP Refinement"),
   m_timerRelocalisation("Relocalisation"),
   m_timerTraining("Training"),
   m_timerUpdate("Update")
 {
-  m_innerRelocalisers.push_back(innerRelocaliser_Fast);
-  m_innerRelocalisers.push_back(innerRelocaliser_Intermediate);
-  m_innerRelocalisers.push_back(innerRelocaliser_Slow);
-
-  // Configure the relocaliser based on the settings that have been passed in.
+  // Configure the cascade relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "CascadeRelocaliser.";
   m_savePoses = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);

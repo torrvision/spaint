@@ -70,13 +70,10 @@ public:
   /**
    * \brief Constructs a cascade relocaliser.
    *
-   * \param innerRelocaliser_Fast          The "Fast" relocaliser.
-   * \param innerRelocaliser_Intermediate  The "Intermediate" relocaliser.
-   * \param innerRelocaliser_Slow          The "Slow" relocaliser.
-   * \param settings                       The settings to use for the relocaliser.
+   * \param innerRelocalisers The individual relocalisers in the cascade.
+   * \param settings          The settings to use for the cascade relocaliser itself.
    */
-  CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser_Fast, const orx::Relocaliser_Ptr& innerRelocaliser_Intermediate,
-                     const orx::Relocaliser_Ptr& innerRelocaliser_Slow, const Settings_CPtr& settings);
+  CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& innerRelocalisers, const Settings_CPtr& settings);
 
   //#################### DESTRUCTOR ####################
 public:
