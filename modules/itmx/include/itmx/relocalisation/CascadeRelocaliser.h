@@ -30,22 +30,22 @@ private:
   orx::Relocaliser_Ptr m_innerRelocaliser_Intermediate;
 
   /** The "Slow" relocaliser, also used for training and update. */
-  orx::Relocaliser_Ptr m_innerRelocaliser_Full;
+  orx::Relocaliser_Ptr m_innerRelocaliser_Slow;
 
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
 
-  /** Whether or not to enable relocalisation with the INTERMEDIATE relocaliser if the results of the fast one are not satisfactory. */
+  /** Whether or not to enable relocalisation with the "Intermediate" relocaliser if the results of the fast one are not satisfactory. */
   bool m_relocaliserEnabled_Intermediate;
 
-  /** Whether or not to enable relocalisation with the FULL relocaliser if the results of the previous one are not satisfactory. */
-  bool m_relocaliserEnabled_Full;
+  /** Whether or not to enable relocalisation with the "Slow" relocaliser if the results of the previous one are not satisfactory. */
+  bool m_relocaliserEnabled_Slow;
 
-  /** The score threshold used when deciding if the INTERMEDIATE relocaliser has to be used. */
+  /** The score threshold used when deciding if the "Intermediate" relocaliser has to be used. */
   float m_relocaliserThresholdScore_Intermediate;
 
-  /** The score threshold used when deciding if the FULL relocaliser has to be used. */
-  float m_relocaliserThresholdScore_Full;
+  /** The score threshold used when deciding if the "Slow" relocaliser has to be used. */
+  float m_relocaliserThresholdScore_Slow;
 
   /** Whether or not to save the relocalised poses. */
   bool m_savePoses;
@@ -53,7 +53,7 @@ private:
   /** Whether or not to save the average relocalisation times. */
   bool m_saveTimes;
 
-  /** The settings to use for InfiniTAM. */
+  /** The settings to use for the relocaliser. */
   Settings_CPtr m_settings;
 
   /** The timer used to profile the initial relocalisations. */
@@ -65,7 +65,7 @@ private:
   /** The timer used to profile the relocalisation calls. */
   mutable AverageTimer m_timerRelocalisation;
 
-  /** The path to a file where to save the average relocalisation times. */
+  /** The path to a file in which to save the average relocalisation times. */
   std::string m_timersOutputFile;
 
   /** The timer used to profile the training calls. */
@@ -79,13 +79,13 @@ public:
   /**
    * \brief Constructs a cascade relocaliser.
    *
-   * \param innerRelocaliser_Fast          The Fast relocaliser.
-   * \param innerRelocaliser_Intermediate  The Intermediate relocaliser.
-   * \param innerRelocaliser_Full          The Fast relocaliser.
-   * \param settings                       The settings.
+   * \param innerRelocaliser_Fast          The "Fast" relocaliser.
+   * \param innerRelocaliser_Intermediate  The "Intermediate" relocaliser.
+   * \param innerRelocaliser_Slow          The "Slow" relocaliser.
+   * \param settings                       The settings to use for the relocaliser.
    */
   CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser_Fast, const orx::Relocaliser_Ptr& innerRelocaliser_Intermediate,
-                     const orx::Relocaliser_Ptr& innerRelocaliser_Full, const Settings_CPtr& settings);
+                     const orx::Relocaliser_Ptr& innerRelocaliser_Slow, const Settings_CPtr& settings);
 
   //#################### DESTRUCTOR ####################
 public:

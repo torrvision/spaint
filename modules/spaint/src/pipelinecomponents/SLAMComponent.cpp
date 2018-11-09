@@ -606,17 +606,17 @@ void SLAMComponent::setup_relocaliser()
     // Construct the inner SCoRe relocalisers.
     ScoreRelocaliser_Ptr scoreRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Fast.", settings->deviceType);
     ScoreRelocaliser_Ptr scoreRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Intermediate.", settings->deviceType);
-    ScoreRelocaliser_Ptr scoreRelocaliser_Full = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
-    scoreRelocaliser_Fast->set_relocaliser_state(scoreRelocaliser_Full->get_relocaliser_state());
-    scoreRelocaliser_Intermediate->set_relocaliser_state(scoreRelocaliser_Full->get_relocaliser_state());
+    ScoreRelocaliser_Ptr scoreRelocaliser_Slow = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
+    scoreRelocaliser_Fast->set_relocaliser_state(scoreRelocaliser_Slow->get_relocaliser_state());
+    scoreRelocaliser_Intermediate->set_relocaliser_state(scoreRelocaliser_Slow->get_relocaliser_state());
 
     // Decorate the SCoRe relocalisers with ones that use ICP tracking to refine the results.
     Relocaliser_Ptr innerRelocaliser_Fast = refine_with_icp(scoreRelocaliser_Fast);
     Relocaliser_Ptr innerRelocaliser_Intermediate = refine_with_icp(scoreRelocaliser_Intermediate);
-    Relocaliser_Ptr innerRelocaliser_Full = refine_with_icp(scoreRelocaliser_Full);
+    Relocaliser_Ptr innerRelocaliser_Slow = refine_with_icp(scoreRelocaliser_Slow);
 
     // Construct the cascade relocaliser itself.
-    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocaliser_Fast, innerRelocaliser_Intermediate, innerRelocaliser_Full, settings));
+    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocaliser_Fast, innerRelocaliser_Intermediate, innerRelocaliser_Slow, settings));
   #endif
   }
   else

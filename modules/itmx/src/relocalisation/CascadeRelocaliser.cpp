@@ -21,10 +21,10 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser_Fast, const orx::Relocaliser_Ptr& innerRelocaliser_Intermediate,
-                                       const orx::Relocaliser_Ptr& innerRelocaliser_Full, const Settings_CPtr& settings)
+                                       const orx::Relocaliser_Ptr& innerRelocaliser_Slow, const Settings_CPtr& settings)
 : m_innerRelocaliser_Fast(innerRelocaliser_Fast),
   m_innerRelocaliser_Intermediate(innerRelocaliser_Intermediate),
-  m_innerRelocaliser_Full(innerRelocaliser_Full),
+  m_innerRelocaliser_Slow(innerRelocaliser_Slow),
   m_settings(settings),
   m_timerInitialRelocalisation("Initial Relocalisation"),
   m_timerRefinement("ICP Refinement"),
@@ -37,9 +37,9 @@ CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocali
   m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
   m_relocaliserEnabled_Intermediate = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Intermediate", true);
-  m_relocaliserEnabled_Full = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Full", true);
+  m_relocaliserEnabled_Slow = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Slow", true);
   m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f);
-  m_relocaliserThresholdScore_Full = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Full", 0.05f);
+  m_relocaliserThresholdScore_Slow = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Slow", 0.05f);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
   // Get the (global) experiment tag.
@@ -100,12 +100,12 @@ CascadeRelocaliser::~CascadeRelocaliser()
 
 void CascadeRelocaliser::finish_training()
 {
-  m_innerRelocaliser_Full->finish_training();
+  m_innerRelocaliser_Slow->finish_training();
 }
 
 void CascadeRelocaliser::load_from_disk(const std::string& inputFolder)
 {
-  m_innerRelocaliser_Full->load_from_disk(inputFolder);
+  m_innerRelocaliser_Slow->load_from_disk(inputFolder);
 }
 
 std::vector<orx::Relocaliser::Result>
@@ -143,14 +143,14 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   }
 
   // Finally, run the normal relocaliser if all else failed.
-  if(m_relocaliserEnabled_Full && m_innerRelocaliser_Full && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Full))
+  if(m_relocaliserEnabled_Slow && m_innerRelocaliser_Slow && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Slow))
   {
 #if DEBUGGING
     static int fullRelocalisationsCount = 0;
     std::cout << "Using full relocaliser to relocalise: " << fullRelocalisationsCount++ << ".\n";
 #endif
 
-    relocalisationResults = m_innerRelocaliser_Full->relocalise(colourImage, depthImage, depthIntrinsics);
+    relocalisationResults = m_innerRelocaliser_Slow->relocalise(colourImage, depthImage, depthIntrinsics);
   }
 
   // Done.
@@ -198,26 +198,26 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
 
 void CascadeRelocaliser::reset()
 {
-  m_innerRelocaliser_Full->reset();
+  m_innerRelocaliser_Slow->reset();
 }
 
 void CascadeRelocaliser::save_to_disk(const std::string& outputFolder) const
 {
-  m_innerRelocaliser_Full->save_to_disk(outputFolder);
+  m_innerRelocaliser_Slow->save_to_disk(outputFolder);
 }
 
 void CascadeRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   start_timer_sync(m_timerTraining);
-  m_innerRelocaliser_Full->train(colourImage, depthImage, depthIntrinsics, cameraPose);
+  m_innerRelocaliser_Slow->train(colourImage, depthImage, depthIntrinsics, cameraPose);
   stop_timer_sync(m_timerTraining);
 }
 
 void CascadeRelocaliser::update()
 {
   start_timer_sync(m_timerUpdate);
-  m_innerRelocaliser_Full->update();
+  m_innerRelocaliser_Slow->update();
   stop_timer_sync(m_timerUpdate);
 }
 
