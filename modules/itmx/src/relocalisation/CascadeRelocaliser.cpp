@@ -128,76 +128,56 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   std::cout << "---\nFrame Index: " << frameIdx << std::endl;
 #endif
 
-  std::vector<Result> relocalisationResults_Fast;
-  std::vector<Result> relocalisationResults;
-
-  // Main timing section.
   start_timer_sync(m_timerRelocalisation);
-
-  // 1. Run the fast inner relocaliser.
   start_timer_nosync(m_timerInitialRelocalisation); // No need to synchronize the GPU again.
-  relocalisationResults = relocalisationResults_Fast = m_innerRelocalisers[0]->relocalise(colourImage, depthImage, depthIntrinsics);
-  stop_timer_sync(m_timerInitialRelocalisation);
 
-  // We time the following as "refinement".
+  // Try to relocalise using the first relocaliser in the cascade (this must exist, since the cascade is prevented from being empty in the constructor).
+  std::vector<Result> initialRelocalisationResults = m_innerRelocalisers[0]->relocalise(colourImage, depthImage, depthIntrinsics);
+  std::vector<Result> relocalisationResults = initialRelocalisationResults;
+
+  stop_timer_sync(m_timerInitialRelocalisation);
   start_timer_nosync(m_timerRefinement); // No need to synchronize the GPU again.
 
-  // If the fast relocaliser failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser (if enabled and available).
-  if(m_enabledFlags[1] && m_innerRelocalisers[1] && (relocalisationResults.empty() || relocalisationResults[0].score > m_fallbackThresholds[0]))
-  {
 #if DEBUGGING
-    static int intermediateRelocalisationsCount = 0;
-    std::cout << "Using intermediate relocaliser to relocalise: " << intermediateRelocalisationsCount++ << ".\n";
+  static std::vector<int> relocalisationCounts(m_innerRelocalisers.size());
 #endif
 
-    relocalisationResults = m_innerRelocalisers[1]->relocalise(colourImage, depthImage, depthIntrinsics);
-  }
-
-  // Finally, run the normal relocaliser if all else failed.
-  if(m_enabledFlags[2] && m_innerRelocalisers[2] && (relocalisationResults.empty() || relocalisationResults[0].score > m_fallbackThresholds[1]))
+  // For each other relocaliser in the cascade:
+  for(size_t i = 1, size = m_innerRelocalisers.size(); i < size; ++i)
   {
+    // If the relocaliser exists and is enabled, and either there is no current best relocalisation result or it's not good enough:
+    if(m_innerRelocalisers[i] && m_enabledFlags[i] && (relocalisationResults.empty() || relocalisationResults[0].score > m_fallbackThresholds[i-1]))
+    {
 #if DEBUGGING
-    static int fullRelocalisationsCount = 0;
-    std::cout << "Using full relocaliser to relocalise: " << fullRelocalisationsCount++ << ".\n";
+      std::cout << "Using inner relocaliser " << i << " to relocalise: " << relocalisationCounts[i]++ << ".\n";
 #endif
 
-    relocalisationResults = m_innerRelocalisers[2]->relocalise(colourImage, depthImage, depthIntrinsics);
+      // Try to relocalise using the new relocaliser.
+      relocalisationResults = m_innerRelocalisers[i]->relocalise(colourImage, depthImage, depthIntrinsics);
+    }
   }
 
-  // Done.
   stop_timer_sync(m_timerRefinement);
   stop_timer_nosync(m_timerRelocalisation); // No need to synchronize the GPU again.
 
   // Save the best initial and refined poses if needed.
   if(m_savePoses)
   {     
-    // The initial pose is the best one returned by the fast relocaliser (if any).
+    // Determine the best initial pose, namely the best pose (if any) returned by the first relocaliser in the cascade.
     Matrix4f initialPose;
-    if(!relocalisationResults_Fast.empty())
-    {
-      initialPose = relocalisationResults_Fast[0].pose.GetInvM();
-    }
-    else
-    {
-      initialPose.setValues(std::numeric_limits<float>::quiet_NaN());
-    }
+    if(!initialRelocalisationResults.empty()) initialPose = initialRelocalisationResults[0].pose.GetInvM();
+    else initialPose.setValues(std::numeric_limits<float>::quiet_NaN());
 
-    // The best refined pose is the pose (if any) whose score is lowest after running all the cascade.
+    // Determine the best refined pose, namely the pose (if any) whose score is lowest after running the entire cascade.
     Matrix4f refinedPose;
-    if(!relocalisationResults.empty())
-    {
-      refinedPose = relocalisationResults[0].pose.GetInvM();
-    }
-    else
-    {
-      refinedPose.setValues(std::numeric_limits<float>::quiet_NaN());
-    }
+    if(!relocalisationResults.empty()) refinedPose = relocalisationResults[0].pose.GetInvM();
+    else refinedPose.setValues(std::numeric_limits<float>::quiet_NaN());
 
-    // Actually save the poses.
+    // Save both poses to disk.
     save_poses(initialPose, refinedPose);
 
     // Since we are saving the poses (i.e. we are running in evaluation mode), we force the quality of
-    // every refined result to POOR to prevent fusion whilst evaluating the testing sequence.
+    // every refined result to poor to prevent fusion whilst evaluating the testing sequence.
     for(size_t i = 0; i < relocalisationResults.size(); ++i)
     {
       relocalisationResults[i].quality = RELOCALISATION_POOR;
