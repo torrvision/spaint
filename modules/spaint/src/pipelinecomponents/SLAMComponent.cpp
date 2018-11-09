@@ -572,13 +572,9 @@ void SLAMComponent::setup_fiducial_detector()
 
 void SLAMComponent::setup_relocaliser()
 {
-  const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
-  const Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
-  const Settings_CPtr& settings = m_context->get_settings();
-  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
-
   // Look up the non-relocaliser-specific settings, such as the type of relocaliser to construct.
   // Note that the relocaliser type is a primary setting, so is not in the SLAMComponent namespace.
+  const Settings_CPtr& settings = m_context->get_settings();
   m_relocaliserType = settings->get_first_value<std::string>("relocaliserType");
 
   static const std::string settingsNamespace = "SLAMComponent.";
@@ -587,7 +583,7 @@ void SLAMComponent::setup_relocaliser()
   m_relocaliserTrainingSkip = settings->get_first_value<size_t>(settingsNamespace + "relocaliserTrainingSkip", 0);
 
 #ifndef WITH_GROVE
-  // If the user is trying to use a Grove relocaliser and Grove has not been built, fall back to the ferns relocaliser and issue a warning.
+  // If we're trying to use a Grove relocaliser and Grove has not been built, fall back to the ferns relocaliser and issue a warning.
   if(m_relocaliserType == "cascade" || m_relocaliserType == "forest")
   {
     m_relocaliserType = "ferns";
@@ -595,16 +591,18 @@ void SLAMComponent::setup_relocaliser()
   }
 #endif
 
+  // If we're trying to use a Grove relocaliser, determine the path to the file containing the forest.
+  if(m_relocaliserType == "cascade" || m_relocaliserType == "forest")
+  {
+    const std::string defaultRelocaliserForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
+    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocaliserForestPath);
+    std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
+  }
+
   // Construct a relocaliser of the specified type.
   if(m_relocaliserType == "cascade")
   {
   #ifdef WITH_GROVE
-    // If we're trying to set up a cascade relocaliser, determine the path to the file containing the forest.
-    // FIXME: This duplicates the code below - we should fix this.
-    const std::string defaultRelocaliserForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
-    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocaliserForestPath);
-    std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
-
     // Construct the inner SCoRe relocalisers.
     ScoreRelocaliser_Ptr scoreRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Fast.", settings->deviceType);
     ScoreRelocaliser_Ptr scoreRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Intermediate.", settings->deviceType);
@@ -627,11 +625,6 @@ void SLAMComponent::setup_relocaliser()
     if(m_relocaliserType == "forest")
     {
     #ifdef WITH_GROVE
-      // If we're trying to set up a forest-based relocaliser, determine the path to the file containing the forest.
-      const std::string defaultRelocaliserForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
-      m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocaliserForestPath);
-      std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
-
       // Load the relocaliser from the specified file.
       int deviceCount = 1;
       cudaGetDeviceCount(&deviceCount);
@@ -648,7 +641,7 @@ void SLAMComponent::setup_relocaliser()
     else if(m_relocaliserType == "ferns")
     {
       innerRelocaliser.reset(new FernRelocaliser(
-        depthImageSize,
+        m_imageSourceEngine->getDepthImageSize(),
         settings->sceneParams.viewFrustum_min,
         settings->sceneParams.viewFrustum_max,
         FernRelocaliser::get_default_harvesting_threshold(),
