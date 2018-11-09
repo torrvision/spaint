@@ -27,7 +27,6 @@ using namespace grove;
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
-#include <itmx/persistence/PosePersister.h>
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/CascadeRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
@@ -39,9 +38,7 @@ using namespace itmx;
 #include <orx/relocalisation/Relocaliser.h>
 using namespace orx;
 
-#include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
-#include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
 #ifdef WITH_OPENCV
