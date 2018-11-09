@@ -32,6 +32,9 @@ private:
   /** The "Slow" relocaliser, also used for training and update. */
   orx::Relocaliser_Ptr m_innerRelocaliser_Slow;
 
+  /** The individual relocalisers in the cascade. */
+  std::vector<orx::Relocaliser_Ptr> m_innerRelocalisers;
+
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
 

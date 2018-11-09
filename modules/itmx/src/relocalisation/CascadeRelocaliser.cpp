@@ -42,6 +42,10 @@ CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocali
   m_relocaliserThresholdScore_Slow = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Slow", 0.05f);
   m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
+  m_innerRelocalisers.push_back(innerRelocaliser_Fast);
+  m_innerRelocalisers.push_back(innerRelocaliser_Intermediate);
+  m_innerRelocalisers.push_back(innerRelocaliser_Slow);
+
   // Get the (global) experiment tag.
   const std::string experimentTag = m_settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
 
@@ -100,12 +104,18 @@ CascadeRelocaliser::~CascadeRelocaliser()
 
 void CascadeRelocaliser::finish_training()
 {
-  m_innerRelocaliser_Slow->finish_training();
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  {
+    m_innerRelocalisers[i]->finish_training();
+  }
 }
 
 void CascadeRelocaliser::load_from_disk(const std::string& inputFolder)
 {
-  m_innerRelocaliser_Slow->load_from_disk(inputFolder);
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  {
+    m_innerRelocalisers[i]->load_from_disk(inputFolder);
+  }
 }
 
 std::vector<orx::Relocaliser::Result>
@@ -198,26 +208,42 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
 
 void CascadeRelocaliser::reset()
 {
-  m_innerRelocaliser_Slow->reset();
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  {
+    m_innerRelocalisers[i]->reset();
+  }
 }
 
 void CascadeRelocaliser::save_to_disk(const std::string& outputFolder) const
 {
-  m_innerRelocaliser_Slow->save_to_disk(outputFolder);
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  {
+    m_innerRelocalisers[i]->save_to_disk(outputFolder);
+  }
 }
 
 void CascadeRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   start_timer_sync(m_timerTraining);
-  m_innerRelocaliser_Slow->train(colourImage, depthImage, depthIntrinsics, cameraPose);
+
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  {
+    m_innerRelocalisers[i]->train(colourImage, depthImage, depthIntrinsics, cameraPose);
+  }
+
   stop_timer_sync(m_timerTraining);
 }
 
 void CascadeRelocaliser::update()
 {
   start_timer_sync(m_timerUpdate);
-  m_innerRelocaliser_Slow->update();
+
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  {
+    m_innerRelocalisers[i]->update();
+  }
+
   stop_timer_sync(m_timerUpdate);
 }
 
