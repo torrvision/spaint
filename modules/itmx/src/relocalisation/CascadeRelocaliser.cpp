@@ -22,32 +22,28 @@ namespace itmx {
 
 CascadeRelocaliser::CascadeRelocaliser(const orx::Relocaliser_Ptr& innerRelocaliser_Fast, const orx::Relocaliser_Ptr& innerRelocaliser_Intermediate,
                                        const orx::Relocaliser_Ptr& innerRelocaliser_Slow, const Settings_CPtr& settings)
-: m_innerRelocaliser_Fast(innerRelocaliser_Fast),
-  m_innerRelocaliser_Intermediate(innerRelocaliser_Intermediate),
-  m_innerRelocaliser_Slow(innerRelocaliser_Slow),
-  m_settings(settings),
-  m_timerInitialRelocalisation("Initial Relocalisation"),
+: m_timerInitialRelocalisation("Initial Relocalisation"),
   m_timerRefinement("ICP Refinement"),
   m_timerRelocalisation("Relocalisation"),
   m_timerTraining("Training"),
   m_timerUpdate("Update")
 {
-  // Configure the relocaliser based on the settings that have been passed in.
-  const static std::string settingsNamespace = "CascadeRelocaliser.";
-  m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
-  m_saveTimes = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
-  m_relocaliserEnabled_Intermediate = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Intermediate", true);
-  m_relocaliserEnabled_Slow = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Slow", true);
-  m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f);
-  m_relocaliserThresholdScore_Slow = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Slow", 0.05f);
-  m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
-
   m_innerRelocalisers.push_back(innerRelocaliser_Fast);
   m_innerRelocalisers.push_back(innerRelocaliser_Intermediate);
   m_innerRelocalisers.push_back(innerRelocaliser_Slow);
 
+  // Configure the relocaliser based on the settings that have been passed in.
+  const static std::string settingsNamespace = "CascadeRelocaliser.";
+  m_savePoses = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
+  m_saveTimes = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
+  m_relocaliserEnabled_Intermediate = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Intermediate", true);
+  m_relocaliserEnabled_Slow = settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Slow", true);
+  m_relocaliserThresholdScore_Intermediate = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f);
+  m_relocaliserThresholdScore_Slow = settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Slow", 0.05f);
+  m_timersEnabled = settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
+
   // Get the (global) experiment tag.
-  const std::string experimentTag = m_settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
+  const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
 
   if(m_savePoses)
   {
@@ -135,32 +131,32 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
 
   // 1. Run the fast inner relocaliser.
   start_timer_nosync(m_timerInitialRelocalisation); // No need to synchronize the GPU again.
-  relocalisationResults = relocalisationResults_Fast = m_innerRelocaliser_Fast->relocalise(colourImage, depthImage, depthIntrinsics);
+  relocalisationResults = relocalisationResults_Fast = m_innerRelocalisers[0]->relocalise(colourImage, depthImage, depthIntrinsics);
   stop_timer_sync(m_timerInitialRelocalisation);
 
   // We time the following as "refinement".
   start_timer_nosync(m_timerRefinement); // No need to synchronize the GPU again.
 
   // If the fast relocaliser failed to relocalise or returned a bad relocalisation, then use the intermediate relocaliser (if enabled and available).
-  if(m_relocaliserEnabled_Intermediate && m_innerRelocaliser_Intermediate && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate))
+  if(m_relocaliserEnabled_Intermediate && m_innerRelocalisers[1] && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Intermediate))
   {
 #if DEBUGGING
     static int intermediateRelocalisationsCount = 0;
     std::cout << "Using intermediate relocaliser to relocalise: " << intermediateRelocalisationsCount++ << ".\n";
 #endif
 
-    relocalisationResults = m_innerRelocaliser_Intermediate->relocalise(colourImage, depthImage, depthIntrinsics);
+    relocalisationResults = m_innerRelocalisers[1]->relocalise(colourImage, depthImage, depthIntrinsics);
   }
 
   // Finally, run the normal relocaliser if all else failed.
-  if(m_relocaliserEnabled_Slow && m_innerRelocaliser_Slow && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Slow))
+  if(m_relocaliserEnabled_Slow && m_innerRelocalisers[2] && (relocalisationResults.empty() || relocalisationResults[0].score > m_relocaliserThresholdScore_Slow))
   {
 #if DEBUGGING
     static int fullRelocalisationsCount = 0;
     std::cout << "Using full relocaliser to relocalise: " << fullRelocalisationsCount++ << ".\n";
 #endif
 
-    relocalisationResults = m_innerRelocaliser_Slow->relocalise(colourImage, depthImage, depthIntrinsics);
+    relocalisationResults = m_innerRelocalisers[2]->relocalise(colourImage, depthImage, depthIntrinsics);
   }
 
   // Done.

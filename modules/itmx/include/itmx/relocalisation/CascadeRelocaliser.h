@@ -23,15 +23,6 @@ class CascadeRelocaliser : public orx::Relocaliser
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  /** The "Fast" relocaliser. */
-  orx::Relocaliser_Ptr m_innerRelocaliser_Fast;
-
-  /** The "Intermediate" relocaliser. */
-  orx::Relocaliser_Ptr m_innerRelocaliser_Intermediate;
-
-  /** The "Slow" relocaliser, also used for training and update. */
-  orx::Relocaliser_Ptr m_innerRelocaliser_Slow;
-
   /** The individual relocalisers in the cascade. */
   std::vector<orx::Relocaliser_Ptr> m_innerRelocalisers;
 
@@ -55,9 +46,6 @@ private:
 
   /** Whether or not to save the average relocalisation times. */
   bool m_saveTimes;
-
-  /** The settings to use for the relocaliser. */
-  Settings_CPtr m_settings;
 
   /** The timer used to profile the initial relocalisations. */
   mutable AverageTimer m_timerInitialRelocalisation;
