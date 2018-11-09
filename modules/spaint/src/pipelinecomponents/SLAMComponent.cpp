@@ -587,11 +587,11 @@ void SLAMComponent::setup_relocaliser()
     if(deviceCount > 1)
     {
       ORcudaSafeCall(cudaSetDevice(1));
-      Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType);
+      Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
       innerRelocaliser.reset(new BackgroundRelocaliser(scoreRelocaliser, 1));
       ORcudaSafeCall(cudaSetDevice(0));
     }
-    else innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, settings->deviceType);
+    else innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
 #endif
   }
   else if(m_relocaliserType == "ferns")

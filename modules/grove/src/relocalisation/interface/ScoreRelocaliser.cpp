@@ -24,11 +24,9 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const SettingsContainer_CPtr& settings, DeviceType deviceType)
+ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const SettingsContainer_CPtr& settings, const std::string& settingsNamespace, DeviceType deviceType)
 : m_deviceType(deviceType), m_settings(settings)
 {
-  const std::string settingsNamespace = "ScoreRelocaliser.";
-
   // Determine the top-level parameters for the relocaliser.
   m_maxRelocalisationsToOutput = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxRelocalisationsToOutput", 1);
 
@@ -58,7 +56,7 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
 
   // Instantiate the sub-components.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, deviceType);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, "PreemptiveRansac.", deviceType);
 
   m_scoreForest = m_settings->get_first_value<bool>(settingsNamespace + "randomlyGenerateForest", false)
     ? DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_randomly_generated_forest(m_settings, deviceType)

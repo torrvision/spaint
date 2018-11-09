@@ -24,14 +24,16 @@ struct ScoreRelocaliserFactory
   /**
    * \brief Makes a SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param forestFilename  The name of the file from which to load the pre-trained forest.
-   * \param settings        The settings used to configure the relocaliser.
-   * \param deviceType      The device on which the relocaliser should operate.
-   * \return                The relocaliser.
+   * \param forestFilename    The name of the file from which to load the pre-trained forest.
+   * \param settings          The settings used to configure the relocaliser.
+   * \param settingsNamespace The namespace associated with the settings that are specific to the SCoRe relocaliser.
+   * \param deviceType        The device on which the relocaliser should operate.
+   * \return                  The relocaliser.
    *
    * \throws std::runtime_error If the relocaliser cannot be created.
    */
-  static ScoreRelocaliser_Ptr make_score_relocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
+  static ScoreRelocaliser_Ptr make_score_relocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings,
+                                                     const std::string& settingsNamespace, DeviceType deviceType);
 };
 
 }

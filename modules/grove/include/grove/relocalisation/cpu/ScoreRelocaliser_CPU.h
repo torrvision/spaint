@@ -21,12 +21,13 @@ public:
   /**
    * \brief Constructs a CPU-based SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param forestFilename  The name of the file from which to load the pre-trained forest.
-   * \param settings        The settings used to configure the relocaliser.
+   * \param forestFilename    The name of the file from which to load the pre-trained forest.
+   * \param settings          The settings used to configure the relocaliser.
+   * \param settingsNamespace The namespace associated with the settings that are specific to the SCoRe relocaliser.
    *
    * \throws std::runtime_error If the forest cannot be loaded.
    */
-  ScoreRelocaliser_CPU(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings);
+  ScoreRelocaliser_CPU(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

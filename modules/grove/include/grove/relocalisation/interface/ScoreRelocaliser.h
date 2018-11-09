@@ -127,13 +127,14 @@ protected:
   /**
    * \brief Constructs a SCoRe relocaliser by loading a pre-trained forest from a file.
    *
-   * \param forestFilename  The name of the file from which to load the pre-trained forest.
-   * \param settings        The settings used to configure the relocaliser.
-   * \param deviceType      The device on which the relocaliser should operate.
+   * \param forestFilename    The name of the file from which to load the pre-trained forest.
+   * \param settings          The settings used to configure the relocaliser.
+   * \param settingsNamespace The namespace associated with the settings that are specific to the SCoRe relocaliser.
+   * \param deviceType        The device on which the relocaliser should operate.
    *
    * \throws std::runtime_error If the forest cannot be loaded.
    */
-  ScoreRelocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
+  ScoreRelocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:

@@ -17,8 +17,8 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr& settings)
-: PreemptiveRansac(settings)
+PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr& settings, const std::string& settingsNamespace)
+: PreemptiveRansac(settings, settingsNamespace)
 {
   MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   m_rngs = mbf.make_block<CPURNG>(m_maxPoseCandidates);

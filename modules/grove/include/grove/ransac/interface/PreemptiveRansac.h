@@ -193,9 +193,10 @@ protected:
   /**
    * \brief Constructs an instance of PreemptiveRansac.
    *
-   * \param settings The settings used to configure the algorithm.
+   * \param settings           The settings used to configure the algorithm.
+   * \param settingsNamespace  The namespace used to read settings from the settings container.
    */
-  PreemptiveRansac(const tvgutil::SettingsContainer_CPtr& settings);
+  PreemptiveRansac(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace);
 
   //#################### DESTRUCTOR ####################
 public:
