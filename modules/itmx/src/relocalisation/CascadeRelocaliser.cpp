@@ -10,7 +10,6 @@ using namespace orx;
 #include <stdexcept>
 
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
@@ -37,6 +36,8 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& inner
   }
 
   // Configure the cascade relocaliser based on the settings that have been passed in.
+  const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
+
   const static std::string settingsNamespace = "CascadeRelocaliser.";
   m_savePoses = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
@@ -47,9 +48,7 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& inner
     m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "fallbackThreshold" + boost::lexical_cast<std::string>(i)));
   }
 
-  // Get the (global) experiment tag.
-  const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
-
+  // If the user wants to save the poses:
   if(m_savePoses)
   {
     // Determine the directory to which to save the poses and make sure that it exists.
@@ -60,6 +59,7 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& inner
     std::cout << "Saving relocalisation poses in: " << m_posePathGenerator->get_base_dir() << '\n';
   }
 
+  // If the user wants to save the timings:
   if(m_saveTimes)
   {
     // Enable the timers.
@@ -178,6 +178,7 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
 
     // Since we are saving the poses (i.e. we are running in evaluation mode), we force the quality of
     // every refined result to poor to prevent fusion whilst evaluating the testing sequence.
+    // FIXME: This is a bit of a hack - we should fix this ultimately.
     for(size_t i = 0; i < relocalisationResults.size(); ++i)
     {
       relocalisationResults[i].quality = RELOCALISATION_POOR;
