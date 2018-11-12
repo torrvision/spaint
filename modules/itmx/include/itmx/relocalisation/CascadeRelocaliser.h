@@ -17,7 +17,7 @@
 namespace itmx {
 
 /**
- * \brief An instance of this class can be used to combine the results of several relocalisers in a cascade.
+ * \brief An instance of this class represents a cascade relocaliser that gradually falls back from faster, weaker relocalisers to slower, stronger ones.
  */
 class CascadeRelocaliser : public orx::Relocaliser
 {
@@ -62,7 +62,7 @@ public:
    * \brief Constructs a cascade relocaliser.
    *
    * \param innerRelocalisers The individual relocalisers in the cascade.
-   * \param settings          The settings to use for the cascade relocaliser itself.
+   * \param settings          The settings to use.
    */
   CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& innerRelocalisers, const Settings_CPtr& settings);
 
@@ -88,8 +88,7 @@ public:
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
-  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
-                                         const Vector4f& depthIntrinsics) const;
+  virtual std::vector<Result> relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const;
 
   /** Override */
   virtual void reset();

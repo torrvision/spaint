@@ -14,7 +14,7 @@
 
 #include "persistence/PosePersister.h"
 
-#define DEBUGGING 1
+#define DEBUGGING 0
 
 namespace itmx {
 
