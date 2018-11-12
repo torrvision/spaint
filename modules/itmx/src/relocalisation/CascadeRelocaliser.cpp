@@ -40,11 +40,9 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& 
   m_saveTimes = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
   m_timersEnabled = settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
-  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size - 1; ++i)
   {
-    const std::string s = boost::lexical_cast<std::string>(i);
-    m_enabledFlags.push_back(settings->get_first_value<bool>(settingsNamespace + "enabledFlag" + s, true));
-    if(i < size - 1) m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "fallbackThreshold" + s));
+    m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "fallbackThreshold" + boost::lexical_cast<std::string>(i)));
   }
 
   // Get the (global) experiment tag.
@@ -131,7 +129,7 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   start_timer_sync(m_timerRelocalisation);
   start_timer_nosync(m_timerInitialRelocalisation); // No need to synchronize the GPU again.
 
-  // Try to relocalise using the first relocaliser in the cascade (this must exist, since the cascade is prevented from being empty in the constructor).
+  // Try to relocalise using the first relocaliser in the cascade.
   std::vector<Result> initialRelocalisationResults = m_innerRelocalisers[0]->relocalise(colourImage, depthImage, depthIntrinsics);
   std::vector<Result> relocalisationResults = initialRelocalisationResults;
 
@@ -145,8 +143,8 @@ CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatIm
   // For each other relocaliser in the cascade:
   for(size_t i = 1, size = m_innerRelocalisers.size(); i < size; ++i)
   {
-    // If the relocaliser exists and is enabled, and either there is no current best relocalisation result or it's not good enough:
-    if(m_innerRelocalisers[i] && m_enabledFlags[i] && (relocalisationResults.empty() || relocalisationResults[0].score > m_fallbackThresholds[i-1]))
+    // If either there is no current best relocalisation result or it's not good enough:
+    if(relocalisationResults.empty() || relocalisationResults[0].score > m_fallbackThresholds[i-1])
     {
 #if DEBUGGING
       std::cout << "Using inner relocaliser " << i << " to relocalise: " << relocalisationCounts[i]++ << ".\n";

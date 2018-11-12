@@ -23,9 +23,6 @@ class CascadeRelocaliser : public orx::Relocaliser
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  /** Flags indicating whether or not the individual relocalisers in the cascade are enabled or not. */
-  std::deque<bool> m_enabledFlags;
-
   /** The thresholds used to decide whether or not to fall back from one relocaliser in the cascade to the next. */
   std::vector<float> m_fallbackThresholds;
 
