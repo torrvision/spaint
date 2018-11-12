@@ -533,8 +533,6 @@ void SLAMComponent::process_relocalisation()
 
 Relocaliser_Ptr SLAMComponent::refine_with_icp(const Relocaliser_Ptr& relocaliser) const
 {
-  if(!relocaliser) return Relocaliser_Ptr();
-
   const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
   const Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
   const Settings_CPtr& settings = m_context->get_settings();
@@ -603,7 +601,7 @@ void SLAMComponent::setup_relocaliser()
   if(m_relocaliserType == "cascade")
   {
   #ifdef WITH_GROVE
-    // Look up the number of inner ScoRe relocalisers to instantiate.
+    // Look up the number of inner SCoRe relocalisers to instantiate.
     const std::string cascadeRelocaliserNamespace = "CascadeRelocaliser.";
     const int innerRelocaliserCount = settings->get_first_value<int>(cascadeRelocaliserNamespace + "innerRelocaliserCount");
 

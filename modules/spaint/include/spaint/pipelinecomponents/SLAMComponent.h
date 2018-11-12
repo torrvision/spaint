@@ -252,8 +252,6 @@ private:
   /**
    * \brief Decorates the specified relocaliser with one that uses an ICP tracker to refine the results.
    *
-   * \note  If the relocaliser is null, this simply returns a null relocaliser (this allows us to safely wrap relocalisers without performing a null check).
-   *
    * \param relocaliser       The relocaliser to decorate.
    * \return                  The decorated relocaliser.
    */
