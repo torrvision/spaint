@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/CascadeRelocaliser.h"
+using namespace orx;
 
 #include <iostream>
 #include <stdexcept>
@@ -11,6 +12,7 @@
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
 
 #include "persistence/PosePersister.h"
 
@@ -20,7 +22,7 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-CascadeRelocaliser::CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& innerRelocalisers, const Settings_CPtr& settings)
+CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const Settings_CPtr& settings)
 : m_innerRelocalisers(innerRelocalisers),
   m_timerInitialRelocalisation("Initial Relocalisation"),
   m_timerRefinement("ICP Refinement"),
@@ -46,12 +48,12 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& 
   }
 
   // Get the (global) experiment tag.
-  const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
+  const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
 
   if(m_savePoses)
   {
     // Determine the directory to which to save the poses and make sure that it exists.
-    m_posePathGenerator.reset(tvgutil::SequentialPathGenerator(tvgutil::find_subdir_from_executable("reloc_poses") / experimentTag));
+    m_posePathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("reloc_poses") / experimentTag));
     boost::filesystem::create_directories(m_posePathGenerator->get_base_dir());
 
     // Output the directory we're using (for debugging purposes).
@@ -64,7 +66,7 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& 
     m_timersEnabled = true;
 
     // Ensure that the directory in which we want to save the relocalisation times exists.
-    boost::filesystem::path timersOutputFolder(tvgutil::find_subdir_from_executable("reloc_times"));
+    boost::filesystem::path timersOutputFolder(find_subdir_from_executable("reloc_times"));
     boost::filesystem::create_directories(timersOutputFolder);
 
     // Construct the output filename.
@@ -117,7 +119,7 @@ void CascadeRelocaliser::load_from_disk(const std::string& inputFolder)
   }
 }
 
-std::vector<orx::Relocaliser::Result>
+std::vector<Relocaliser::Result>
 CascadeRelocaliser::relocalise(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics) const
 {
 #if DEBUGGING && 0
