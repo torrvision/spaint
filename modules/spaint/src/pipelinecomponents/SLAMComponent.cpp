@@ -5,13 +5,11 @@
 
 #include "pipelinecomponents/SLAMComponent.h"
 
-#include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 namespace bf = boost::filesystem;
-using boost::assign::list_of;
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
@@ -605,26 +603,26 @@ void SLAMComponent::setup_relocaliser()
   if(m_relocaliserType == "cascade")
   {
   #ifdef WITH_GROVE
-    // Construct the inner SCoRe relocalisers.
-    ScoreRelocaliser_Ptr scoreRelocaliser_Fast = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Fast.", settings->deviceType);
-    ScoreRelocaliser_Ptr scoreRelocaliser_Intermediate = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser_Intermediate.", settings->deviceType);
-    ScoreRelocaliser_Ptr scoreRelocaliser_Slow = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
-    scoreRelocaliser_Fast->set_backing_relocaliser(scoreRelocaliser_Slow);
-    scoreRelocaliser_Intermediate->set_backing_relocaliser(scoreRelocaliser_Slow);
+    // Look up the number of inner ScoRe relocalisers to instantiate.
+    const std::string cascadeRelocaliserNamespace = "CascadeRelocaliser.";
+    const int innerRelocaliserCount = settings->get_first_value<int>(cascadeRelocaliserNamespace + "innerRelocaliserCount");
 
-    // Decorate the SCoRe relocalisers with ones that use ICP tracking to refine the results.
-    Relocaliser_Ptr innerRelocaliser_Fast = refine_with_icp(scoreRelocaliser_Fast);
-    Relocaliser_Ptr innerRelocaliser_Intermediate = refine_with_icp(scoreRelocaliser_Intermediate);
-    Relocaliser_Ptr innerRelocaliser_Slow = refine_with_icp(scoreRelocaliser_Slow);
+    // Construct the inner relocalisers.
+    ScoreRelocaliser_Ptr primaryRelocaliser;
+    std::vector<Relocaliser_Ptr> innerRelocalisers(innerRelocaliserCount);
+    for(int i = innerRelocaliserCount - 1; i >= 0; --i)
+    {
+      const std::string innerRelocaliserNamespace = cascadeRelocaliserNamespace + "R" + boost::lexical_cast<std::string>(i) + ".";
+      ScoreRelocaliser_Ptr innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, innerRelocaliserNamespace, settings->deviceType);
+
+      if(i == innerRelocaliserCount - 1) primaryRelocaliser = innerRelocaliser;
+      else innerRelocaliser->set_backing_relocaliser(primaryRelocaliser);
+
+      innerRelocalisers[i] = refine_with_icp(innerRelocaliser);
+    }
 
     // Construct the cascade relocaliser itself.
-    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(
-      list_of
-        (innerRelocaliser_Fast)
-        (innerRelocaliser_Intermediate)
-        (innerRelocaliser_Slow),
-      settings)
-    );
+    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocalisers, settings));
   #endif
   }
   else

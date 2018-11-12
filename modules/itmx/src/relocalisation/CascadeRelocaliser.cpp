@@ -14,7 +14,7 @@
 
 #include "persistence/PosePersister.h"
 
-#define DEBUGGING 0
+#define DEBUGGING 1
 
 namespace itmx {
 
@@ -40,12 +40,12 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& 
   m_saveTimes = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
   m_timersEnabled = settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
-  m_enabledFlags.push_back(true); // the "Fast" relocaliser is currently always enabled
-  m_enabledFlags.push_back(settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Intermediate", true));
-  m_enabledFlags.push_back(settings->get_first_value<bool>(settingsNamespace + "relocaliserEnabled_Slow", true));
-
-  m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Intermediate", 0.05f));
-  m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "relocaliserThresholdScore_Slow", 0.05f));
+  for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
+  {
+    const std::string s = boost::lexical_cast<std::string>(i);
+    m_enabledFlags.push_back(settings->get_first_value<bool>(settingsNamespace + "enabledFlag" + s, true));
+    if(i < size - 1) m_fallbackThresholds.push_back(settings->get_first_value<float>(settingsNamespace + "fallbackThreshold" + s));
+  }
 
   // Get the (global) experiment tag.
   const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
