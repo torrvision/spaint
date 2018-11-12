@@ -263,7 +263,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       }
       else
       {
-        // If we're not trying to choose the best relocalisation,
+        // If we're not trying to choose the best relocalisation after refinement,
         // simply store the initial pose and refined result without any scoring.
         initialPoses.push_back(initialPose);
         refinedResults.push_back(refinedResult);
