@@ -233,6 +233,7 @@ void CascadeRelocaliser::update()
 
 void CascadeRelocaliser::save_poses(const Matrix4f& relocalisedPose, const Matrix4f& refinedPose) const
 {
+  // FIXME: This is the same as ICPRefiningRelocaliser::save_poses - the commonality should be factored out.
   if(!m_savePoses) return;
 
   PosePersister::save_pose_on_thread(relocalisedPose, m_posePathGenerator->make_path("pose-%06i.reloc.txt"));
