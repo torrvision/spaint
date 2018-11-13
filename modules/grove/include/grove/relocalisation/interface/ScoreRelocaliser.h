@@ -74,6 +74,9 @@ private:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
+  /** A flag indicating whether or not this relocaliser is "backed" by another one. */
+  bool m_backed;
+
   /** The sigma of the Gaussian used when computing the example densities (used during clustering). */
   float m_clustererSigma;
 
@@ -210,20 +213,6 @@ public:
   ScorePredictionsImage_CPtr get_predictions_image() const;
 
   /**
-   * \brief Gets the state of the relocaliser.
-   *
-   * \return  The state of the relocaliser.
-   */
-  ScoreRelocaliserState_Ptr get_relocaliser_state();
-
-  /**
-   * \brief Gets the state of the relocaliser.
-   *
-   * \return  The state of the relocaliser.
-   */
-  ScoreRelocaliserState_CPtr get_relocaliser_state() const;
-
-  /**
    * \brief Gets the contents of the reservoir associated with the specified leaf in the forest.
    *
    * \param treeIdx The index of the tree containing the leaf.
@@ -247,13 +236,13 @@ public:
   virtual void save_to_disk(const std::string& outputFolder) const;
 
   /**
-   * \brief Replaces the relocaliser's current state with a new one.
+   * \brief Replaces the relocaliser's current state with that of another relocaliser, and marks this relocaliser as being "backed" by that relocaliser.
    *
-   * \note The new state must have been previously initialised with the right variable sizes.
+   * \note  The new state must previously have been initialised with the right variable sizes.
    *
-   * \param relocaliserState  The new relocaliser state.
+   * \param backingRelocaliser  The backing relocaliser.
    */
-  void set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState);
+  void set_backing_relocaliser(const boost::shared_ptr<ScoreRelocaliser>& backingRelocaliser);
 
   /** Override */
   virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);

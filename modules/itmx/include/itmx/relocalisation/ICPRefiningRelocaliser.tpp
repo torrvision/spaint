@@ -241,8 +241,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       refinedResult.quality = m_trackingState->trackerResult == ITMLib::ITMTrackingState::TRACKING_GOOD ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
       refinedResult.score = m_trackingState->trackerScore;
 
-      // If the inner relocaliser produced multiple initial results, and we're trying to choose the best one after refinement:
-      if(initialResults.size() > 1 && m_chooseBestResult)
+      // If we're trying to choose the best relocalisation after refinement:
+      if(m_chooseBestResult)
       {
         // Score the refined result.
         refinedResult.score = score_pose(refinedResult.pose);
@@ -263,7 +263,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
       }
       else
       {
-        // If the inner relocaliser only produced one initial result, or we're not trying to choose the best one,
+        // If we're not trying to choose the best relocalisation after refinement,
         // simply store the initial pose and refined result without any scoring.
         initialPoses.push_back(initialPose);
         refinedResults.push_back(refinedResult);
@@ -528,30 +528,6 @@ float ICPRefiningRelocaliser<VoxelType,IndexType>::score_pose(const ORUtils::SE3
 #else
   return 0.0f;
 #endif
-}
-
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer_nosync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.start_nosync();
-}
-
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::start_timer_sync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.start_sync();
-}
-
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer_nosync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.stop_nosync();
-}
-
-template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType,IndexType>::stop_timer_sync(AverageTimer& timer) const
-{
-  if(m_timersEnabled) timer.stop_sync();
 }
 
 }

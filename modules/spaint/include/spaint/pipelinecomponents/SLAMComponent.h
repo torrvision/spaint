@@ -122,6 +122,9 @@ private:
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;
 
+  /** The namespace associated with the settings that are specific to SLAM components. */
+  std::string m_settingsNamespace;
+
   /** The tracker. */
   Tracker_Ptr m_tracker;
 
@@ -245,6 +248,14 @@ private:
    * \brief Perform relocalisation-specific operations (i.e. train a relocaliser if tracking succeeded or relocalise otherwise).
    */
   void process_relocalisation();
+
+  /**
+   * \brief Decorates the specified relocaliser with one that uses an ICP tracker to refine the results.
+   *
+   * \param relocaliser       The relocaliser to decorate.
+   * \return                  The decorated relocaliser.
+   */
+  orx::Relocaliser_Ptr refine_with_icp(const orx::Relocaliser_Ptr& relocaliser) const;
 
   /**
    * \brief Sets up the fiducial detector (if any).

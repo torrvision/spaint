@@ -13,6 +13,8 @@
 #include <ORUtils/ImageTypes.h>
 #include <ORUtils/SE3Pose.h>
 
+#include <tvgutil/timing/AverageTimer.h>
+
 namespace orx {
 
 /**
@@ -21,6 +23,10 @@ namespace orx {
  */
 class Relocaliser
 {
+  //#################### TYPEDEFS ####################
+protected:
+  typedef tvgutil::AverageTimer<boost::chrono::microseconds> AverageTimer;
+
   //#################### ENUMERATIONS ####################
 public:
   /**
@@ -56,6 +62,18 @@ public:
     : quality(RELOCALISATION_POOR), score(0.0f)
     {}
   };
+
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** Whether or not timers are enabled and stats are printed on destruction. */
+  bool m_timersEnabled;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs a relocaliser.
+   */
+  Relocaliser();
 
   //#################### DESTRUCTOR ####################
 public:
@@ -128,6 +146,36 @@ public:
    * This is intended to be overridden by derived relocalisers that need to perform bookkeeping operations.
    */
   virtual void update();
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Starts the specified timer (iff timers are enabled), without synchronising the GPU.
+   *
+   * \param timer The timer to start.
+   */
+  void start_timer_nosync(AverageTimer& timer) const;
+
+  /**
+   * \brief Starts the specified timer (iff timers are enabled), after first synchronising the GPU.
+   *
+   * \param timer The timer to start.
+   */
+  void start_timer_sync(AverageTimer& timer) const;
+
+  /**
+   * \brief Stops the specified timer (iff timers are enabled), without synchronising the GPU.
+   *
+   * \param timer The timer to stop.
+   */
+  void stop_timer_nosync(AverageTimer& timer) const;
+
+  /**
+   * \brief Stops the specified timer (iff timers are enabled), after first synchronising the GPU.
+   *
+   * \param timer The timer to stop.
+   */
+  void stop_timer_sync(AverageTimer& timer) const;
 };
 
 //#################### TYPEDEFS ####################

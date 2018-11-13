@@ -25,7 +25,9 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const SettingsContainer_CPtr& settings, const std::string& settingsNamespace, DeviceType deviceType)
-: m_deviceType(deviceType), m_settings(settings)
+: m_backed(false),
+  m_deviceType(deviceType),
+  m_settings(settings)
 {
   // Determine the top-level parameters for the relocaliser.
   m_maxRelocalisationsToOutput = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxRelocalisationsToOutput", 1);
@@ -56,7 +58,7 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
 
   // Instantiate the sub-components.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
-  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, "PreemptiveRansac.", deviceType);
+  m_preemptiveRansac = PreemptiveRansacFactory::make_preemptive_ransac(settings, settingsNamespace + "PreemptiveRansac.", deviceType);
 
   m_scoreForest = m_settings->get_first_value<bool>(settingsNamespace + "randomlyGenerateForest", false)
     ? DecisionForestFactory<DescriptorType,FOREST_TREE_COUNT>::make_randomly_generated_forest(m_settings, deviceType)
@@ -77,6 +79,9 @@ ScoreRelocaliser::~ScoreRelocaliser() {}
 
 void ScoreRelocaliser::finish_training()
 {
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   // First update all of the clusters.
@@ -116,16 +121,6 @@ ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const
   return m_predictionsImage;
 }
 
-ScoreRelocaliserState_Ptr ScoreRelocaliser::get_relocaliser_state()
-{
-  return m_relocaliserState;
-}
-
-ScoreRelocaliserState_CPtr ScoreRelocaliser::get_relocaliser_state() const
-{
-  return m_relocaliserState;
-}
-
 std::vector<Keypoint3DColour> ScoreRelocaliser::get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const
 {
   // Ensure that the specified leaf is valid (throw if not).
@@ -154,7 +149,10 @@ std::vector<Keypoint3DColour> ScoreRelocaliser::get_reservoir_contents(uint32_t 
 
 void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
 {
-  // Load the relocaliser's internal state from disk.
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
+  // Otherwise, load its internal state from disk.
   m_relocaliserState->load_from_disk(inputFolder);
 }
 
@@ -216,6 +214,9 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Imag
 
 void ScoreRelocaliser::reset()
 {
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   // Set up the clusterer if it hasn't been allocated yet.
@@ -246,6 +247,9 @@ void ScoreRelocaliser::reset()
 
 void ScoreRelocaliser::save_to_disk(const std::string& outputFolder) const
 {
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
   // First make sure that the output folder exists.
   bf::create_directories(outputFolder);
 
@@ -253,14 +257,18 @@ void ScoreRelocaliser::save_to_disk(const std::string& outputFolder) const
   m_relocaliserState->save_to_disk(outputFolder);
 }
 
-void ScoreRelocaliser::set_relocaliser_state(const ScoreRelocaliserState_Ptr& relocaliserState)
+void ScoreRelocaliser::set_backing_relocaliser(const ScoreRelocaliser_Ptr& backingRelocaliser)
 {
-  m_relocaliserState = relocaliserState;
+  m_relocaliserState = backingRelocaliser->m_relocaliserState;
+  m_backed = true;
 }
 
 void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                              const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   if(!m_relocaliserState->exampleReservoirs)
@@ -294,6 +302,9 @@ void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImag
 
 void ScoreRelocaliser::update()
 {
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   if(!m_relocaliserState->exampleReservoirs)
@@ -319,6 +330,9 @@ void ScoreRelocaliser::update()
 
 void ScoreRelocaliser::update_all_clusters()
 {
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
 
   // Repeatedly call update until we get back to the batch of reservoirs that was updated last time train() was called.
