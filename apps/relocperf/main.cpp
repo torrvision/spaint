@@ -769,7 +769,8 @@ int main(int argc, char *argv[])
   // Print the weighted averages for the parameter search algorithm.
   if(useValidation)
   {
-    std::cout << std::defaultfloat << relocLoss << ' ' << icpLoss << '\n';
+    std::cout.unsetf(std::ios_base::floatfield);
+    std::cout << relocLoss << ' ' << icpLoss << '\n';
   }
 
   // Save results of online training-relocalization
