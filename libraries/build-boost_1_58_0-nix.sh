@@ -48,6 +48,10 @@ if [ -e b2 ]
 then
   echo "[spaint] ...Skipping bootstrapping (b2 already exists)"
 else
+  # Note: This fix is needed when building Boost on a system with Python 3.
+  echo "[spaint] ...Fixing bootstrap script..."
+  perl -i -pe 's/print sys.prefix/print(sys.prefix)/g' bootstrap.sh
+
   echo "[spaint] ...Bootstrapping..."
   ./bootstrap.sh > $LOG
 fi
