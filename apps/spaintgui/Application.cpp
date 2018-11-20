@@ -824,25 +824,38 @@ void Application::process_renderer_input()
   if(m_inputState.key_down(KEYCODE_c))
   {
     Subwindow& subwindow = get_active_subwindow();
-    boost::optional<VisualisationGenerator::VisualisationType> type =
-      m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN :
-      m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_SCENE_SEMANTICPHONG :
-      m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR :
-      m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_SCENE_SEMANTICFLAT :
-      m_inputState.key_down(KEYCODE_5) ? VisualisationGenerator::VT_SCENE_COLOUR :
-      m_inputState.key_down(KEYCODE_6) ? VisualisationGenerator::VT_SCENE_NORMAL :
-      m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_CONFIDENCE :
-      m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_DEPTH :
-      m_inputState.key_down(KEYCODE_9) ? VisualisationGenerator::VT_INPUT_COLOUR :
-      m_inputState.key_down(KEYCODE_0) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_INPUT_DEPTH) :
-      boost::none;
+    boost::optional<VisualisationGenerator::VisualisationType> type;
 
-    if(type)
+    if(!m_inputState.key_down(KEYCODE_LALT))
     {
-      subwindow.set_type(*type);
-      subwindow.set_surfel_flag(m_inputState.key_down(KEYCODE_LSHIFT));
-      subwindow.set_remote_flag(m_inputState.key_down(KEYCODE_LCTRL));
+      type =
+        m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN :
+        m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_SCENE_SEMANTICPHONG :
+        m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR :
+        m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_SCENE_SEMANTICFLAT :
+        m_inputState.key_down(KEYCODE_5) ? VisualisationGenerator::VT_SCENE_COLOUR :
+        m_inputState.key_down(KEYCODE_6) ? VisualisationGenerator::VT_SCENE_NORMAL :
+        m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_CONFIDENCE :
+        m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_DEPTH :
+        m_inputState.key_down(KEYCODE_9) ? VisualisationGenerator::VT_INPUT_COLOUR :
+        m_inputState.key_down(KEYCODE_0) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_INPUT_DEPTH) :
+        boost::none;
+
+      if(type)
+      {
+        subwindow.set_surfel_flag(m_inputState.key_down(KEYCODE_LSHIFT));
+        subwindow.set_remote_flag(m_inputState.key_down(KEYCODE_LCTRL));
+      }
     }
+    else
+    {
+      type =
+        m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_RELOCALISER_LEAVES :
+        m_inputState.key_down(KEYCODE_2) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_RELOCALISER_POINTS) :
+        boost::none;
+    }
+
+    if(type) subwindow.set_type(*type);
   }
 }
 

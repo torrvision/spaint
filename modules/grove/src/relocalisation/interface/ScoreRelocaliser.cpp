@@ -8,6 +8,10 @@
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
 
+#ifdef WITH_OPENCV
+#include <opencv2/opencv.hpp>
+#endif
+
 #include <orx/base/MemoryBlockFactory.h>
 using namespace orx;
 
@@ -27,10 +31,17 @@ namespace grove {
 ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const SettingsContainer_CPtr& settings, const std::string& settingsNamespace, DeviceType deviceType)
 : m_backed(false),
   m_deviceType(deviceType),
+  m_maxX(static_cast<float>(INT_MIN)),
+  m_maxY(static_cast<float>(INT_MIN)),
+  m_maxZ(static_cast<float>(INT_MIN)),
+  m_minX(static_cast<float>(INT_MAX)),
+  m_minY(static_cast<float>(INT_MAX)),
+  m_minZ(static_cast<float>(INT_MAX)),
   m_settings(settings)
 {
   // Determine the top-level parameters for the relocaliser.
   m_maxRelocalisationsToOutput = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxRelocalisationsToOutput", 1);
+  m_visualiseForest = m_settings->get_first_value<bool>(settingsNamespace + "visualiseForest", true);
 
   // Determine the reservoir-related parameters.
   m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxReservoirsToUpdate", 256);  // Update the modes associated with this number of reservoirs for each train/update call.
@@ -147,6 +158,13 @@ std::vector<Keypoint3DColour> ScoreRelocaliser::get_reservoir_contents(uint32_t 
   return reservoirContents;
 }
 
+ORUChar4Image_CPtr ScoreRelocaliser::get_visualisation_image(const std::string& key) const
+{
+  if(key == "leaves") return m_pixelsToLeavesImage;
+  else if(key == "points") return m_pixelsToPointsImage;
+  else return ORUChar4Image_CPtr();
+}
+
 void ScoreRelocaliser::load_from_disk(const std::string& inputFolder)
 {
   // If this relocaliser is "backed" by another one, early out.
@@ -207,6 +225,15 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Imag
         }
       }
     }
+  }
+
+  // If forest visualisation is enabled and we relocalised successfully, update the forest visualisation images (for debugging purposes).
+  if(m_visualiseForest && !results.empty())
+  {
+    update_pixels_to_leaves_image(depthImage);
+
+    // Note: We use the "best" pose here as a default, even though this may later be either refined by ICP or discarded in favour of a different pose.
+    update_pixels_to_points_image(results[0].pose);
   }
 
   return results;
@@ -274,6 +301,17 @@ void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImag
   if(!m_relocaliserState->exampleReservoirs)
   {
     throw std::runtime_error("Error: finish_training() has been called; the relocaliser cannot be trained again until reset() is called");
+  }
+
+  // If forest visualisation is enabled, update the maximum and minimum x, y and z coordinates visited by the camera during training.
+  if(m_visualiseForest)
+  {
+    m_maxX = std::max(m_maxX, cameraPose.GetT().x);
+    m_maxY = std::max(m_maxY, cameraPose.GetT().y);
+    m_maxZ = std::max(m_maxZ, cameraPose.GetT().z);
+    m_minX = std::min(m_minX, cameraPose.GetT().x);
+    m_minY = std::min(m_minY, cameraPose.GetT().y);
+    m_minZ = std::min(m_minZ, cameraPose.GetT().z);
   }
 
   // Step 1: Extract keypoints from the RGB-D image and compute descriptors for them.
@@ -356,6 +394,104 @@ void ScoreRelocaliser::ensure_valid_leaf(uint32_t treeIdx, uint32_t leafIdx) con
   {
     throw std::invalid_argument("Error: Invalid tree or leaf index");
   }
+}
+
+void ScoreRelocaliser::update_pixels_to_leaves_image(const ORFloatImage *depthImage) const
+{
+#ifdef WITH_OPENCV
+  // Ensure that the depth image and leaf indices are available on the CPU.
+  depthImage->UpdateHostFromDevice();
+  m_leafIndicesImage->UpdateHostFromDevice();
+
+  // Make a map showing which pixels are in which leaves (for the first tree).
+  std::map<int,std::vector<int> > leafToRegionMap;
+  for(int i = 0, pixelCount = static_cast<int>(m_leafIndicesImage->dataSize); i < pixelCount; ++i)
+  {
+    const ORUtils::VectorX<int,ScoreRelocaliser::FOREST_TREE_COUNT>& elt = m_leafIndicesImage->GetData(MEMORYDEVICE_CPU)[i];
+    leafToRegionMap[elt[0]].push_back(i);
+  }
+
+  // Make greyscale and colour images showing which pixels are in which leaves (for the first tree).
+  cv::Mat1b imageG = cv::Mat1b::zeros(m_leafIndicesImage->noDims.y, m_leafIndicesImage->noDims.x);
+  const uint32_t featureStep = m_featureCalculator->get_feature_step();
+  for(std::map<int,std::vector<int> >::const_iterator jt = leafToRegionMap.begin(), jend = leafToRegionMap.end(); jt != jend; ++jt)
+  {
+    for(std::vector<int>::const_iterator kt = jt->second.begin(), kend = jt->second.end(); kt != kend; ++kt)
+    {
+      int x = *kt % m_leafIndicesImage->noDims.x, y = *kt / m_leafIndicesImage->noDims.x;
+      if(depthImage->GetData(MEMORYDEVICE_CPU)[y * featureStep * depthImage->noDims.x + x * featureStep] > 0.0f)
+      {
+        imageG(y,x) = jt->first % 256;
+      }
+    }
+  }
+
+  cv::Mat3b imageC;
+  cv::applyColorMap(imageG, imageC, cv::COLORMAP_HSV);
+
+  // If the pixels to leaves image hasn't been allocated yet, allocate it now.
+  if(!m_pixelsToLeavesImage) m_pixelsToLeavesImage.reset(new ORUChar4Image(Vector2i(imageC.cols, imageC.rows), true, true));
+
+  for(int y = 0; y < imageC.rows; ++y)
+  {
+    for(int x = 0; x < imageC.cols; ++x)
+    {
+      const int offset = y * imageC.cols + x;
+      cv::Vec3b& p = imageC(y, x);
+
+      if(depthImage->GetData(MEMORYDEVICE_CPU)[y * featureStep * depthImage->noDims.x + x * featureStep] <= 0.0f)
+      {
+        p = cv::Vec3b(0,0,0);
+      }
+
+      m_pixelsToLeavesImage->GetData(MEMORYDEVICE_CPU)[offset] = Vector4u(p[2], p[1], p[0], 255);
+    }
+  }
+
+  // Update the GPU copy of the pixels to leaves image (if it exists).
+  m_pixelsToLeavesImage->UpdateDeviceFromHost();
+#endif
+}
+
+void ScoreRelocaliser::update_pixels_to_points_image(const ORUtils::SE3Pose& worldToCamera) const
+{
+  // Ensure that the keypoints and SCoRe predictions are available on the CPU.
+  m_keypointsImage->UpdateHostFromDevice();
+  m_predictionsImage->UpdateHostFromDevice();
+
+  // If the pixels to points image hasn't been allocated yet, allocate it now.
+  if(!m_pixelsToPointsImage) m_pixelsToPointsImage.reset(new ORUChar4Image(m_leafIndicesImage->noDims, true, true));
+
+  // For each pixel:
+  Vector4u *p = m_pixelsToPointsImage->GetData(MEMORYDEVICE_CPU);
+  for(int i = 0, pixelCount = static_cast<int>(m_pixelsToPointsImage->dataSize); i < pixelCount; ++i, ++p)
+  {
+    p->r = p->g = p->b = 0;
+    p->a = 255;
+
+    // If the pixel has a valid keypoint, look up the position of the cluster (if any) in the corresponding prediction that is closest to it.
+    const ExampleType& keypoint = m_keypointsImage->GetData(MEMORYDEVICE_CPU)[i];
+    if(!keypoint.valid) continue;
+    const PredictionType& prediction = m_predictionsImage->GetData(MEMORYDEVICE_CPU)[i];
+    const int closestModeIdx = find_closest_mode(worldToCamera.GetInvM() * keypoint.position, prediction);
+    if(closestModeIdx == -1) continue;
+    const Vector3f& clusterPos = prediction.elts[closestModeIdx].position;
+
+    // Colour the pixel in the pixels to points image based on the cluster's position in world space.
+    float scale = 2.0f;
+    float centre = 0.5f;
+    float offset = centre - 1.0f / (scale * 2.0f);
+    float xCoeff = ((CLAMP(clusterPos.x,m_minX,m_maxX) - m_minX) / (m_maxX - m_minX)) / scale + offset;
+    float yCoeff = ((CLAMP(clusterPos.y,m_minY,m_maxY) - m_minY) / (m_maxY - m_minY)) / scale + offset;
+    float zCoeff = ((CLAMP(clusterPos.z,m_minZ,m_maxZ) - m_minZ) / (m_maxZ - m_minZ)) / scale + offset;
+    p->r = static_cast<unsigned char>(255 * xCoeff);
+    p->g = static_cast<unsigned char>(255 * yCoeff);
+    p->b = static_cast<unsigned char>(255 * zCoeff);
+    p->a = 255;
+  }
+
+  // Update the GPU copy of the pixels to points image (if it exists).
+  m_pixelsToPointsImage->UpdateDeviceFromHost();
 }
 
 void ScoreRelocaliser::update_reservoir_start_idx()

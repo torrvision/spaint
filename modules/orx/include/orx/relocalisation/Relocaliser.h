@@ -10,10 +10,11 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ORUtils/ImageTypes.h>
 #include <ORUtils/SE3Pose.h>
 
 #include <tvgutil/timing/AverageTimer.h>
+
+#include "../base/ORImagePtrTypes.h"
 
 namespace orx {
 
@@ -139,6 +140,14 @@ public:
    * \note Later calls to train or update prior to a reset will result in undefined behaviour.
    */
   virtual void finish_training();
+
+  /**
+   * \brief Attempts to get an image that visualises the relocaliser's internal state (for debugging purposes).
+   *
+   * \param key A key specifying which visualisation image to get.
+   * \return    The corresponding image, if available, or null otherwise.
+   */
+  virtual ORUChar4Image_CPtr get_visualisation_image(const std::string& key) const;
 
   /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.

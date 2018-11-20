@@ -24,6 +24,11 @@ void Relocaliser::finish_training()
   // No-op by default
 }
 
+ORUChar4Image_CPtr Relocaliser::get_visualisation_image(const std::string& key) const
+{
+  return ORUChar4Image_CPtr();
+}
+
 void Relocaliser::update()
 {
   // No-op by default

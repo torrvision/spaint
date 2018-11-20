@@ -238,6 +238,7 @@ private:
    * \param surfelScene       The surfel version of the scene to visualise.
    * \param voxelRenderState  The voxel render state to use for intermediate storage (if relevant).
    * \param surfelRenderState The surfel render state to use for intermediate storage (if relevant).
+   * \param relocaliser       The relocaliser for the scene to visualise (used when visualising the relocaliser's internals).
    * \param pose              The pose from which to visualise the scene (if relevant).
    * \param view              The current view of the scene.
    * \param intrinsics        The intrinsics to use when rendering synthetic visualisations of the scene.
@@ -245,8 +246,9 @@ private:
    * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
    */
   void generate_visualisation(const ORUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
-                              VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                              const ITMLib::ITMIntrinsics& intrinsics, spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const;
+                              VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const orx::Relocaliser_CPtr& relocaliser,
+                              const ORUtils::SE3Pose& pose, const View_CPtr& view, const ITMLib::ITMIntrinsics& intrinsics,
+                              spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const;
 
   /**
    * \brief Gets the function (if any) with which to postprocess scene visualisations.

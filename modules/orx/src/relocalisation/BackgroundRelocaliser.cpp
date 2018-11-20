@@ -29,6 +29,20 @@ void BackgroundRelocaliser::finish_training()
   to_old_gpu();
 }
 
+ORUChar4Image_CPtr BackgroundRelocaliser::get_visualisation_image(const std::string& key) const
+{
+  // Set the current GPU to the one on which calls to the decorated relocaliser should be performed.
+  to_relocalisation_gpu();
+
+  // Get the visualisation image from the decorated relocaliser.
+  ORUChar4Image_CPtr result = m_relocaliser->get_visualisation_image(key);
+
+  // Reset the current GPU to the one on which calls were previously being performed.
+  to_old_gpu();
+
+  return result;
+}
+
 void BackgroundRelocaliser::load_from_disk(const std::string& inputFolder)
 {
   // Set the current GPU to the one on which calls to the decorated relocaliser should be performed.

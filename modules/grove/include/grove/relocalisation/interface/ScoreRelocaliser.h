@@ -101,8 +101,20 @@ protected:
   /** The maximum number of reservoirs to subject to clustering for each call to the update function. */
   uint32_t m_maxReservoirsToUpdate;
 
+  /** The maximum x, y and z coordinates visited by the camera during training. */
+  float m_maxX, m_maxY, m_maxZ;
+
   /** The minimum size of cluster to keep (used during clustering). */
   uint32_t m_minClusterSize;
+
+  /** The minimum x, y and z coordinates visited by the camera during training. */
+  float m_minX, m_minY, m_minZ;
+
+  /** An image in which to store a visualisation of the mapping from pixels to forest leaves (for debugging purposes). */
+  mutable ORUChar4Image_Ptr m_pixelsToLeavesImage;
+
+  /** An image in which to store a visualisation of the mapping from pixels to world-space points (for debugging purposes). */
+  mutable ORUChar4Image_Ptr m_pixelsToPointsImage;
 
   /** The Preemptive RANSAC instance, used to estimate the 6DOF camera pose from a set of 3D keypoints and their associated SCoRe forest predictions. */
   PreemptiveRansac_Ptr m_preemptiveRansac;
@@ -124,6 +136,9 @@ protected:
 
   /** The settings used to configure the relocaliser. */
   tvgutil::SettingsContainer_CPtr m_settings;
+
+  /** Whether or not to produce visualisations of the forest when relocalising. */
+  bool m_visualiseForest;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -224,6 +239,9 @@ public:
   std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
   /** Override */
+  virtual ORUChar4Image_CPtr get_visualisation_image(const std::string& key) const;
+
+  /** Override */
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */
@@ -275,6 +293,20 @@ private:
    * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
    */
   void ensure_valid_leaf(uint32_t treeIdx, uint32_t leafIdx) const;
+
+  /**
+   * \brief Updates the pixels to leaves image (for debugging purposes).
+   *
+   * \param depthImage  The current depth image.
+   */
+  void update_pixels_to_leaves_image(const ORFloatImage *depthImage) const;
+
+  /**
+   * \brief Updates the pixels to points image (for debugging purposes).
+   *
+   * \param worldToCamera The relocalised pose.
+   */
+  void update_pixels_to_points_image(const ORUtils::SE3Pose& worldToCamera) const;
 
   /**
    * \brief Updates the index of the first reservoir to subject to clustering during the next train/update call.

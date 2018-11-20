@@ -6,6 +6,7 @@
 #include "Renderer.h"
 using namespace ITMLib;
 using namespace ORUtils;
+using namespace orx;
 using namespace rigging;
 using namespace tvgutil;
 
@@ -455,8 +456,9 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::generate_visualisation(const ORUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
-                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
-                                      const ITMIntrinsics& intrinsics, VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const Relocaliser_CPtr& relocaliser,
+                                      const ORUtils::SE3Pose& pose, const View_CPtr& view, const ITMIntrinsics& intrinsics,
+                                      VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag) const
 {
   VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
 
@@ -468,6 +470,23 @@ void Renderer::generate_visualisation(const ORUChar4Image_Ptr& output, const Spa
     case VisualisationGenerator::VT_INPUT_DEPTH:
       visualisationGenerator->get_depth_input(output, view);
       break;
+    case VisualisationGenerator::VT_RELOCALISER_LEAVES:
+    case VisualisationGenerator::VT_RELOCALISER_POINTS:
+    {
+      std::string key = "leaves";
+      if(visualisationType == VisualisationGenerator::VT_RELOCALISER_POINTS) key = "points";
+
+      ORUChar4Image_CPtr visualisationImage = relocaliser->get_visualisation_image(key);
+
+      if(visualisationImage)
+      {
+        output->SetFrom(visualisationImage.get(), ORUChar4Image::CPU_TO_CPU);
+        output->UpdateDeviceFromHost();
+      }
+      else output->Clear();
+
+      break;
+    }
     default:
     {
       if(view)
@@ -568,9 +587,10 @@ void Renderer::render_all_reconstructed_scenes(const ORUtils::SE3Pose& primaryPo
     }
 
     // Actually render the colour and depth images for the scene.
+    Relocaliser_CPtr relocaliser = m_model->get_relocaliser(sceneIDs[sceneIdx]);
     generate_visualisation(
       colourImages[sceneIdx], slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-      voxelRenderState, surfelRenderState, tempPose, slamState->get_view(), intrinsics,
+      voxelRenderState, surfelRenderState, relocaliser, tempPose, slamState->get_view(), intrinsics,
       visualisationTypes[sceneIdx], surfelFlag
     );
 
@@ -672,14 +692,13 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 {
   // Generate the subwindow image.
   const ORUChar4Image_Ptr& image = subwindow.get_image();
-
+  Relocaliser_CPtr relocaliser = m_model->get_relocaliser(sceneID);
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   const View_CPtr view = slamState->get_view();
 
   generate_visualisation(
-    image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
-    pose, view, subwindow.get_camera_intrinsics(), subwindow.get_type(), subwindow.get_surfel_flag()
+    image, slamState->get_voxel_scene(), slamState->get_surfel_scene(), subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    relocaliser, pose, view, subwindow.get_camera_intrinsics(), subwindow.get_type(), subwindow.get_surfel_flag()
   );
 
   // Render a quad textured with the subwindow image.

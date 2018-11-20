@@ -151,6 +151,12 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::finish_training()
 }
 
 template <typename VoxelType, typename IndexType>
+ORUChar4Image_CPtr ICPRefiningRelocaliser<VoxelType,IndexType>::get_visualisation_image(const std::string& key) const
+{
+  return m_innerRelocaliser->get_visualisation_image(key);
+}
+
+template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType,IndexType>::load_from_disk(const std::string& inputFolder)
 {
   m_innerRelocaliser->load_from_disk(inputFolder);
