@@ -20,8 +20,8 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-ViconTracker::ViconTracker(const ViconInterface_CPtr& vicon, const std::string& subjectName, TrackingMode trackingMode)
-: m_subjectName(subjectName), m_trackingMode(trackingMode), m_vicon(vicon)
+ViconTracker::ViconTracker(const ViconInterface_CPtr& vicon, const std::string& sceneID, const std::string& subjectName, TrackingMode trackingMode)
+: m_sceneID(sceneID), m_subjectName(subjectName), m_trackingMode(trackingMode), m_vicon(vicon)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -152,7 +152,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
     {
       // If we're in absolute tracking mode, first look to see if the relative transformation from Original Camera
       // ("world") space to Vicon space has been determined yet.
-      const boost::optional<Matrix4f>& vTw = m_vicon->get_world_to_vicon_transform();
+      const boost::optional<Matrix4f>& vTw = m_vicon->get_world_to_vicon_transform(m_sceneID);
       if(vTw)
       {
         // If it has, compute and set the final pose (cTw), and set the tracking quality to good.

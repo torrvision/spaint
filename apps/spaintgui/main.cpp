@@ -636,7 +636,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
-    ("fiducialDetectorType", po::value<std::string>(&args.fiducialDetectorType)->default_value("aruco"), "fiducial detector type (aruco)")
+    ("fiducialDetectorType", po::value<std::string>(&args.fiducialDetectorType)->default_value("aruco"), "fiducial detector type (aruco|vicon)")
     ("globalPosesSpecifier,g", po::value<std::string>(&args.globalPosesSpecifier)->default_value(""), "global poses specifier")
     ("headless", po::bool_switch(&args.headless), "run in headless mode")
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")

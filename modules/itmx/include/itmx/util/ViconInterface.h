@@ -30,8 +30,8 @@ private:
   /** The Vicon client. */
   mutable ViconDataStreamSDK::CPP::Client m_vicon;
 
-  /** The relative transformation from world space to Vicon space (if known). */
-  boost::optional<Matrix4f> m_worldToViconTransform;
+  /** The relative transformations from the world spaces of the various scenes to Vicon space (if known). */
+  std::map<std::string,Matrix4f> m_worldToViconTransforms;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -65,18 +65,20 @@ public:
   unsigned int get_frame_number() const;
 
   /**
-   * \brief Gets the relative transformation from world space to Vicon space (if known).
+   * \brief Gets the relative transformation from the world space of the specified scene to Vicon space (if known).
    *
-   * \return  The relative transformation from world space to Vicon space, if known, or boost::none otherwise.
+   * \param sceneID The scene ID.
+   * \return        The relative transformation from the world space of the scene to Vicon space, if known, or boost::none otherwise.
    */
-  const boost::optional<Matrix4f>& get_world_to_vicon_transform() const;
+  boost::optional<Matrix4f> get_world_to_vicon_transform(const std::string& sceneID) const;
 
   /**
-   * \brief Sets the relative transformation from world space to Vicon space.
+   * \brief Sets the relative transformation from the world space of the specified scene to Vicon space.
    *
-   * \param worldToViconTransform The relative transformation from world space to Vicon space.
+   * \param sceneID               The scene ID.
+   * \param worldToViconTransform The relative transformation from the world space of the scene to Vicon space.
    */
-  void set_world_to_vicon_transform(const Matrix4f& worldToViconTransform);
+  void set_world_to_vicon_transform(const std::string& sceneID, const Matrix4f& worldToViconTransform);
 
   /**
    * \brief Attempts to get the positions of the markers for the Vicon subject with the specified name.

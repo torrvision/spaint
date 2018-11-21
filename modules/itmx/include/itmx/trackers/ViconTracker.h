@@ -45,6 +45,9 @@ private:
   /** The transformation from Original Camera ("world") space to Original Marker space (once computed) - see comments in TrackCamera. */
   boost::optional<Matrix4f> m_aTw;
 
+  /** The ID of the scene for which the tracker will be used. */
+  std::string m_sceneID;
+
   /** The name given in the Vicon software to the subject being tracked. */
   std::string m_subjectName;
 
@@ -66,10 +69,11 @@ public:
    * \brief Constructs a Vicon tracker.
    *
    * \param vicon         The Vicon interface.
+   * \param sceneID       The ID of the scene for which the tracker will be used.
    * \param subjectName   The name given in the Vicon software to the subject being tracked.
    * \param trackingMode  The tracking mode (absolute or relative).
    */
-  ViconTracker(const ViconInterface_CPtr& vicon, const std::string& subjectName, TrackingMode trackingMode);
+  ViconTracker(const ViconInterface_CPtr& vicon, const std::string& sceneID, const std::string& subjectName, TrackingMode trackingMode);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

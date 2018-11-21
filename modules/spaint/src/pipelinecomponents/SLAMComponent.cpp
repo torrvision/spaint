@@ -44,6 +44,9 @@ using namespace tvgutil;
 #ifdef WITH_OPENCV
 #include "fiducials/ArUcoFiducialDetector.h"
 #endif
+#ifdef WITH_VICON
+#include "fiducials/ViconFiducialDetector.h"
+#endif
 #include "segmentation/SegmentationUtil.h"
 
 namespace spaint {
@@ -349,6 +352,24 @@ bool SLAMComponent::process_frame()
     slamState->update_fiducials(fiducialDetector->detect_fiducials(view, *trackingState->pose_d));
   }
 
+#ifdef WITH_VICON
+  // If we're using a Vicon fiducial detector to calibrate the Vicon system, and a stable pose for the Vicon origin has newly been determined,
+  // store the relative transformation from world space to Vicon space.
+  const ViconInterface_Ptr& vicon = m_context->get_vicon();
+  if(vicon && !vicon->get_world_to_vicon_transform(m_sceneID) && boost::dynamic_pointer_cast<const ViconFiducialDetector>(fiducialDetector))
+  {
+    const std::map<std::string,Fiducial_Ptr>& fiducials = slamState->get_fiducials();
+    if(!fiducials.empty())
+    {
+      Fiducial_CPtr fiducial = fiducials.begin()->second;
+      if(fiducial->confidence() >= Fiducial::stable_confidence())
+      {
+        vicon->set_world_to_vicon_transform(m_sceneID, fiducial->pose().GetM());
+      }
+    }
+  }
+#endif
+
   return true;
 }
 
@@ -545,7 +566,9 @@ Relocaliser_Ptr SLAMComponent::refine_with_icp(const Relocaliser_Ptr& relocalise
 
   const bool trackSurfels = false;
   FallibleTracker *dummy;
-  Tracker_Ptr tracker = m_context->get_tracker_factory().make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
+  Tracker_Ptr tracker = m_context->get_tracker_factory().make_tracker_from_string(
+    trackerConfig, m_sceneID, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy
+  );
 
   return Relocaliser_Ptr(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
     relocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(), voxelScene, m_denseVoxelMapper, settings
@@ -563,6 +586,17 @@ void SLAMComponent::setup_fiducial_detector()
   {
 #ifdef WITH_OPENCV
     fiducialDetector.reset(new ArUcoFiducialDetector(scene, settings, ArUcoFiducialDetector::PEM_RAYCAST));
+#endif
+  }
+  else if(type == "vicon")
+  {
+#if WITH_OPENCV && WITH_VICON
+    ViconInterface_CPtr vicon = m_context->get_vicon();
+    if(vicon)
+    {
+      FiducialDetector_CPtr calibratingDetector(new ArUcoFiducialDetector(scene, settings, ArUcoFiducialDetector::PEM_RAYCAST));
+      fiducialDetector.reset(new ViconFiducialDetector(vicon, calibratingDetector));
+    }
 #endif
   }
 
@@ -675,7 +709,7 @@ void SLAMComponent::setup_tracker()
 
   m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
   m_tracker = m_context->get_tracker_factory().make_tracker_from_string(
-    m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker, mappingServer
+    m_trackerConfig, m_sceneID, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker, mappingServer
   );
 }
 

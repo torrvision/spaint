@@ -38,7 +38,7 @@ namespace itmx {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-Tracker_Ptr TrackerFactory::make_tracker_from_file(const std::string& trackerConfigFilename, bool trackSurfels,
+Tracker_Ptr TrackerFactory::make_tracker_from_file(const std::string& trackerConfigFilename, const std::string& sceneID, bool trackSurfels,
                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                    const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                    const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
@@ -46,10 +46,10 @@ Tracker_Ptr TrackerFactory::make_tracker_from_file(const std::string& trackerCon
 {
   Tree tree = PropertyUtil::load_properties_from_xml_file(trackerConfigFilename);
   Tree trackerTree = tree.get_child("tracker");
-  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag);
+  return make_tracker(trackerTree, sceneID, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag);
 }
 
-Tracker_Ptr TrackerFactory::make_tracker_from_string(const std::string& trackerConfig, bool trackSurfels,
+Tracker_Ptr TrackerFactory::make_tracker_from_string(const std::string& trackerConfig, const std::string& sceneID, bool trackSurfels,
                                                      const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                      const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                      const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
@@ -57,7 +57,7 @@ Tracker_Ptr TrackerFactory::make_tracker_from_string(const std::string& trackerC
 {
   Tree tree = PropertyUtil::load_properties_from_xml_string(trackerConfig);
   Tree trackerTree = tree.get_child("tracker");
-  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag);
+  return make_tracker(trackerTree, sceneID, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag);
 }
 
 #ifdef WITH_VICON
@@ -69,8 +69,8 @@ void TrackerFactory::set_vicon(const ViconInterface_CPtr& vicon)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::string trackerParams, bool trackSurfels,
-                                                const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+Tracker_Ptr TrackerFactory::make_simple_tracker(const std::string& trackerType, const std::string& sceneID, std::string trackerParams,
+                                                bool trackSurfels, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                 const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                                 const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
                                                 const MappingServer_Ptr& mappingServer, NestingFlag nestingFlag) const
@@ -112,7 +112,7 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
     if(m_vicon)
     {
       ViconTracker::TrackingMode trackingMode = trackerParams == "absolute" ? ViconTracker::TM_ABSOLUTE : ViconTracker::TM_RELATIVE;
-      fallibleTracker = new ViconTracker(m_vicon, "kinect", trackingMode);
+      fallibleTracker = new ViconTracker(m_vicon, sceneID, "camera" + sceneID, trackingMode);
       tracker = fallibleTracker;
     }
     else throw std::runtime_error("Error: The Vicon interface is null (try adding --useVicon to the command line).");
@@ -133,7 +133,7 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
   return nestingFlag == NESTED ? Tracker_Ptr(tracker, boost::serialization::null_deleter()) : Tracker_Ptr(tracker);
 }
 
-Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurfels,
+Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, const std::string& sceneID, bool trackSurfels,
                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                          const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
                                          const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
@@ -160,7 +160,7 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
       if(it->first != "tracker") continue;
 
       Tracker_Ptr nestedTracker = make_tracker(
-        it->second, trackSurfels, rgbImageSize, depthImageSize,
+        it->second, sceneID, trackSurfels, rgbImageSize, depthImageSize,
         lowLevelEngine, imuCalibrator, settings, fallibleTracker,
         mappingServer, NESTED
       );
@@ -176,7 +176,7 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
     // Construct the nested tracker.
     Tree nestedTrackerTree = trackerTree.get_child("tracker");
     Tracker_Ptr nestedTracker = make_tracker(
-      nestedTrackerTree, trackSurfels, rgbImageSize, depthImageSize,
+      nestedTrackerTree, sceneID, trackSurfels, rgbImageSize, depthImageSize,
       lowLevelEngine, imuCalibrator, settings, fallibleTracker,
       mappingServer, NESTED
     );
@@ -210,14 +210,14 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
 
     // Import the tracker configuration from the specified file.
     return make_tracker_from_file(
-      trackerConfigFilename, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine,
+      trackerConfigFilename, sceneID, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine,
       imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag
     );
   }
   else
   {
     return make_simple_tracker(
-      trackerType, trackerParams, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine,
+      trackerType, sceneID, trackerParams, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine,
       imuCalibrator, settings, fallibleTracker, mappingServer, nestingFlag
     );
   }
