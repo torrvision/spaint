@@ -26,7 +26,6 @@ ViconInterface::ViconInterface(const std::string& host)
   m_vicon.EnableMarkerData();
   m_vicon.EnableSegmentData();
   m_vicon.EnableUnlabeledMarkerData();
-  m_vicon.SetAxisMapping(Direction::Right, Direction::Down, Direction::Forward);
   m_vicon.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
 }
 
@@ -47,14 +46,15 @@ unsigned int ViconInterface::get_frame_number() const
   return m_vicon.GetFrameNumber().FrameNumber;
 }
 
-const boost::optional<Matrix4f>& ViconInterface::get_world_to_vicon_transform() const
+boost::optional<Matrix4f> ViconInterface::get_world_to_vicon_transform(const std::string& sceneID) const
 {
-  return m_worldToViconTransform;
+  std::map<std::string,Matrix4f>::const_iterator it = m_worldToViconTransforms.find(sceneID);
+  return it != m_worldToViconTransforms.end() ? boost::optional<Matrix4f>(it->second) : boost::none;
 }
 
-void ViconInterface::set_world_to_vicon_transform(const Matrix4f& worldToViconTransform)
+void ViconInterface::set_world_to_vicon_transform(const std::string& sceneID, const Matrix4f& worldToViconTransform)
 {
-  m_worldToViconTransform = worldToViconTransform;
+  m_worldToViconTransforms[sceneID] = worldToViconTransform;
 }
 
 boost::optional<std::map<std::string,Eigen::Vector3f> > ViconInterface::try_get_marker_positions(const std::string& subjectName) const

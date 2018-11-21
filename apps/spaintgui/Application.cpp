@@ -27,6 +27,9 @@ using namespace itmx;
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
+#ifdef WITH_VICON
+#include <spaint/fiducials/ViconFiducialDetector.h>
+#endif
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
@@ -970,14 +973,28 @@ void Application::save_mesh() const
     Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType(), 1 << 24));
     m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-    // If there is a pose optimiser, try to get the relative transform from this scene's coordinate system to the World scene's coordinate system.
-    boost::optional<std::pair<ORUtils::SE3Pose,size_t> > relativeTransform;
-    if(model->get_collaborative_pose_optimiser() && sceneID != Model::get_world_scene_id())
+    // Determine the relative transform (if any) to apply to the mesh prior to saving it.
+    boost::optional<Matrix4f> relativeTransform;
+
+#ifdef WITH_VICON
+    ViconInterface_CPtr vicon = model->get_vicon();
+    if(vicon)
     {
-      relativeTransform = model->get_collaborative_pose_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
+      // If we're using the Vicon system, try to get the relative transform from this scene's coordinate system to Vicon space, and use that.
+      relativeTransform = vicon->get_world_to_vicon_transform(sceneID);
+    }
+    else
+#endif
+    {
+      // Otherwise, if there's a pose optimiser, try to get the relative transform from this scene's coordinate system to the World scene's coordinate system.
+      if(model->get_collaborative_pose_optimiser() && sceneID != Model::get_world_scene_id())
+      {
+        boost::optional<std::pair<ORUtils::SE3Pose,size_t> > result = model->get_collaborative_pose_optimiser()->try_get_relative_transform(Model::get_world_scene_id(), sceneID);
+        relativeTransform = result ? boost::optional<Matrix4f>(result->first.GetM()) : boost::none;
+      }
     }
 
-    // If we managed to get the relative transform, we need to update every triangle in the mesh. We do this on the CPU, since this is not currently
+    // If a relative transform is being used, we need to update every triangle in the mesh. We do this on the CPU, since this is not currently
     // a time-sensitive operation. (We might want to use a proper CUDA kernel in the future.)
     if(relativeTransform)
     {
@@ -989,7 +1006,7 @@ void Application::save_mesh() const
       triangles->SetFrom(mesh->triangles, mesh->memoryType == MEMORYDEVICE_CUDA ? TriangleBlock::CUDA_TO_CPU : TriangleBlock::CPU_TO_CPU);
 
       // Next, transform each triangle using the relative transform determined above.
-      const Matrix4f transform = relativeTransform->first.GetM();
+      const Matrix4f transform = *relativeTransform;
       Triangle *trianglesData = triangles->GetData(MEMORYDEVICE_CPU);
       for(size_t triangleIdx = 0; triangleIdx < mesh->noTotalTriangles; ++triangleIdx)
       {

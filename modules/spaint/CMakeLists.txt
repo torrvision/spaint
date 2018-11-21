@@ -119,6 +119,11 @@ IF(WITH_OPENCV)
   SET(fiducials_headers ${fiducials_headers} include/spaint/fiducials/ArUcoFiducialDetector.h)
 ENDIF()
 
+IF(WITH_VICON)
+  SET(fiducials_sources ${fiducials_sources} src/fiducials/ViconFiducialDetector.cpp)
+  SET(fiducials_headers ${fiducials_headers} include/spaint/fiducials/ViconFiducialDetector.h)
+ENDIF()
+
 ##
 SET(imageprocessing_sources)
 SET(imageprocessing_headers)
