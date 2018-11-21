@@ -79,7 +79,7 @@ public:
    *
    * \param sceneID The scene ID to add.
    */
-  void add_scene_id(const std::string& sceneID);
+  virtual void add_scene_id(const std::string& sceneID);
 
   /**
    * \brief Gets the fiducial detector for the specified scene (if any).
@@ -87,7 +87,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The fiducial detector for the specified scene (if any).
    */
-  const FiducialDetector_CPtr& get_fiducial_detector(const std::string& sceneID) const;
+  virtual FiducialDetector_CPtr get_fiducial_detector(const std::string& sceneID) const;
 
   /**
    * \brief Gets the mapping client (if any) for the specified scene.
@@ -150,7 +150,7 @@ public:
    * \param sceneID           The scene ID.
    * \param fiducialDetector  The fiducial detector for the specified scene.
    */
-  void set_fiducial_detector(const std::string& sceneID, const FiducialDetector_CPtr& fiducialDetector);
+  virtual void set_fiducial_detector(const std::string& sceneID, const FiducialDetector_CPtr& fiducialDetector);
 };
 
 //#################### TYPEDEFS ####################

@@ -19,7 +19,7 @@ void SLAMContext::add_scene_id(const std::string& sceneID)
   m_sceneIDs.push_back(sceneID);
 }
 
-const FiducialDetector_CPtr& SLAMContext::get_fiducial_detector(const std::string& sceneID) const
+FiducialDetector_CPtr SLAMContext::get_fiducial_detector(const std::string& sceneID) const
 {
   return MapUtil::lookup(m_fiducialDetectors, sceneID, FiducialDetector_CPtr());
 }
