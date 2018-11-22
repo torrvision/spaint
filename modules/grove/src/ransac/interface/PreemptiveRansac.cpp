@@ -357,8 +357,9 @@ void PreemptiveRansac::reset_inliers(bool resetMask)
 }
 
 bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
-{
 #ifdef WITH_ALGLIB
+try
+{
   // Fill in the struct that will be passed to the optimiser.
   PointsForLM ptsForLM;
   ptsForLM.nbPoints = static_cast<uint32_t>(m_inlierRasterIndicesBlock->dataSize);                          // The current number of inlier points.
@@ -385,21 +386,13 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   alglib::minlmsetcond(state, m_poseOptimisationGradientThreshold, m_poseOptimisationEnergyThreshold, m_poseOptimisationStepThreshold, m_poseOptimisationMaxIterations);
 
   // Run the optimiser.
-  try
+  if (m_usePredictionCovarianceForPoseOptimization)
   {
-    if (m_usePredictionCovarianceForPoseOptimization)
-    {
-      alglib::minlmoptimize(state, alglib_func_mahalanobis, alglib_jac_mahalanobis, alglib_rep, &ptsForLM);
-    }
-    else
-    {
-      alglib::minlmoptimize(state, alglib_func_l2, alglib_jac_l2, alglib_rep, &ptsForLM);
-    }
+    alglib::minlmoptimize(state, alglib_func_mahalanobis, alglib_jac_mahalanobis, alglib_rep, &ptsForLM);
   }
-  catch(const alglib::ap_error& e)
+  else
   {
-    std::cout << "ALGLIB failed the optimisation for pose candidate: " << candidateIdx << ". Reason: " << e.msg << "\n";
-    return false;
+    alglib::minlmoptimize(state, alglib_func_l2, alglib_jac_l2, alglib_rep, &ptsForLM);
   }
 
   // Extract the results of the optimisation.
@@ -414,10 +407,17 @@ bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
   }
 
   return succeeded;
-#else
-  throw std::runtime_error("Error: Cannot update candidate poses. Reconfigure in CMake with the WITH_ALGLIB option set to ON.");
-#endif
 }
+catch(const alglib::ap_error& e)
+{
+  std::cout << "ALGLIB failed the optimisation for pose candidate: " << candidateIdx << ". Reason: " << e.msg << "\n";
+  return false;
+}
+#else
+{
+  throw std::runtime_error("Error: Cannot update candidate pose. Reconfigure in CMake with the WITH_ALGLIB option set to ON.");
+}
+#endif
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
