@@ -117,8 +117,8 @@ public:
   template <typename T>
   static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
   {
-    quaternion_to_row_major_rotation_matrix(q, matrix);
-    if(order == COL_MAJOR) transpose_matrix3_in_place(matrix);
+    quaternion_to_col_major_rotation_matrix(q, matrix);
+    if(order == ROW_MAJOR) transpose_matrix3_in_place(matrix);
   }
 
   /**
@@ -162,14 +162,14 @@ public:
   template <typename T>
   static void rotation_matrix_to_quaternion(const T *matrix, T *q, Order order)
   {
-    const T *rowMajorMatrix = matrix;
+    const T *colMajorMatrix = matrix;
     T temp[9];
-    if(order == COL_MAJOR)
+    if(order == ROW_MAJOR)
     {
       transpose_matrix3(matrix, temp);
-      rowMajorMatrix = temp;
+      colMajorMatrix = temp;
     }
-    row_major_rotation_matrix_to_quaternion(rowMajorMatrix, q);
+    col_major_rotation_matrix_to_quaternion(colMajorMatrix, q);
   }
 
   /**
@@ -262,55 +262,13 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Calculates the L2 norm of a vector.
+   * \brief Converts a rotation matrix arranged in column-major format to a unit quaternion.
    *
-   * \param v  The vector.
-   * \return   The L2 norm of the vector.
-   */
-  template <typename T>
-  static T l2_norm(const T *v, size_t elementCount)
-  {
-    T sumSquares = 0.0;
-    for(size_t i = 0; i < elementCount; ++i)
-    {
-      sumSquares += v[i] * v[i];
-    }
-    return sqrt(sumSquares);
-  }
-
-  /**
-   * \brief Converts a unit quaternion to a rotation matrix arranged in row-major format.
-   *
-   * \param q      The unit quaternion.
-   * \param matrix The rotation matrix in row-major format.
-   */
-  template <typename T>
-  static void quaternion_to_row_major_rotation_matrix(const T *q, T *matrix)
-  {
-    T q0Sq = q[0]*q[0];
-    T q1Sq = q[1]*q[1];
-    T q2Sq = q[2]*q[2];
-    T q3Sq = q[3]*q[3];
-
-    matrix[0] = q0Sq + q1Sq - q2Sq - q3Sq;
-    matrix[1] = 2.0f * (q[1]*q[2] + q[0]*q[3]);
-    matrix[2] = 2.0f * (q[1]*q[3] - q[0]*q[2]);
-    matrix[3] = 2.0f * (q[1]*q[2] - q[0]*q[3]);
-    matrix[4] = q0Sq - q1Sq + q2Sq - q3Sq;
-    matrix[5] = 2.0f * (q[2]*q[3] + q[0]*q[1]);
-    matrix[6] = 2.0f * (q[1]*q[3] + q[0]*q[2]);
-    matrix[7] = 2.0f * (q[2]*q[3] - q[0]*q[1]);
-    matrix[8] = q0Sq - q1Sq - q2Sq + q3Sq;
-  }
-
-  /**
-   * \brief Converts a rotation matrix arranged in row-major format to a unit quaternion.
-   *
-   * \param matrix   The rotation matrix in row-major format.
+   * \param matrix   The rotation matrix in column-major format.
    * \param q        The unit quaternion.
    */
   template <typename T>
-  static void row_major_rotation_matrix_to_quaternion(const T *matrix, T *q)
+  static void col_major_rotation_matrix_to_quaternion(const T *matrix, T *q)
   {
     int variant = 0;
 
@@ -356,6 +314,48 @@ private:
         q[3] = denominator / 4.0f;
         break;
     }
+  }
+
+  /**
+   * \brief Calculates the L2 norm of a vector.
+   *
+   * \param v  The vector.
+   * \return   The L2 norm of the vector.
+   */
+  template <typename T>
+  static T l2_norm(const T *v, size_t elementCount)
+  {
+    T sumSquares = 0.0;
+    for(size_t i = 0; i < elementCount; ++i)
+    {
+      sumSquares += v[i] * v[i];
+    }
+    return sqrt(sumSquares);
+  }
+
+  /**
+   * \brief Converts a unit quaternion to a rotation matrix arranged in column-major format.
+   *
+   * \param q      The unit quaternion.
+   * \param matrix The rotation matrix in column-major format.
+   */
+  template <typename T>
+  static void quaternion_to_col_major_rotation_matrix(const T *q, T *matrix)
+  {
+    T q0Sq = q[0]*q[0];
+    T q1Sq = q[1]*q[1];
+    T q2Sq = q[2]*q[2];
+    T q3Sq = q[3]*q[3];
+
+    matrix[0] = q0Sq + q1Sq - q2Sq - q3Sq;
+    matrix[1] = 2.0f * (q[1]*q[2] + q[0]*q[3]);
+    matrix[2] = 2.0f * (q[1]*q[3] - q[0]*q[2]);
+    matrix[3] = 2.0f * (q[1]*q[2] - q[0]*q[3]);
+    matrix[4] = q0Sq - q1Sq + q2Sq - q3Sq;
+    matrix[5] = 2.0f * (q[2]*q[3] + q[0]*q[1]);
+    matrix[6] = 2.0f * (q[1]*q[3] + q[0]*q[2]);
+    matrix[7] = 2.0f * (q[2]*q[3] - q[0]*q[1]);
+    matrix[8] = q0Sq - q1Sq - q2Sq + q3Sq;
   }
 
   /**

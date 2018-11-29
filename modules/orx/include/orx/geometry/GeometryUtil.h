@@ -149,7 +149,7 @@ struct GeometryUtil
   static Matrix3f to_rotation_matrix(const ORUtils::Vector3<T>& r)
   {
     Matrix3f R;
-    tvgutil::AttitudeUtil::rotation_vector_to_rotation_matrix(r.toFloat().v, R.m, tvgutil::AttitudeUtil::ROW_MAJOR);
+    tvgutil::AttitudeUtil::rotation_vector_to_rotation_matrix(r.toFloat().v, R.m, tvgutil::AttitudeUtil::COL_MAJOR);
     return R;
   }
 
@@ -163,7 +163,7 @@ struct GeometryUtil
   static ORUtils::Vector3<T> to_rotation_vector(const Matrix3f& R)
   {
     Vector3f r;
-    tvgutil::AttitudeUtil::rotation_matrix_to_rotation_vector(R.m, r.v, tvgutil::AttitudeUtil::ROW_MAJOR);
+    tvgutil::AttitudeUtil::rotation_matrix_to_rotation_vector(R.m, r.v, tvgutil::AttitudeUtil::COL_MAJOR);
     ORUtils::Vector3<T> typedR(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));
     return typedR;
   }
