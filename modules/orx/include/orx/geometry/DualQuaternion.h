@@ -50,7 +50,13 @@ public:
    */
   DualQuaternion(const DualNumber<T>& w_, const DualNumber<T>& x_, const DualNumber<T>& y_, const DualNumber<T>& z_)
   : x(x_), y(y_), z(z_), w(w_)
-  {}
+  {
+    // Put the dual quaternion into canonical form.
+    if(w.r < static_cast<T>(0))
+    {
+      *this = -*this;
+    }
+  }
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -407,6 +413,18 @@ private:
 };
 
 //#################### NON-MEMBER OPERATORS ####################
+
+/**
+ * \brief Negates a dual quaternion.
+ *
+ * \param q The dual quaternion.
+ * \return  A negated version of the dual quaternion.
+ */
+template <typename T>
+DualQuaternion<T> operator-(const DualQuaternion<T>& q)
+{
+  return DualQuaternion<T>(-q.w, -q.x, -q.y, -q.z);
+}
 
 /**
  * \brief Scales a dual quaternion by the specified factor.
