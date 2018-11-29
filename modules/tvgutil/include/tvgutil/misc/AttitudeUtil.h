@@ -173,6 +173,21 @@ public:
   }
 
   /**
+   * \brief Converts a rotation matrix to a rotation vector.
+   *
+   * \param matrix  The rotation matrix.
+   * \param rv      The rotation vector.
+   * \param order   The order in which the elements of the rotation matrix are linearised.
+   */
+  template <typename T>
+  static void rotation_matrix_to_rotation_vector(const T *matrix, T *rv, Order order)
+  {
+    T q[4];
+    rotation_matrix_to_quaternion(matrix, q, order);
+    quaternion_to_rotation_vector(q, rv);
+  }
+
+  /**
    * \brief Converts a rotation vector to an axis-angle representation.
    *
    * Note: If the rotation vector is zero, a zero rotation around the x-axis is returned.
@@ -227,6 +242,21 @@ public:
     q[1] = axis[0] * sinHalfAngle;
     q[2] = axis[1] * sinHalfAngle;
     q[3] = axis[2] * sinHalfAngle;
+  }
+
+  /**
+   * \brief Converts a rotation vector to a rotation matrix.
+   *
+   * \param rv      The rotation vector.
+   * \param matrix  The rotation matrix.
+   * \param order   The order in which the elements of the rotation matrix are linearised.
+   */
+  template <typename T>
+  static void rotation_vector_to_rotation_matrix(const T *rv, T *matrix, Order order)
+  {
+    T q[4];
+    rotation_vector_to_quaternion(rv, q);
+    quaternion_to_rotation_matrix(q, matrix, order);
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################

@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
   DualQuaternion<T> dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(M_PI_2));
 
   SE3Pose pose = GeometryUtil::dual_quat_to_pose(dq);
-  Vector3f t, r;
-  pose.GetParams(t, r);
+  Vector3f t = pose.GetT();
+  Vector3f r = GeometryUtil::to_rotation_vector<float>(pose.GetR());
 
   BOOST_CHECK_SMALL(length(t), 1e-4f);
   BOOST_CHECK_SMALL(length(r - Vector3f(0,0,(float)M_PI_2)), 1e-4f);
@@ -103,7 +103,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_pose_to_dual_quat, T, TS)
 {
   Vector3<T> r(0,T(M_PI_4),0);
   Vector3<T> t(3,4,5);
-  SE3Pose pose((float)t.x, (float)t.y, (float)t.z, (float)r.x, (float)r.y, (float)r.z);
+  SE3Pose pose;
+  pose.SetT(t.toFloat());
+  pose.SetR(GeometryUtil::to_rotation_matrix(r));
 
   DualQuaternion<T> dq = GeometryUtil::pose_to_dual_quat<T>(pose);
 

@@ -10,6 +10,8 @@
 #include <map>
 #include <vector>
 
+#include <tvgutil/misc/AttitudeUtil.h>
+
 #include <Eigen/Dense>
 
 #include <ORUtils/Math.h>
@@ -44,7 +46,13 @@ struct GeometryUtil
   static ORUtils::SE3Pose dual_quat_to_pose(const DualQuaternion<T>& dq)
   {
     ORUtils::SE3Pose pose;
-    pose.SetFrom(dq.get_translation().toFloat(), dq.get_rotation().toFloat());
+
+    const Vector3f r = dq.get_rotation().toFloat();
+    const Vector3f t = dq.get_translation().toFloat();
+
+    pose.SetR(to_rotation_matrix(r));
+    pose.SetT(t);
+
     return pose;
   }
 
@@ -106,8 +114,8 @@ struct GeometryUtil
   template <typename T>
   static DualQuaternion<T> pose_to_dual_quat(const ORUtils::SE3Pose& pose)
   {
-    ORUtils::Vector3<float> r, t;
-    pose.GetParams(t, r);
+    const Vector3f r = to_rotation_vector<float>(pose.GetR());
+    const Vector3f t = pose.GetT();
 
     ORUtils::Vector3<T> typedR(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));
     ORUtils::Vector3<T> typedT(static_cast<T>(t.x), static_cast<T>(t.y), static_cast<T>(t.z));
@@ -130,6 +138,35 @@ struct GeometryUtil
    * \return                true, if the poses are sufficiently similar, or false otherwise.
    */
   static bool poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtils::SE3Pose& pose2, double rotThreshold = 20 * M_PI / 180, float transThreshold = 0.05f);
+
+  /**
+   * \brief Converts a rotation vector to a rotation matrix.
+   *
+   * \param r The rotation vector.
+   * \return  The corresponding rotation matrix.
+   */
+  template <typename T>
+  static Matrix3f to_rotation_matrix(const ORUtils::Vector3<T>& r)
+  {
+    Matrix3f R;
+    tvgutil::AttitudeUtil::rotation_vector_to_rotation_matrix(r.toFloat().v, R.m, tvgutil::AttitudeUtil::COL_MAJOR);
+    return R;
+  }
+
+  /**
+   * \brief Converts a rotation matrix to a rotation vector.
+   *
+   * \param R The rotation matrix.
+   * \return  The corresponding rotation vector.
+   */
+  template <typename T>
+  static ORUtils::Vector3<T> to_rotation_vector(const Matrix3f& R)
+  {
+    Vector3f r;
+    tvgutil::AttitudeUtil::rotation_matrix_to_rotation_vector(R.m, r.v, tvgutil::AttitudeUtil::COL_MAJOR);
+    ORUtils::Vector3<T> typedR(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));
+    return typedR;
+  }
 
   /**
    * \brief Converts an Eigen Vector to an InfiniTAM vector.
