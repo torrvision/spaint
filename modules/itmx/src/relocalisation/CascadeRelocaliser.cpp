@@ -111,6 +111,12 @@ void CascadeRelocaliser::finish_training()
   }
 }
 
+ORUChar4Image_CPtr CascadeRelocaliser::get_visualisation_image(const std::string& key) const
+{
+  // FIXME: Returning the image from the first relocaliser will do for now, but longer-term we should do this properly.
+  return m_innerRelocalisers[0]->get_visualisation_image(key);
+}
+
 void CascadeRelocaliser::load_from_disk(const std::string& inputFolder)
 {
   for(size_t i = 0, size = m_innerRelocalisers.size(); i < size; ++i)
