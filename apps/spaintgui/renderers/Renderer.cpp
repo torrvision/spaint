@@ -430,8 +430,11 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     }
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
-    // Render the value of the pixel to which the user is pointing (for debugging purposes).
-    render_pixel_value(fracWindowPos, subwindow);
+    // If desired, render the value of the pixel to which the user is pointing (for debugging purposes).
+    if(m_model->get_settings()->get_first_value<bool>("usePixelDebugging", true))
+    {
+      render_pixel_value(fracWindowPos, subwindow);
+    }
 #endif
   }
 }
