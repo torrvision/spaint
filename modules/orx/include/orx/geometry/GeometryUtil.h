@@ -132,6 +132,14 @@ struct GeometryUtil
   static bool poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtils::SE3Pose& pose2, double rotThreshold = 20 * M_PI / 180, float transThreshold = 0.05f);
 
   /**
+   * \brief Converts an Eigen matrix to an InfiniTAM matrix.
+   *
+   * \param m  The Eigen matrix.
+   * \return   The InfiniTAM matrix.
+   */
+  static Matrix3f to_itm(const Eigen::Matrix3f& m);
+
+  /**
    * \brief Converts an Eigen Vector to an InfiniTAM vector.
    *
    * \param v  The Eigen vector.
