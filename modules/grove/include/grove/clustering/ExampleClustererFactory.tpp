@@ -18,7 +18,7 @@ namespace grove {
 template <typename ExampleType, typename ClusterType, int MaxClusters>
 typename ExampleClustererFactory<ExampleType,ClusterType,MaxClusters>::Clusterer_Ptr
 ExampleClustererFactory<ExampleType,ClusterType,MaxClusters>::make_clusterer(
-  float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, DeviceType deviceType
+  float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, ORUtils::DeviceType deviceType
 )
 {
   Clusterer_Ptr clusterer;

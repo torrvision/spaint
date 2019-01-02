@@ -34,7 +34,7 @@ struct ExampleReservoirsFactory
    * \param rngSeed           The seed for the random number generators.
    * \return                  The set of example reservoirs.
    */
-  static Reservoirs_Ptr make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, DeviceType deviceType, uint32_t rngSeed = 42);
+  static Reservoirs_Ptr make_reservoirs(uint32_t reservoirCount, uint32_t reservoirCapacity, ORUtils::DeviceType deviceType, uint32_t rngSeed = 42);
 };
 
 }

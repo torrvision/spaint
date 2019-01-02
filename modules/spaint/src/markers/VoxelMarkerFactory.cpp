@@ -5,6 +5,7 @@
 
 #include "markers/VoxelMarkerFactory.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "markers/cpu/VoxelMarker_CPU.h"
 

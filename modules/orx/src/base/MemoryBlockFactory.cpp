@@ -4,6 +4,7 @@
  */
 
 #include "base/MemoryBlockFactory.h"
+using namespace ORUtils;
 
 namespace orx {
 

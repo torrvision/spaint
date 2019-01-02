@@ -36,7 +36,7 @@ public:
    * \param kernelWidth The kernel width to use for median filtering.
    * \param deviceType  The device on which the filterer should operate.
    */
-  MedianFilterer(unsigned int kernelWidth, DeviceType deviceType);
+  MedianFilterer(unsigned int kernelWidth, ORUtils::DeviceType deviceType);
 
   //#################### PUBLIC OPERATORS ####################
 public:

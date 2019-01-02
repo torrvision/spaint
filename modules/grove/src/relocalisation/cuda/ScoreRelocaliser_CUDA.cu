@@ -51,7 +51,7 @@ __global__ void ck_merge_predictions_for_keypoints(const ORUtils::VectorX<int,TR
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string& forestFilename, const SettingsContainer_CPtr& settings, const std::string& settingsNamespace)
-: ScoreRelocaliser(forestFilename, settings, settingsNamespace, DEVICE_CUDA)
+: ScoreRelocaliser(forestFilename, settings, settingsNamespace, ORUtils::DEVICE_CUDA)
 {}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################

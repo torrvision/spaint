@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/ScoreRelocaliserFactory.h"
+using namespace ORUtils;
 using namespace tvgutil;
 
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"

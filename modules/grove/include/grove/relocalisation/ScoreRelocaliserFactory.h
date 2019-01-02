@@ -31,7 +31,7 @@ struct ScoreRelocaliserFactory
    *
    * \throws std::runtime_error If the relocaliser cannot be created.
    */
-  static ScoreRelocaliser_Ptr make_score_relocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
+  static ScoreRelocaliser_Ptr make_score_relocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, ORUtils::DeviceType deviceType);
 
   /**
    * \brief Makes a SCoRe relocaliser by loading a pre-trained forest from a file.
@@ -45,7 +45,7 @@ struct ScoreRelocaliserFactory
    * \throws std::runtime_error If the relocaliser cannot be created.
    */
   static ScoreRelocaliser_Ptr make_score_relocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings,
-                                                     const std::string& settingsNamespace, DeviceType deviceType);
+                                                     const std::string& settingsNamespace, ORUtils::DeviceType deviceType);
 };
 
 }

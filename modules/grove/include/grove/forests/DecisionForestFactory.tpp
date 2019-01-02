@@ -17,11 +17,11 @@ namespace grove {
 
 template <typename DescriptorType, int TreeCount>
 typename DecisionForestFactory<DescriptorType,TreeCount>::Forest_Ptr
-DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const std::string& filename, DeviceType deviceType)
+DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const std::string& filename, ORUtils::DeviceType deviceType)
 {
   Forest_Ptr forest;
 
-  if(deviceType == DEVICE_CUDA)
+  if(deviceType == ORUtils::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     forest.reset(new DecisionForest_CUDA<DescriptorType,TreeCount>(filename));
@@ -40,11 +40,11 @@ DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const std::string& 
 #ifdef WITH_SCOREFORESTS
 template <typename DescriptorType, int TreeCount>
 typename DecisionForestFactory<DescriptorType,TreeCount>::Forest_Ptr
-DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const EnsembleLearner& pretrainedForest, DeviceType deviceType)
+DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const EnsembleLearner& pretrainedForest, ORUtils::DeviceType deviceType)
 {
   Forest_Ptr forest;
 
-  if(deviceType == DEVICE_CUDA)
+  if(deviceType == ORUtils::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     forest.reset(new DecisionForest_CUDA<DescriptorType,TreeCount>(pretrainedForest));
@@ -63,11 +63,11 @@ DecisionForestFactory<DescriptorType,TreeCount>::make_forest(const EnsembleLearn
 
 template <typename DescriptorType, int TreeCount>
 typename DecisionForestFactory<DescriptorType,TreeCount>::Forest_Ptr
-DecisionForestFactory<DescriptorType,TreeCount>::make_randomly_generated_forest(const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType)
+DecisionForestFactory<DescriptorType,TreeCount>::make_randomly_generated_forest(const tvgutil::SettingsContainer_CPtr& settings, ORUtils::DeviceType deviceType)
 {
   Forest_Ptr forest;
 
-  if(deviceType == DEVICE_CUDA)
+  if(deviceType == ORUtils::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     forest.reset(new DecisionForest_CUDA<DescriptorType,TreeCount>(settings));

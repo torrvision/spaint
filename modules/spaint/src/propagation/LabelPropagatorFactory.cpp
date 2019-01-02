@@ -5,6 +5,7 @@
 
 #include "propagation/LabelPropagatorFactory.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "propagation/cpu/LabelPropagator_CPU.h"
 

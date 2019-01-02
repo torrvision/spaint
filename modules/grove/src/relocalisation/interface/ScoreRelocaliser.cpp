@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/interface/ScoreRelocaliser.h"
+using namespace ORUtils;
 
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
