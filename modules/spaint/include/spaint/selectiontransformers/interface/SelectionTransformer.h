@@ -30,7 +30,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The device on which the transformer is operating. */
-  const DeviceType m_deviceType;
+  const ORUtils::DeviceType m_deviceType;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -39,7 +39,7 @@ protected:
    *
    * \param deviceType  The device on which the transformer is operating.
    */
-  explicit SelectionTransformer(DeviceType deviceType);
+  explicit SelectionTransformer(ORUtils::DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:

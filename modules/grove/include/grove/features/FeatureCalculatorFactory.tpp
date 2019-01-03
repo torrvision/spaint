@@ -15,7 +15,7 @@ namespace grove {
 
 template <typename KeypointType, typename DescriptorType>
 boost::shared_ptr<RGBDPatchFeatureCalculator<KeypointType, DescriptorType> > FeatureCalculatorFactory::make_custom_patch_feature_calculator(
-  DeviceType deviceType, bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
+  ORUtils::DeviceType deviceType, bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
   uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius,
   RGBDPatchFeatureDifferenceType rgbDifferenceType, uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset,
   uint32_t rgbMinRadius, uint32_t rgbMaxRadius
@@ -23,7 +23,7 @@ boost::shared_ptr<RGBDPatchFeatureCalculator<KeypointType, DescriptorType> > Fea
 {
   boost::shared_ptr<RGBDPatchFeatureCalculator<KeypointType,DescriptorType> > calculator;
 
-  if(deviceType == DEVICE_CUDA)
+  if(deviceType == ORUtils::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     calculator.reset(new RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>(

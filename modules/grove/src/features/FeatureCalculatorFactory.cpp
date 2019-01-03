@@ -4,6 +4,7 @@
  */
 
 #include "features/FeatureCalculatorFactory.h"
+using namespace ORUtils;
 
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
 

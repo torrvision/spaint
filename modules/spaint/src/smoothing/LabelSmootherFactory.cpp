@@ -5,6 +5,7 @@
 
 #include "smoothing/LabelSmootherFactory.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "smoothing/cpu/LabelSmoother_CPU.h"
 

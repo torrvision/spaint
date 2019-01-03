@@ -4,6 +4,7 @@
  */
 
 #include "visualisation/VisualisationGenerator.h"
+using namespace ORUtils;
 
 #include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>

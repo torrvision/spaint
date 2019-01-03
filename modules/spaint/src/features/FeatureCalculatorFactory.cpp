@@ -5,6 +5,7 @@
 
 #include "features/FeatureCalculatorFactory.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "features/cpu/VOPFeatureCalculator_CPU.h"
 

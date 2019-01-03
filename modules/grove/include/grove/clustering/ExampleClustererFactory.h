@@ -38,7 +38,7 @@ struct ExampleClustererFactory
    *
    * \throws std::invalid_argument If maxClusterCount > MaxClusters.
    */
-  static Clusterer_Ptr make_clusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, DeviceType deviceType);
+  static Clusterer_Ptr make_clusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize, ORUtils::DeviceType deviceType);
 };
 
 }

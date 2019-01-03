@@ -84,7 +84,7 @@ protected:
   float m_clustererTau;
 
   /** The device on which the relocaliser should operate. */
-  DeviceType m_deviceType;
+  ORUtils::DeviceType m_deviceType;
 
   /** The clusterer used to compute 3D modal clusters from the examples stored in the reservoirs. */
   Clusterer_Ptr m_exampleClusterer;
@@ -152,7 +152,7 @@ protected:
    *
    * \throws std::runtime_error If the forest cannot be loaded.
    */
-  ScoreRelocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, DeviceType deviceType);
+  ScoreRelocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, ORUtils::DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:

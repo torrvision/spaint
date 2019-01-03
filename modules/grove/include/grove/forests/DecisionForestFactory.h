@@ -38,7 +38,7 @@ struct DecisionForestFactory
    *
    * \throws std::runtime_error If the forest cannot be loaded.
    */
-  static Forest_Ptr make_forest(const std::string& filename, DeviceType deviceType);
+  static Forest_Ptr make_forest(const std::string& filename, ORUtils::DeviceType deviceType);
 
 #ifdef WITH_SCOREFORESTS
   /**
@@ -62,7 +62,7 @@ struct DecisionForestFactory
    *
    * \throws std::runtime_error If the forest cannot be created.
    */
-  static Forest_Ptr make_randomly_generated_forest(const tvgutil::SettingsContainer_CPtr& settings, DeviceType deviceType);
+  static Forest_Ptr make_randomly_generated_forest(const tvgutil::SettingsContainer_CPtr& settings, ORUtils::DeviceType deviceType);
 };
 
 }

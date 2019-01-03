@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
+using namespace ORUtils;
 using namespace tvgutil;
 
 #ifdef _MSC_VER

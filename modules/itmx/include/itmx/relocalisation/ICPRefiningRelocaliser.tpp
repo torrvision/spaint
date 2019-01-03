@@ -52,7 +52,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const orx::R
   // Construct the tracking controller, tracking state, view and render state.
   m_trackingController.reset(new ITMLib::ITMTrackingController(m_tracker.get(), m_settings.get()));
   m_trackingState.reset(new ITMLib::ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
-  m_view.reset(new ITMLib::ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == DEVICE_CUDA));
+  m_view.reset(new ITMLib::ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == ORUtils::DEVICE_CUDA));
   m_voxelRenderState.reset(ITMLib::ITMRenderStateFactory<IndexType>::CreateRenderState(
     m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize),
     m_scene->sceneParams,
@@ -222,8 +222,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ORUChar4Image *co
     const ORUtils::SE3Pose initialPose = initialResults[resultIdx].pose;
 
     // Copy the depth and RGB images into the view.
-    m_view->depth->SetFrom(depthImage, m_settings->deviceType == DEVICE_CUDA ? ORFloatImage::CUDA_TO_CUDA : ORFloatImage::CPU_TO_CPU);
-    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == DEVICE_CUDA ? ORUChar4Image::CUDA_TO_CUDA : ORUChar4Image::CPU_TO_CPU);
+    m_view->depth->SetFrom(depthImage, m_settings->deviceType == ORUtils::DEVICE_CUDA ? ORFloatImage::CUDA_TO_CUDA : ORFloatImage::CPU_TO_CPU);
+    m_view->rgb->SetFrom(colourImage, m_settings->deviceType == ORUtils::DEVICE_CUDA ? ORUChar4Image::CUDA_TO_CUDA : ORUChar4Image::CPU_TO_CPU);
 
     // Set up the tracking state using the initial pose.
     m_trackingState->pose_d->SetFrom(&initialPose);
