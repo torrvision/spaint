@@ -5,6 +5,7 @@
 
 #include "selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "selectiontransformers/shared/VoxelToCubeSelectionTransformer_Shared.h"
 
@@ -21,7 +22,7 @@ __global__ void ck_transform_selection(int cubeSideLength, int cubeSize, int rad
 //#################### CONSTRUCTORS ####################
 
 VoxelToCubeSelectionTransformer_CUDA::VoxelToCubeSelectionTransformer_CUDA(int radius)
-: VoxelToCubeSelectionTransformer(radius, ORUtils::DEVICE_CUDA)
+: VoxelToCubeSelectionTransformer(radius, DEVICE_CUDA)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
