@@ -4,6 +4,7 @@
  */
 
 #include "relocalisation/interface/ScoreRelocaliser.h"
+using namespace ORUtils;
 
 #include <boost/filesystem.hpp>
 namespace bf = boost::filesystem;
@@ -293,15 +294,7 @@ void ScoreRelocaliser::set_backing_relocaliser(const ScoreRelocaliser_Ptr& backi
 void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                              const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
-  // If this relocaliser is "backed" by another one, early out.
-  if(m_backed) return;
-
   boost::lock_guard<boost::recursive_mutex> lock(m_mutex);
-
-  if(!m_relocaliserState->exampleReservoirs)
-  {
-    throw std::runtime_error("Error: finish_training() has been called; the relocaliser cannot be trained again until reset() is called");
-  }
 
   // If forest visualisation is enabled, update the maximum and minimum x, y and z coordinates visited by the camera during training.
   if(m_visualiseForest)
@@ -312,6 +305,14 @@ void ScoreRelocaliser::train(const ORUChar4Image *colourImage, const ORFloatImag
     m_minX = std::min(m_minX, cameraPose.GetT().x);
     m_minY = std::min(m_minY, cameraPose.GetT().y);
     m_minZ = std::min(m_minZ, cameraPose.GetT().z);
+  }
+
+  // If this relocaliser is "backed" by another one, early out.
+  if(m_backed) return;
+
+  if(!m_relocaliserState->exampleReservoirs)
+  {
+    throw std::runtime_error("Error: finish_training() has been called; the relocaliser cannot be trained again until reset() is called");
   }
 
   // Step 1: Extract keypoints from the RGB-D image and compute descriptors for them.

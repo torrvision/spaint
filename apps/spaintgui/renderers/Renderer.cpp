@@ -430,8 +430,11 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     }
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
-    // Render the value of the pixel to which the user is pointing (for debugging purposes).
-    render_pixel_value(fracWindowPos, subwindow);
+    // If desired, render the value of the pixel to which the user is pointing (for debugging purposes).
+    if(m_model->get_settings()->get_first_value<bool>("usePixelDebugging", true))
+    {
+      render_pixel_value(fracWindowPos, subwindow);
+    }
 #endif
   }
 }
@@ -722,9 +725,12 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       // Note: Conveniently, data() returns the elements in column-major order (the order required by OpenGL).
       glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data());
 
-      // Render the default camera.
-      static SimpleCamera defaultCam = *CameraFactory::make_default_camera();
-      CameraRenderer::render_camera(defaultCam);
+      // If desired, render the default camera.
+      if(m_model->get_settings()->get_first_value<bool>("renderCamera", true))
+      {
+        static SimpleCamera defaultCam = *CameraFactory::make_default_camera();
+        CameraRenderer::render_camera(defaultCam);
+      }
 
       // Render the current selector to show how we're interacting with the scene.
       Vector3u labelColour = m_model->get_label_manager()->get_label_colour(m_model->get_semantic_label());

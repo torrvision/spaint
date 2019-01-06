@@ -27,8 +27,10 @@
 
 namespace bf = boost::filesystem;
 
-using namespace grove;
 using namespace ITMLib;
+using namespace ORUtils;
+
+using namespace grove;
 using namespace itmx;
 using namespace orx;
 using namespace tvgutil;
@@ -178,7 +180,7 @@ RelocaliserApplication::RelocaliserApplication(const std::string &calibrationPat
   m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(m_cameraCalibration, deviceType));
 
   // Allocate the ITM Images used to train/test the relocaliser (empty for now, will be resized later).
-  const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   m_currentDepthImage = mbf.make_image<float>();
   m_currentRawDepthImage = mbf.make_image<short>();
   m_currentRgbImage = mbf.make_image<Vector4u>();

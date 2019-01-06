@@ -19,6 +19,8 @@ using namespace itmx;
 #include <tvgutil/timing/Timer.h>
 
 using namespace ITMLib;
+using namespace ORUtils;
+
 using namespace rigging;
 using namespace tvginput;
 

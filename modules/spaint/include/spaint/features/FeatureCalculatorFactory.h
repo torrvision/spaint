@@ -29,7 +29,7 @@ struct FeatureCalculatorFactory
    * \param deviceType            The device on which the feature calculator should operate.
    * \return                      The feature calculator.
    */
-  static FeatureCalculator_CPtr make_vop_feature_calculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount, DeviceType deviceType);
+  static FeatureCalculator_CPtr make_vop_feature_calculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount, ORUtils::DeviceType deviceType);
 };
 
 }

@@ -25,7 +25,7 @@ struct VoxelMarkerFactory
    * \param deviceType  The device on which the voxel marker should operate.
    * \return            The voxel marker.
    */
-  static VoxelMarker_CPtr make_voxel_marker(DeviceType deviceType);
+  static VoxelMarker_CPtr make_voxel_marker(ORUtils::DeviceType deviceType);
 };
 
 }

@@ -454,7 +454,7 @@ int DecisionForest<DescriptorType,TreeCount>::create_node(uint32_t treeIdx, uint
     outputNode.leftChildIdx = outputFirstFreeIdx++;
     const uint32_t rightChildIdx = outputFirstFreeIdx++; // No need to store it in the texture since it's always leftChildIdx + 1
 
-    outputNode.featureIdx = 0.0; // Will be filled later.
+    outputNode.featureIdx = 0; // Will be filled later.
     outputNode.featureThreshold = 0.0; // Will be filled later.
 
     // Recursively create the left child and its descendants.

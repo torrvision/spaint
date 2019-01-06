@@ -85,6 +85,9 @@ public:
   virtual void finish_training();
 
   /** Override */
+  virtual ORUChar4Image_CPtr get_visualisation_image(const std::string& key) const;
+
+  /** Override */
   virtual void load_from_disk(const std::string& inputFolder);
 
   /** Override */

@@ -148,6 +148,21 @@ bool GeometryUtil::poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtil
   return rot <= rotThreshold && trans <= transThreshold;
 }
 
+Matrix3f GeometryUtil::to_itm(const Eigen::Matrix3f& m)
+{
+  Matrix3f result;
+
+  for(int row = 0; row < 3; ++row)
+  {
+    for(int col = 0; col < 3; ++col)
+    {
+      result(col, row) = m(row, col);
+    }
+  }
+
+  return result;
+}
+
 Vector3f GeometryUtil::to_itm(const Eigen::Vector3f& v)
 {
   return Vector3f(v[0], v[1], v[2]);

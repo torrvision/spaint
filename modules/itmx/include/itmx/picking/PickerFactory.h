@@ -25,7 +25,7 @@ struct PickerFactory
    * \param deviceType  The device on which the picker should operate.
    * \return            The picker.
    */
-  static Picker_CPtr make_picker(DeviceType deviceType);
+  static Picker_CPtr make_picker(ORUtils::DeviceType deviceType);
 };
 
 }

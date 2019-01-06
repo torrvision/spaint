@@ -26,7 +26,7 @@ struct SemanticVisualiserFactory
    * \param deviceType    The device on which the visualiser should operate.
    * \return              The visualiser.
    */
-  static SemanticVisualiser_CPtr make_semantic_visualiser(size_t maxLabelCount, DeviceType deviceType);
+  static SemanticVisualiser_CPtr make_semantic_visualiser(size_t maxLabelCount, ORUtils::DeviceType deviceType);
 };
 
 }

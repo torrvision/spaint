@@ -25,7 +25,7 @@ struct DepthVisualiserFactory
    * \param deviceType  The device on which the visualiser should operate.
    * \return            The visualiser.
    */
-  static DepthVisualiser_CPtr make_depth_visualiser(DeviceType deviceType);
+  static DepthVisualiser_CPtr make_depth_visualiser(ORUtils::DeviceType deviceType);
 };
 
 }

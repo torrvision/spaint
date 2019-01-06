@@ -5,6 +5,7 @@
 
 #include "visualisation/DepthVisualiserFactory.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "visualisation/cpu/DepthVisualiser_CPU.h"
 

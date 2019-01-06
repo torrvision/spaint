@@ -4,6 +4,7 @@
  */
 
 #include "imageprocessing/MedianFilterer.h"
+using namespace ORUtils;
 
 #include "imageprocessing/ImageProcessorFactory.h"
 

@@ -168,6 +168,14 @@ struct GeometryUtil
     return typedR;
   }
 
+  /*
+   * \brief Converts an Eigen matrix to an InfiniTAM matrix.
+   *
+   * \param m  The Eigen matrix.
+   * \return   The InfiniTAM matrix.
+   */
+  static Matrix3f to_itm(const Eigen::Matrix3f& m);
+
   /**
    * \brief Converts an Eigen Vector to an InfiniTAM vector.
    *

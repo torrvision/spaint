@@ -29,7 +29,7 @@ struct PreemptiveRansacFactory
    * \param deviceType         The device on which the instance of preemptive RANSAC should operate.
    * \return                   The instance of preemptive RANSAC.
    */
-  static PreemptiveRansac_Ptr make_preemptive_ransac(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, DeviceType deviceType);
+  static PreemptiveRansac_Ptr make_preemptive_ransac(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, ORUtils::DeviceType deviceType);
 };
 
 }

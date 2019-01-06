@@ -40,7 +40,7 @@ struct FeatureCalculatorFactory
    */
   template <typename KeypointType, typename DescriptorType>
   static boost::shared_ptr<RGBDPatchFeatureCalculator<KeypointType, DescriptorType> > make_custom_patch_feature_calculator(
-    DeviceType deviceType, bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
+    ORUtils::DeviceType deviceType, bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
     uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius,
     RGBDPatchFeatureDifferenceType rgbDifferenceType, uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset,
     uint32_t rgbMinRadius, uint32_t rgbMaxRadius
@@ -52,7 +52,7 @@ struct FeatureCalculatorFactory
    * \param deviceType  The device on which the feature calculator should operate.
    * \return            The feature calculator.
    */
-  static DA_RGBDPatchFeatureCalculator_Ptr make_da_rgbd_patch_feature_calculator(DeviceType deviceType);
+  static DA_RGBDPatchFeatureCalculator_Ptr make_da_rgbd_patch_feature_calculator(ORUtils::DeviceType deviceType);
 
   /**
    * \brief Makes an RGB patch feature calculator.
@@ -60,7 +60,7 @@ struct FeatureCalculatorFactory
    * \param deviceType  The device on which the feature calculator should operate.
    * \return            The feature calculator.
    */
-  static RGBPatchFeatureCalculator_Ptr make_rgb_patch_feature_calculator(DeviceType deviceType);
+  static RGBPatchFeatureCalculator_Ptr make_rgb_patch_feature_calculator(ORUtils::DeviceType deviceType);
 };
 
 }

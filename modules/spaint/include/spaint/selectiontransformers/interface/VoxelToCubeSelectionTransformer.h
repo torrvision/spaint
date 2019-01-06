@@ -28,7 +28,7 @@ protected:
    * \param radius      The initial (Manhattan) radius (in voxels) to select around each initial voxel.
    * \param deviceType  The device on which the transformer is operating.
    */
-  VoxelToCubeSelectionTransformer(int radius, DeviceType deviceType);
+  VoxelToCubeSelectionTransformer(int radius, ORUtils::DeviceType deviceType);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

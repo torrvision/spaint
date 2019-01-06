@@ -5,6 +5,7 @@
 
 #include "selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "selectiontransformers/shared/VoxelToCubeSelectionTransformer_Shared.h"
 

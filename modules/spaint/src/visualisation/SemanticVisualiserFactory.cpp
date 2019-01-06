@@ -5,6 +5,7 @@
 
 #include "visualisation/SemanticVisualiserFactory.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "visualisation/cpu/SemanticVisualiser_CPU.h"
 

@@ -5,6 +5,7 @@
 
 #include "picking/PickerFactory.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include "picking/cpu/Picker_CPU.h"
 

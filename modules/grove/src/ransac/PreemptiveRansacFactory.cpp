@@ -4,6 +4,7 @@
  */
 
 #include "ransac/PreemptiveRansacFactory.h"
+using namespace ORUtils;
 using namespace tvgutil;
 
 #include "ransac/cpu/PreemptiveRansac_CPU.h"
