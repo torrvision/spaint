@@ -23,7 +23,7 @@ ExampleClustererFactory<ExampleType,ClusterType,MaxClusters>::make_clusterer(
 {
   Clusterer_Ptr clusterer;
 
-  if(deviceType == DEVICE_CUDA)
+  if(deviceType == ORUtils::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     clusterer.reset(new ExampleClusterer_CUDA<ExampleType,ClusterType,MaxClusters>(sigma, tau, maxClusterCount, minClusterSize));
