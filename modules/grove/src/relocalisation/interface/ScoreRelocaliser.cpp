@@ -42,7 +42,7 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string& forestFilename, const Sett
 {
   // Determine the top-level parameters for the relocaliser.
   m_maxRelocalisationsToOutput = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxRelocalisationsToOutput", 1);
-  m_visualiseForest = m_settings->get_first_value<bool>(settingsNamespace + "visualiseForest", true);
+  m_visualiseForest = m_settings->get_first_value<bool>(settingsNamespace + "visualiseForest", false);
 
   // Determine the reservoir-related parameters.
   m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxReservoirsToUpdate", 256);  // Update the modes associated with this number of reservoirs for each train/update call.
