@@ -146,6 +146,14 @@ struct GeometryUtil
   static Eigen::Matrix3f to_eigen(const Matrix3f& m);
 
   /**
+   * \brief Converts an InfiniTAM vector to an Eigen vector.
+   *
+   * \param v  The InfiniTAM vector.
+   * \return   The Eigen vector.
+   */
+  static Eigen::Vector3f to_eigen(const Vector3f& v);
+
+  /**
    * \brief Converts a rotation vector to a rotation matrix.
    *
    * \param r The rotation vector.
@@ -161,7 +169,7 @@ struct GeometryUtil
     {
       float angle = static_cast<float>(sqrt(angleSquared));
       Vector3f axis = (r / angle).toFloat();
-      R = to_itm(Eigen::Matrix3f(Eigen::AngleAxisf(angle, Eigen::Vector3f(axis.x, axis.y, axis.z))));
+      R = to_itm(Eigen::Matrix3f(Eigen::AngleAxisf(angle, to_eigen(axis))));
     }
     else R.setIdentity();
 
@@ -191,7 +199,7 @@ struct GeometryUtil
   static Matrix3f to_itm(const Eigen::Matrix3f& m);
 
   /**
-   * \brief Converts an Eigen Vector to an InfiniTAM vector.
+   * \brief Converts an Eigen vector to an InfiniTAM vector.
    *
    * \param v  The Eigen vector.
    * \return   The InfiniTAM vector.

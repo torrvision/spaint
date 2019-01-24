@@ -163,6 +163,11 @@ Eigen::Matrix3f GeometryUtil::to_eigen(const Matrix3f& m)
   return result;
 }
 
+Eigen::Vector3f GeometryUtil::to_eigen(const Vector3f& v)
+{
+  return Eigen::Vector3f(v.x, v.y, v.z);
+}
+
 Matrix3f GeometryUtil::to_itm(const Eigen::Matrix3f& m)
 {
   Matrix3f result;
