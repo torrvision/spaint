@@ -110,9 +110,14 @@ float angular_separation(const Eigen::Matrix3f& r1, const Eigen::Matrix3f& r2)
   // First calculate the rotation matrix which maps r1 to r2.
   Eigen::Matrix3f dr = r2 * r1.transpose();
 
-  // Then, compute the corresponding angle-axis transform and return the angle.
+  // If the relative rotation matrix contains NaN entries, return the worst possible angular separation (i.e. PI radians).
+  if(std::isnan(dr.sum())) return static_cast<float>(M_PI);
+
+  // Otherwise, compute the corresponding angle-axis transform.
   Eigen::AngleAxisf aa(dr);
-  return aa.angle();
+
+  // Then, compute the angular separation from the angle of this transform, and return it.
+  return aa.angle() > static_cast<float>(M_PI) ? 2.0f * static_cast<float>(M_PI) - aa.angle() : aa.angle();
 }
 
 /**
@@ -142,6 +147,9 @@ bool pose_matches(const Eigen::Matrix4f& gtPose, const Eigen::Matrix4f& testPose
   // Compute the difference between the transformations.
   translationError = (gtT - testT).norm();
   angleError = angular_separation(gtR, testR);
+
+  if(!std::isfinite(translationError)) translationError = std::numeric_limits<float>::infinity();
+  if(!std::isfinite(angleError)) angleError = static_cast<float>(M_PI);
 
   return translationError <= translationMaxError && angleError <= angleMaxError;
 }
@@ -193,7 +201,7 @@ bool pose_file_matches(const Eigen::Matrix4f& gtPose, const fs::path& poseFile)
 bool pose_file_matches(const Eigen::Matrix4f& gtPose, const fs::path& poseFile, float& translationError, float& angleError)
 {
   translationError = std::numeric_limits<float>::infinity();
-  angleError = std::numeric_limits<float>::infinity();
+  angleError = static_cast<float>(M_PI);
 
   if(!fs::is_regular(poseFile)) return false;
 
