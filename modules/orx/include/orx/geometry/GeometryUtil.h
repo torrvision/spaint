@@ -151,7 +151,11 @@ struct GeometryUtil
    * \param v  The InfiniTAM vector.
    * \return   The Eigen vector.
    */
-  static Eigen::Vector3f to_eigen(const Vector3f& v);
+  template <typename T>
+  static Eigen::Matrix<T,3,1> to_eigen(const ORUtils::Vector3<T>& v)
+  {
+    return Eigen::Matrix<T,3,1>(v.x, v.y, v.z);
+  }
 
   /**
    * \brief Converts a rotation vector to a rotation matrix.
@@ -159,21 +163,21 @@ struct GeometryUtil
    * \param r The rotation vector.
    * \return  The corresponding rotation matrix.
    */
-  template <typename T>
-  static Matrix3f to_rotation_matrix(const ORUtils::Vector3<T>& r)
+  template <typename U, typename T = U>
+  static ORUtils::Matrix3<T> to_rotation_matrix(const ORUtils::Vector3<U>& r)
   {
-    Matrix3f R;
+    ORUtils::Matrix3<U> R;
 
-    T angleSquared = ORUtils::dot(r, r);
+    U angleSquared = ORUtils::dot(r, r);
     if(angleSquared > 1e-6)
     {
-      float angle = static_cast<float>(sqrt(angleSquared));
-      Vector3f axis = (r / angle).toFloat();
-      R = to_itm(Eigen::Matrix3f(Eigen::AngleAxisf(angle, to_eigen(axis))));
+      U angle = sqrt(angleSquared);
+      ORUtils::Vector3<U> axis = r / angle;
+      R = to_itm(Eigen::Matrix<U,3,3>(Eigen::AngleAxis<U>(angle, to_eigen(axis))));
     }
     else R.setIdentity();
 
-    return R;
+    return ORUtils::Matrix3<T>(R.m);
   }
 
   /**
@@ -196,7 +200,21 @@ struct GeometryUtil
    * \param m  The Eigen matrix.
    * \return   The InfiniTAM matrix.
    */
-  static Matrix3f to_itm(const Eigen::Matrix3f& m);
+  template <typename T>
+  static ORUtils::Matrix3<T> to_itm(const Eigen::Matrix<T,3,3>& m)
+  {
+    ORUtils::Matrix3<T> result;
+
+    for(int row = 0; row < 3; ++row)
+    {
+      for(int col = 0; col < 3; ++col)
+      {
+        result(col, row) = m(row, col);
+      }
+    }
+
+    return result;
+  }
 
   /**
    * \brief Converts an Eigen vector to an InfiniTAM vector.

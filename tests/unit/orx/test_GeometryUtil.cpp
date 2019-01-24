@@ -10,6 +10,38 @@ using namespace ORUtils;
 #include <orx/geometry/GeometryUtil.h>
 using namespace orx;
 
+//#################### HELPER FUNCTIONS ####################
+
+template <typename T>
+void check_close(T a, T b, T TOL)
+{
+  BOOST_CHECK_CLOSE(a, b, TOL);
+}
+
+template <typename T>
+void check_close(const T *v1, const T *v2, size_t size, T TOL)
+{
+  for(size_t i = 0; i < size; ++i) check_close(v1[i], v2[i], TOL);
+}
+
+template <typename T>
+void check_close(const Vector3<T>& v1, const Vector3<T>& v2, T TOL)
+{
+  check_close(v1.v, v2.v, v1.size(), TOL);
+}
+
+template <typename T>
+void check_close(const Vector4<T>& v1, const Vector4<T>& v2, T TOL)
+{
+  check_close(v1.v, v2.v, v1.size(), TOL);
+}
+
+template <typename T>
+void check_close(const Matrix3<T>& m1, const Matrix3<T>& m2, T TOL)
+{
+  check_close(m1.m, m2.m, 9, TOL);
+}
+
 //#################### TESTS ####################
 
 typedef boost::mpl::list<double,float> TS;
@@ -105,7 +137,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_pose_to_dual_quat, T, TS)
   Vector3<T> t(3,4,5);
   SE3Pose pose;
   pose.SetT(t.toFloat());
-  pose.SetR(GeometryUtil::to_rotation_matrix(r));
+  pose.SetR(GeometryUtil::to_rotation_matrix<T,float>(r));
 
   DualQuaternion<T> dq = GeometryUtil::pose_to_dual_quat<T>(pose);
 
@@ -140,6 +172,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_poses_are_similar, T, TS)
   BOOST_CHECK(!GeometryUtil::poses_are_similar(GeometryUtil::dual_quat_to_pose(t1r1), GeometryUtil::dual_quat_to_pose(t1r3), rotThreshold, transThreshold));
   BOOST_CHECK(!GeometryUtil::poses_are_similar(GeometryUtil::dual_quat_to_pose(t1r1), GeometryUtil::dual_quat_to_pose(t3r1), rotThreshold, transThreshold));
   BOOST_CHECK(!GeometryUtil::poses_are_similar(GeometryUtil::dual_quat_to_pose(t1r1), GeometryUtil::dual_quat_to_pose(t3r3), rotThreshold, transThreshold));
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_to_rotation_matrix, T, TS)
+{
+  const T TOL = static_cast<T>(1e-4);
+
+  Vector3<T> rotationVector(static_cast<T>(M_PI) / 4.0f, 0.0f, 0.0f);
+  const T root2inv = static_cast<T>(1.0 / sqrt(2.0));
+  Matrix3<T> rotationMatrix(T(1), T(0), T(0), T(0), root2inv, root2inv, T(0), -root2inv, root2inv);
+  check_close(GeometryUtil::to_rotation_matrix(rotationVector), rotationMatrix, TOL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
