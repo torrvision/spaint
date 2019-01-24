@@ -63,9 +63,9 @@ public:
     // Set up the fixture.
     imageProcessor = ImageProcessorFactory::make_image_processor(
 #if WITH_CUDA
-      DEVICE_CUDA
+      ORUtils::DEVICE_CUDA
 #else
-      DEVICE_CPU
+      ORUtils::DEVICE_CPU
 #endif
     );
 

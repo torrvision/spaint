@@ -10,8 +10,6 @@
 #include <map>
 #include <vector>
 
-#include <tvgutil/misc/AttitudeUtil.h>
-
 #include <Eigen/Dense>
 
 #include <ORUtils/Math.h>
@@ -140,6 +138,14 @@ struct GeometryUtil
   static bool poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtils::SE3Pose& pose2, double rotThreshold = 20 * M_PI / 180, float transThreshold = 0.05f);
 
   /**
+   * \brief Converts an InfiniTAM matrix to an Eigen matrix.
+   *
+   * \param m  The InfiniTAM matrix.
+   * \return   The Eigen matrix.
+   */
+  static Eigen::Matrix3f to_eigen(const Matrix3f& m);
+
+  /**
    * \brief Converts a rotation vector to a rotation matrix.
    *
    * \param r The rotation vector.
@@ -149,7 +155,16 @@ struct GeometryUtil
   static Matrix3f to_rotation_matrix(const ORUtils::Vector3<T>& r)
   {
     Matrix3f R;
-    tvgutil::AttitudeUtil::rotation_vector_to_rotation_matrix(r.toFloat().v, R.m, tvgutil::AttitudeUtil::COL_MAJOR);
+
+    T angleSquared = ORUtils::dot(r, r);
+    if(angleSquared > 1e-6)
+    {
+      float angle = static_cast<float>(sqrt(angleSquared));
+      Vector3f axis = (r / angle).toFloat();
+      R = to_itm(Eigen::Matrix3f(Eigen::AngleAxisf(angle, Eigen::Vector3f(axis.x, axis.y, axis.z))));
+    }
+    else R.setIdentity();
+
     return R;
   }
 
@@ -162,13 +177,12 @@ struct GeometryUtil
   template <typename T>
   static ORUtils::Vector3<T> to_rotation_vector(const Matrix3f& R)
   {
-    Vector3f r;
-    tvgutil::AttitudeUtil::rotation_matrix_to_rotation_vector(R.m, r.v, tvgutil::AttitudeUtil::COL_MAJOR);
-    ORUtils::Vector3<T> typedR(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));
-    return typedR;
+    Eigen::AngleAxisf aa(to_eigen(R));
+    Vector3f r = to_itm(Eigen::Vector3f(aa.angle() * aa.axis()));
+    return ORUtils::Vector3<T>(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));
   }
 
-  /*
+  /**
    * \brief Converts an Eigen matrix to an InfiniTAM matrix.
    *
    * \param m  The Eigen matrix.

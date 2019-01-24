@@ -14,6 +14,7 @@ SET(targetname tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
 #############################
 # Specify the project files #
@@ -69,7 +70,6 @@ src/misc/ThreadPool.cpp
 
 SET(misc_headers
 include/tvgutil/misc/ArgUtil.h
-include/tvgutil/misc/AttitudeUtil.h
 include/tvgutil/misc/ConversionUtil.h
 include/tvgutil/misc/ExclusiveHandle.h
 include/tvgutil/misc/IDAllocator.h

@@ -10,9 +10,9 @@
 
 #include <boost/mpl/identity.hpp>
 
-#include <ORUtils/MathUtils.h>
+#include <Eigen/Dense>
 
-#include <tvgutil/misc/AttitudeUtil.h>
+#include <ORUtils/MathUtils.h>
 
 #include "DualNumber.h"
 #include "Screw.h"
@@ -305,10 +305,9 @@ public:
    */
   ORUtils::Vector3<T> get_rotation() const
   {
-    T q[] = { w.r, x.r, y.r, z.r };
-    T rv[3];
-    tvgutil::AttitudeUtil::quaternion_to_rotation_vector(q, rv);
-    return ORUtils::Vector3<T>(rv[0], rv[1], rv[2]);
+    Eigen::Quaternion<T> q(w.r, x.r, y.r, z.r);
+    Eigen::AngleAxis<T> aa(q);
+    return aa.angle() * ORUtils::Vector3<T>(aa.axis().x(), aa.axis().y(), aa.axis().z());
   }
 
   /**

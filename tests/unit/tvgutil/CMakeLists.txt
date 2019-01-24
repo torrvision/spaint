@@ -14,7 +14,6 @@ SET(suitename tvgutil)
 
 SET(testnames
 ArgUtil
-AttitudeUtil
 CommandManager
 LimitedContainer
 MapUtil
@@ -31,6 +30,7 @@ SET(targetname "unittest_${suitename}_${testname}")
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
