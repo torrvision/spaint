@@ -148,26 +148,6 @@ bool GeometryUtil::poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtil
   return rot <= rotThreshold && trans <= transThreshold;
 }
 
-Eigen::Matrix3f GeometryUtil::to_eigen(const Matrix3f& m)
-{
-  Eigen::Matrix3f result;
-
-  for(int row = 0; row < 3; ++row)
-  {
-    for(int col = 0; col < 3; ++col)
-    {
-      result(row, col) = m(col, row);
-    }
-  }
-
-  return result;
-}
-
-Vector3f GeometryUtil::to_itm(const Eigen::Vector3f& v)
-{
-  return Vector3f(v[0], v[1], v[2]);
-}
-
 std::string GeometryUtil::to_matlab(const Matrix4f& m)
 {
   std::ostringstream oss;

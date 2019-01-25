@@ -184,4 +184,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_to_rotation_matrix, T, TS)
   check_close(GeometryUtil::to_rotation_matrix(rotationVector), rotationMatrix, TOL);
 }
 
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_to_rotation_vector, T, TS)
+{
+  const T TOL = static_cast<T>(1e-4);
+
+  const T root2inv = static_cast<T>(1.0 / sqrt(2.0));
+  Matrix3<T> rotationMatrix(T(1), T(0), T(0), T(0), root2inv, root2inv, T(0), -root2inv, root2inv);
+  Vector3<T> rotationVector(static_cast<T>(M_PI) / 4.0f, 0.0f, 0.0f);
+  check_close(GeometryUtil::to_rotation_vector(rotationMatrix), rotationVector, TOL);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
