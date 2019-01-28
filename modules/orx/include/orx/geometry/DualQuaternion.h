@@ -134,7 +134,7 @@ public:
     }
 
     U cosHalfTheta = cos(angle/2);
-    U sinHalfTheta = sqrt(1 - cosHalfTheta*cosHalfTheta);
+    U sinHalfTheta = sin(angle/2);
     return DualQuaternion<T>(cosHalfTheta, sinHalfTheta * axis.x, sinHalfTheta * axis.y, sinHalfTheta * axis.z);
   }
 

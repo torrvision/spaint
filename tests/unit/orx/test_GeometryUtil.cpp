@@ -48,6 +48,17 @@ typedef boost::mpl::list<double,float> TS;
 
 BOOST_AUTO_TEST_SUITE(test_GeometryUtil)
 
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_apply, T, TS)
+{
+  const T TOL = static_cast<T>(1e-4);
+
+  DualQuaternion<T> rot = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), -T(M_PI_2));
+  DualQuaternion<T> trans = DualQuaternion<T>::from_translation(Vector3<T>(1,2,3));
+  DualQuaternion<T> dq = trans * rot;
+
+  check_close(dq.apply(Vector3<T>(1,0,0)), Vector3<T>(1,1,3), TOL);
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_blend_poses, T, TS)
 {
   // Generate five poses around the identity pose by jittering the rotation angle and translation.
@@ -129,6 +140,30 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
   // Check that blending the inliers for the best hypothesis together gives the 3*PI/2 pose.
   SE3Pose refinedPose = GeometryUtil::blend_poses(inliersForBestHypothesis);
   BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(refinedPose), DualQuaternion<T>::from_rotation(up, T(3 * M_PI_2))));
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_from_rotation, T, TS)
+{
+  DualQuaternion<T> dq, expected;
+
+  expected = DualQuaternion<T>(T(0.707107), T(0), T(0), T(0.707107));
+
+  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(M_PI_2));
+  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
+
+  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,-1), -T(M_PI_2));
+  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
+
+  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,2), T(M_PI_2));
+  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
+
+  expected = DualQuaternion<T>(T(0.707107), T(0), T(0), -T(0.707107));
+
+  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), -T(M_PI_2));
+  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
+
+  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,-1), T(M_PI_2));
+  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_pose_to_dual_quat, T, TS)
