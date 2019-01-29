@@ -112,7 +112,7 @@ struct GeometryUtil
   template <typename T>
   static DualQuaternion<T> pose_to_dual_quat(const ORUtils::SE3Pose& pose)
   {
-    const Vector3f r = to_rotation_vector<float>(pose.GetR());
+    const Vector3f r = to_rotation_vector(pose.GetR());
     const Vector3f t = pose.GetT();
 
     ORUtils::Vector3<T> typedR(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));
@@ -140,11 +140,11 @@ struct GeometryUtil
   /**
    * \brief Converts an InfiniTAM matrix to an Eigen matrix.
    *
-   * \param m  The InfiniTAM matrix.
+   * \param M  The InfiniTAM matrix.
    * \return   The Eigen matrix.
    */
   template <typename T>
-  static Eigen::Matrix<T,3,3> to_eigen(const ORUtils::Matrix3<T>& m)
+  static Eigen::Matrix<T,3,3> to_eigen(const ORUtils::Matrix3<T>& M)
   {
     Eigen::Matrix<T,3,3> result;
 
@@ -152,7 +152,7 @@ struct GeometryUtil
     {
       for(int col = 0; col < 3; ++col)
       {
-        result(row, col) = m(col, row);
+        result(row, col) = M(col, row);
       }
     }
 
@@ -211,11 +211,11 @@ struct GeometryUtil
   /**
    * \brief Converts an Eigen matrix to an InfiniTAM matrix.
    *
-   * \param m  The Eigen matrix.
+   * \param M  The Eigen matrix.
    * \return   The InfiniTAM matrix.
    */
   template <typename T>
-  static ORUtils::Matrix3<T> to_itm(const Eigen::Matrix<T,3,3>& m)
+  static ORUtils::Matrix3<T> to_itm(const Eigen::Matrix<T,3,3>& M)
   {
     ORUtils::Matrix3<T> result;
 
@@ -223,7 +223,7 @@ struct GeometryUtil
     {
       for(int col = 0; col < 3; ++col)
       {
-        result(col, row) = m(row, col);
+        result(col, row) = M(row, col);
       }
     }
 
@@ -245,10 +245,10 @@ struct GeometryUtil
   /**
    * \brief Converts an InfiniTAM matrix into a string representation of it that can be copied into Matlab.
    *
-   * \param m An InfiniTAM matrix.
+   * \param M An InfiniTAM matrix.
    * \return  A string representation of the InfiniTAM matrix that can be copied into Matlab.
    */
-  static std::string to_matlab(const Matrix4f& m);
+  static std::string to_matlab(const Matrix4f& M);
 };
 
 }
