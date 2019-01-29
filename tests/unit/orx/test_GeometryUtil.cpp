@@ -4,60 +4,18 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/list.hpp>
 
-#include <ORUtils/Math.h>
-using namespace ORUtils;
-
 #include <orx/geometry/GeometryUtil.h>
+
+#include "HelperFunctions.h"
+
+using namespace ORUtils;
 using namespace orx;
-
-//#################### HELPER FUNCTIONS ####################
-
-template <typename T>
-void check_close(T a, T b, T TOL)
-{
-  BOOST_CHECK_CLOSE(a, b, TOL);
-}
-
-template <typename T>
-void check_close(const T *v1, const T *v2, size_t size, T TOL)
-{
-  for(size_t i = 0; i < size; ++i) check_close(v1[i], v2[i], TOL);
-}
-
-template <typename T>
-void check_close(const Vector3<T>& v1, const Vector3<T>& v2, T TOL)
-{
-  check_close(v1.v, v2.v, v1.size(), TOL);
-}
-
-template <typename T>
-void check_close(const Vector4<T>& v1, const Vector4<T>& v2, T TOL)
-{
-  check_close(v1.v, v2.v, v1.size(), TOL);
-}
-
-template <typename T>
-void check_close(const Matrix3<T>& m1, const Matrix3<T>& m2, T TOL)
-{
-  check_close(m1.m, m2.m, 9, TOL);
-}
 
 //#################### TESTS ####################
 
 typedef boost::mpl::list<double,float> TS;
 
 BOOST_AUTO_TEST_SUITE(test_GeometryUtil)
-
-BOOST_AUTO_TEST_CASE_TEMPLATE(test_apply, T, TS)
-{
-  const T TOL = static_cast<T>(1e-4);
-
-  DualQuaternion<T> rot = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), -T(M_PI_2));
-  DualQuaternion<T> trans = DualQuaternion<T>::from_translation(Vector3<T>(1,2,3));
-  DualQuaternion<T> dq = trans * rot;
-
-  check_close(dq.apply(Vector3<T>(1,0,0)), Vector3<T>(1,1,3), TOL);
-}
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_blend_poses, T, TS)
 {
@@ -140,30 +98,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
   // Check that blending the inliers for the best hypothesis together gives the 3*PI/2 pose.
   SE3Pose refinedPose = GeometryUtil::blend_poses(inliersForBestHypothesis);
   BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(refinedPose), DualQuaternion<T>::from_rotation(up, T(3 * M_PI_2))));
-}
-
-BOOST_AUTO_TEST_CASE_TEMPLATE(test_from_rotation, T, TS)
-{
-  DualQuaternion<T> dq, expected;
-
-  expected = DualQuaternion<T>(T(0.707107), T(0), T(0), T(0.707107));
-
-  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(M_PI_2));
-  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
-
-  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,-1), -T(M_PI_2));
-  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
-
-  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,2), T(M_PI_2));
-  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
-
-  expected = DualQuaternion<T>(T(0.707107), T(0), T(0), -T(0.707107));
-
-  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), -T(M_PI_2));
-  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
-
-  dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,-1), T(M_PI_2));
-  BOOST_CHECK(DualQuaternion<T>::close(dq, expected));
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_pose_to_dual_quat, T, TS)

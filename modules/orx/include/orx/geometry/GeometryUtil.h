@@ -245,7 +245,7 @@ struct GeometryUtil
   /**
    * \brief Converts an InfiniTAM matrix into a string representation of it that can be copied into Matlab.
    *
-   * \param M An InfiniTAM matrix.
+   * \param M The InfiniTAM matrix.
    * \return  A string representation of the InfiniTAM matrix that can be copied into Matlab.
    */
   static std::string to_matlab(const Matrix4f& M);
