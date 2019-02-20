@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
           learnFromTree, loadFeatures, randomSeed));
   m_dataset->LoadForest();
 
-  auto scoreForest = DecisionForestFactory<RGBDPatchDescriptor, nbTrees>::make_forest(*m_dataset->GetForest(), DeviceType::DEVICE_CPU);
+  auto scoreForest = DecisionForestFactory<RGBDPatchDescriptor, nbTrees>::make_forest(*m_dataset->GetForest(), ORUtils::DeviceType::DEVICE_CPU);
 
   std::cout << "Saving forest in: " << outputFile << std::endl;
   scoreForest->save_structure_to_file(outputFile);

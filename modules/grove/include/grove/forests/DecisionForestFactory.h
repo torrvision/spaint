@@ -50,7 +50,7 @@ struct DecisionForestFactory
    *
    * \throws std::runtime_error If the forest cannot be converted.
    */
-  static Forest_Ptr make_forest(const EnsembleLearner& pretrainedForest, DeviceType deviceType);
+  static Forest_Ptr make_forest(const EnsembleLearner& pretrainedForest, ORUtils::DeviceType deviceType);
 #endif
 
   /**
