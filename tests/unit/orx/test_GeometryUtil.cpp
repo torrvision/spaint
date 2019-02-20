@@ -17,32 +17,13 @@ typedef boost::mpl::list<double,float> TS;
 
 BOOST_AUTO_TEST_SUITE(test_GeometryUtil)
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(test_blend_poses, T, TS)
-{
-  // Generate five poses around the identity pose by jittering the rotation angle and translation.
-  std::vector<SE3Pose> inputPoses;
-  const Vector3<T> up(0,0,1);
-
-  for(float i = -2.0f; i <= 2.0f; ++i)
-  {
-    inputPoses.push_back(GeometryUtil::dual_quat_to_pose(
-      DualQuaternion<T>::from_translation(Vector3<T>(i,0,0)) *
-      DualQuaternion<T>::from_rotation(up, T(i * M_PI / 180))
-    ));
-  }
-
-  // Check that the result of blending the poses is the identity pose.
-  SE3Pose outputPose = GeometryUtil::blend_poses(inputPoses);
-  BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(outputPose), DualQuaternion<T>::identity()));
-}
-
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
 {
   DualQuaternion<T> dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(M_PI_2));
 
   SE3Pose pose = GeometryUtil::dual_quat_to_pose(dq);
   Vector3f t = pose.GetT();
-  Vector3f r = GeometryUtil::to_rotation_vector<float>(pose.GetR());
+  Vector3f r = GeometryUtil::to_rotation_vector(pose.GetR());
 
   BOOST_CHECK_SMALL(length(t), 1e-4f);
   BOOST_CHECK_SMALL(length(r - Vector3f(0,0,(float)M_PI_2)), 1e-4f);
