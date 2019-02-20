@@ -14,7 +14,6 @@ SET(suitename tvgutil)
 
 SET(testnames
 ArgUtil
-AttitudeUtil
 CommandManager
 LimitedContainer
 MapUtil

@@ -4,10 +4,11 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/list.hpp>
 
-#include <ORUtils/Math.h>
-using namespace ORUtils;
-
 #include <orx/geometry/GeometryUtil.h>
+
+#include "HelperFunctions.h"
+
+using namespace ORUtils;
 using namespace orx;
 
 //#################### TESTS ####################
@@ -16,32 +17,13 @@ typedef boost::mpl::list<double,float> TS;
 
 BOOST_AUTO_TEST_SUITE(test_GeometryUtil)
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(test_blend_poses, T, TS)
-{
-  // Generate five poses around the identity pose by jittering the rotation angle and translation.
-  std::vector<SE3Pose> inputPoses;
-  const Vector3<T> up(0,0,1);
-
-  for(float i = -2.0f; i <= 2.0f; ++i)
-  {
-    inputPoses.push_back(GeometryUtil::dual_quat_to_pose(
-      DualQuaternion<T>::from_translation(Vector3<T>(i,0,0)) *
-      DualQuaternion<T>::from_rotation(up, T(i * M_PI / 180))
-    ));
-  }
-
-  // Check that the result of blending the poses is the identity pose.
-  SE3Pose outputPose = GeometryUtil::blend_poses(inputPoses);
-  BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(outputPose), DualQuaternion<T>::identity()));
-}
-
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
 {
   DualQuaternion<T> dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(M_PI_2));
 
   SE3Pose pose = GeometryUtil::dual_quat_to_pose(dq);
-  Vector3f t, r;
-  pose.GetParams(t, r);
+  Vector3f t = pose.GetT();
+  Vector3f r = GeometryUtil::to_rotation_vector(pose.GetR());
 
   BOOST_CHECK_SMALL(length(t), 1e-4f);
   BOOST_CHECK_SMALL(length(r - Vector3f(0,0,(float)M_PI_2)), 1e-4f);
@@ -103,7 +85,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_pose_to_dual_quat, T, TS)
 {
   Vector3<T> r(0,T(M_PI_4),0);
   Vector3<T> t(3,4,5);
-  SE3Pose pose((float)t.x, (float)t.y, (float)t.z, (float)r.x, (float)r.y, (float)r.z);
+  SE3Pose pose;
+  pose.SetT(t.toFloat());
+  pose.SetR(GeometryUtil::to_rotation_matrix<T,float>(r));
 
   DualQuaternion<T> dq = GeometryUtil::pose_to_dual_quat<T>(pose);
 
@@ -138,6 +122,34 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_poses_are_similar, T, TS)
   BOOST_CHECK(!GeometryUtil::poses_are_similar(GeometryUtil::dual_quat_to_pose(t1r1), GeometryUtil::dual_quat_to_pose(t1r3), rotThreshold, transThreshold));
   BOOST_CHECK(!GeometryUtil::poses_are_similar(GeometryUtil::dual_quat_to_pose(t1r1), GeometryUtil::dual_quat_to_pose(t3r1), rotThreshold, transThreshold));
   BOOST_CHECK(!GeometryUtil::poses_are_similar(GeometryUtil::dual_quat_to_pose(t1r1), GeometryUtil::dual_quat_to_pose(t3r3), rotThreshold, transThreshold));
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_to_rotation_matrix, T, TS)
+{
+  const T TOL = static_cast<T>(1e-4);
+
+  Matrix3<T> I;
+  I.setIdentity();
+  check_close(GeometryUtil::to_rotation_matrix(Vector3<T>(T(0))), I, TOL);
+
+  Vector3<T> r(static_cast<T>(M_PI) / 4.0f, 0.0f, 0.0f);
+  const T root2inv = static_cast<T>(1.0 / sqrt(2.0));
+  Matrix3<T> R(T(1), T(0), T(0), T(0), root2inv, root2inv, T(0), -root2inv, root2inv);
+  check_close(GeometryUtil::to_rotation_matrix(r), R, TOL);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_to_rotation_vector, T, TS)
+{
+  const T TOL = static_cast<T>(1e-4);
+
+  Matrix3<T> I;
+  I.setIdentity();
+  check_close(GeometryUtil::to_rotation_vector(I), Vector3<T>(T(0)), TOL);
+
+  const T root2inv = static_cast<T>(1.0 / sqrt(2.0));
+  Matrix3<T> R(T(1), T(0), T(0), T(0), root2inv, root2inv, T(0), -root2inv, root2inv);
+  Vector3<T> r(static_cast<T>(M_PI) / 4.0f, 0.0f, 0.0f);
+  check_close(GeometryUtil::to_rotation_vector(R), r, TOL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

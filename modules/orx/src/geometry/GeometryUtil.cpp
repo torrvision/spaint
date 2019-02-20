@@ -148,34 +148,14 @@ bool GeometryUtil::poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtil
   return rot <= rotThreshold && trans <= transThreshold;
 }
 
-Matrix3f GeometryUtil::to_itm(const Eigen::Matrix3f& m)
-{
-  Matrix3f result;
-
-  for(int row = 0; row < 3; ++row)
-  {
-    for(int col = 0; col < 3; ++col)
-    {
-      result(col, row) = m(row, col);
-    }
-  }
-
-  return result;
-}
-
-Vector3f GeometryUtil::to_itm(const Eigen::Vector3f& v)
-{
-  return Vector3f(v[0], v[1], v[2]);
-}
-
-std::string GeometryUtil::to_matlab(const Matrix4f& m)
+std::string GeometryUtil::to_matlab(const Matrix4f& M)
 {
   std::ostringstream oss;
   oss << '['
-      << m.m[0] << ' ' << m.m[4] << ' ' << m.m[8] << ' ' << m.m[12] << "; "
-      << m.m[1] << ' ' << m.m[5] << ' ' << m.m[9] << ' ' << m.m[13] << "; "
-      << m.m[2] << ' ' << m.m[6] << ' ' << m.m[10] << ' ' << m.m[14] << "; "
-      << m.m[3] << ' ' << m.m[7] << ' ' << m.m[11] << ' ' << m.m[15]
+      << M.m[0] << ' ' << M.m[4] << ' ' << M.m[8] << ' ' << M.m[12] << "; "
+      << M.m[1] << ' ' << M.m[5] << ' ' << M.m[9] << ' ' << M.m[13] << "; "
+      << M.m[2] << ' ' << M.m[6] << ' ' << M.m[10] << ' ' << M.m[14] << "; "
+      << M.m[3] << ' ' << M.m[7] << ' ' << M.m[11] << ' ' << M.m[15]
       << ']';
   return oss.str();
 }

@@ -10,9 +10,9 @@
 
 #include <boost/mpl/identity.hpp>
 
-#include <ORUtils/MathUtils.h>
+#include <Eigen/Dense>
 
-#include <tvgutil/misc/AttitudeUtil.h>
+#include <ORUtils/MathUtils.h>
 
 #include "DualNumber.h"
 #include "Screw.h"
@@ -50,7 +50,13 @@ public:
    */
   DualQuaternion(const DualNumber<T>& w_, const DualNumber<T>& x_, const DualNumber<T>& y_, const DualNumber<T>& z_)
   : x(x_), y(y_), z(z_), w(w_)
-  {}
+  {
+    // Put the dual quaternion into canonical form.
+    if(w.r < static_cast<T>(0))
+    {
+      *this = -*this;
+    }
+  }
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -128,7 +134,7 @@ public:
     }
 
     U cosHalfTheta = cos(angle/2);
-    U sinHalfTheta = sqrt(1 - cosHalfTheta*cosHalfTheta);
+    U sinHalfTheta = sin(angle/2);
     return DualQuaternion<T>(cosHalfTheta, sinHalfTheta * axis.x, sinHalfTheta * axis.y, sinHalfTheta * axis.z);
   }
 
@@ -299,10 +305,9 @@ public:
    */
   ORUtils::Vector3<T> get_rotation() const
   {
-    T q[] = { w.r, x.r, y.r, z.r };
-    T rv[3];
-    tvgutil::AttitudeUtil::quaternion_to_rotation_vector(q, rv);
-    return ORUtils::Vector3<T>(rv[0], rv[1], rv[2]);
+    Eigen::Quaternion<T> q(w.r, x.r, y.r, z.r);
+    Eigen::AngleAxis<T> aa(q);
+    return aa.angle() * ORUtils::Vector3<T>(aa.axis().x(), aa.axis().y(), aa.axis().z());
   }
 
   /**
@@ -407,6 +412,18 @@ private:
 };
 
 //#################### NON-MEMBER OPERATORS ####################
+
+/**
+ * \brief Negates a dual quaternion.
+ *
+ * \param q The dual quaternion.
+ * \return  A negated version of the dual quaternion.
+ */
+template <typename T>
+DualQuaternion<T> operator-(const DualQuaternion<T>& q)
+{
+  return DualQuaternion<T>(-q.w, -q.x, -q.y, -q.z);
+}
 
 /**
  * \brief Scales a dual quaternion by the specified factor.

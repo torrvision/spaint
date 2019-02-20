@@ -69,7 +69,6 @@ src/misc/ThreadPool.cpp
 
 SET(misc_headers
 include/tvgutil/misc/ArgUtil.h
-include/tvgutil/misc/AttitudeUtil.h
 include/tvgutil/misc/ConversionUtil.h
 include/tvgutil/misc/ExclusiveHandle.h
 include/tvgutil/misc/IDAllocator.h

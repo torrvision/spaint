@@ -39,11 +39,15 @@ SET(sources
 test_${testname}.cpp
 )
 
+SET(headers
+HelperFunctions.h
+)
+
 #############################
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(sources FILES ${sources})
+SOURCE_GROUP(sources FILES ${sources} ${headers})
 
 ##########################################
 # Specify additional include directories #
