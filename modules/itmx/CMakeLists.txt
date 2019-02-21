@@ -46,12 +46,14 @@ ENDIF()
 ##
 SET(imagesources_sources
 src/imagesources/AsyncImageSourceEngine.cpp
+src/imagesources/DepthCorruptingImageSourceEngine.cpp
 src/imagesources/RemoteImageSourceEngine.cpp
 src/imagesources/SingleRGBDImagePipe.cpp
 )
 
 SET(imagesources_headers
 include/itmx/imagesources/AsyncImageSourceEngine.h
+include/itmx/imagesources/DepthCorruptingImageSourceEngine.h
 include/itmx/imagesources/RemoteImageSourceEngine.h
 include/itmx/imagesources/SingleRGBDImagePipe.h
 )
