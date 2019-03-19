@@ -1,25 +1,24 @@
 /**
- * itmx: CascadeRelocaliser.h
+ * orx: CascadeRelocaliser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
-#ifndef H_ITMX_CASCADERELOCALISER
-#define H_ITMX_CASCADERELOCALISER
+#ifndef H_ORX_CASCADERELOCALISER
+#define H_ORX_CASCADERELOCALISER
 
 #include <boost/optional.hpp>
 
-#include <orx/relocalisation/Relocaliser.h>
-
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
+#include <tvgutil/misc/SettingsContainer.h>
 
-#include "../base/ITMObjectPtrTypes.h"
+#include "Relocaliser.h"
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief An instance of this class represents a cascade relocaliser that gradually falls back from faster, weaker relocalisers to slower, stronger ones.
  */
-class CascadeRelocaliser : public orx::Relocaliser
+class CascadeRelocaliser : public Relocaliser
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -27,7 +26,7 @@ private:
   std::vector<float> m_fallbackThresholds;
 
   /** The individual relocalisers in the cascade. */
-  std::vector<orx::Relocaliser_Ptr> m_innerRelocalisers;
+  std::vector<Relocaliser_Ptr> m_innerRelocalisers;
 
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
@@ -64,7 +63,7 @@ public:
    * \param innerRelocalisers The individual relocalisers in the cascade.
    * \param settings          The settings to use.
    */
-  CascadeRelocaliser(const std::vector<orx::Relocaliser_Ptr>& innerRelocalisers, const Settings_CPtr& settings);
+  CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const tvgutil::SettingsContainer_CPtr& settings);
 
   //#################### DESTRUCTOR ####################
 public:

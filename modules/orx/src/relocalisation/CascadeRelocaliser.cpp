@@ -1,5 +1,5 @@
 /**
- * itmx: CascadeRelocaliser.cpp
+ * orx: CascadeRelocaliser.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2018. All rights reserved.
  */
 
@@ -8,20 +8,19 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <orx/persistence/PosePersister.h>
-using namespace orx;
-
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
+#include "persistence/PosePersister.h"
+
 #define DEBUGGING 0
 
-namespace itmx {
+namespace orx {
 
 //#################### CONSTRUCTORS ####################
 
-CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const Settings_CPtr& settings)
+CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const SettingsContainer_CPtr& settings)
 : m_innerRelocalisers(innerRelocalisers),
   m_timerInitialRelocalisation("Initial Relocalisation"),
   m_timerRefinement("ICP Refinement"),

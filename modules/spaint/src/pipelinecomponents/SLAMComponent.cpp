@@ -27,13 +27,13 @@ using namespace grove;
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
-#include <itmx/relocalisation/CascadeRelocaliser.h>
 #include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 using namespace itmx;
 
 #include <orx/relocalisation/BackgroundRelocaliser.h>
+#include <orx/relocalisation/CascadeRelocaliser.h>
 #include <orx/relocalisation/NullRelocaliser.h>
 #include <orx/relocalisation/Relocaliser.h>
 using namespace orx;
