@@ -29,7 +29,7 @@
 
 #include <InputSource/IdleImageSourceEngine.h>
 #include <InputSource/OpenNIEngine.h>
-#if WITH_LIBROYALE
+#ifdef WITH_LIBROYALE
 #include <InputSource/PicoFlexxEngine.h>
 #endif
 #ifdef WITH_REALSENSE
@@ -59,6 +59,7 @@
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 #include "core/SLAMPipeline.h"
+#include "sequences/SpaintSequence.h"
 
 using namespace InputSource;
 using namespace ITMLib;
@@ -85,15 +86,17 @@ struct CommandLineArguments
   bool cameraAfterDisk;
   std::string collaborationMode;
   std::vector<std::string> depthImageMasks;
+  std::vector<float> depthNoiseSigmas;
   bool detectFiducials;
   std::string experimentTag;
   std::string fiducialDetectorType;
   std::string globalPosesSpecifier;
   bool headless;
   std::string host;
-  int initialFrameNumber;
+  std::vector<size_t> initialFrameNumbers;
   std::string leapFiducialID;
   bool mapSurfels;
+  std::vector<double> missingDepthFractions;
   std::string modelSpecifier;
   bool noRelocaliser;
   std::string openNIDeviceURI;
@@ -108,6 +111,7 @@ struct CommandLineArguments
   bool runServer;
   bool saveMeshOnExit;
   bool saveModelsOnExit;
+  std::vector<std::string> semanticImageMasks;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
   std::string subwindowConfigurationIndex;
@@ -120,7 +124,7 @@ struct CommandLineArguments
 
   // Derived arguments
   boost::optional<bf::path> modelDir;
-  std::vector<bf::path> sequenceDirs;
+  std::vector<Sequence_CPtr> sequences;
 
   //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 
@@ -131,21 +135,30 @@ struct CommandLineArguments
    */
   void add_to_settings(const Settings_Ptr& settings)
   {
+    std::vector<std::string> diskTrackerConfigs;
+    for(size_t i = 0, size = sequences.size(); i < size; ++i)
+    {
+      diskTrackerConfigs.push_back(sequences[i]->make_disk_tracker_config());
+    }
+
     #define ADD_SETTING(arg) settings->add_value(#arg, boost::lexical_cast<std::string>(arg))
     #define ADD_SETTINGS(arg) for(size_t i = 0; i < arg.size(); ++i) { settings->add_value(#arg, boost::lexical_cast<std::string>(arg[i])); }
       ADD_SETTING(batch);
       ADD_SETTING(calibrationFilename);
       ADD_SETTING(collaborationMode);
       ADD_SETTINGS(depthImageMasks);
+      ADD_SETTINGS(depthNoiseSigmas);
       ADD_SETTING(detectFiducials);
+      ADD_SETTINGS(diskTrackerConfigs);
       ADD_SETTING(experimentTag);
       ADD_SETTING(fiducialDetectorType);
       ADD_SETTING(globalPosesSpecifier);
       ADD_SETTING(headless);
       ADD_SETTING(host);
-      ADD_SETTING(initialFrameNumber);
+      ADD_SETTINGS(initialFrameNumbers);
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
+      ADD_SETTINGS(missingDepthFractions);
       ADD_SETTING(modelSpecifier);
       ADD_SETTING(noRelocaliser);
       ADD_SETTING(openNIDeviceURI);
@@ -160,6 +173,7 @@ struct CommandLineArguments
       ADD_SETTING(runServer);
       ADD_SETTING(saveMeshOnExit);
       ADD_SETTING(saveModelsOnExit);
+      ADD_SETTINGS(semanticImageMasks);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
       ADD_SETTING(subwindowConfigurationIndex);
@@ -265,6 +279,65 @@ void copy_surfel_scene_params(const Settings_Ptr& settings)
 }
 
 /**
+ * \brief Determines the sequences (if any) that the user wants to load from disk, based on the program's command-line arguments.
+ *
+ * \param args  The program's command-line arguments.
+ * \return      The sequences (if any) that the user wants to load from disk.
+ */
+std::vector<Sequence_CPtr> determine_sequences(const CommandLineArguments& args)
+{
+  std::vector<Sequence_CPtr> sequences;
+
+  // If the numbers of depth image and RGB image masks don't match, throw an error.
+  if(args.depthImageMasks.size() != args.rgbImageMasks.size())
+  {
+    throw std::runtime_error("Error: The numbers of depth image and RGB image masks must match");
+  }
+
+  // Add any sequence that the user specifies using a sequence specifier.
+  for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
+  {
+    size_t initialFrameNumber = i < args.initialFrameNumbers.size() ? args.initialFrameNumbers[i] : 0;
+    double missingDepthFraction = i < args.missingDepthFractions.size() ? args.missingDepthFractions[i] : 0.0;
+    float depthNoiseSigma = i < args.depthNoiseSigmas.size() ? args.depthNoiseSigmas[i] : 0.0f;
+
+    const std::string& sequenceSpecifier = args.sequenceSpecifiers[i];
+    if(!bf::is_regular_file(sequenceSpecifier))
+    {
+      // Determine the sequence type.
+      const std::string sequenceType = i < args.sequenceTypes.size() ? args.sequenceTypes[i] : "sequence";
+
+      // Determine the directory containing the sequence.
+      bf::path dir = bf::is_directory(sequenceSpecifier)
+        ? sequenceSpecifier
+        : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
+
+      // Add the sequence to the list.
+      sequences.push_back(Sequence_CPtr(new SpaintSequence(dir, initialFrameNumber, missingDepthFraction, depthNoiseSigma)));
+    }
+    else throw std::runtime_error("Error: The sequence specifier '" + sequenceSpecifier + "' denotes a file rather than a directory");
+  }
+
+  // Add any sequence that the user specifies implicitly via depth/RGB/pose masks.
+  for(size_t i = 0, size = args.depthImageMasks.size(); i < size; ++i)
+  {
+    std::string depthImageMask = args.depthImageMasks[i];
+    std::string rgbImageMask = args.rgbImageMasks[i];
+    std::string poseFileMask = i < args.poseFileMasks.size() ? args.poseFileMasks[i] : "";
+    std::string semanticImageMask = i < args.semanticImageMasks.size() ? args.semanticImageMasks[i] : "";
+
+    const size_t j = i + args.sequenceSpecifiers.size();
+    size_t initialFrameNumber = j < args.initialFrameNumbers.size() ? args.initialFrameNumbers[j] : 0;
+    double missingDepthFraction = j < args.missingDepthFractions.size() ? args.missingDepthFractions[j] : 0.0;
+    float depthNoiseSigma = j < args.depthNoiseSigmas.size() ? args.depthNoiseSigmas[j] : 0.0f;
+
+    sequences.push_back(Sequence_CPtr(new SpaintSequence(depthImageMask, rgbImageMask, poseFileMask, semanticImageMask, initialFrameNumber, missingDepthFraction, depthNoiseSigma)));
+  }
+
+  return sequences;
+}
+
+/**
  * \brief Attempts to load a set of global poses from a file specified by a global poses specifier.
  *
  * \param globalPosesSpecifier  The global poses specifier.
@@ -348,13 +421,47 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
   return cameraSubengine;
 }
 
+boost::shared_ptr<CompositeImageSourceEngine> make_image_source_engine(const CommandLineArguments& args)
+{
+  boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
+
+  // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
+  if(args.modelDir && args.sequences.empty() && !args.cameraAfterDisk)
+  {
+    const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
+    imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
+  }
+
+  // Add a subengine for each disk sequence specified.
+  for(size_t i = 0; i < args.sequences.size(); ++i)
+  {
+    // If no calibration file was specified by the user, and the first disk sequence has a calibration file, use that.
+    // FIXME: It would be better to use the correct calibration file for each disk sequence, but our pipeline doesn't
+    //        yet support changing the camera calibration parameters during reconstruction.
+    const bf::path calibrationPath = args.sequences[0]->default_calib_path();
+    const std::string calibrationFilename = (args.calibrationFilename != "" || !bf::exists(calibrationPath)) ? args.calibrationFilename : calibrationPath.string();
+
+    std::cout << "[spaint] Reading images from disk: " << *args.sequences[i] << '\n';
+    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(args.sequences[i]->make_image_source_engine(calibrationFilename), args.prefetchBufferCapacity));
+  }
+
+  // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+  if((!args.modelDir && args.sequences.empty()) || args.cameraAfterDisk)
+  {
+    ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
+    if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
+  }
+
+  return imageSourceEngine;
+}
+
 /**
  * \brief Makes the overall tracker configuration based on any tracker specifiers that were passed in on the command line.
  *
  * \param args  The program's command-line arguments.
  * \return      The overall tracker configuration.
  */
-std::string make_tracker_config(CommandLineArguments& args)
+std::string make_tracker_config(const CommandLineArguments& args)
 {
   std::string result;
 
@@ -363,7 +470,7 @@ std::string make_tracker_config(CommandLineArguments& args)
   if(args.globalPosesSpecifier != "") globalPoses = load_global_poses(args.globalPosesSpecifier);
 
   // Determine the number of different trackers that will be needed.
-  size_t trackerCount = args.sequenceSpecifiers.size();
+  size_t trackerCount = args.sequences.size();
   if(trackerCount == 0 || args.cameraAfterDisk) ++trackerCount;
 
   // If more than one tracker is needed, make the overall tracker a composite.
@@ -395,18 +502,11 @@ std::string make_tracker_config(CommandLineArguments& args)
       }
       else if(chunks[j] == "Disk")
       {
-        if(args.poseFileMasks.size() < i)
-        {
-          // If this happens, it's because the pose file mask for at least one sequence was specified with the -p flag
-          // (otherwise postprocess_arguments would have taken care of supplying the default masks).
-          throw std::runtime_error("Error: Not enough pose file masks have been specified with the -p flag.");
-        }
-
         // If we're using global poses for the scenes:
         if(!globalPoses.empty())
         {
-          // Try to find the global pose for this scene based on the sequence specifier.
-          const std::string sequenceID = args.sequenceDirs[i].stem().string();
+          // Try to find the global pose for this scene based on the sequence ID.
+          const std::string sequenceID = args.sequences[i]->id();
           std::map<std::string,DualQuatd>::const_iterator it = globalPoses.find(sequenceID);
 
           // If that doesn't work, try to find the global pose based on the scene ID.
@@ -422,8 +522,8 @@ std::string make_tracker_config(CommandLineArguments& args)
           else throw std::runtime_error("Error: Global pose for sequence '" + sequenceID + "' not found");
         }
 
-        // Specify the creation of a file-based tracker that reads poses from disk.
-        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + ",initialFrameNo=" + boost::lexical_cast<std::string>(args.initialFrameNumber) + "</params></tracker>";
+        // Specify the creation of a disk-based tracker that reads poses from disk.
+        result += args.sequences[i]->make_disk_tracker_config();
 
         // If we're using global poses for the scenes, add the necessary closing tag for the global tracker.
         if(!globalPoses.empty()) result += "</tracker>";
@@ -472,16 +572,11 @@ void parse_configuration_file(const std::string& filename, const po::options_des
  * \param options   The registered options for the application.
  * \param vm        The variables map for the application.
  * \param settings  The settings for the application.
- * \return          true, if the program should continue after post-processing its arguments, or false otherwise.
  */
-bool postprocess_arguments(CommandLineArguments& args, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
+void postprocess_arguments(CommandLineArguments& args, const po::options_description& options, po::variables_map& vm, const Settings_Ptr& settings)
 {
-  // If the user specifies both sequence and explicit depth/RGB/pose masks, print an error message.
-  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
-  {
-    std::cout << "Error: Either sequence flags or explicit depth/RGB/pose masks may be specified, but not both.\n";
-    return false;
-  }
+  // Determine the sequences (if any) that the user wants to load from disk, based on the program's command-line arguments.
+  args.sequences = determine_sequences(args);
 
   // If the user specified a model to load, determine the model directory and parse the model's configuration file (if present).
   if(args.modelSpecifier != "")
@@ -494,59 +589,6 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
       // Parse any additional options from the model's configuration file.
       parse_configuration_file(configPath.string(), options, vm, settings);
       po::notify(vm);
-    }
-  }
-
-  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth/RGB/pose masks appropriately.
-  for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
-  {
-    // Determine the sequence type.
-    const std::string sequenceType = i < args.sequenceTypes.size() ? args.sequenceTypes[i] : "sequence";
-
-    // Determine the directory containing the sequence and record it for later use.
-    const std::string& sequenceSpecifier = args.sequenceSpecifiers[i];
-    const bf::path dir = bf::is_directory(sequenceSpecifier)
-      ? sequenceSpecifier
-      : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
-    args.sequenceDirs.push_back(dir);
-
-    // Try to figure out the format of the sequence stored in the directory (we only check the depth images, since the colour ones might be missing).
-    const bool sevenScenesNaming = bf::is_regular_file(dir / "frame-000000.depth.png");
-    const bool spaintNaming = bf::is_regular_file(dir / "depthm000000.pgm");
-
-    // Set the depth/RGB/pose masks appropriately.
-    if(sevenScenesNaming && spaintNaming)
-    {
-      std::cout << "Error: The directory '" << dir.string() << "' contains images that follow both the 7-Scenes and spaint naming conventions.\n";
-      return false;
-    }
-    else if(sevenScenesNaming)
-    {
-      args.depthImageMasks.push_back((dir / "frame-%06i.depth.png").string());
-      args.poseFileMasks.push_back((dir / "frame-%06i.pose.txt").string());
-      args.rgbImageMasks.push_back((dir / "frame-%06i.color.png").string());
-    }
-    else if(spaintNaming)
-    {
-      args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
-      args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
-      args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
-    }
-    else
-    {
-      std::cout << "Error: The directory '" << dir.string() << "' does not contain depth images that follow a known naming convention. "
-                << "Manually specify the masks using the -d, -p and -r options.\n";
-      return false;
-    }
-  }
-
-  // If the user hasn't explicitly specified a calibration file, try to find one in the first sequence directory (if it exists).
-  if(args.calibrationFilename == "" && !args.sequenceDirs.empty())
-  {
-    bf::path defaultCalibrationFilename = args.sequenceDirs[0] / "calib.txt";
-    if(bf::exists(defaultCalibrationFilename))
-    {
-      args.calibrationFilename = defaultCalibrationFilename.string();
     }
   }
 
@@ -596,7 +638,7 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
     args.runServer = true;
   }
 
-  // If the user tries to run the application in both batch mode and server mode, print an error message.
+  // If the user tries to run the application in both batch mode and server mode simultaneously, throw.
   // It doesn't make sense to combine the two modes: server mode is intended to make sure that fusion
   // starts as soon as frames arrive from a client; batch mode is intended to make sure that the user
   // cannot quit the application during experiments, and that the application quits automatically once
@@ -604,14 +646,11 @@ bool postprocess_arguments(CommandLineArguments& args, const po::options_descrip
   // intended for completely different use cases and should not be combined (indeed, they conflict).
   if(args.batch && args.runServer)
   {
-    std::cout << "Error: Cannot enable both batch mode and server mode at the same time.\n";
-    return false;
+    throw std::runtime_error("Error: Cannot enable both batch mode and server mode at the same time.");
   }
 
   // Add the post-processed arguments to the application settings.
   args.add_to_settings(settings);
-
-  return true;
 }
 
 /**
@@ -634,6 +673,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("collaborationMode", po::value<std::string>(&args.collaborationMode)->default_value("batch"), "collaboration mode (batch|live)")
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
+    ("depthNoiseSigma", po::value<std::vector<float> >(&args.depthNoiseSigmas)->multitoken(), "depth noise sigma")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(Settings::NOT_SET), "experiment tag")
     ("fiducialDetectorType", po::value<std::string>(&args.fiducialDetectorType)->default_value("aruco"), "fiducial detector type (aruco|vicon)")
@@ -642,6 +682,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("host,h", po::value<std::string>(&args.host)->default_value(""), "remote mapping host")
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
+    ("missingDepthFraction", po::value<std::vector<double> >(&args.missingDepthFractions)->multitoken(), "missing depth fraction [0,1]")
     ("modelSpecifier,m", po::value<std::string>(&args.modelSpecifier)->default_value(""), "model specifier")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
@@ -668,7 +709,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   po::options_description diskSequenceOptions("Disk sequence options");
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
-    ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("initialFrame,n", po::value<std::vector<size_t> >(&args.initialFrameNumbers)->multitoken(), "initial frame numbers")
     ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
@@ -703,7 +744,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   po::notify(vm);
 
   // Post-process any registered options and add them to the settings.
-  if(!postprocess_arguments(args, options, vm, settings)) return false;
+  postprocess_arguments(args, options, vm, settings);
 
   // Print the settings for the application so that the user can see them.
   std::cout << "Settings:\n" << *settings << '\n';
@@ -811,38 +852,6 @@ try
   MultiScenePipeline_Ptr pipeline;
   if(args.pipelineType != "collaborative")
   {
-    // Construct the image source engine.
-    boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
-
-    // If a model was specified without either a disk sequence or the camera following it, add an idle subengine to allow the model to still be viewed.
-    if(args.modelDir && args.depthImageMasks.empty() && !args.cameraAfterDisk)
-    {
-      const std::string calibrationFilename = (*args.modelDir / "calib.txt").string();
-      imageSourceEngine->addSubengine(new IdleImageSourceEngine(calibrationFilename.c_str()));
-    }
-
-    // Add a subengine for each disk sequence specified.
-    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
-    {
-      const std::string& depthImageMask = args.depthImageMasks[i];
-      const std::string& rgbImageMask = args.rgbImageMasks[i];
-
-      std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-        new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-        args.prefetchBufferCapacity
-      ));
-    }
-
-    // If no model and no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
-    if((!args.modelDir && args.depthImageMasks.empty()) || args.cameraAfterDisk)
-    {
-      ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
-      if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
-    }
-
-    // Construct the pipeline itself.
     const size_t maxLabelCount = 10;
     SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
     SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
@@ -852,7 +861,7 @@ try
       pipeline.reset(new SLAMPipeline(
         settings,
         Application::resources_dir().string(),
-        imageSourceEngine,
+        make_image_source_engine(args),
         make_tracker_config(args),
         mappingMode,
         trackingMode,
@@ -867,7 +876,7 @@ try
         settings,
         Application::resources_dir().string(),
         maxLabelCount,
-        imageSourceEngine,
+        make_image_source_engine(args),
         seed,
         make_tracker_config(args),
         mappingMode,
@@ -882,7 +891,7 @@ try
         settings,
         Application::resources_dir().string(),
         maxLabelCount,
-        imageSourceEngine,
+        make_image_source_engine(args),
         make_tracker_config(args),
         mappingMode,
         trackingMode,
@@ -908,32 +917,26 @@ try
     std::vector<std::string> trackerConfigs;
 
     // Add an image source engine for each disk sequence specified.
-    for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
+    for(size_t i = 0; i < args.sequences.size(); ++i)
     {
-      const std::string& depthImageMask = args.depthImageMasks[i];
-      const std::string& rgbImageMask = args.rgbImageMasks[i];
-
-      const bf::path calibrationPath = args.sequenceDirs[i] / "calib.txt";
+      const bf::path calibrationPath = args.sequences[i]->default_calib_path();
       const std::string calibrationFilename = bf::exists(calibrationPath) ? calibrationPath.string() : args.calibrationFilename;
 
-      std::cout << "[spaint] Adding local agent for disk sequence: " << rgbImageMask << ' ' << depthImageMask << '\n';
-      ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+      std::cout << "[spaint] Adding local agent for disk sequence: " << *args.sequences[i] << '\n';
       CompositeImageSourceEngine_Ptr imageSourceEngine(new CompositeImageSourceEngine);
-      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
-        new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
-        args.prefetchBufferCapacity
-      ));
+      imageSourceEngine->addSubengine(new AsyncImageSourceEngine(args.sequences[i]->make_image_source_engine(calibrationFilename), args.prefetchBufferCapacity));
 
       imageSourceEngines.push_back(imageSourceEngine);
     }
 
     // Set up the mapping modes, tracking modes and tracker configurations.
-    // FIXME: We don't always want to read the poses from disk - make it possible to run the normal tracker instead.
     for(size_t i = 0, size = imageSourceEngines.size(); i < size; ++i)
     {
       mappingModes.push_back(args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY);
       trackingModes.push_back(args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS);
-      trackerConfigs.push_back("<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>");
+
+      // FIXME: We don't always want to read the poses from disk - make it possible to run the normal tracker instead.
+      trackerConfigs.push_back(args.sequences[i]->make_disk_tracker_config());
     }
 
     // Construct the pipeline itself.

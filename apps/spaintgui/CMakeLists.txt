@@ -105,6 +105,17 @@ IF(WITH_OVR)
 ENDIF()
 
 ##
+SET(sequences_sources
+sequences/Sequence.cpp
+sequences/SpaintSequence.cpp
+)
+
+SET(sequences_headers
+sequences/Sequence.h
+sequences/SpaintSequence.h
+)
+
+##
 SET(subwindows_sources
 subwindows/Subwindow.cpp
 subwindows/SubwindowConfiguration.cpp
@@ -139,6 +150,7 @@ ${commands_sources}
 ${core_sources}
 ${debugging_sources}
 ${renderers_sources}
+${sequences_sources}
 ${subwindows_sources}
 ${toplevel_sources}
 )
@@ -148,6 +160,7 @@ ${commands_headers}
 ${core_headers}
 ${debugging_headers}
 ${renderers_headers}
+${sequences_headers}
 ${subwindows_headers}
 ${toplevel_headers}
 )
@@ -161,6 +174,7 @@ SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(debugging FILES ${debugging_sources} ${debugging_headers})
 SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
+SOURCE_GROUP(sequences FILES ${sequences_sources} ${sequences_headers})
 SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 
 ##########################################
