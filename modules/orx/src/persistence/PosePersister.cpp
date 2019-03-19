@@ -1,5 +1,5 @@
 /**
- * itmx: PosePersister.cpp
+ * orx: PosePersister.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -13,7 +13,7 @@ using tvgutil::ThreadPool;
 
 namespace bf = boost::filesystem;
 
-namespace itmx {
+namespace orx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

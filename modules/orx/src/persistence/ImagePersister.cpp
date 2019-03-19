@@ -1,5 +1,5 @@
 /**
- * itmx: ImagePersister.cpp
+ * orx: ImagePersister.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -13,7 +13,7 @@
 
 #include <ORUtils/FileUtils.h>
 
-namespace itmx {
+namespace orx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

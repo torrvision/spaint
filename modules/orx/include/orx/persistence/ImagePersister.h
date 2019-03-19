@@ -1,21 +1,21 @@
 /**
- * itmx: ImagePersister.h
+ * orx: ImagePersister.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_ITMX_IMAGEPERSISTER
-#define H_ITMX_IMAGEPERSISTER
+#ifndef H_ORX_IMAGEPERSISTER
+#define H_ORX_IMAGEPERSISTER
 
 #include <vector>
 
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 
-#include <orx/base/ORImagePtrTypes.h>
-
 #include <tvgutil/misc/ThreadPool.h>
 
-namespace itmx {
+#include "../base/ORImagePtrTypes.h"
+
+namespace orx {
 
 /**
  * \brief This class contains utility functions for loading and saving images.

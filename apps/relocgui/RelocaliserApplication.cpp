@@ -17,9 +17,8 @@
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 
-#include <itmx/persistence/PosePersister.h>
-
 #include <orx/base/MemoryBlockFactory.h>
+#include <orx/persistence/PosePersister.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/AverageTimer.h>

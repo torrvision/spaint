@@ -17,7 +17,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGraphviz.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
@@ -70,17 +69,6 @@ src/ocv/OpenCVUtil.cpp
 
 SET(ocv_headers
 include/itmx/ocv/OpenCVUtil.h
-)
-
-##
-SET(persistence_sources
-src/persistence/ImagePersister.cpp
-src/persistence/PosePersister.cpp
-)
-
-SET(persistence_headers
-include/itmx/persistence/ImagePersister.h
-include/itmx/persistence/PosePersister.h
 )
 
 ##
@@ -268,7 +256,6 @@ include/itmx/visualisation/shared/DepthVisualiser_Shared.h
 SET(sources
 ${graphviz_sources}
 ${imagesources_sources}
-${persistence_sources}
 ${picking_sources}
 ${picking_cpu_sources}
 ${relocalisation_sources}
@@ -283,7 +270,6 @@ SET(headers
 ${base_headers}
 ${graphviz_headers}
 ${imagesources_headers}
-${persistence_headers}
 ${picking_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
@@ -328,7 +314,6 @@ SOURCE_GROUP(base FILES ${base_headers})
 SOURCE_GROUP(graphviz FILES ${graphviz_sources} ${graphviz_headers})
 SOURCE_GROUP(imagesources FILES ${imagesources_sources} ${imagesources_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
-SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(picking FILES ${picking_sources} ${picking_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})

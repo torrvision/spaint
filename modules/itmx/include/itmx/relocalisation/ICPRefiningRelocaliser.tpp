@@ -14,12 +14,12 @@
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 
 #include <orx/base/ORImagePtrTypes.h>
+#include <orx/persistence/PosePersister.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 
-#include "../persistence/PosePersister.h"
 #include "../visualisation/DepthVisualisationUtil.tpp"
 #include "../visualisation/DepthVisualiserFactory.h"
 
@@ -462,8 +462,8 @@ void ICPRefiningRelocaliser<VoxelType,IndexType>::save_poses(const Matrix4f& rel
 {
   if(!m_savePoses) return;
 
-  PosePersister::save_pose_on_thread(relocalisedPose, m_posePathGenerator->make_path("pose-%06i.reloc.txt"));
-  PosePersister::save_pose_on_thread(refinedPose, m_posePathGenerator->make_path("pose-%06i.icp.txt"));
+  orx::PosePersister::save_pose_on_thread(relocalisedPose, m_posePathGenerator->make_path("pose-%06i.reloc.txt"));
+  orx::PosePersister::save_pose_on_thread(refinedPose, m_posePathGenerator->make_path("pose-%06i.icp.txt"));
   m_posePathGenerator->increment_index();
 }
 

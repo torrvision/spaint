@@ -4,16 +4,16 @@
  */
 
 #include "relocalisation/CascadeRelocaliser.h"
-using namespace orx;
 
 #include <iostream>
 #include <stdexcept>
 
+#include <orx/persistence/PosePersister.h>
+using namespace orx;
+
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
-
-#include "persistence/PosePersister.h"
 
 #define DEBUGGING 0
 

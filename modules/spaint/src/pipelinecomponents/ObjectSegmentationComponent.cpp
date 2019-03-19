@@ -4,20 +4,22 @@
  */
 
 #include "pipelinecomponents/ObjectSegmentationComponent.h"
-using namespace tvgutil;
 
 #include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-#include <itmx/persistence/ImagePersister.h>
-using namespace itmx;
+#include <orx/persistence/ImagePersister.h>
 
 #include "segmentation/SegmentationUtil.h"
 
 #if WITH_ARRAYFIRE && WITH_OPENCV
 #include "segmentation/BackgroundSubtractingObjectSegmenter.h"
 #endif
+
+using namespace itmx;
+using namespace orx;
+using namespace tvgutil;
 
 namespace spaint {
 

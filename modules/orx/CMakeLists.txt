@@ -16,6 +16,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 
 #############################
 # Specify the project files #
@@ -45,6 +46,17 @@ include/orx/geometry/Screw.h
 )
 
 ##
+SET(persistence_sources
+src/persistence/ImagePersister.cpp
+src/persistence/PosePersister.cpp
+)
+
+SET(persistence_headers
+include/orx/persistence/ImagePersister.h
+include/orx/persistence/PosePersister.h
+)
+
+##
 SET(relocalisation_sources
 src/relocalisation/NullRelocaliser.cpp
 src/relocalisation/RefiningRelocaliser.cpp
@@ -69,12 +81,14 @@ ENDIF()
 SET(sources
 ${base_sources}
 ${geometry_sources}
+${persistence_sources}
 ${relocalisation_sources}
 )
 
 SET(headers
 ${base_headers}
 ${geometry_headers}
+${persistence_headers}
 ${relocalisation_headers}
 )
 
@@ -84,6 +98,7 @@ ${relocalisation_headers}
 
 SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
 SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
+SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers})
 
 ##########################################

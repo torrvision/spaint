@@ -1,10 +1,10 @@
 /**
- * itmx: PosePersister.h
+ * orx: PosePersister.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_ITMX_POSEPERSISTER
-#define H_ITMX_POSEPERSISTER
+#ifndef H_ORX_POSEPERSISTER
+#define H_ORX_POSEPERSISTER
 
 #include <string>
 
@@ -12,7 +12,7 @@
 
 #include <ORUtils/Math.h>
 
-namespace itmx {
+namespace orx {
 
 /**
  * \brief This class contains utility functions for saving camera poses.

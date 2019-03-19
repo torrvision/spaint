@@ -19,10 +19,12 @@ using boost::assign::map_list_of;
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 using namespace ITMLib;
 
-#include <itmx/persistence/ImagePersister.h>
-#include <itmx/persistence/PosePersister.h>
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
+
+#include <orx/persistence/ImagePersister.h>
+#include <orx/persistence/PosePersister.h>
+using namespace orx;
 
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
