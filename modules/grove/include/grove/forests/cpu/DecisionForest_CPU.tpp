@@ -43,7 +43,7 @@ void DecisionForest_CPU<DescriptorType,TreeCount>::find_leaves(const DescriptorI
   LeafIndices *leafIndicesPtr = leafIndices->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int y = 0; y < imgSize.y; ++y)
   {
