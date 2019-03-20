@@ -60,10 +60,11 @@ public:
   /**
    * \brief Constructs a cascade relocaliser.
    *
-   * \param innerRelocalisers The individual relocalisers in the cascade.
-   * \param settings          The settings to use.
+   * \param innerRelocalisers     The individual relocalisers in the cascade.
+   * \param settings              The settings to use.
+   * \param settingsNamespace     The namespace associated with the settings that are specific to the relocaliser.
    */
-  CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const tvgutil::SettingsContainer_CPtr& settings);
+  CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace);
 
   //#################### DESTRUCTOR ####################
 public:

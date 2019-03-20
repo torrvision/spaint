@@ -20,7 +20,7 @@ namespace orx {
 
 //#################### CONSTRUCTORS ####################
 
-CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const SettingsContainer_CPtr& settings)
+CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& innerRelocalisers, const SettingsContainer_CPtr& settings, const std::string& settingsNamespace)
 : m_innerRelocalisers(innerRelocalisers),
   m_timerInitialRelocalisation("Initial Relocalisation"),
   m_timerRefinement("ICP Refinement"),
@@ -37,7 +37,6 @@ CascadeRelocaliser::CascadeRelocaliser(const std::vector<Relocaliser_Ptr>& inner
   // Configure the cascade relocaliser based on the settings that have been passed in.
   const std::string experimentTag = settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
 
-  const static std::string settingsNamespace = "CascadeRelocaliser.";
   m_savePoses = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
   m_saveTimes = settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationTimes", false);
   m_timersEnabled = settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);

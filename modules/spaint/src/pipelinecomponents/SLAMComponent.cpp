@@ -654,7 +654,7 @@ void SLAMComponent::setup_relocaliser()
     }
 
     // Construct the cascade relocaliser itself.
-    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocalisers, settings));
+    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocalisers, settings, "CascadeRelocaliser."));
   #endif
   }
   else
