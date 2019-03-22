@@ -131,7 +131,7 @@ private:
   /**
    * \brief Makes a tracker based on the configuration specified in a property tree.
    *
-   * \param trackerConfig   The property tree containing the tracker configuration.
+   * \param trackerTree     The property tree containing the tracker configuration.
    * \param sceneID         The ID of the scene for which the tracker will be used.
    * \param trackSurfels    Whether or not we're tracking against the surfel scene, rather than the voxel one.
    * \param rgbImageSize    The size of the colour input images.
