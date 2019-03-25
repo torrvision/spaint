@@ -40,6 +40,11 @@ public:
    */
   PreemptiveRansac_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace);
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual uint32_t count_valid_depths(const ORFloatImage *depthImage) const;
+
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /** Override */

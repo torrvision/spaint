@@ -24,6 +24,16 @@ using namespace orx;
 
 #include "ransac/shared/PreemptiveRansac_Shared.h"
 
+//#################### LOCAL TYPES ####################
+
+struct ValidDepth
+{
+  __device__ bool operator()(float x) const
+  {
+    return x > 0.0f;
+  }
+};
+
 namespace grove {
 
 //#################### CUDA KERNELS ####################
@@ -160,6 +170,19 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr& setti
 
   // Reset RNGs.
   init_random();
+}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+uint32_t PreemptiveRansac_CUDA::count_valid_depths(const ORFloatImage *depthImage) const
+{
+  const float *depths = depthImage->GetData(MEMORYDEVICE_CUDA);
+  const int pixelCount = depthImage->noDims.width * depthImage->noDims.height;
+
+  thrust::device_ptr<const float> depthsStart(depths);
+  thrust::device_ptr<const float> depthsEnd(depths + pixelCount);
+
+  return static_cast<uint32_t>(thrust::count_if(depthsStart, depthsEnd, ValidDepth()));
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################

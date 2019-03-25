@@ -164,15 +164,6 @@ public:
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Counts the number of pixels in the specified depth image that contain a valid depth value.
-   *
-   * \param depthImage  The depth image.
-   *
-   * \return  The number of pixels in the depth image that contain a valid depth value.
-   */
-  virtual uint32_t count_valid_depths(const ORFloatImage *depthImage) const = 0;
-
-  /**
    * \brief Merges the SCoRe predictions (sets of clusters) associated with each keypoint to create a single
    *        SCoRe prediction (a single set of clusters) for each keypoint.
    *

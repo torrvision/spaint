@@ -205,6 +205,17 @@ public:
    */
   virtual ~PreemptiveRansac();
 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Counts the number of pixels in the specified depth image that contain a valid depth value.
+   *
+   * \param depthImage  The depth image.
+   *
+   * \return  The number of pixels in the depth image that contain a valid depth value.
+   */
+  virtual uint32_t count_valid_depths(const ORFloatImage *depthImage) const = 0;
+
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**

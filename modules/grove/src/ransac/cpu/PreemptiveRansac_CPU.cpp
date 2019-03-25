@@ -27,6 +27,27 @@ PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr& setting
   init_random();
 }
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+uint32_t PreemptiveRansac_CPU::count_valid_depths(const ORFloatImage *depthImage) const
+{
+  uint32_t validDepths = 0;
+
+  const float *depths = depthImage->GetData(MEMORYDEVICE_CPU);
+  const int pixelCount = depthImage->noDims.width * depthImage->noDims.height;
+
+  // Count the number of pixels having a valid (positive) depth measurement.
+#ifdef WITH_OPENMP
+  #pragma omp parallel for reduction(+:validDepths)
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    if(depths[i] > 0.0f) ++validDepths;
+  }
+
+  return validDepths;
+}
+
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 void PreemptiveRansac_CPU::compute_energies_and_sort()

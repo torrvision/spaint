@@ -182,7 +182,7 @@ std::vector<Relocaliser::Result> ScoreRelocaliser::relocalise(const ORUChar4Imag
   std::vector<Result> results;
 
   // Iff we have enough valid depth values, try to estimate the camera pose:
-  if(count_valid_depths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
+  if(m_preemptiveRansac->count_valid_depths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
     // Step 1: Extract keypoints from the RGB-D image and compute descriptors for them.
     m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, depthIntrinsics, m_keypointsImage.get(), m_descriptorsImage.get());
