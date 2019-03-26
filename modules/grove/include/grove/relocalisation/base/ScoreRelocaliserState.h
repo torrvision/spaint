@@ -6,6 +6,8 @@
 #ifndef H_GROVE_SCORERELOCALISERSTATE
 #define H_GROVE_SCORERELOCALISERSTATE
 
+#include <ORUtils/DeviceType.h>
+
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../reservoirs/interface/ExampleReservoirs.h"
 #include "../../scoreforests/ScorePrediction.h"
@@ -20,15 +22,29 @@ namespace grove {
  * - The example reservoirs used when training the relocaliser.
  * - A memory block containing the 3D modal clusters used for the actual camera relocalisation.
  */
-struct ScoreRelocaliserState
+class ScoreRelocaliserState
 {
   //#################### TYPEDEFS ####################
-
+public:
   typedef ExampleReservoirs<Keypoint3DColour> Reservoirs;
   typedef boost::shared_ptr<Reservoirs> Reservoirs_Ptr;
 
-  //#################### PUBLIC MEMBER VARIABLES ####################
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The device on which the relocaliser should operate. */
+  ORUtils::DeviceType m_deviceType;
 
+  /** The capacity (maximum size) of each example reservoir. */
+  uint32_t m_reservoirCapacity;
+
+  /** The total number of example reservoirs used by the relocaliser. */
+  uint32_t m_reservoirCount;
+
+  /** The seed for the random number generators used by the example reservoirs. */
+  uint32_t m_rngSeed;
+
+  //#################### PUBLIC VARIABLES ####################
+public:
   /** The example reservoirs associated with each leaf in the forest. */
   Reservoirs_Ptr exampleReservoirs;
 
@@ -42,11 +58,19 @@ struct ScoreRelocaliserState
   uint32_t reservoirUpdateStartIdx;
 
   //#################### CONSTRUCTORS ####################
-
-  ScoreRelocaliserState();
+public:
+  /**
+   * \brief Constructs the internal state for a ScoRe-based relocaliser.
+   *
+   * \param reservoirCount    The total number of example reservoirs used by the relocaliser.
+   * \param reservoirCapacity The capacity (maximum size) of each example reservoir.
+   * \param deviceType        The device on which the relocaliser should operate.
+   * \param rngSeed           The seed for the random number generators used by the example reservoirs.
+   */
+  ScoreRelocaliserState(uint32_t reservoirCount, uint32_t reservoirCapacity, ORUtils::DeviceType deviceType, uint32_t rngSeed);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
-
+public:
   /**
    * \brief Loads the relocaliser state from a folder on disk.
    *
@@ -55,6 +79,11 @@ struct ScoreRelocaliserState
    * \throws std::runtime_error If loading the relocaliser state fails.
    */
   void load_from_disk(const std::string& inputFolder);
+
+  /**
+   * \brief Resets the relocaliser state.
+   */
+  void reset();
 
   /**
    * \brief Saves the relocaliser state to a folder on disk.

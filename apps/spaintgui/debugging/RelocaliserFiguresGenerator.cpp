@@ -16,7 +16,7 @@ using boost::assign::list_of;
 
 #include <ORUtils/ProjectionUtils.h>
 
-#include <grove/relocalisation/interface/ScoreRelocaliser.h>
+#include <grove/relocalisation/interface/ScoreForestRelocaliser.h>
 using namespace grove;
 
 #include <orx/base/MemoryBlockFactory.h>
@@ -46,8 +46,8 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr& model
   const std::string sceneId = model->get_world_scene_id();
   Relocaliser_CPtr relocaliser = model->get_relocaliser(sceneId);
 
-  // Need to go through the ScoreRelocaliser interface.
-  ScoreRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreRelocaliser>(
+  // Need to go through the ScoreForestRelocaliser interface.
+  ScoreForestRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreForestRelocaliser>(
     boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser()
   );
 
@@ -68,7 +68,7 @@ void RelocaliserFiguresGenerator::show_growing_leaf_modes(const Model_Ptr& model
       outFile << p.size << ' ' << predictionIndices[treeIdx] << '\n';
       for(int modeIdx = 0; modeIdx < p.size; ++modeIdx)
       {
-        const Keypoint3DColourCluster &m = p.elts[modeIdx];
+        const Keypoint3DColourCluster& m = p.elts[modeIdx];
         outFile << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
 
         // Invert and transpose the covariance to print it in row-major format.
@@ -125,8 +125,8 @@ void RelocaliserFiguresGenerator::show_leaf_modes(const Model_Ptr& model)
   const std::string sceneId = model->get_world_scene_id();
   Relocaliser_CPtr relocaliser = model->get_relocaliser(sceneId);
 
-  // Need to go through the ScoreRelocaliser interface.
-  ScoreRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreRelocaliser>(
+  // Need to go through the ScoreForestRelocaliser interface.
+  ScoreForestRelocaliser_CPtr scoreRelocaliser = boost::dynamic_pointer_cast<const ScoreForestRelocaliser>(
     boost::dynamic_pointer_cast<const RefiningRelocaliser>(relocaliser)->get_inner_relocaliser()
   );
 

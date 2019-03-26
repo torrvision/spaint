@@ -107,9 +107,6 @@ private:
   /** Whether or not to relocalise and train after processing every frame, for evaluation purposes. */
   bool m_relocaliseEveryFrame;
 
-  /** The path to the relocalisation forest. */
-  std::string m_relocaliserForestPath;
-
   /** A count that allows us to determine when to train the relocaliser (used in conjunction with m_relocaliserTrainingSkip). */
   size_t m_relocaliserTrainingCount;
 
@@ -237,6 +234,13 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Loads the ground truth trajectory for the relocaliser.
+   *
+   * \return  The ground truth trajectory for the relocaliser.
+   */
+  std::vector<ORUtils::SE3Pose> SLAMComponent::load_ground_truth_relocalisation_trajectory() const;
+
   /**
    * \brief Render from the live camera position to prepare for tracking.
    *

@@ -20,6 +20,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTorch.cmake)
 
 #############################
 # Specify the project files #
@@ -143,19 +144,64 @@ SET(relocalisation_base_sources src/relocalisation/base/ScoreRelocaliserState.cp
 SET(relocalisation_base_headers include/grove/relocalisation/base/ScoreRelocaliserState.h)
 
 ##
-SET(relocalisation_cpu_sources src/relocalisation/cpu/ScoreRelocaliser_CPU.cpp)
-SET(relocalisation_cpu_headers include/grove/relocalisation/cpu/ScoreRelocaliser_CPU.h)
+SET(relocalisation_cpu_sources
+src/relocalisation/cpu/ScoreForestRelocaliser_CPU.cpp
+src/relocalisation/cpu/ScoreGTRelocaliser_CPU.cpp
+)
+
+SET(relocalisation_cpu_headers
+include/grove/relocalisation/cpu/ScoreForestRelocaliser_CPU.h
+include/grove/relocalisation/cpu/ScoreGTRelocaliser_CPU.h
+)
+
+IF(WITH_TORCH)
+  SET(relocalisation_cpu_sources ${relocalisation_cpu_sources} src/relocalisation/cpu/ScoreNetRelocaliser_CPU.cpp)
+  SET(relocalisation_cpu_headers ${relocalisation_cpu_headers} include/grove/relocalisation/cpu/ScoreNetRelocaliser_CPU.h)
+ENDIF()
 
 ##
-SET(relocalisation_cuda_sources src/relocalisation/cuda/ScoreRelocaliser_CUDA.cu)
-SET(relocalisation_cuda_headers include/grove/relocalisation/cuda/ScoreRelocaliser_CUDA.h)
+SET(relocalisation_cuda_sources
+src/relocalisation/cuda/ScoreForestRelocaliser_CUDA.cu
+src/relocalisation/cuda/ScoreGTRelocaliser_CUDA.cu
+)
+
+SET(relocalisation_cuda_headers
+include/grove/relocalisation/cuda/ScoreForestRelocaliser_CUDA.h
+include/grove/relocalisation/cuda/ScoreGTRelocaliser_CUDA.h
+)
+
+IF(WITH_TORCH)
+  SET(relocalisation_cuda_sources ${relocalisation_cuda_sources} src/relocalisation/cuda/ScoreNetRelocaliser_CUDA.cu)
+  SET(relocalisation_cuda_headers ${relocalisation_cuda_headers} include/grove/relocalisation/cuda/ScoreNetRelocaliser_CUDA.h)
+ENDIF()
 
 ##
-SET(relocalisation_interface_sources src/relocalisation/interface/ScoreRelocaliser.cpp)
-SET(relocalisation_interface_headers include/grove/relocalisation/interface/ScoreRelocaliser.h)
+SET(relocalisation_interface_sources
+src/relocalisation/interface/ScoreForestRelocaliser.cpp
+src/relocalisation/interface/ScoreGTRelocaliser.cpp
+src/relocalisation/interface/ScoreRelocaliser.cpp
+)
+
+SET(relocalisation_interface_headers
+include/grove/relocalisation/interface/ScoreForestRelocaliser.h
+include/grove/relocalisation/interface/ScoreGTRelocaliser.h
+include/grove/relocalisation/interface/ScoreRelocaliser.h
+)
+
+IF(WITH_TORCH)
+  SET(relocalisation_interface_sources ${relocalisation_interface_sources} src/relocalisation/interface/ScoreNetRelocaliser.cpp)
+  SET(relocalisation_interface_headers ${relocalisation_interface_headers} include/grove/relocalisation/interface/ScoreNetRelocaliser.h)
+ENDIF()
 
 ##
-SET(relocalisation_shared_headers include/grove/relocalisation/shared/ScoreRelocaliser_Shared.h)
+SET(relocalisation_shared_headers
+include/grove/relocalisation/shared/ScoreForestRelocaliser_Shared.h
+include/grove/relocalisation/shared/ScoreGTRelocaliser_Shared.h
+)
+
+IF(WITH_TORCH)
+  SET(relocalisation_shared_headers ${relocalisation_shared_headers} include/grove/relocalisation/shared/ScoreNetRelocaliser_Shared.h)
+ENDIF()
 
 ##
 SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)

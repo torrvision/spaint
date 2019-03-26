@@ -82,9 +82,13 @@ template class ExampleReservoirs_CPU<Keypoint3DColour>;
 template struct ExampleReservoirsFactory<Keypoint2D>;
 template struct ExampleReservoirsFactory<Keypoint3DColour>;
 
+template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&, const shared_ptr<Image<VectorX<int,1> > >&);
 template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&, const shared_ptr<Image<VectorX<int,FOREST_TREES> > >&);
+template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&, const shared_ptr<const Image<VectorX<int,1> > >&);
 template void ExampleReservoirs<Keypoint2D>::add_examples(const ExampleImage_CPtr&, const shared_ptr<const Image<VectorX<int,FOREST_TREES> > >&);
+template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&, const shared_ptr<Image<VectorX<int,1> > >&);
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&, const shared_ptr<Image<VectorX<int,FOREST_TREES> > >&);
+template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&, const shared_ptr<const Image<VectorX<int,1> > >&);
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&, const shared_ptr<const Image<VectorX<int,FOREST_TREES> > >&);
 
 }

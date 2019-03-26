@@ -45,6 +45,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
+# This has to be included last since libtorch provides a tweaked version of FindCUDA.cmake that messes with the flags,
+# causing build failures if other packages that require CUDA (e.g. the ZED ones) are included after it.
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTorch.cmake)
+
 #############################
 # Specify the project files #
 #############################
@@ -173,6 +177,7 @@ SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(debugging FILES ${debugging_sources} ${debugging_headers})
+SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers})
 SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
 SOURCE_GROUP(sequences FILES ${sequences_sources} ${sequences_headers})
 SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
@@ -220,6 +225,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkRealSense.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkScoreForests.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkTorch.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVicon.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkZed.cmake)
 

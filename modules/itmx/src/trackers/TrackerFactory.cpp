@@ -128,6 +128,10 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(const std::string& trackerType, 
     throw std::runtime_error("Error: Zed support not currently available. Reconfigure in CMake with the WITH_ZED option set to on.");
 #endif
   }
+  else
+  {
+    throw std::runtime_error("Error: Unknown tracker type '" + trackerType + "'");
+  }
 
   // Finally, return the constructed tracker, making sure to prevent double deletion if it will be added to a composite.
   return nestingFlag == NESTED ? Tracker_Ptr(tracker, boost::serialization::null_deleter()) : Tracker_Ptr(tracker);

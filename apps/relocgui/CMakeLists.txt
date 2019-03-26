@@ -19,6 +19,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTorch.cmake)
 
 #############################
 # Specify the project files #
@@ -77,6 +78,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkTorch.cmake)
 
 #########################################
 # Copy resource files to the build tree #

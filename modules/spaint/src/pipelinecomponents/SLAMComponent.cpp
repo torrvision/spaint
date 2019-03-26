@@ -4,6 +4,7 @@
  */
 
 #include "pipelinecomponents/SLAMComponent.h"
+using namespace orx;
 
 #include <boost/filesystem.hpp>
 #include <boost/serialization/extended_type_info.hpp>
@@ -19,24 +20,12 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 
-#ifdef WITH_GROVE
-#include <grove/relocalisation/ScoreRelocaliserFactory.h>
-using namespace grove;
-#endif
-
 #ifdef WITH_OPENCV
 #include <itmx/ocv/OpenCVUtil.h>
 #endif
-#include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/remotemapping/RGBDCalibrationMessage.h>
 using namespace itmx;
-
-#include <orx/relocalisation/BackgroundRelocaliser.h>
-#include <orx/relocalisation/CascadeRelocaliser.h>
-#include <orx/relocalisation/NullRelocaliser.h>
-#include <orx/relocalisation/Relocaliser.h>
-using namespace orx;
 
 #include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
@@ -47,6 +36,7 @@ using namespace tvgutil;
 #ifdef WITH_VICON
 #include "fiducials/ViconFiducialDetector.h"
 #endif
+#include "relocalisation/RelocaliserFactory.h"
 #include "segmentation/SegmentationUtil.h"
 
 namespace spaint {
@@ -397,11 +387,14 @@ void SLAMComponent::reset_scene()
 
 void SLAMComponent::save_models(const std::string& outputDir) const
 {
+  // If reconstruction hasn't started yet, early out.
+  SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
+  if(!slamState->get_view()) return;
+
   // Make sure that the output directory exists.
   bf::create_directories(outputDir);
 
   // Save the camera calibration.
-  SLAMState_CPtr slamState = m_context->get_slam_state(m_sceneID);
   const std::string calibFilename = outputDir + "/calib.txt";
   writeRGBDCalib(calibFilename.c_str(), slamState->get_view()->calib);
 
@@ -467,6 +460,45 @@ void SLAMComponent::set_mapping_client(const MappingClient_Ptr& mappingClient)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+std::vector<SE3Pose> SLAMComponent::load_ground_truth_relocalisation_trajectory() const
+{
+  std::vector<SE3Pose> groundTruthTrajectory;
+
+  // Detect any sequences for which we're using force-fail tracking, create a disk-based tracker for each of them, and wrap them into a composite tracker.
+  const Settings_CPtr& settings = m_context->get_settings();
+  std::vector<std::string> diskTrackerConfigs = settings->get_values<std::string>("diskTrackerConfigs");
+  std::vector<std::string> trackerSpecifiers = settings->get_values<std::string>("trackerSpecifiers");
+
+  std::string trackerConfig = "<tracker type='composite' policy='sequential'>";
+
+  for(size_t i = 0, size = trackerSpecifiers.size(); i < size; ++i)
+  {
+    if(trackerSpecifiers[i] == "ForceFail")
+    {
+      trackerConfig += diskTrackerConfigs[i];
+    }
+  }
+
+  trackerConfig += "</tracker>";
+
+  const bool trackSurfels = false;
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  FallibleTracker *dummy;
+  Tracker_Ptr groundTruthTracker = m_context->get_tracker_factory().make_tracker_from_string(
+    trackerConfig, m_sceneID, trackSurfels, slamState->get_rgb_image_size(), slamState->get_depth_image_size(), m_lowLevelEngine, m_imuCalibrator, settings, dummy
+  );
+
+  // Read in all of the poses from the composite tracker and return the trajectory.
+  ITMTrackingState groundTruthTrackingState(slamState->get_depth_image_size(), MEMORYDEVICE_CUDA);
+  while(groundTruthTracker->CanKeepTracking())
+  {
+    groundTruthTracker->TrackCamera(&groundTruthTrackingState, NULL);
+    groundTruthTrajectory.push_back(*groundTruthTrackingState.pose_d);
+  }
+
+  return groundTruthTrajectory;
+}
 
 void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
 {
@@ -614,89 +646,14 @@ void SLAMComponent::setup_relocaliser()
   m_relocaliseEveryFrame = settings->get_first_value<bool>(m_settingsNamespace + "relocaliseEveryFrame", false);
   m_relocaliserTrainingSkip = settings->get_first_value<size_t>(m_settingsNamespace + "relocaliserTrainingSkip", 0);
 
-#ifndef WITH_GROVE
-  // If we're trying to use a Grove relocaliser and Grove has not been built, fall back to the ferns relocaliser and issue a warning.
-  if(m_relocaliserType == "cascade" || m_relocaliserType == "forest")
-  {
-    m_relocaliserType = "ferns";
-    std::cerr << "Warning: Cannot use a Grove relocaliser because BUILD_GROVE is disabled in CMake. Falling back to random ferns.\n";
-  }
-#endif
-
-  // If we're trying to use a Grove relocaliser, determine the path to the file containing the forest.
-  if(m_relocaliserType == "cascade" || m_relocaliserType == "forest")
-  {
-    const std::string defaultRelocaliserForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
-    m_relocaliserForestPath = settings->get_first_value<std::string>(m_settingsNamespace + "relocalisationForestPath", defaultRelocaliserForestPath);
-    std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
-  }
-
-  // Construct a relocaliser of the specified type.
-  if(m_relocaliserType == "cascade")
-  {
-  #ifdef WITH_GROVE
-    // Look up the number of inner SCoRe relocalisers to instantiate.
-    const std::string cascadeRelocaliserNamespace = "CascadeRelocaliser.";
-    const int innerRelocaliserCount = settings->get_first_value<int>(cascadeRelocaliserNamespace + "innerRelocaliserCount");
-
-    // Construct the inner relocalisers.
-    ScoreRelocaliser_Ptr primaryRelocaliser;
-    std::vector<Relocaliser_Ptr> innerRelocalisers(innerRelocaliserCount);
-    for(int i = innerRelocaliserCount - 1; i >= 0; --i)
-    {
-      const std::string innerRelocaliserNamespace = cascadeRelocaliserNamespace + "R" + boost::lexical_cast<std::string>(i) + ".";
-      ScoreRelocaliser_Ptr innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, innerRelocaliserNamespace, settings->deviceType);
-
-      if(i == innerRelocaliserCount - 1) primaryRelocaliser = innerRelocaliser;
-      else innerRelocaliser->set_backing_relocaliser(primaryRelocaliser);
-
-      innerRelocalisers[i] = refine_with_icp(innerRelocaliser);
-    }
-
-    // Construct the cascade relocaliser itself.
-    m_context->get_relocaliser(m_sceneID).reset(new CascadeRelocaliser(innerRelocalisers, settings, "CascadeRelocaliser."));
-  #endif
-  }
-  else
-  {
-    Relocaliser_Ptr innerRelocaliser;
-    if(m_relocaliserType == "forest")
-    {
-    #ifdef WITH_GROVE
-      // Load the relocaliser from the specified file.
-      int deviceCount = 1;
-      cudaGetDeviceCount(&deviceCount);
-      if(deviceCount > 1)
-      {
-        ORcudaSafeCall(cudaSetDevice(1));
-        Relocaliser_Ptr scoreRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
-        innerRelocaliser.reset(new BackgroundRelocaliser(scoreRelocaliser, 1));
-        ORcudaSafeCall(cudaSetDevice(0));
-      }
-      else innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(m_relocaliserForestPath, settings, "ScoreRelocaliser.", settings->deviceType);
-    #endif
-    }
-    else if(m_relocaliserType == "ferns")
-    {
-      innerRelocaliser.reset(new FernRelocaliser(
-        m_imageSourceEngine->getDepthImageSize(),
-        settings->sceneParams.viewFrustum_min,
-        settings->sceneParams.viewFrustum_max,
-        FernRelocaliser::get_default_harvesting_threshold(),
-        FernRelocaliser::get_default_num_ferns(),
-        FernRelocaliser::get_default_num_decisions_per_fern(),
-        m_relocaliseEveryFrame ? FernRelocaliser::ALWAYS_TRY_ADD : FernRelocaliser::DELAY_AFTER_RELOCALISATION
-      ));
-    }
-    else if(m_relocaliserType == "none")
-    {
-      innerRelocaliser.reset(new NullRelocaliser);
-    }
-    else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
-
-    // Now decorate this relocaliser with one that uses an ICP tracker to refine the results.
-    m_context->get_relocaliser(m_sceneID) = refine_with_icp(innerRelocaliser);
-  }
+  m_context->get_relocaliser(m_sceneID) = RelocaliserFactory::make_relocaliser(
+    m_relocaliserType,
+    m_imageSourceEngine->getDepthImageSize(),
+    m_relocaliseEveryFrame,
+    boost::bind(&SLAMComponent::refine_with_icp, this, _1),
+    boost::bind(&SLAMComponent::load_ground_truth_relocalisation_trajectory, this),
+    settings
+  );
 }
 
 void SLAMComponent::setup_tracker()

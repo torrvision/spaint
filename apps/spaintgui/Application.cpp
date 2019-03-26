@@ -856,7 +856,8 @@ void Application::process_renderer_input()
     {
       type =
         m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_RELOCALISER_LEAVES :
-        m_inputState.key_down(KEYCODE_2) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_RELOCALISER_POINTS) :
+        m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_RELOCALISER_POINTS :
+        m_inputState.key_down(KEYCODE_3) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_RELOCALISER_GTPOINTS) :
         boost::none;
     }
 
