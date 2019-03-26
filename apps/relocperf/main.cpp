@@ -9,6 +9,7 @@
 #include <map>
 #include <sstream>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -537,6 +538,12 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  // If the tag has a .ini extension (i.e. was filled via shell autocompletion), strip it.
+  if(boost::algorithm::ends_with(relocTag, ".ini"))
+  {
+    boost::algorithm::erase_last(relocTag, ".ini");
+  }
+
   // Find the valid sequences in the dataset folder.
   const std::vector<std::string> sequenceNames = find_sequence_names(datasetFolder);
   int sequenceNameMaxLength = 0;
@@ -575,24 +582,24 @@ int main(int argc, char *argv[])
   if(verbose)
   {
     printWidth("Final", 8);
-    printWidth("Avg T.", 20);
-    printWidth("Avg A.", 8);
-    printWidth("Avg Succ T.", 14);
-    printWidth("Avg Succ A.", 14);
-    printWidth("Avg Fail T.", 14);
-    printWidth("Avg Fail A.", 14);
+    printWidth("Avg_T.", 20);
+    printWidth("Avg_A.", 8);
+    printWidth("Avg_Succ_T.", 14);
+    printWidth("Avg_Succ_A.", 14);
+    printWidth("Avg_Fail_T.", 14);
+    printWidth("Avg_Fail_A.", 14);
   }
 
-  printWidth("Median Reloc T.", 17);
-  printWidth("Median Reloc A.", 17);
-  printWidth("Median ICP T.", 17);
-  printWidth("Median ICP A.", 17);
+  printWidth("Median_Reloc_T.", 17);
+  printWidth("Median_Reloc_A.", 17);
+  printWidth("Median_ICP_T.", 17);
+  printWidth("Median_ICP_A.", 17);
 
-  printWidth("Training ms", 20);
-  printWidth("Update ms", 20);
-  printWidth("Initial Reloc ms", 20);
-  printWidth("ICP ms", 20);
-  printWidth("Total Reloc ms", 20);
+  printWidth("Training_ms", 20);
+  printWidth("Update_ms", 20);
+  printWidth("Initial_Reloc_ms", 20);
+  printWidth("ICP_ms", 20);
+  printWidth("Total_Reloc_ms", 20);
 
   std::cerr << '\n';
 
@@ -762,7 +769,7 @@ int main(int argc, char *argv[])
 
   std::cerr << '\n';
 
-  printWidth("Average (W)", sequenceNameMaxLength, true);
+  printWidth("Average_(W)", sequenceNameMaxLength, true);
   printWidth(poseCount, 8);
   printWidth(relocWeightedAvg, 8);
   printWidth(icpWeightedAvg, 8);
