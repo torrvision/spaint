@@ -473,10 +473,12 @@ void Renderer::generate_visualisation(const ORUChar4Image_Ptr& output, const Spa
     case VisualisationGenerator::VT_INPUT_DEPTH:
       visualisationGenerator->get_depth_input(output, view);
       break;
+    case VisualisationGenerator::VT_RELOCALISER_GTPOINTS:
     case VisualisationGenerator::VT_RELOCALISER_LEAVES:
     case VisualisationGenerator::VT_RELOCALISER_POINTS:
     {
-      std::string key = "leaves";
+      std::string key = "gtpoints";
+      if(visualisationType == VisualisationGenerator::VT_RELOCALISER_LEAVES) key = "leaves";
       if(visualisationType == VisualisationGenerator::VT_RELOCALISER_POINTS) key = "points";
 
       ORUChar4Image_CPtr visualisationImage = relocaliser->get_visualisation_image(key);

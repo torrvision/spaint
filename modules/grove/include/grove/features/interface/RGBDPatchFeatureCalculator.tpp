@@ -113,7 +113,10 @@ Vector2i RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_output
   Vector2i inputDims = (requireDepth && validDepth) ? depthImage->noDims : rgbImage->noDims;
 
   // Compute the output dimensions.
-  return inputDims / m_featureStep;
+  return Vector2i(
+    static_cast<int>(static_cast<float>(inputDims.x) / m_featureStep + 0.5f),
+    static_cast<int>(static_cast<float>(inputDims.y) / m_featureStep + 0.5f)
+  );
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

@@ -11,13 +11,20 @@ namespace bf = boost::filesystem;
 #include <ORUtils/MemoryBlockPersister.h>
 using namespace ORUtils;
 
+#include <orx/base/MemoryBlockFactory.h>
+using namespace orx;
+
+#include "reservoirs/ExampleReservoirsFactory.h"
+
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliserState::ScoreRelocaliserState()
-: lastExamplesAddedStartIdx(0), reservoirUpdateStartIdx(0)
-{}
+ScoreRelocaliserState::ScoreRelocaliserState(uint32_t reservoirCount, uint32_t reservoirCapacity, DeviceType deviceType, uint32_t rngSeed)
+: m_deviceType(deviceType), m_reservoirCapacity(reservoirCapacity), m_reservoirCount(reservoirCount), m_rngSeed(rngSeed)
+{
+  reset();
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -39,6 +46,26 @@ void ScoreRelocaliserState::load_from_disk(const std::string& inputFolder)
   std::ifstream inFile(dataFile.c_str());
   inFile >> lastExamplesAddedStartIdx >> reservoirUpdateStartIdx;
   if(!inFile) throw std::runtime_error("Error: Couldn't load relocaliser data from " + dataFile);
+}
+
+void ScoreRelocaliserState::reset()
+{
+  // Set up the reservoirs if they aren't currently allocated.
+  if(!exampleReservoirs)
+  {
+    exampleReservoirs = ExampleReservoirsFactory<Keypoint3DColour>::make_reservoirs(m_reservoirCount, m_reservoirCapacity, m_deviceType, m_rngSeed);
+  }
+
+  // Set up the predictions block if it isn't currently allocated.
+  if(!predictionsBlock)
+  {
+    predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirCount);
+  }
+
+  exampleReservoirs->reset();
+  lastExamplesAddedStartIdx = 0;
+  predictionsBlock->Clear();
+  reservoirUpdateStartIdx = 0;
 }
 
 void ScoreRelocaliserState::save_to_disk(const std::string& outputFolder) const

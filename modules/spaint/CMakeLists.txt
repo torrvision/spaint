@@ -38,6 +38,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVTK.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseZed.cmake)
 
+# This has to be included last since libtorch provides a tweaked version of FindCUDA.cmake that messes with the flags,
+# causing build failures if other packages that require CUDA (e.g. the ZED ones) are included after it.
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTorch.cmake)
+
 #############################
 # Specify the project files #
 #############################
@@ -303,6 +307,15 @@ src/randomforest/SpaintDecisionFunctionGenerator.cpp
 SET(randomforest_headers
 include/spaint/randomforest/ForestUtil.h
 include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
+)
+
+##
+SET(relocalisation_sources
+src/relocalisation/RelocaliserFactory.cpp
+)
+
+SET(relocalisation_headers
+include/spaint/relocalisation/RelocaliserFactory.h
 )
 
 ##
@@ -580,6 +593,7 @@ ${propagation_sources}
 ${propagation_cpu_sources}
 ${propagation_interface_sources}
 ${randomforest_sources}
+${relocalisation_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
@@ -617,6 +631,7 @@ ${propagation_cpu_headers}
 ${propagation_interface_headers}
 ${propagation_shared_headers}
 ${randomforest_headers}
+${relocalisation_headers}
 ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
@@ -709,6 +724,7 @@ SOURCE_GROUP(propagation\\cuda FILES ${propagation_cuda_sources} ${propagation_c
 SOURCE_GROUP(propagation\\interface FILES ${propagation_interface_sources} ${propagation_interface_headers})
 SOURCE_GROUP(propagation\\shared FILES ${propagation_shared_headers})
 SOURCE_GROUP(randomforest FILES ${randomforest_sources} ${randomforest_headers})
+SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers})
 SOURCE_GROUP(sampling FILES ${sampling_sources} ${sampling_headers})
 SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers})
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})

@@ -9,8 +9,6 @@
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
 
-#include <ORUtils/DeviceType.h>
-
 #include <orx/relocalisation/Relocaliser.h>
 
 #include "../base/ScoreRelocaliserState.h"
@@ -25,15 +23,13 @@
 namespace grove {
 
 /**
- * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene, using the approach described
- *        in "On-the-Fly Adaptation of Regression Forests for Online Camera Relocalisation" (Cavallari et al., 2017).
+ * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene by regressing the scene coordinates
+ *        corresponding to pixels in the input image and using the resulting correspondences to generate camera pose hypotheses.
+ *
+ * \note  SCoRe is an acronym for "Scene Coordinate Regression", hence the name of the class.
  */
 class ScoreRelocaliser : public orx::Relocaliser
 {
-  //#################### CONSTANTS ####################
-public:
-  enum { FOREST_TREE_COUNT = 5 };
-
   //#################### TYPEDEFS ####################
 public:
   typedef Keypoint3DColour ExampleType;
@@ -44,33 +40,13 @@ public:
   typedef ExampleClusterer<ExampleType, ClusterType, PredictionType::Capacity> Clusterer;
   typedef boost::shared_ptr<Clusterer> Clusterer_Ptr;
 
-  typedef ORUtils::VectorX<int, FOREST_TREE_COUNT> LeafIndices;
-  typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
-  typedef boost::shared_ptr<LeafIndicesImage> LeafIndicesImage_Ptr;
-  typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;
-
   typedef ExampleReservoirs<ExampleType> Reservoirs;
   typedef boost::shared_ptr<Reservoirs> Reservoirs_Ptr;
 
-  typedef DecisionForest<DescriptorType, FOREST_TREE_COUNT> ScoreForest;
-  typedef boost::shared_ptr<ScoreForest> ScoreForest_Ptr;
-
 //#################### PRIVATE VARIABLES ####################
 private:
-  /** The image containing the descriptors extracted from the RGB-D image. */
-  RGBDPatchDescriptorImage_Ptr m_descriptorsImage;
-
-  /** The image containing the keypoints extracted from the RGB-D image. */
-  Keypoint3DColourImage_Ptr m_keypointsImage;
-
-  /** The image containing the indices of the forest leaves associated with the keypoint/descriptor pairs. */
-  mutable LeafIndicesImage_Ptr m_leafIndicesImage;
-
   /** The mutex used to synchronise access to the relocaliser in a multithreaded environment. */
   mutable boost::recursive_mutex m_mutex;
-
-  /** The image containing the forest predictions associated with the keypoint/descriptor pairs. */
-  mutable ScorePredictionsImage_Ptr m_predictionsImage;
 
   //#################### PROTECTED VARIABLES ####################
 protected:
@@ -83,8 +59,14 @@ protected:
   /** The maximum distance there can be between two examples that are part of the same cluster (used during clustering). */
   float m_clustererTau;
 
+  /** The image containing the descriptors extracted from the RGB-D image. */
+  RGBDPatchDescriptorImage_Ptr m_descriptorsImage;
+
   /** The device on which the relocaliser should operate. */
   ORUtils::DeviceType m_deviceType;
+
+  /** Whether or not to produce the debug visualisation images when relocalising. */
+  bool m_enableDebugging;
 
   /** The clusterer used to compute 3D modal clusters from the examples stored in the reservoirs. */
   Clusterer_Ptr m_exampleClusterer;
@@ -92,7 +74,22 @@ protected:
   /** The feature calculator used to extract keypoints and descriptors from the RGB-D image. */
   DA_RGBDPatchFeatureCalculator_Ptr m_featureCalculator;
 
-  /** The maximum number of clusters to store in each leaf in the forest (used during clustering). */
+  /** The index of the next ground truth pose to use (if the ground truth camera trajectory is available). */
+  mutable size_t m_groundTruthFrameIndex;
+
+  /** An image in which to store a visualisation of the ground truth mapping from pixels to world-space points (if available). */
+  mutable ORUChar4Image_Ptr m_groundTruthPixelsToPointsImage;
+
+  /** The image containing the ground truth SCoRe predictions associated with the keypoint/descriptor pairs (if available). */
+  mutable ScorePredictionsImage_Ptr m_groundTruthPredictionsImage;
+
+  /** The ground truth camera trajectory (if available). */
+  boost::optional<std::vector<ORUtils::SE3Pose> > m_groundTruthTrajectory;
+
+  /** The image containing the keypoints extracted from the RGB-D image. */
+  Keypoint3DColourImage_Ptr m_keypointsImage;
+
+  /** The maximum number of clusters to store in each reservoir (used during clustering). */
   uint32_t m_maxClusterCount;
 
   /** The maximum number of relocalisations to output for each call to the relocalise function. */
@@ -110,49 +107,45 @@ protected:
   /** The minimum x, y and z coordinates visited by the camera during training. */
   float m_minX, m_minY, m_minZ;
 
-  /** An image in which to store a visualisation of the mapping from pixels to forest leaves (for debugging purposes). */
-  mutable ORUChar4Image_Ptr m_pixelsToLeavesImage;
-
   /** An image in which to store a visualisation of the mapping from pixels to world-space points (for debugging purposes). */
   mutable ORUChar4Image_Ptr m_pixelsToPointsImage;
 
-  /** The Preemptive RANSAC instance, used to estimate the 6DOF camera pose from a set of 3D keypoints and their associated SCoRe forest predictions. */
+  /** The image containing the SCoRe predictions associated with the keypoint/descriptor pairs. */
+  mutable ScorePredictionsImage_Ptr m_predictionsImage;
+
+  /** The Preemptive RANSAC instance, used to estimate the 6DOF camera pose from a set of 3D keypoints and their associated SCoRe predictions. */
   PreemptiveRansac_Ptr m_preemptiveRansac;
 
   /** The state of the relocaliser. Can be replaced at runtime to relocalise (and train) in a different environment. */
   ScoreRelocaliserState_Ptr m_relocaliserState;
 
-  /** The capacity (maximum size) of each reservoir associated with a leaf in the forest. */
+  /** The capacity (maximum size) of each example reservoir. */
   uint32_t m_reservoirCapacity;
 
-  /** The total number of example reservoirs used by the relocaliser (in practice, this is equal to the number of leaves in the forest). */
+  /** The total number of example reservoirs used by the relocaliser. */
   uint32_t m_reservoirCount;
 
   /** The seed for the random number generators used by the example reservoirs. */
   uint32_t m_rngSeed;
 
-  /** The SCoRe forest on which the relocaliser is based. */
-  ScoreForest_Ptr m_scoreForest;
-
   /** The settings used to configure the relocaliser. */
   tvgutil::SettingsContainer_CPtr m_settings;
 
-  /** Whether or not to produce visualisations of the forest when relocalising. */
-  bool m_visualiseForest;
+  /** The namespace associated with the settings that are specific to the relocaliser. */
+  std::string m_settingsNamespace;
 
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Constructs a SCoRe relocaliser by loading a pre-trained forest from a file.
+   * \brief Constructs a SCoRe relocaliser.
    *
-   * \param forestFilename    The name of the file from which to load the pre-trained forest.
    * \param settings          The settings used to configure the relocaliser.
-   * \param settingsNamespace The namespace associated with the settings that are specific to the SCoRe relocaliser.
+   * \param settingsNamespace The namespace associated with the settings that are specific to the relocaliser.
    * \param deviceType        The device on which the relocaliser should operate.
    *
-   * \throws std::runtime_error If the forest cannot be loaded.
+   * \throws std::runtime_error If the relocaliser cannot be constructed.
    */
-  ScoreRelocaliser(const std::string& forestFilename, const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, ORUtils::DeviceType deviceType);
+  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& settingsNamespace, ORUtils::DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -164,18 +157,23 @@ public:
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Merges the SCoRe predictions (sets of clusters) associated with each keypoint to create a single
-   *        SCoRe prediction (a single set of clusters) for each keypoint.
+   * \brief Fills the SCoRe predictions image with a set of clusters for each keypoint extracted from the RGB-D image.
    *
-   * \note  Each keypoint/descriptor pair extracted from the input RGB-D image pairs determines a leaf in a tree of the
-   *        forest. Each such leaf contains a set of 3D modal clusters, which together constitute a SCoRe prediction.
-   *        This function merges the SCoRe predictions associated with the different leaves (from different trees) with
-   *        which each keypoint/descriptor pair is associated, thereby yielding a single SCoRe prediction for each pair.
-   *
-   * \param leafIndices       An image containing the indices of the leaves (in the different trees) associated with each keypoint/descriptor pair.
-   * \param outputPredictions An image into which to store the merged SCoRe predictions.
+   * \param colourImage The colour image.
    */
-  virtual void merge_predictions_for_keypoints(const LeafIndicesImage_CPtr& leafIndices, ScorePredictionsImage_Ptr& outputPredictions) const = 0;
+  virtual void make_predictions(const ORUChar4Image *colourImage) const = 0;
+
+  /**
+   * \brief Trains the relocaliser using information from an RGB-D image pair captured from a known pose in the world.
+   *
+   * \note  This is a hook function - derived classes should override this rather than overriding train() directly, since train() also does some clustering.
+   *
+   * \param colourImage     The colour image.
+   * \param depthImage      The depth image.
+   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
+   * \param cameraPose      The position of the camera in the world.
+   */
+  virtual void train_sub(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -201,33 +199,11 @@ public:
   Keypoint3DColourImage_CPtr get_keypoints_image() const;
 
   /**
-   * \brief Gets the prediction associated with the specified leaf in the forest.
+   * \brief Gets the image containing the SCoRe predictions associated with the keypoint/descriptor pairs.
    *
-   * \param treeIdx The index of the tree containing the prediction.
-   * \param leafIdx The index of the leaf.
-   * \return        The prediction associated with the specified leaf.
-   *
-   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
-   */
-  ScorePrediction get_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
-
-  /**
-   * \brief Gets the image containing the forest predictions associated with the keypoint/descriptor pairs.
-   *
-   * \return  The image containing the forest predictions associated with the keypoint/descriptor pairs.
+   * \return  The image containing the SCoRe predictions associated with the keypoint/descriptor pairs.
    */
   ScorePredictionsImage_CPtr get_predictions_image() const;
-
-  /**
-   * \brief Gets the contents of the reservoir associated with the specified leaf in the forest.
-   *
-   * \param treeIdx The index of the tree containing the leaf.
-   * \param leafIdx The index of the leaf.
-   * \return        The reservoir associated with the specified leaf.
-   *
-   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
-   */
-  std::vector<Keypoint3DColour> get_reservoir_contents(uint32_t treeIdx, uint32_t leafIdx) const;
 
   /** Override */
   virtual ORUChar4Image_CPtr get_visualisation_image(const std::string& key) const;
@@ -253,6 +229,13 @@ public:
    */
   void set_backing_relocaliser(const boost::shared_ptr<ScoreRelocaliser>& backingRelocaliser);
 
+  /**
+   * \brief Sets the ground truth camera trajectory.
+   *
+   * \param groundTruthTrajectory The ground truth camera trajectory.
+   */
+  void set_ground_truth_trajectory(const std::vector<ORUtils::SE3Pose>& groundTruthTrajectory);
+
   /** Override */
   virtual void train(const ORUChar4Image *colourImage, const ORFloatImage *depthImage, const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
 
@@ -260,11 +243,31 @@ public:
   virtual void update();
 
   /**
-   * \brief Forcibly updates the contents of every cluster in the forest.
+   * \brief Forcibly updates the contents of every cluster in the example reservoirs.
    *
    * \note  This is computationally intensive, and can require a few hundred milliseconds to terminate.
    */
   void update_all_clusters();
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Makes debug visualisation images to help the user better understand what happened during the most recent attempt to relocalise the camera.
+   *
+   * \param depthImage  The depth image from which we were trying to relocalise.
+   * \param results     The results of the most recent attempt to relocalise.
+   */
+  virtual void make_visualisation_images(const ORFloatImage *depthImage, const std::vector<Result>& results) const;
+
+  /**
+   * \brief Sets a SCoRe prediction for each keypoint that contains a single cluster consisting of the ground truth position of the keypoint in world space.
+   *
+   * \param keypointsImage    The image containing the keypoints extracted from the RGB-D image.
+   * \param cameraToWorld     The ground truth transformation from camera space to world space.
+   * \param outputPredictions An image into which to store the SCoRe predictions.
+   */
+  virtual void set_ground_truth_predictions_for_keypoints(const Keypoint3DColourImage_CPtr& keypointsImage, const Matrix4f& cameraToWorld,
+                                                          ScorePredictionsImage_Ptr& outputPredictions) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -276,28 +279,13 @@ private:
   uint32_t compute_nb_reservoirs_to_update() const;
 
   /**
-   * \brief Checks whether or not the specified leaf is valid, and throws if not.
+   * \brief Updates one of the pixels to points images (for debugging purposes).
    *
-   * \param treeIdx The index of the tree containing the leaf.
-   * \param leafIdx The index of the leaf.
-   *
-   * \throws std::invalid_argument  If treeIdx or leafIdx are greater than the maximum number of trees or leaves, respectively.
+   * \param worldToCamera       The transformation to use from world to camera space.
+   * \param predictionsImage    An image containing SCoRe predictions associated with the keypoint/descriptor pairs.
+   * \param pixelsToPointsImage An image in which to store a visualisation of a mapping from pixels to world-space points.
    */
-  void ensure_valid_leaf(uint32_t treeIdx, uint32_t leafIdx) const;
-
-  /**
-   * \brief Updates the pixels to leaves image (for debugging purposes).
-   *
-   * \param depthImage  The current depth image.
-   */
-  void update_pixels_to_leaves_image(const ORFloatImage *depthImage) const;
-
-  /**
-   * \brief Updates the pixels to points image (for debugging purposes).
-   *
-   * \param worldToCamera The relocalised pose.
-   */
-  void update_pixels_to_points_image(const ORUtils::SE3Pose& worldToCamera) const;
+  void update_pixels_to_points_image(const ORUtils::SE3Pose& worldToCamera, const ScorePredictionsImage_Ptr& predictionsImage, ORUChar4Image_Ptr& pixelsToPointsImage) const;
 
   /**
    * \brief Updates the index of the first reservoir to subject to clustering during the next train/update call.
