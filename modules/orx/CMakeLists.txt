@@ -59,6 +59,7 @@ include/orx/persistence/PosePersister.h
 ##
 SET(relocalisation_sources
 src/relocalisation/CascadeRelocaliser.cpp
+src/relocalisation/EnsembleRelocaliser.cpp
 src/relocalisation/NullRelocaliser.cpp
 src/relocalisation/RefiningRelocaliser.cpp
 src/relocalisation/Relocaliser.cpp
@@ -66,6 +67,7 @@ src/relocalisation/Relocaliser.cpp
 
 SET(relocalisation_headers
 include/orx/relocalisation/CascadeRelocaliser.h
+include/orx/relocalisation/EnsembleRelocaliser.h
 include/orx/relocalisation/NullRelocaliser.h
 include/orx/relocalisation/RefiningRelocaliser.h
 include/orx/relocalisation/Relocaliser.h
