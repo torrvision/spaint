@@ -239,7 +239,7 @@ private:
    *
    * \return  The ground truth trajectory for the relocaliser.
    */
-  std::vector<ORUtils::SE3Pose> SLAMComponent::load_ground_truth_relocalisation_trajectory() const;
+  std::vector<ORUtils::SE3Pose> load_ground_truth_relocalisation_trajectory() const;
 
   /**
    * \brief Render from the live camera position to prepare for tracking.

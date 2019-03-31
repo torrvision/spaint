@@ -10,10 +10,11 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include <orx/persistence/ImagePersister.h>
+using namespace orx;
+
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
-
-#include "persistence/ImagePersister.h"
 
 //#################### MACROS ####################
 

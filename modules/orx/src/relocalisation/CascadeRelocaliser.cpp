@@ -5,6 +5,7 @@
 
 #include "relocalisation/CascadeRelocaliser.h"
 
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 
