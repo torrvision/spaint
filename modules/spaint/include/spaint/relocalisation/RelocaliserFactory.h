@@ -34,8 +34,9 @@ public:
    * \param getGroundTruthTrajectory  A callback function that can be used to get the ground truth test trajectory.
    * \param settings                  The InfiniTAM settings.
    */
-  static orx::Relocaliser_Ptr make_relocaliser(const std::string& relocaliserType, const Vector2i& depthImageSize, bool relocaliseEveryFrame,
-                                               const Refiner& refineWithICP, const GroundTruthProvider& getGroundTruthTrajectory, const Settings_CPtr& settings);
+  static orx::Relocaliser_Ptr make_relocaliser(std::string relocaliserType, const Vector2i& depthImageSize, bool relocaliseEveryFrame,
+                                               const Refiner& refineWithICP, const GroundTruthProvider& getGroundTruthTrajectory,
+                                               const Settings_CPtr& settings);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:

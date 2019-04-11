@@ -5,8 +5,10 @@
 
 #include "relocalisation/RelocaliserFactory.h"
 
+#ifdef WITH_GROVE
 #include <grove/relocalisation/ScoreRelocaliserFactory.h>
 using namespace grove;
+#endif
 
 #include <itmx/relocalisation/FernRelocaliser.h>
 using namespace itmx;
@@ -21,8 +23,9 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-Relocaliser_Ptr RelocaliserFactory::make_relocaliser(const std::string& relocaliserType, const Vector2i& depthImageSize, bool relocaliseEveryFrame,
-                                                     const Refiner& refineWithICP, const GroundTruthProvider& getGroundTruthTrajectory, const Settings_CPtr& settings)
+Relocaliser_Ptr RelocaliserFactory::make_relocaliser(std::string relocaliserType, const Vector2i& depthImageSize, bool relocaliseEveryFrame,
+                                                     const Refiner& refineWithICP, const GroundTruthProvider& getGroundTruthTrajectory,
+                                                     const Settings_CPtr& settings)
 {
 #ifndef WITH_GROVE
   // If we're trying to use a Grove relocaliser and Grove has not been built, fall back to the ferns relocaliser and issue a warning.
