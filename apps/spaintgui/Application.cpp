@@ -166,6 +166,7 @@ void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 
 void Application::set_save_memory_usage(bool saveMemoryUsage)
 {
+#ifdef WITH_CUDA
   // If we're trying to turn off memory usage saving, reset the output stream and early out.
   if(!saveMemoryUsage)
   {
@@ -202,6 +203,7 @@ void Application::set_save_memory_usage(bool saveMemoryUsage)
   }
 
   *m_memoryUsageOutputStream << '\n';
+#endif
 }
 
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
@@ -906,6 +908,7 @@ void Application::process_voice_input()
 
 void Application::save_current_memory_usage()
 {
+#ifdef WITH_CUDA
   // Make sure that the memory usage output stream has been initialised, and throw if not.
   if(!m_memoryUsageOutputStream)
   {
@@ -945,6 +948,7 @@ void Application::save_current_memory_usage()
 
   // Restore the GPU that was originally active.
   ORcudaSafeCall(cudaSetDevice(originalGpu));
+#endif
 }
 
 void Application::save_mesh() const
