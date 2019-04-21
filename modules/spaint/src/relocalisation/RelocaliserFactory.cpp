@@ -61,6 +61,9 @@ Relocaliser_Ptr RelocaliserFactory::make_relocaliser(std::string relocaliserType
 
     // Construct the cascade relocaliser itself.
     return Relocaliser_Ptr(new CascadeRelocaliser(innerRelocalisers, settings, relocaliserNamespace));
+  #else
+    // This should never happen.
+    throw std::runtime_error("Error: Cannot construct a Grove relocaliser when BUILD_GROVE is disabled in CMake.");
   #endif
   }
   else if(relocaliserType == "ensemble")
@@ -98,6 +101,9 @@ Relocaliser_Ptr RelocaliserFactory::make_relocaliser(std::string relocaliserType
     else innerRelocaliser = ensembleRelocaliser;
 
     return refineWithICP(innerRelocaliser);
+  #else
+    // This should never happen.
+    throw std::runtime_error("Error: Cannot construct a Grove relocaliser when BUILD_GROVE is disabled in CMake.");
   #endif
   }
   else
