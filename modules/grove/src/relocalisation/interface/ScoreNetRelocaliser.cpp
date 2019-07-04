@@ -84,6 +84,9 @@ void ScoreNetRelocaliser::make_predictions(const ORUChar4Image *colourImage) con
 void ScoreNetRelocaliser::train_sub(const ORUChar4Image *colourImage, const ORFloatImage *depthImage,
                                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
+  // If we're not using bucketing, don't waste any time filling the reservoirs (we'll be using the raw network predictions instead).
+  if(!m_useBucketPredictions) return;
+
   // Extract keypoints from the RGB-D image and compute descriptors for them.
   // FIXME: We don't need to compute the descriptors when we're using the net (we should allow keypoints to be computed without also computing the descriptors).
   const Matrix4f invCameraPose = cameraPose.GetInvM();
