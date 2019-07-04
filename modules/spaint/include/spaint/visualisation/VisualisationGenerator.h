@@ -41,14 +41,15 @@ public:
 public:
   /**
    * \brief An enumeration specifying the different types of visualisation that are supported.
+   *
+   * Note: The streaming app for the collaborative pipeline depends on the order of these values.
+   *       Please add any new visualisation types to the end of the list, not in the middle.
+   *       (Alternatively, please update the streaming app accordingly.)
    */
   enum VisualisationType
   {
     VT_INPUT_COLOUR,
     VT_INPUT_DEPTH,
-    VT_RELOCALISER_GTPOINTS,
-    VT_RELOCALISER_LEAVES,
-    VT_RELOCALISER_POINTS,
     VT_SCENE_COLOUR,
     VT_SCENE_CONFIDENCE,
     VT_SCENE_DEPTH,
@@ -58,7 +59,10 @@ public:
     VT_SCENE_SEMANTICCOLOUR,
     VT_SCENE_SEMANTICFLAT,
     VT_SCENE_SEMANTICLAMBERTIAN,
-    VT_SCENE_SEMANTICPHONG
+    VT_SCENE_SEMANTICPHONG,
+    VT_RELOCALISER_GTPOINTS,
+    VT_RELOCALISER_LEAVES,
+    VT_RELOCALISER_POINTS,
   };
 
   //#################### PRIVATE VARIABLES ####################
