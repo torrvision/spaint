@@ -187,6 +187,7 @@ SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/oglx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
@@ -205,7 +206,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} spaint itmx orx rafl rigging tvginput tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} spaint itmx oglx orx rafl rigging tvginput tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)

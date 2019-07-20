@@ -11,10 +11,10 @@
 
 #include <SDL.h>
 
-#include <spaint/ogl/WrappedGL.h>
+#include <oglx/WrappedGL.h>
 
 #ifdef WITH_GLUT
-#include <spaint/ogl/WrappedGLUT.h>
+#include <oglx/WrappedGLUT.h>
 #endif
 
 #include <rigging/MoveableCamera.h>
@@ -171,19 +171,9 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Sets appropriate projection and model-view matrices for 2D rendering.
-   */
-  static void begin_2d();
-
-  /**
    * \brief Destroys the temporary image and texture used for visualising the scene.
    */
   void destroy_common();
-
-  /**
-   * \brief Restores the projection and model-view matrices that were active prior to 2D rendering.
-   */
-  static void end_2d();
 
   /**
    * \brief Gets the spaint model.
@@ -339,13 +329,6 @@ private:
    */
   static void render_text(const std::string& text, const Vector3f& colour, const Vector2f& pos, void *font = GLUT_BITMAP_HELVETICA_18);
 #endif
-
-  /**
-   * \brief Renders a quad textured with the specified texture.
-   *
-   * \param textureID The ID of the texture to apply to the quad.
-   */
-  static void render_textured_quad(GLuint textureID);
 
   /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.

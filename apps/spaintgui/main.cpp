@@ -37,7 +37,7 @@
 #endif
 
 #ifdef WITH_GLUT
-#include <spaint/ogl/WrappedGLUT.h>
+#include <oglx/WrappedGLUT.h>
 #endif
 
 #ifdef WITH_OVR

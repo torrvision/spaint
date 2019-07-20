@@ -6,6 +6,7 @@
 #include "RiftRenderer.h"
 using namespace ITMLib;
 using namespace ORUtils;
+using namespace oglx;
 using namespace spaint;
 
 #include <iostream>

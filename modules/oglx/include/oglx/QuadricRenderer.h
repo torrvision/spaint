@@ -1,10 +1,10 @@
 /**
- * spaint: QuadricRenderer.h
+ * oglx: QuadricRenderer.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_QUADRICRENDERER
-#define H_SPAINT_QUADRICRENDERER
+#ifndef H_OGLX_QUADRICRENDERER
+#define H_OGLX_QUADRICRENDERER
 
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
@@ -13,7 +13,7 @@
 
 #include "WrappedGL.h"
 
-namespace spaint {
+namespace oglx {
 
 /**
  * \brief This class provides utility functions for rendering quadrics at arbitrary positions and orientations in space.

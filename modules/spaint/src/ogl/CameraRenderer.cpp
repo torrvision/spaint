@@ -5,10 +5,11 @@
 
 #include "ogl/CameraRenderer.h"
 
+#include <oglx/QuadricRenderer.h>
+using namespace oglx;
+
 #include <rigging/SimpleCamera.h>
 using namespace rigging;
-
-#include "ogl/QuadricRenderer.h"
 
 namespace spaint {
 

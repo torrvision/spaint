@@ -22,6 +22,8 @@ using namespace ITMLib;
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
+#include <oglx/WrappedGL.h>
+
 #include <orx/persistence/ImagePersister.h>
 #include <orx/persistence/PosePersister.h>
 using namespace orx;
@@ -32,7 +34,6 @@ using namespace rigging;
 #ifdef WITH_VICON
 #include <spaint/fiducials/ViconFiducialDetector.h>
 #endif
-#include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>

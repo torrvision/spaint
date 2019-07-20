@@ -1,16 +1,16 @@
 /**
- * spaint: FrameBuffer.h
+ * oglx: FrameBuffer.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_FRAMEBUFFER
-#define H_SPAINT_FRAMEBUFFER
+#ifndef H_OGLX_FRAMEBUFFER
+#define H_OGLX_FRAMEBUFFER
 
 #include <boost/shared_ptr.hpp>
 
 #include "WrappedGL.h"
 
-namespace spaint {
+namespace oglx {
 
 /**
  * \brief An instance of this class represents an off-screen frame buffer to which OpenGL rendering calls can be directed.

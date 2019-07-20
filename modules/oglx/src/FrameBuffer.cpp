@@ -1,13 +1,13 @@
 /**
- * spaint: FrameBuffer.cpp
+ * oglx: FrameBuffer.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "ogl/FrameBuffer.h"
+#include "FrameBuffer.h"
 
 #include <stdexcept>
 
-namespace spaint {
+namespace oglx {
 
 //#################### CONSTRUCTORS ####################
 

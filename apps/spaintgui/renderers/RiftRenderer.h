@@ -12,7 +12,7 @@
 
 #include <rigging/CompositeCamera.h>
 
-#include <spaint/ogl/FrameBuffer.h>
+#include <oglx/FrameBuffer.h>
 
 #include "Renderer.h"
 
@@ -35,7 +35,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The eye frame buffers. */
-  spaint::FrameBuffer_CPtr m_eyeFrameBuffers[ovrEye_Count];
+  oglx::FrameBuffer_CPtr m_eyeFrameBuffers[ovrEye_Count];
 
   /** The Rift handle. */
   ovrHmd m_hmd;

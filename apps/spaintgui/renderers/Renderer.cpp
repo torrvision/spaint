@@ -13,11 +13,14 @@ using namespace tvgutil;
 #include <itmx/util/CameraPoseConverter.h>
 using namespace itmx;
 
+#include <oglx/OpenGLUtil.h>
+#include <oglx/QuadricRenderer.h>
+using namespace oglx;
+
 #include <orx/geometry/GeometryUtil.h>
 using namespace orx;
 
 #include <spaint/ogl/CameraRenderer.h>
-#include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
 #include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraFactory.h>
@@ -145,7 +148,7 @@ public:
     static float angle = 0.0f;
     angle = fmod(angle + 5.0f, 360.0f);
 
-    m_base->begin_2d();
+    OpenGLUtil::begin_2d();
       glTranslatef(labelOrbPos.x(), labelOrbPos.y(), labelOrbPos.z());
       glScalef(1.0f, aspectRatio, 1.0f);
       glRotatef(angle, 1.0f, 1.0f, 0.0f);
@@ -156,7 +159,7 @@ public:
       glLineWidth(2.0f);
         render_orb(labelOrbPos, labelOrbRadius);
       glPopAttrib();
-    m_base->end_2d();
+    OpenGLUtil::end_2d();
   }
 #endif
 
@@ -312,36 +315,9 @@ void Renderer::set_supersampling_enabled(bool supersamplingEnabled)
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void Renderer::begin_2d()
-{
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-  glTranslated(0.0, 1.0, 0.0);
-  glScaled(1.0, -1.0, 1.0);
-
-  glDepthMask(false);
-}
-
 void Renderer::destroy_common()
 {
   glDeleteTextures(1, &m_textureID);
-}
-
-void Renderer::end_2d()
-{
-  glDepthMask(true);
-
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
 }
 
 Model_CPtr Renderer::get_model() const
@@ -656,9 +632,9 @@ void Renderer::render_image(const ORUChar4Image_CPtr& image, bool useAlphaBlendi
   }
 
   // Render a quad textured with the image over the top of the existing scene.
-  begin_2d();
-    render_textured_quad(m_textureID);
-  end_2d();
+  OpenGLUtil::begin_2d();
+    OpenGLUtil::render_textured_quad(m_textureID);
+  OpenGLUtil::end_2d();
 
   if(useAlphaBlending)
   {
@@ -687,9 +663,9 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
   std::ostringstream oss;
   oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
 
-  begin_2d();
+  OpenGLUtil::begin_2d();
     render_text(oss.str(), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(0.025f, 0.95f));
-  end_2d();
+  OpenGLUtil::end_2d();
 }
 #endif
 
@@ -785,24 +761,6 @@ void Renderer::render_text(const std::string& text, const Vector3f& colour, cons
   }
 }
 #endif
-
-void Renderer::render_textured_quad(GLuint textureID)
-{
-  glEnable(GL_TEXTURE_2D);
-  {
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    {
-      glTexCoord2f(0, 0); glVertex2f(0, 0);
-      glTexCoord2f(1, 0); glVertex2f(1, 0);
-      glTexCoord2f(1, 1); glVertex2f(1, 1);
-      glTexCoord2f(0, 1); glVertex2f(0, 1);
-    }
-    glEnd();
-  }
-  glDisable(GL_TEXTURE_2D);
-}
 
 void Renderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)
 {

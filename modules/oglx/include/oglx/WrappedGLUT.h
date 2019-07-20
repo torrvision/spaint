@@ -1,5 +1,5 @@
 /**
- * spaint: WrappedGLUT.h
+ * oglx: WrappedGLUT.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -12,4 +12,3 @@
 #endif
 
 #undef WIN32_LEAN_AND_MEAN
-

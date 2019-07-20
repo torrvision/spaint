@@ -217,16 +217,10 @@ include/spaint/markers/shared/VoxelMarker_Shared.h
 ##
 SET(ogl_sources
 src/ogl/CameraRenderer.cpp
-src/ogl/FrameBuffer.cpp
-src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
 include/spaint/ogl/CameraRenderer.h
-include/spaint/ogl/FrameBuffer.h
-include/spaint/ogl/QuadricRenderer.h
-include/spaint/ogl/WrappedGL.h
-include/spaint/ogl/WrappedGLUT.h
 )
 
 ##
@@ -758,6 +752,7 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 INCLUDE_DIRECTORIES(include/spaint)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/oglx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/orx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)

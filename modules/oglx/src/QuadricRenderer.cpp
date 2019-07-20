@@ -1,14 +1,14 @@
 /**
- * spaint: QuadricRenderer.cpp
+ * oglx: QuadricRenderer.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "ogl/QuadricRenderer.h"
+#include "QuadricRenderer.h"
 
 #include <rigging/SimpleCamera.h>
 using namespace rigging;
 
-namespace spaint {
+namespace oglx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
