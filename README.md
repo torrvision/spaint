@@ -2,7 +2,7 @@
 
 ![teaser](teaser.png)
 
-*Project page:* [http://www.semantic-paint.com](http://www.semantic-paint.com)
+*Project page:* [http://www.robots.ox.ac.uk/~tvg/projects/SemanticPaint/index.php](http://www.robots.ox.ac.uk/~tvg/projects/SemanticPaint/index.php)
 
 This is an open-source, real-time implementation of the interactive *SemanticPaint* system for geometric reconstruction, object-class segmentation and learning of 3D scenes, originally published in [Valentin15]. Using our system, a user can walk into a room wearing a depth camera and a virtual reality headset, and both densely reconstruct the 3D scene [Newcombe11,Niessner13,Kaehler15] and interactively segment the environment into object classes such as 'chair', 'floor' and 'table'. The user interacts *physically* with the real-world scene, touching objects and using voice commands to assign them appropriate labels. These user-generated labels are leveraged by an online random forest-based machine learning algorithm, which is used to predict labels for previously unseen parts of the scene. The entire pipeline runs in real time, and the user stays 'in the loop' throughout the process, receiving immediate feedback about the progress of the labelling and interacting with the scene as necessary to refine the predicted segmentation.
 
