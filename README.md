@@ -54,6 +54,21 @@ If you make use of or build on our Grove relocaliser, please consider citing:
   booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
   year = {2017}
 }
+
+@article{Cavallari2019PAMI,
+  author = {Tommaso Cavallari* and Stuart Golodetz* and Nicholas A Lord* and Julien Valentin* and Victor A Prisacariu and Luigi Di Stefano and Philip H S Torr},
+  title = {{Real-Time RGB-D Camera Pose Estimation in Novel Scenes using a Relocalisation Cascade}},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume = {Early Access},
+  year = {2019}
+}
+
+@inproceedings{Cavallari20193DV,
+  author = {Tommaso Cavallari* and Luca Bertinetto and Jishnu Mukhoti and Philip Torr and Stuart Golodetz*},
+  title = {{Let's Take This Online: Adapting Scene Coordinate Regression Network Predictions for Online RGB-D Camera Relocalisation}},
+  booktitle = {Proceedings of the International Conference on 3D Vision (3DV)},
+  year = {2019}
+}
 ```
 
 If you make use of or build on our Collaborative SLAM approach, please consider citing:
